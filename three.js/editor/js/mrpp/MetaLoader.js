@@ -152,12 +152,12 @@ function MetaLoader(editor) {
 	this.load = async function (meta) {
 
 		let scene = editor.scene;
-		if (scene == null) {
+		if (!scene) {
 			scene = new THREE.Scene();
 			scene.name = "Scene"
 			editor.setScene(scene)
 		}
-		if (meta.events == null) {
+		if (!meta.events) {
 			scene.events = { inputs: [], outputs: [] };
 		} else {
 			scene.events = JSON.parse(meta.events)
@@ -188,13 +188,13 @@ function MetaLoader(editor) {
 		let root = editor.scene;
 
 
-		if (meta.data !== null) {
+		if (meta.data) {
 			const data = JSON.parse(meta.data)
-
 			const resources = new Map()
 			meta.resources.forEach(r => {
-				resources.set(r.id, r)
+				resources.set(r.id.toString(), r)
 			})
+
 
 			root.uuid = data.parameters.uuid
 

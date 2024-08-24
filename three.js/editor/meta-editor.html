@@ -93,7 +93,6 @@
 		});
 
 
-
 		window.editor = editor // Expose editor to Console
 		window.THREE = THREE // Expose THREE to APP Scripts and Console
 		window.VRButton = VRButton // Expose VRButton to APP Scripts
@@ -124,10 +123,6 @@
 		editor.storage.init(function () {
 			editor.storage.get(function (state) {
 				if (isLoadingFromHash) return
-
-				if (state !== undefined) {
-					//	editor.fromJSON( state );
-				}
 
 				const selected = editor.config.getKey('selected')
 
@@ -186,7 +181,6 @@
 			if (event.dataTransfer.types[0] === 'text/plain') return // Outliner drop
 
 			if (event.dataTransfer.items) {
-				// DataTransferItemList supports folders
 
 				editor.loader.loadItemList(event.dataTransfer.items)
 			} else {
@@ -235,13 +229,23 @@
 
 		window.addEventListener('message', e => {
 
-			if (e.data.verify === 'mrpp.com') {
-				editor.signals.messageReceive.dispatch(e.data)
+			const data = e.data
+			if (data.action) {
+				editor.signals.messageReceive.dispatch({
+					action: data.action,
+					data: JSON.parse(data.json)
+				})
 			}
+
+
+
 		})
 
-		editor.signals.messageReceive.add(async function (data) {
-			if (data.action == 'load') {
+		editor.signals.messageReceive.add(async function (params) {
+			console.error(params.data)
+
+			if (params.action == 'load') {
+				const data = params.data
 				loader.load(data.data)
 			}
 		})

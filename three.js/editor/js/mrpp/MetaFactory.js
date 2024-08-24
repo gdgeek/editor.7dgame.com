@@ -57,7 +57,6 @@ class MetaFactory extends Factory {
 				if (data.children.entities[i] != null) {
 					try {
 						const node = await this.building(data.children.entities[i], resources)
-
 						if (node != null) {
 							root.add(node)
 							if (editor != null) {
@@ -133,7 +132,11 @@ class MetaFactory extends Factory {
 		})
 	}
 	async getPolygen(data, resources) {
+
+
 		if (resources.has(data.parameters.resource)) {
+
+
 			const resource = resources.get(data.parameters.resource)
 			const node = await this.loadPolygen(resource.file.url)
 

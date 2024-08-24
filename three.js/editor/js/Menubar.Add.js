@@ -33,17 +33,19 @@ function MenubarAdd(editor) {
 
 	if (editor.type.toLowerCase() == 'meta') {
 
-		editor.signals.messageReceive.add(async function (message) {
+		editor.signals.messageReceive.add(async function (params) {
 
-			if (message.action === 'load_resource') {
+			if (params.action === 'load_resource') {
 
-				resources.set(message.data.id, message.data)
+				console.log(params.data)
+				const data = params.data;
+				resources.set(data.id, data)
 
-				const data = builder.resource(message.data)
-				//alert(message.data)
-				if (data != null) {
-					const node = await factory.building(data, resources);
-					if (node != null) {
+				const raw = builder.resource(data)
+
+				if (raw) {
+					const node = await factory.building(raw, resources);
+					if (node) {
 						editor.execute(new AddObjectCommand(editor, node));
 					}
 				}
