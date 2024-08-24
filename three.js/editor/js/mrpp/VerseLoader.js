@@ -228,12 +228,12 @@ function VerseLoader(editor) {
 
 			const resources = new Map()
 			verse.resources.forEach(item => {
-				resources.set(item.id, item)
+				resources.set(item.id.toString(), item)
 			})
 			const metas = new Map()
 			console.error(verse)
 			verse.metas.forEach(item => {
-				metas.set(item.id, item)
+				metas.set(item.id.toString(), item)
 			})
 			await this.read(root, data, resources, metas)
 			const copy = await this.write(root);

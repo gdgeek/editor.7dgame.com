@@ -39,7 +39,7 @@ function MenubarAdd(editor) {
 
 				console.log(params.data)
 				const data = params.data;
-				resources.set(data.id, data)
+				resources.set(data.id.toString(), data)
 
 				const raw = builder.resource(data)
 
@@ -133,7 +133,7 @@ function MenubarAdd(editor) {
 
 				if (data.resources) {
 					data.resources.forEach(resource => {
-						resources.set(resource.id, resource)
+						resources.set(resource.id.toString(), resource)
 					})
 				}
 

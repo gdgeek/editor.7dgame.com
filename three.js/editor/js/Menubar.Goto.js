@@ -18,7 +18,7 @@ function MenubarGoto(editor) {
 	editor.signals.messageReceive.add(async function (message) {
 		if (message.action === 'resource') {
 
-			resources.set(message.data.id, message.data)
+			resources.set(message.data.id.toString(), message.data)
 
 			const data = builder.resource(message.data)
 			if (data != null) {
