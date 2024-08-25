@@ -19,9 +19,6 @@ function VerseLoader(editor) {
 		self.save()
 	})
 	const factory = new MetaFactory();
-	//const metaFactory = new MetaFactory();
-	//const builder = new SceneBuilder(editor)
-
 
 
 
@@ -33,7 +30,7 @@ function VerseLoader(editor) {
 
 		const data = {
 			action: 'save-verse',
-			data: JSON.stringify(verse)
+			json: JSON.stringify({ verse })
 		}
 
 		editor.signals.messageSend.dispatch(data)

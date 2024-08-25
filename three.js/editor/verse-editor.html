@@ -85,10 +85,12 @@
 
 		const editor = new Editor();
 		editor.type = 'verse';
-		editor.signals.messageSend.add(function (data) {
-			data.from = 'mrpp-editor';
-			data.verify = 'mrpp.com';
-			window.parent.postMessage(data, '*')
+		editor.signals.messageSend.add(function (e) {
+			window.parent.postMessage({
+				...e,
+				from: "scene.verse.editor",
+				verify: "mrpp.com"
+			}, '*')
 		});
 
 
@@ -228,7 +230,8 @@
 
 		window.addEventListener('message', e => {
 			const data = e.data
-			if (data.action) {
+			if (data.action && data.form && data.form === "scene.verse.web") {
+
 				editor.signals.messageReceive.dispatch({
 					action: data.action,
 					data: JSON.parse(data.json)
@@ -244,7 +247,8 @@
 			}
 		})
 		editor.signals.messageSend.dispatch({
-			action: 'ready'
+			action: 'ready',
+			json: JSON.stringify({})
 		})
 	</script>
 </body>

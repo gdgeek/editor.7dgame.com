@@ -62,13 +62,11 @@ function MetaLoader(editor) {
 
 		const meta = await self.write(editor.scene)
 
-		const data = {
-			action: 'save',
-			data: JSON.stringify(meta),
-			events: JSON.stringify(editor.scene.events)
-		}
 
-		editor.signals.messageSend.dispatch(data)
+		editor.signals.messageSend.dispatch({
+			action: 'save',
+			json: JSON.stringify({ meta, events: editor.scene.events }),
+		})
 
 	}
 	this.writeEntity = function (node) {

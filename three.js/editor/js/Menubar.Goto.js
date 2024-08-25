@@ -47,7 +47,11 @@ function MenubarGoto(editor) {
 	option.setClass('option');
 	option.setTextContent('Script Edit');
 	option.onClick(function () {
-		editor.signals.messageSend.dispatch({ action: 'goto', data: 'blockly.js' });
+		editor.signals.messageSend.dispatch(
+			{
+				action: 'goto',
+				json: JSON.stringify({ target: 'blockly.js' })
+			});
 	});
 	options.add(option);
 	return container;

@@ -35,7 +35,7 @@ function MenubarAdd(editor) {
 
 		editor.signals.messageReceive.add(async function (params) {
 
-			if (params.action === 'load_resource') {
+			if (params.action === 'load-resource') {
 
 				console.log(params.data)
 				const data = params.data;
@@ -80,7 +80,11 @@ function MenubarAdd(editor) {
 		option.setClass('option');
 		option.setTextContent("体素");
 		option.onClick(async function () {
-			editor.signals.messageSend.dispatch({ action: 'load_resource', data: { type: 'voxel' } });
+			editor.signals.messageSend.dispatch(
+				{
+					action: 'load-resource',
+					json: JSON.stringify({ type: 'voxel' })
+				});
 		});
 		options.add(option);
 
@@ -91,7 +95,10 @@ function MenubarAdd(editor) {
 		option.setClass('option');
 		option.setTextContent("模型");
 		option.onClick(async function () {
-			editor.signals.messageSend.dispatch({ action: 'load_resource', data: { type: 'polygen' } });
+			editor.signals.messageSend.dispatch({
+				action: 'load-resource',
+				json: JSON.stringify({ type: 'polygen' })
+			});
 		});
 		options.add(option);
 
@@ -100,7 +107,11 @@ function MenubarAdd(editor) {
 		option.setClass('option');
 		option.setTextContent("音频");
 		option.onClick(async function () {
-			editor.signals.messageSend.dispatch({ action: 'load_resource', data: { type: 'audio' } });
+			editor.signals.messageSend.dispatch(
+				{
+					action: 'load-resource',
+					json: JSON.stringify({ type: 'audio' })
+				});
 		});
 		options.add(option);
 
@@ -108,7 +119,11 @@ function MenubarAdd(editor) {
 		option.setClass('option');
 		option.setTextContent("图片");
 		option.onClick(async function () {
-			editor.signals.messageSend.dispatch({ action: 'load_resource', data: { type: 'picture' } });
+			editor.signals.messageSend.dispatch(
+				{
+					action: 'load-resource',
+					json: JSON.stringify({ type: 'picture' })
+				});
 		});
 		options.add(option);
 
@@ -116,7 +131,11 @@ function MenubarAdd(editor) {
 		option.setClass('option');
 		option.setTextContent("视频");
 		option.onClick(async function () {
-			editor.signals.messageSend.dispatch({ action: 'load_resource', data: { type: 'video' } });
+			editor.signals.messageSend.dispatch(
+				{
+					action: 'load-resource',
+					json: JSON.stringify({ type: 'video' })
+				});
 		});
 		options.add(option);
 
@@ -158,7 +177,10 @@ function MenubarAdd(editor) {
 		option.setClass('option');
 		option.setTextContent("Meta");
 		option.onClick(async function () {
-			editor.signals.messageSend.dispatch({ action: 'add-meta' });
+			editor.signals.messageSend.dispatch({
+				action: 'add-meta',
+				json: JSON.stringify({})
+			});
 		});
 		options.add(option);
 
@@ -166,7 +188,11 @@ function MenubarAdd(editor) {
 		option.setClass('option');
 		option.setTextContent("Prefab");
 		option.onClick(async function () {
-			editor.signals.messageSend.dispatch({ action: 'add-prefab' });
+			editor.signals.messageSend.dispatch(
+				{
+					action: 'add-prefab',
+					json: JSON.stringify({})
+				});
 		});
 		options.add(option);
 	}

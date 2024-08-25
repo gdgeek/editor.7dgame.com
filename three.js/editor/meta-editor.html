@@ -86,10 +86,13 @@
 		const editor = new Editor()
 
 		editor.type = 'meta';
-		editor.signals.messageSend.add(function (data) {
-			data.from = 'mrpp-editor';
-			data.verify = 'mrpp.com';
-			window.parent.postMessage(data, '*')
+		editor.signals.messageSend.add(function (e) {
+
+			window.parent.postMessage({
+				...e,
+				from: "scene.meta.editor",
+				verify: "mrpp.com"
+			}, '*')
 		});
 
 
@@ -230,7 +233,8 @@
 		window.addEventListener('message', e => {
 
 			const data = e.data
-			if (data.action) {
+
+			if (data.action && data.from && data.from === "scene.meta.web") {
 				editor.signals.messageReceive.dispatch({
 					action: data.action,
 					data: JSON.parse(data.json)
@@ -242,7 +246,7 @@
 		})
 
 		editor.signals.messageReceive.add(async function (params) {
-			console.error(params.data)
+
 
 			if (params.action == 'load') {
 				const data = params.data
@@ -250,7 +254,8 @@
 			}
 		})
 		editor.signals.messageSend.dispatch({
-			action: 'ready'
+			action: 'ready',
+			json: JSON.stringify({})
 		})
 	</script>
 </body>

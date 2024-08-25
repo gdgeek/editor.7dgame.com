@@ -55,7 +55,10 @@ function SidebarMeta(editor) {
 			top.add(new UIBreak());
 			const newComponent = new UIButton('edit');
 			newComponent.onClick(function () {
-				editor.signals.messageSend.dispatch({ action: 'edit-meta', data: { meta_id: object.userData.meta_id } });
+				editor.signals.messageSend.dispatch({
+					action: 'edit-meta',
+					json: JSON.stringify({ meta_id: object.userData.meta_id })
+				});
 			}.bind(this));
 			top.add(newComponent);
 		} else {
@@ -66,7 +69,15 @@ function SidebarMeta(editor) {
 			top.add(new UIBreak());
 			const newComponent = new UIButton('setup');
 			newComponent.onClick(function () {
-				editor.signals.messageSend.dispatch({ action: 'setup-prefab', data: { meta_id: object.userData.meta_id, uuid: object.uuid, data: object.userData.data } });
+				editor.signals.messageSend.dispatch(
+					{
+						action: 'setup-prefab',
+						json: JSON.stringify({
+							meta_id: object.userData.meta_id,
+							uuid: object.uuid,
+							data: object.userData.data
+						})
+					});
 			}.bind(this));
 			top.add(newComponent);
 		}
