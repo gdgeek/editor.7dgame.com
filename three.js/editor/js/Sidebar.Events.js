@@ -12,21 +12,7 @@ function SidebarEvents(editor) {
 	const strings = editor.strings;
 
 	const signals = editor.signals;
-	/*
-		editor.signals.messageReceive.add(async function (message) {
-	
-			if (message.action == 'setup-module') {
-				const data = message.data;
-				const node = editor.objectByUuid(data.uuid);
-	
-				if (node != null) {
-					node.userData.data = JSON.stringify(data.setup);
-					signals.objectChanged.dispatch(node);
-				}
-				//editor.get
-			}
-		});
-	*/
+
 
 
 	const container = new UIPanel();

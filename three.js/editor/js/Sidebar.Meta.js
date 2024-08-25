@@ -10,8 +10,6 @@ import { ComponentContainer } from './mrpp/ComponentContainer.js';
 
 function SidebarMeta(editor) {
 
-	const strings = editor.strings;
-
 	const signals = editor.signals;
 
 	editor.signals.messageReceive.add(async function (message) {
@@ -24,7 +22,6 @@ function SidebarMeta(editor) {
 				node.userData.data = JSON.stringify(data.setup);
 				signals.objectChanged.dispatch(node);
 			}
-			//editor.get
 		}
 	});
 
