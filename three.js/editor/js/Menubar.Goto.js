@@ -15,12 +15,12 @@ function MenubarGoto(editor) {
 
 	const resources = new Map()
 	const container = new UIPanel();
-	editor.signals.messageReceive.add(async function (message) {
-		if (message.action === 'resource') {
+	editor.signals.messageReceive.add(async function (params) {
+		if (params.action === 'resource') {
 
-			resources.set(message.data.id.toString(), message.data)
+			resources.set(params.data.id.toString(), params.data)
 
-			const data = builder.resource(message.data)
+			const data = builder.resource(params.data)
 			if (data != null) {
 				const node = await factory.building(data, resources);
 				if (node != null) {

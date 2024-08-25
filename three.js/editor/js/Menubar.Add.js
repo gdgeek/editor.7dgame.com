@@ -122,12 +122,13 @@ function MenubarAdd(editor) {
 
 	} else if (editor.type.toLowerCase() == 'verse') {
 		//const factory = new VerseFactory();
-		editor.signals.messageReceive.add(async function (message) {
+		editor.signals.messageReceive.add(async function (params) {
 
-			if (message.action == 'add-module') {
-				const data = message.data.data;
-				const setup = message.data.setup;
-				const title = message.data.title;
+
+			if (params.action === 'add-module') {
+				const data = params.data.data;
+				const setup = params.data.setup;
+				const title = params.data.title;
 
 				console.error(data)
 

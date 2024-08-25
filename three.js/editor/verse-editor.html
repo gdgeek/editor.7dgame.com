@@ -234,16 +234,12 @@
 					data: JSON.parse(data.json)
 				})
 			}
-			/*
-			if (e.data.verify === 'mrpp.com') {
-				editor.signals.messageReceive.dispatch(e.data)
-			}*/
 		})
 
 		const loader = new VerseLoader(editor)
-		editor.signals.messageReceive.add(async function (data) {
-
-			if (data.action == 'load') {
+		editor.signals.messageReceive.add(async function (params) {
+			if (params.action == 'load') {
+				const data = params.data
 				loader.load(data.data)
 			}
 		})
