@@ -57,7 +57,7 @@ function SidebarMeta(editor) {
 			newComponent.onClick(function () {
 				editor.signals.messageSend.dispatch({
 					action: 'edit-meta',
-					json: JSON.stringify({ meta_id: object.userData.meta_id })
+					data: { meta_id: object.userData.meta_id }
 				});
 			}.bind(this));
 			top.add(newComponent);
@@ -72,11 +72,11 @@ function SidebarMeta(editor) {
 				editor.signals.messageSend.dispatch(
 					{
 						action: 'setup-prefab',
-						json: JSON.stringify({
+						data: {
 							meta_id: object.userData.meta_id,
 							uuid: object.uuid,
 							data: object.userData.data
-						})
+						}
 					});
 			}.bind(this));
 			top.add(newComponent);

@@ -65,7 +65,7 @@ function MetaLoader(editor) {
 
 		editor.signals.messageSend.dispatch({
 			action: 'save',
-			json: JSON.stringify({ meta, events: editor.scene.events }),
+			data: { meta, events: editor.scene.events },
 		})
 
 	}

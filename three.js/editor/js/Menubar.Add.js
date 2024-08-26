@@ -83,7 +83,7 @@ function MenubarAdd(editor) {
 			editor.signals.messageSend.dispatch(
 				{
 					action: 'load-resource',
-					json: JSON.stringify({ type: 'voxel' })
+					data: { type: 'voxel' }
 				});
 		});
 		options.add(option);
@@ -97,7 +97,7 @@ function MenubarAdd(editor) {
 		option.onClick(async function () {
 			editor.signals.messageSend.dispatch({
 				action: 'load-resource',
-				json: JSON.stringify({ type: 'polygen' })
+				data: { type: 'polygen' }
 			});
 		});
 		options.add(option);
@@ -110,7 +110,7 @@ function MenubarAdd(editor) {
 			editor.signals.messageSend.dispatch(
 				{
 					action: 'load-resource',
-					json: JSON.stringify({ type: 'audio' })
+					data: { type: 'audio' }
 				});
 		});
 		options.add(option);
@@ -122,7 +122,7 @@ function MenubarAdd(editor) {
 			editor.signals.messageSend.dispatch(
 				{
 					action: 'load-resource',
-					json: JSON.stringify({ type: 'picture' })
+					data: { type: 'picture' }
 				});
 		});
 		options.add(option);
@@ -134,7 +134,7 @@ function MenubarAdd(editor) {
 			editor.signals.messageSend.dispatch(
 				{
 					action: 'load-resource',
-					json: JSON.stringify({ type: 'video' })
+					data: { type: 'video' }
 				});
 		});
 		options.add(option);
@@ -178,8 +178,7 @@ function MenubarAdd(editor) {
 		option.setTextContent("Meta");
 		option.onClick(async function () {
 			editor.signals.messageSend.dispatch({
-				action: 'add-meta',
-				json: JSON.stringify({})
+				action: 'add-meta'
 			});
 		});
 		options.add(option);
@@ -190,8 +189,7 @@ function MenubarAdd(editor) {
 		option.onClick(async function () {
 			editor.signals.messageSend.dispatch(
 				{
-					action: 'add-prefab',
-					json: JSON.stringify({})
+					action: 'add-prefab'
 				});
 		});
 		options.add(option);

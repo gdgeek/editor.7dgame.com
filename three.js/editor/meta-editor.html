@@ -235,9 +235,10 @@
 			const data = e.data
 
 			if (data.action && data.from && data.from === "scene.meta.web") {
+
 				editor.signals.messageReceive.dispatch({
 					action: data.action,
-					data: JSON.parse(data.json)
+					data: data.data
 				})
 			}
 
@@ -254,8 +255,7 @@
 			}
 		})
 		editor.signals.messageSend.dispatch({
-			action: 'ready',
-			json: JSON.stringify({})
+			action: 'ready'
 		})
 	</script>
 </body>

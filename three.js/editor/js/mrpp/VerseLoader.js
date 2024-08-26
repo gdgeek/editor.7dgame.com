@@ -28,12 +28,10 @@ function VerseLoader(editor) {
 		const root = editor.scene;
 		const verse = await this.write(root)
 
-		const data = {
+		editor.signals.messageSend.dispatch({
 			action: 'save-verse',
-			json: JSON.stringify({ verse })
-		}
-
-		editor.signals.messageSend.dispatch(data)
+			data: { verse }
+		})
 	}
 
 	this.compareObjectsAndPrintDifferences = function (obj1, obj2, path = '', tolerance = 0.0001) {

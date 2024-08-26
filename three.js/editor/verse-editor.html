@@ -230,11 +230,11 @@
 
 		window.addEventListener('message', e => {
 			const data = e.data
-			if (data.action && data.form && data.form === "scene.verse.web") {
 
+			if (data.action && data.from && data.from === "scene.verse.web") {
 				editor.signals.messageReceive.dispatch({
 					action: data.action,
-					data: JSON.parse(data.json)
+					data: data.data
 				})
 			}
 		})
@@ -247,8 +247,7 @@
 			}
 		})
 		editor.signals.messageSend.dispatch({
-			action: 'ready',
-			json: JSON.stringify({})
+			action: 'ready'
 		})
 	</script>
 </body>
