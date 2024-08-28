@@ -50,7 +50,7 @@ function MenubarGoto(editor) {
 		editor.signals.messageSend.dispatch(
 			{
 				action: 'goto',
-				data: { 'target': 'blockly.js', 'a': 'b' }
+				data: { 'target': 'blockly.js2', 'a': 'b' }
 			});
 	});
 	options.add(option);
