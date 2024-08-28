@@ -88,11 +88,13 @@
 		editor.signals.messageSend.add(function (e) {
 
 			console.error(2);
-			window.parent.postMessage({
+			const data = {
 				...e,
 				from: "scene.meta.editor",
 				verify: "mrpp.com"
-			}, '*')
+			};
+			alert(JSON.stringify(data))
+			window.parent.postMessage(data, '*')
 		});
 
 
