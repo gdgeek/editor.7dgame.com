@@ -88,6 +88,7 @@
 		editor.type = 'meta';
 		editor.signals.messageSend.add(function (e) {
 
+			console.error(2);
 			window.parent.postMessage({
 				...e,
 				from: "scene.meta.editor",
