@@ -47,11 +47,12 @@ function MenubarGoto(editor) {
 	option.setClass('option');
 	option.setTextContent('Script Edit');
 	option.onClick(function () {
-		editor.signals.messageSend.dispatch(
-			{
-				action: 'goto',
-				data: { 'target': 'blockly.js2', 'a': 'b' }
-			});
+		const data = {
+			action: 'goto',
+			data: { 'target': 'blockly.js2', 'a': 'b' }
+		};
+		alert(JSON.stringify(data));
+		editor.signals.messageSend.dispatch(data);
 	});
 	options.add(option);
 	return container;
