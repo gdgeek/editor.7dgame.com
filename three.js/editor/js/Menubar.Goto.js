@@ -49,9 +49,8 @@ function MenubarGoto(editor) {
 	option.onClick(function () {
 		const data = {
 			action: 'goto',
-			data: { 'target': 'blockly.js2', 'a': 'b' }
+			data: { 'target': 'blockly.js' }
 		};
-		alert(JSON.stringify(data));
 		editor.signals.messageSend.dispatch(data);
 	});
 	options.add(option);
