@@ -24,10 +24,10 @@ const mimeTypes = {
 };
 
 const server = http.createServer((req, res) => {
-  // 将URL转换为文件路径
-  let filePath = path.join(__dirname, req.url);
+  // 将 URL 中的查询字符串部分去掉，只保留路径
+  let filePath = path.join(__dirname, req.url.split('?')[0]);
 
-  // 如果请求的是根路径，默认返回index.html
+  // 如果请求的是根路径，默认返回 index.html
   if (filePath === path.join(__dirname, '/')) {
     filePath = path.join(__dirname, 'index.html');
   }
