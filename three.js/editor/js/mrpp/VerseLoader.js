@@ -159,10 +159,9 @@ function VerseLoader(editor) {
 		if (data.children.modules) {
 			data.children.modules.forEach(async item => {
 
-				const meta = metas.get(item.parameters.meta_id)
+				const meta = metas.get(item.parameters.meta_id.toString())
 
 				const node = factory.addModule(item)
-
 				node.userData.custom = meta.custom
 				root.add(node)
 				editor.signals.sceneGraphChanged.dispatch()

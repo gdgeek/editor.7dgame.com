@@ -137,7 +137,7 @@ class MetaFactory extends Factory {
 		if (resources.has(data.parameters.resource)) {
 
 
-			const resource = resources.get(data.parameters.resource)
+			const resource = resources.get(data.parameters.resource.toString())
 			const node = await this.loadPolygen(resource.file.url)
 
 			return node
@@ -168,7 +168,7 @@ class MetaFactory extends Factory {
 
 	async getPicture(data, resources) {
 
-		const resource = resources.get(data.parameters.resource)
+		const resource = resources.get(data.parameters.resource.toString())
 		const info = JSON.parse(resource.info)
 		const size = info.size
 		const width = data.parameters.width
@@ -202,7 +202,7 @@ class MetaFactory extends Factory {
 
 
 		if (resources.has(data.parameters.resource)) {
-			const resource = resources.get(data.parameters.resource)
+			const resource = resources.get(data.parameters.resource.toString())
 			return await this.loadVoxel(resource.file.url)
 		}
 		return null
@@ -225,7 +225,7 @@ class MetaFactory extends Factory {
 		if (data.parameters.resource == undefined) {
 			return null;
 		}
-		const resource = resources.get(data.parameters.resource)
+		const resource = resources.get(data.parameters.resource.toString())
 		const info = JSON.parse(resource.info)
 		const size = info.size
 		const width = data.parameters.width
