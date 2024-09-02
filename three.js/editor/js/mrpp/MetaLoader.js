@@ -126,7 +126,9 @@ function MetaLoader(editor) {
 		//console.error(entity)
 		return entity
 	}
+
 	this.write = async function (root) {
+
 		const data = {}
 		data.type = "MetaRoot"
 		data.parameters = { "uuid": root.uuid }
@@ -146,9 +148,8 @@ function MetaLoader(editor) {
 	this.clear = async function () {
 		this.editor.clear()
 	}
-
 	this.load = async function (meta) {
-
+		console.error(meta)
 		let scene = editor.scene;
 		if (!scene) {
 			scene = new THREE.Scene();
@@ -189,7 +190,9 @@ function MetaLoader(editor) {
 		if (meta.data) {
 			const data = JSON.parse(meta.data)
 			const resources = new Map()
+
 			meta.resources.forEach(r => {
+				console.error(r)
 				resources.set(r.id.toString(), r)
 			})
 

@@ -71,16 +71,7 @@ function VerseLoader(editor) {
 			}
 		}
 	}
-	/*
-	this.loadIt = async function () {
-		if (this.data.space) {
-			space = await self.loadSpace(this.data.space)
-			builder.lockNode(space)
-			editor.scene.add(space)
-		}
 
-
-	}*/
 	this.writeData = function (node) {
 
 		if (!types.includes(node.type)) {
@@ -149,6 +140,7 @@ function VerseLoader(editor) {
 	}
 
 	this.read = async function (root, data, resources, metas) {
+
 		root.uuid = data.parameters.uuid
 		if (data.children.anchors) {
 			data.children.anchors.forEach(async item => {
@@ -157,10 +149,12 @@ function VerseLoader(editor) {
 		}
 
 		if (data.children.modules) {
+
 			data.children.modules.forEach(async item => {
 
 				const meta = metas.get(item.parameters.meta_id.toString())
 
+				console.error(meta)
 				const node = factory.addModule(item)
 				node.userData.custom = meta.custom
 				root.add(node)

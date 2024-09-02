@@ -51,7 +51,7 @@ class MetaFactory extends Factory {
 	}
 	async readMeta(root, data, resources, editor = null) {
 
-
+		//alert(resources.size)
 		if (data.children) {
 			for (let i = 0; i < data.children.entities.length; ++i) {
 				if (data.children.entities[i] != null) {
@@ -134,7 +134,7 @@ class MetaFactory extends Factory {
 	async getPolygen(data, resources) {
 
 
-		if (resources.has(data.parameters.resource)) {
+		if (resources.has(data.parameters.resource.toString())) {
 
 
 			const resource = resources.get(data.parameters.resource.toString())
@@ -201,14 +201,14 @@ class MetaFactory extends Factory {
 	async getVoxel(data, resources) {
 
 
-		if (resources.has(data.parameters.resource)) {
+		if (resources.has(data.parameters.resource.toString())) {
 			const resource = resources.get(data.parameters.resource.toString())
 			return await this.loadVoxel(resource.file.url)
 		}
 		return null
 	}
 	async getSound(data, resources) {
-		if (resources.has(data.parameters.resource)) {
+		if (resources.has(data.parameters.resource.toString())) {
 
 			const entity = new THREE.Group()
 			entity.name = data.parameters.name
