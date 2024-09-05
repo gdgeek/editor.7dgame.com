@@ -5,6 +5,32 @@ import { DRACOLoader } from '../../../examples/jsm/loaders/DRACOLoader.js'
 import { VOXLoader, VOXMesh } from '../../../examples/jsm/loaders/VOXLoader.js'
 
 import { Factory } from './Factory.js'
+
+
+// 检查当前页面是否使用 HTTPS
+const isHttps = () => {
+	const protocol = window.location.protocol;
+	const isHttps = protocol === 'https:';
+	console.log(isHttps ? "这个网页是使用HTTPS" : "这个网页不是使用HTTPS");
+	return isHttps;
+};
+
+// 将 URL 转换为 HTTPS 或 HTTP
+const convertToHttps = (url) => {
+	if (url === undefined || url === null) return '';
+
+	if (isHttps()) {
+		if (url.startsWith('http://')) {
+			return url.replace('http://', 'https://');
+		}
+	} else {
+		if (url.startsWith('https://')) {
+			return url.replace('https://', 'http://');
+		}
+	}
+	return url;
+};
+
 class MetaFactory extends Factory {
 	constructor() {
 		super()
@@ -73,6 +99,7 @@ class MetaFactory extends Factory {
 
 
 	async loadVoxel(url) {
+		url = convertToHttps(url);
 		return new Promise((resolve, reject) => {
 			const loader = new VOXLoader()
 			loader.load(
@@ -96,7 +123,8 @@ class MetaFactory extends Factory {
 	}
 
 	async loadPolygen(url) {
-
+		console.error(url)
+		url = convertToHttps(url);
 		const self = this
 		return new Promise((resolve, reject) => {
 			const loader = new GLTFLoader(THREE.DefaultLoadingManager)
@@ -148,6 +176,8 @@ class MetaFactory extends Factory {
 	}
 
 	async getPlane(url, width, height) {
+
+		url = convertToHttps(url);
 		return new Promise(resolve => {
 			const geometry = new THREE.PlaneGeometry(width, height)
 			const loader = new THREE.TextureLoader()

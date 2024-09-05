@@ -7,29 +7,6 @@ import { MetaFactory } from './mrpp/MetaFactory.js'
 import { VerseFactory } from './mrpp/VerseFactory.js'
 import { Builder } from './mrpp/Builder.js'
 
-// 检查当前页面是否使用 HTTPS
-const isHttps = () => {
-	const protocol = window.location.protocol;
-	const isHttps = protocol === 'https:';
-	console.log(isHttps ? "这个网页是使用HTTPS" : "这个网页不是使用HTTPS");
-	return isHttps;
-};
-
-// 将 URL 转换为 HTTPS 或 HTTP
-const convertToHttps = (url) => {
-	if (url === undefined || url === null) return '';
-
-	if (isHttps()) {
-		if (url.startsWith('http://')) {
-			return url.replace('http://', 'https://');
-		}
-	} else {
-		if (url.startsWith('https://')) {
-			return url.replace('https://', 'http://');
-		}
-	}
-	return url;
-};
 
 function MenubarAdd(editor) {
 
@@ -63,7 +40,7 @@ function MenubarAdd(editor) {
 
 
 				const data = params.data;
-				data.src = convertToHttps(data.src)
+				//data.src = convertToHttps(data.src)
 				console.error(data.src)
 				resources.set(data.id.toString(), data)
 
