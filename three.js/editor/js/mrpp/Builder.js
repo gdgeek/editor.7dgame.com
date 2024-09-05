@@ -27,20 +27,20 @@ class Builder {
 		let ret = null;
 		switch (data.type.toLowerCase()) {
 			case 'voxel':
-				ret = this.node("Voxel", "Voxel");
+				ret = this.node("Voxel", data.name + " [voxel]");
 				break;
 			case 'picture':
-				ret = this.node("Picture", "Picture");
+				ret = this.node("Picture", data.name + " [picture]");
 				ret.parameters.width = 0.5;
 				break;
 			case 'polygen':
-				ret = this.node("Polygen", "Polygen");
+				ret = this.node("Polygen", data.name + " [polygen]");
 				break;
 			case 'audio':
-				ret = this.node("Sound", "Sound");
+				ret = this.node("Sound", data.name + " [sound]");
 				break;
 			case 'video':
-				ret = this.node("Video", "Video");
+				ret = this.node("Video", data.name + " [video]");
 				ret.parameters.width = 0.5;
 				ret.parameters.loop = false;
 				ret.parameters.play = true;

@@ -110,11 +110,11 @@ class MetaFactory extends Factory {
 					url,
 					function (gltf) {
 
-
-						resolve(gltf.scene)
 						gltf.scene.children.forEach(item => {
 							self.lockNode(item)
 						})
+						resolve(gltf.scene)
+
 					},
 					function (xhr) {
 						//console.log((xhr.loaded / xhr.total) * 100 + '% loaded!')
@@ -138,7 +138,9 @@ class MetaFactory extends Factory {
 
 
 			const resource = resources.get(data.parameters.resource.toString())
+
 			const node = await this.loadPolygen(resource.file.url)
+
 
 			return node
 		}

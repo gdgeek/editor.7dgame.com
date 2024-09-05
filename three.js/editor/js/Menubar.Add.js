@@ -37,7 +37,7 @@ function MenubarAdd(editor) {
 
 			if (params.action === 'load-resource') {
 
-				console.log(params.data)
+
 				const data = params.data;
 				resources.set(data.id.toString(), data)
 
