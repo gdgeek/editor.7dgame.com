@@ -3,7 +3,7 @@ function Config() {
 
 	const storage = {
 		// 默认中文
-		language: 'zh',
+		language: 'en',
 		// language: 'en',
 
 		// 自动存储

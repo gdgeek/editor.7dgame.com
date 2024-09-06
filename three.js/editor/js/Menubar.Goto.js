@@ -34,7 +34,7 @@ function MenubarGoto(editor) {
 
 	const title = new UIPanel();
 	title.setClass('title');
-	title.setTextContent('goto');
+	title.setTextContent('Code');
 	container.add(title);
 
 	const options = new UIPanel();

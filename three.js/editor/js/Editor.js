@@ -6,6 +6,14 @@ import { History as _History } from './History.js'
 import { Strings } from './Strings.js'
 import { Storage as _Storage } from './Storage.js'
 
+const mapping = {
+	'zh-cn': 'zh',
+	'en': 'en',
+};
+const urlParams = new URLSearchParams(window.location.search)
+const lg = urlParams.get('language')
+
+
 var _DEFAULT_CAMERA = new THREE.PerspectiveCamera(50, 1, 0.01, 1000)
 _DEFAULT_CAMERA.name = 'Camera'
 _DEFAULT_CAMERA.position.set(0, 5, 10)
@@ -104,6 +112,10 @@ function Editor() {
 	this.config = new Config()
 	this.history = new _History(this)
 	this.storage = new _Storage()
+
+	if (lg && mapping[lg]) {
+		this.config.setKey('language', mapping[lg])
+	}
 	this.strings = new Strings(this.config)
 
 	this.loader = new Loader(this)

@@ -123,7 +123,6 @@ class MetaFactory extends Factory {
 	}
 
 	async loadPolygen(url) {
-		console.error(url)
 		url = convertToHttps(url);
 		const self = this
 		return new Promise((resolve, reject) => {
