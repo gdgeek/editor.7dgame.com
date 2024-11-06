@@ -8,67 +8,83 @@ import { RemoveScriptCommand } from './commands/RemoveScriptCommand.js';
 import { ComponentContainer } from './mrpp/ComponentContainer.js';
 //import { RemoveComponentCommand } from './commands/RemoveComponentCommand.js';
 
-function SidebarMeta(editor) {
+function SidebarMeta( editor ) {
+
+	const strings = editor.strings;
 
 	const signals = editor.signals;
 
-	editor.signals.messageReceive.add(async function (message) {
+	editor.signals.messageReceive.add( async function ( message ) {
 
-		if (message.action == 'setup-module') {
+		if ( message.action == 'setup-module' ) {
+
 			const data = message.data;
-			const node = editor.objectByUuid(data.uuid);
+			const node = editor.objectByUuid( data.uuid );
 
-			if (node != null) {
-				node.userData.data = JSON.stringify(data.setup);
-				signals.objectChanged.dispatch(node);
+			if ( node != null ) {
+
+				node.userData.data = JSON.stringify( data.setup );
+				signals.objectChanged.dispatch( node );
+
 			}
+
 		}
-	});
+
+	} );
 
 
 
 	const container = new UIPanel();
-	container.setDisplay('none');
+	container.setDisplay( 'none' );
 
 
 
 
 	const top = new UIRow();
-	container.add(top);
+	container.add( top );
 
 
 	function update() {
+
 		top.clear();
-		top.setDisplay('none');
+		top.setDisplay( 'none' );
 		const object = editor.selected;
 
-		if (object === null) {
+		if ( object === null ) {
+
 			return;
+
 		}
-		top.setDisplay('block');
+
+		top.setDisplay( 'block' );
 
 
-		if (object.userData.custom != 0) {
-			top.add(new UIText("Meta(custom)").setTextTransform('uppercase'));
-			top.add(new UIBreak());
+		if ( object.userData.custom != 0 ) {
 
-			top.add(new UIBreak());
-			const newComponent = new UIButton('edit');
-			newComponent.onClick(function () {
-				editor.signals.messageSend.dispatch({
+			top.add( new UIText( strings.getKey( 'sidebar/entity' ).toUpperCase() ) );
+			top.add( new UIBreak() );
+
+			top.add( new UIBreak() );
+			const newComponent = new UIButton( strings.getKey( 'sidebar/entity/button' ) );
+			newComponent.onClick( function () {
+
+				editor.signals.messageSend.dispatch( {
 					action: 'edit-meta',
 					data: { meta_id: object.userData.meta_id }
-				});
-			}.bind(this));
-			top.add(newComponent);
+				} );
+
+			}.bind( this ) );
+			top.add( newComponent );
+
 		} else {
 
-			top.add(new UIText("Meta(prefab)").setTextTransform('uppercase'));
-			top.add(new UIBreak());
+			top.add( new UIText( 'Meta(prefab)' ).setTextTransform( 'uppercase' ) );
+			top.add( new UIBreak() );
 
-			top.add(new UIBreak());
-			const newComponent = new UIButton('setup');
-			newComponent.onClick(function () {
+			top.add( new UIBreak() );
+			const newComponent = new UIButton( 'setup' );
+			newComponent.onClick( function () {
+
 				editor.signals.messageSend.dispatch(
 					{
 						action: 'setup-prefab',
@@ -77,29 +93,32 @@ function SidebarMeta(editor) {
 							uuid: object.uuid,
 							data: object.userData.data
 						}
-					});
-			}.bind(this));
-			top.add(newComponent);
+					} );
+
+			}.bind( this ) );
+			top.add( newComponent );
+
 		}
+
 	}
 
 	// signals
 
-	signals.objectSelected.add(function (object) {
+	signals.objectSelected.add( function ( object ) {
 
-		if (object !== null && editor.camera !== object) {
+		if ( object !== null && editor.camera !== object ) {
 
-			container.setDisplay('block');
+			container.setDisplay( 'block' );
 
 			update();
 
 		} else {
 
-			container.setDisplay('none');
+			container.setDisplay( 'none' );
 
 		}
 
-	});
+	} );
 
 
 	return container;
