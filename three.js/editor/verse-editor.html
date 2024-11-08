@@ -60,195 +60,241 @@
 		</script>
 
 	<script type="module">
-		import * as THREE from 'three'
+		import * as THREE from 'three';
 
-		import { Editor } from './js/Editor.js'
-		import { Viewport } from './js/Viewport.js'
-		import { Toolbar } from './js/Toolbar.js'
-		import { Script } from './js/Script.js'
-		import { Player } from './js/Player.js'
-		import { Sidebar } from './js/Sidebar.js'
-		import { Menubar } from './js/Menubar.js'
-		import { Resizer } from './js/Resizer.js'
-		import { VerseLoader } from './js/mrpp/VerseLoader.js'
-		import { VRButton } from '../examples/jsm/webxr/VRButton.js'
+		import { Editor } from './js/Editor.js';
+		import { Viewport } from './js/Viewport.js';
+		import { Toolbar } from './js/Toolbar.js';
+		import { Script } from './js/Script.js';
+		import { Player } from './js/Player.js';
+		import { Sidebar } from './js/Sidebar.js';
+		import { Menubar } from './js/Menubar.js';
+		import { Resizer } from './js/Resizer.js';
+		import { VerseLoader } from './js/mrpp/VerseLoader.js';
+		import { VRButton } from '../examples/jsm/webxr/VRButton.js';
 
-		window.URL = window.URL || window.webkitURL
+		window.URL = window.URL || window.webkitURL;
 		window.BlobBuilder =
-			window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder
+			window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder;
 
 		Number.prototype.format = function () {
-			return this.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
-		}
+
+			return this.toString().replace( /(\d)(?=(\d{3})+(?!\d))/g, '$1,' );
+
+};
 
 		//
 
 		const editor = new Editor();
 		editor.type = 'verse';
-		editor.signals.messageSend.add(function (e) {
-			window.parent.postMessage({
+		editor.signals.messageSend.add( function ( e ) {
+
+			window.parent.postMessage( {
 				...e,
-				from: "scene.verse.editor",
-				verify: "mrpp.com"
-			}, '*')
-		});
+				from: 'scene.verse.editor',
+				verify: 'mrpp.com'
+			}, '*' );
+
+} );
 
 
-		window.editor = editor // Expose editor to Console
-		window.THREE = THREE // Expose THREE to APP Scripts and Console
-		window.VRButton = VRButton // Expose VRButton to APP Scripts
+		window.editor = editor; // Expose editor to Console
+		window.THREE = THREE; // Expose THREE to APP Scripts and Console
+		window.VRButton = VRButton; // Expose VRButton to APP Scripts
 
-		const viewport = new Viewport(editor)
-		document.body.appendChild(viewport.dom)
+		const viewport = new Viewport( editor );
+		document.body.appendChild( viewport.dom );
 
-		const toolbar = new Toolbar(editor)
-		document.body.appendChild(toolbar.dom)
+		const toolbar = new Toolbar( editor );
+		document.body.appendChild( toolbar.dom );
 
-		const script = new Script(editor)
-		document.body.appendChild(script.dom)
+		const script = new Script( editor );
+		document.body.appendChild( script.dom );
 
-		const player = new Player(editor)
-		document.body.appendChild(player.dom)
+		const player = new Player( editor );
+		document.body.appendChild( player.dom );
 
-		const sidebar = new Sidebar(editor)
-		document.body.appendChild(sidebar.dom)
+		const sidebar = new Sidebar( editor );
+		document.body.appendChild( sidebar.dom );
 
-		const menubar = new Menubar(editor)
-		document.body.appendChild(menubar.dom)
+		const menubar = new Menubar( editor );
+		document.body.appendChild( menubar.dom );
 
-		const resizer = new Resizer(editor)
-		document.body.appendChild(resizer.dom)
+		const resizer = new Resizer( editor );
+		document.body.appendChild( resizer.dom );
 
 		//
 
-		editor.storage.init(function () {
-			editor.storage.get(function (state) {
-				if (isLoadingFromHash) return
+		editor.storage.init( function () {
 
-				if (state !== undefined) {
+			editor.storage.get( function ( state ) {
+
+				if ( isLoadingFromHash ) return;
+
+				if ( state !== undefined ) {
 					//	editor.fromJSON( state );
 				}
 
-				const selected = editor.config.getKey('selected')
+				const selected = editor.config.getKey( 'selected' );
 
-				if (selected !== undefined) {
-					editor.selectByUuid(selected)
-				}
-			})
+				if ( selected !== undefined ) {
+
+					editor.selectByUuid( selected );
+		
+		}
+		
+	} );
 
 			//
 
-			let timeout
+			let timeout;
 
 			function saveState() {
-				if (editor.config.getKey('autosave') === false) {
-					return
-				}
 
-				clearTimeout(timeout)
+				if ( editor.config.getKey( 'autosave' ) === false ) {
 
-				timeout = setTimeout(function () {
-					editor.signals.savingStarted.dispatch()
+					return;
+		
+		}
 
-					timeout = setTimeout(function () {
-						editor.storage.set(editor.toJSON())
+				clearTimeout( timeout );
 
-						editor.signals.savingFinished.dispatch()
-					}, 100)
-				}, 1000)
-			}
+				timeout = setTimeout( function () {
 
-			const signals = editor.signals
+					editor.signals.savingStarted.dispatch();
 
-			signals.geometryChanged.add(saveState)
-			signals.objectAdded.add(saveState)
-			signals.objectChanged.add(saveState)
-			signals.objectRemoved.add(saveState)
-			signals.materialChanged.add(saveState)
-			signals.sceneBackgroundChanged.add(saveState)
-			signals.sceneEnvironmentChanged.add(saveState)
-			signals.sceneFogChanged.add(saveState)
-			signals.sceneGraphChanged.add(saveState)
-			signals.scriptChanged.add(saveState)
-			signals.historyChanged.add(saveState)
-		})
+					timeout = setTimeout( function () {
+
+						editor.storage.set( editor.toJSON() );
+
+						editor.signals.savingFinished.dispatch();
+		
+					}, 100 );
+		
+		}, 1000 );
+		
+	}
+
+			const signals = editor.signals;
+
+			signals.geometryChanged.add( saveState );
+			signals.objectAdded.add( saveState );
+			signals.objectChanged.add( saveState );
+			signals.objectRemoved.add( saveState );
+			signals.materialChanged.add( saveState );
+			signals.sceneBackgroundChanged.add( saveState );
+			signals.sceneEnvironmentChanged.add( saveState );
+			signals.sceneFogChanged.add( saveState );
+			signals.sceneGraphChanged.add( saveState );
+			signals.scriptChanged.add( saveState );
+			signals.historyChanged.add( saveState );
+
+} );
 
 		//
 
-		document.addEventListener('dragover', function (event) {
-			event.preventDefault()
-			event.dataTransfer.dropEffect = 'copy'
-		})
+		document.addEventListener( 'dragover', function ( event ) {
 
-		document.addEventListener('drop', function (event) {
-			event.preventDefault()
+			event.preventDefault();
+			event.dataTransfer.dropEffect = 'copy';
 
-			if (event.dataTransfer.types[0] === 'text/plain') return // Outliner drop
+} );
 
-			if (event.dataTransfer.items) {
-				editor.loader.loadItemList(event.dataTransfer.items)
-			} else {
-				editor.loader.loadFiles(event.dataTransfer.files)
-			}
-		})
+		document.addEventListener( 'drop', function ( event ) {
+
+			event.preventDefault();
+
+			if ( event.dataTransfer.types[ 0 ] === 'text/plain' ) return; // Outliner drop
+
+			if ( event.dataTransfer.items ) {
+
+				editor.loader.loadItemList( event.dataTransfer.items );
+		
+	} else {
+
+				editor.loader.loadFiles( event.dataTransfer.files );
+		
+	}
+
+} );
 
 		function onWindowResize() {
-			editor.signals.windowResize.dispatch()
-		}
 
-		window.addEventListener('resize', onWindowResize)
+			editor.signals.windowResize.dispatch();
 
-		onWindowResize()
+}
+
+		window.addEventListener( 'resize', onWindowResize );
+
+		onWindowResize();
 
 		//
 
-		let isLoadingFromHash = false
-		const hash = window.location.hash
+		let isLoadingFromHash = false;
+		const hash = window.location.hash;
 
-		if (hash.slice(1, 6) === 'file=') {
-			const file = hash.slice(6)
+		if ( hash.slice( 1, 6 ) === 'file=' ) {
 
-			if (confirm('Any unsaved data will be lost. Are you sure?')) {
-				const loader = new THREE.FileLoader()
-				loader.crossOrigin = ''
-				await loader.load(file, function (text) {
-					editor.clear()
-					editor.fromJSON(JSON.parse(text))
-				})
+			const file = hash.slice( 6 );
 
-				isLoadingFromHash = true
-			}
-		}
+			if ( confirm( 'Any unsaved data will be lost. Are you sure?' ) ) {
+
+				const loader = new THREE.FileLoader();
+				loader.crossOrigin = '';
+				await loader.load( file, function ( text ) {
+
+					editor.clear();
+					editor.fromJSON( JSON.parse( text ) );
+		
+		} );
+
+				isLoadingFromHash = true;
+		
+	}
+
+}
 
 		// ServiceWorker
 
-		if ('serviceWorker' in navigator) {
+		if ( 'serviceWorker' in navigator ) {
+
 			try {
-				navigator.serviceWorker.register('sw.js')
-			} catch (error) { }
-		}
 
-		window.addEventListener('message', e => {
-			const data = e.data
+				navigator.serviceWorker.register( 'sw.js' );
+		
+	} catch ( error ) { }
 
-			if (data.action && data.from && data.from === "scene.verse.web") {
-				editor.signals.messageReceive.dispatch({
+}
+
+		window.addEventListener( 'message', e => {
+
+			const data = e.data;
+
+			if ( data.action && data.from && data.from === 'scene.verse.web' ) {
+
+				editor.signals.messageReceive.dispatch( {
 					action: data.action,
 					data: data.data
-				})
-			}
-		})
+				} );
+		
+	}
 
-		const loader = new VerseLoader(editor)
-		editor.signals.messageReceive.add(async function (params) {
-			if (params.action == 'load') {
-				const data = params.data
-				loader.load(data.data)
-			}
-		})
-		editor.signals.messageSend.dispatch({
+} );
+
+		const loader = new VerseLoader( editor );
+		editor.signals.messageReceive.add( async function ( params ) {
+
+			if ( params.action == 'load' ) {
+
+				const data = params.data;
+				loader.load( data.data );
+		
+	}
+
+} );
+		editor.signals.messageSend.dispatch( {
 			action: 'ready'
-		})
+		} );
 	</script>
 </body>
 
