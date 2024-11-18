@@ -2,9 +2,11 @@
 
 
 class Builder {
+
 	constructor() {
 	}
-	node(type, name) {
+	node( type, name ) {
+
 		return {
 			type: type,
 			children: {
@@ -21,39 +23,49 @@ class Builder {
 				uuid: THREE.MathUtils.generateUUID(),
 				active: true,
 			}
-		}
+		};
+
 	}
-	resource(data) {
+	resource( data ) {
+
 		let ret = null;
-		switch (data.type.toLowerCase()) {
+		switch ( data.type.toLowerCase() ) {
+
 			case 'voxel':
-				ret = this.node("Voxel", data.name + " [voxel]");
+				ret = this.node( 'Voxel', data.name + ' [voxel]' );
 				break;
 			case 'picture':
-				ret = this.node("Picture", data.name + " [picture]");
+				ret = this.node( 'Picture', data.name + ' [picture]' );
 				ret.parameters.width = 0.5;
 				break;
 			case 'polygen':
-				ret = this.node("Polygen", data.name + " [polygen]");
+				ret = this.node( 'Polygen', data.name + ' [polygen]' );
 				break;
 			case 'audio':
-				ret = this.node("Sound", data.name + " [sound]");
+				ret = this.node( 'Sound', data.name + ' [sound]' );
 				break;
 			case 'video':
-				ret = this.node("Video", data.name + " [video]");
+				ret = this.node( 'Video', data.name + ' [video]' );
 				ret.parameters.width = 0.5;
 				ret.parameters.loop = false;
 				ret.parameters.play = true;
 				ret.parameters.console = true;
 
 				break;
+
 		}
-		if (ret != null) {
+
+		if ( ret != null ) {
+
 			ret.parameters.resource = data.id;
+
 		}
+
 		return ret;
+
 	}
-	module(meta_id, title = 'Module') {
+	module( meta_id, title = 'Module' ) {
+
 		return {
 			type: 'Module',
 			children: {},
@@ -68,9 +80,11 @@ class Builder {
 				uuid: THREE.MathUtils.generateUUID(),
 				active: true,
 			}
-		}
+		};
+
 	}
-	anchor(title = 'Anchor') {
+	anchor( title = 'Anchor' ) {
+
 		return {
 			type: 'Anchor',
 			children: {},
@@ -84,16 +98,22 @@ class Builder {
 				uuid: THREE.MathUtils.generateUUID(),
 				active: true,
 			}
-		}
+		};
+
 	}
-	text(content = "Hello World") {
-		const ret = this.node("Text", "Text");
+	text( content = 'Hello World' ) {
+
+		const ret = this.node( 'Text', 'Text' );
 		ret.parameters.text = content;
 		return ret;
+
 	}
 	entity() {
-		const ret = this.node("Entity", "Entity");
+
+		const ret = this.node( 'Entity', 'Entity' );
 		return ret;
+
 	}
+
 }
-export { Builder }
+export { Builder };

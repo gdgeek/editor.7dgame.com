@@ -169,7 +169,7 @@ function MenubarAdd( editor ) {
 
 	} else if ( editor.type.toLowerCase() == 'verse' ) {
 
-		//const factory = new VerseFactory();
+		// const factory = new VerseFactory();
 		editor.signals.messageReceive.add( async function ( params ) {
 
 

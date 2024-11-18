@@ -1,9 +1,12 @@
-import * as THREE from 'three'
+import * as THREE from 'three';
 
-import { Factory } from './Factory.js'
+import { Factory } from './Factory.js';
 class VerseFactory extends Factory {
+
 	constructor() {
-		super()
+
+		super();
+
 	}
 	/*
 
@@ -33,6 +36,7 @@ class VerseFactory extends Factory {
 			return node;
 		}
 	*/
+
 }
 
-export { VerseFactory }
+export { VerseFactory };

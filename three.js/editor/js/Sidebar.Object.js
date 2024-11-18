@@ -760,6 +760,7 @@ function SidebarObject( editor ) {
 
 			if ( object.visible !== objectVisible.getValue() ) {
 
+
 				editor.execute(
 					new SetValueCommand(
 						editor,
@@ -1130,6 +1131,7 @@ function SidebarObject( editor ) {
 
 		}
 
+		console.error( 'object', object );
 		objectVisible.setValue( object.visible );
 		objectFrustumCulled.setValue( object.frustumCulled );
 		objectRenderOrder.setValue( object.renderOrder );

@@ -1,35 +1,40 @@
-import * as THREE from 'three'
+import * as THREE from 'three';
 
-import { zipSync, strToU8 } from '../../examples/jsm/libs/fflate.module.js'
+import { zipSync, strToU8 } from '../../examples/jsm/libs/fflate.module.js';
 
-import { UIPanel, UIRow, UIHorizontalRule } from './libs/ui.js'
+import { UIPanel, UIRow, UIHorizontalRule } from './libs/ui.js';
 
-function MenubarFile(editor) {
-	const config = editor.config
-	const strings = editor.strings
+function MenubarFile( editor ) {
 
-	const container = new UIPanel()
-	container.setClass('menu')
+	const config = editor.config;
+	const strings = editor.strings;
 
-	const title = new UIPanel()
-	title.setClass('title')
-	title.setTextContent(strings.getKey('menubar/file'))
-	container.add(title)
+	const container = new UIPanel();
+	container.setClass( 'menu' );
 
-	const options = new UIPanel()
-	options.setClass('options')
-	container.add(options)
+	const title = new UIPanel();
+	title.setClass( 'title' );
+	title.setTextContent( strings.getKey( 'menubar/file' ) );
+	container.add( title );
+
+	const options = new UIPanel();
+	options.setClass( 'options' );
+	container.add( options );
 
 	// New
 
-	let option = new UIRow()
-	option.setClass('option')
-	option.setTextContent(strings.getKey('menubar/file/new'))
-	option.onClick(function () {
-		if (confirm('Any unsaved data will be lost. Are you sure?')) {
-			editor.clear()
+	let option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( strings.getKey( 'menubar/file/new' ) );
+	option.onClick( function () {
+
+		if ( confirm( 'Any unsaved data will be lost. Are you sure?' ) ) {
+
+			editor.clear();
+
 		}
-	})
+
+	} );
 	//options.add(option)
 
 	//
@@ -38,25 +43,29 @@ function MenubarFile(editor) {
 
 	// Import
 
-	const form = document.createElement('form')
-	form.style.display = 'none'
-	document.body.appendChild(form)
+	const form = document.createElement( 'form' );
+	form.style.display = 'none';
+	document.body.appendChild( form );
 
-	const fileInput = document.createElement('input')
-	fileInput.multiple = true
-	fileInput.type = 'file'
-	fileInput.addEventListener('change', function () {
-		editor.loader.loadFiles(fileInput.files)
-		form.reset()
-	})
-	form.appendChild(fileInput)
+	const fileInput = document.createElement( 'input' );
+	fileInput.multiple = true;
+	fileInput.type = 'file';
+	fileInput.addEventListener( 'change', function () {
 
-	option = new UIRow()
-	option.setClass('option')
-	option.setTextContent(strings.getKey('menubar/file/import'))
-	option.onClick(function () {
-		fileInput.click()
-	})
+		editor.loader.loadFiles( fileInput.files );
+		form.reset();
+
+	} );
+	form.appendChild( fileInput );
+
+	option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( strings.getKey( 'menubar/file/import' ) );
+	option.onClick( function () {
+
+		fileInput.click();
+
+	} );
 	//options.add(option)
 
 	//
@@ -64,14 +73,16 @@ function MenubarFile(editor) {
 	//options.add(new UIHorizontalRule())
 
 	// SAVE
-	option = new UIRow()
-	option.setClass('option')
-	option.setTextContent(strings.getKey('menubar/file/save'))
-	option.onClick(function () {
-		editor.signals.sceneGraphChanged.dispatch()
-		editor.signals.upload.dispatch()
-	})
-	options.add(option)
+	option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( strings.getKey( 'menubar/file/save' ) );
+	option.onClick( function () {
+
+		editor.signals.sceneGraphChanged.dispatch();
+		editor.signals.upload.dispatch();
+
+	} );
+	options.add( option );
 	/*
 	// Export Geometry
 
@@ -381,102 +392,129 @@ function MenubarFile(editor) {
 */
 	//Publish
 
-	option = new UIRow()
-	option.setClass('option')
-	option.setTextContent(strings.getKey('menubar/file/publish'))
-	option.onClick(function () {
-		const toZip = {}
+	option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( strings.getKey( 'menubar/file/publish' ) );
+	option.onClick( function () {
+
+		const toZip = {};
 
 		//
 
-		let output = editor.toJSON()
-		output.metadata.type = 'App'
-		delete output.history
+		let output = editor.toJSON();
+		output.metadata.type = 'App';
+		delete output.history;
 
-		output = JSON.stringify(output, null, '\t')
-		output = output.replace(/[\n\t]+([\d\.e\-\[\]]+)/g, '$1')
+		output = JSON.stringify( output, null, '\t' );
+		output = output.replace( /[\n\t]+([\d\.e\-\[\]]+)/g, '$1' );
 
-		toZip['app.json'] = strToU8(output)
+		toZip[ 'app.json' ] = strToU8( output );
 
 		//
 
-		const title = config.getKey('project/title')
+		const title = config.getKey( 'project/title' );
 
-		const manager = new THREE.LoadingManager(function () {
-			const zipped = zipSync(toZip, { level: 9 })
+		const manager = new THREE.LoadingManager( function () {
 
-			const blob = new Blob([zipped.buffer], { type: 'application/zip' })
+			const zipped = zipSync( toZip, { level: 9 } );
 
-			save(blob, (title !== '' ? title : 'untitled') + '.zip')
-		})
+			const blob = new Blob( [ zipped.buffer ], { type: 'application/zip' } );
 
-		const loader = new THREE.FileLoader(manager)
-		loader.load('js/libs/app/index.html', function (content) {
-			content = content.replace('<!-- title -->', title)
+			save( blob, ( title !== '' ? title : 'untitled' ) + '.zip' );
 
-			const includes = []
+		} );
 
-			content = content.replace('<!-- includes -->', includes.join('\n\t\t'))
+		const loader = new THREE.FileLoader( manager );
+		loader.load( 'js/libs/app/index.html', function ( content ) {
 
-			let editButton = ''
+			content = content.replace( '<!-- title -->', title );
 
-			if (config.getKey('project/editable')) {
+			const includes = [];
+
+			content = content.replace( '<!-- includes -->', includes.join( '\n\t\t' ) );
+
+			let editButton = '';
+
+			if ( config.getKey( 'project/editable' ) ) {
+
 				editButton = [
-					"			let button = document.createElement( 'a' );",
-					"			button.href = 'https://threejs.org/editor/#file=' + location.href.split( '/' ).slice( 0, - 1 ).join( '/' ) + '/app.json';",
-					"			button.style.cssText = 'position: absolute; bottom: 20px; right: 20px; padding: 10px 16px; color: #fff; border: 1px solid #fff; border-radius: 20px; text-decoration: none;';",
-					"			button.target = '_blank';",
-					"			button.textContent = 'EDIT';",
+					'			let button = document.createElement( \'a\' );',
+					'			button.href = \'https://threejs.org/editor/#file=\' + location.href.split( \'/\' ).slice( 0, - 1 ).join( \'/\' ) + \'/app.json\';',
+					'			button.style.cssText = \'position: absolute; bottom: 20px; right: 20px; padding: 10px 16px; color: #fff; border: 1px solid #fff; border-radius: 20px; text-decoration: none;\';',
+					'			button.target = \'_blank\';',
+					'			button.textContent = \'EDIT\';',
 					'			document.body.appendChild( button );'
-				].join('\n')
+				].join( '\n' );
+
 			}
 
-			content = content.replace('\t\t\t/* edit button */', editButton)
+			content = content.replace( '\t\t\t/* edit button */', editButton );
 
-			toZip['index.html'] = strToU8(content)
-		})
-		loader.load('js/libs/app.js', function (content) {
-			toZip['js/app.js'] = strToU8(content)
-		})
-		loader.load('../build/three.module.js', function (content) {
-			toZip['js/three.module.js'] = strToU8(content)
-		})
-		loader.load('../examples/jsm/webxr/VRButton.js', function (content) {
-			toZip['js/VRButton.js'] = strToU8(content)
-		})
-	})
+			toZip[ 'index.html' ] = strToU8( content );
+
+		} );
+		loader.load( 'js/libs/app.js', function ( content ) {
+
+			toZip[ 'js/app.js' ] = strToU8( content );
+
+		} );
+		loader.load( '../build/three.module.js', function ( content ) {
+
+			toZip[ 'js/three.module.js' ] = strToU8( content );
+
+		} );
+		loader.load( '../examples/jsm/webxr/VRButton.js', function ( content ) {
+
+			toZip[ 'js/VRButton.js' ] = strToU8( content );
+
+		} );
+
+	} );
 	//options.add(option)
 
-	const link = document.createElement('a')
-	function save(blob, filename) {
-		if (link.href) {
-			URL.revokeObjectURL(link.href)
+	const link = document.createElement( 'a' );
+	function save( blob, filename ) {
+
+		if ( link.href ) {
+
+			URL.revokeObjectURL( link.href );
+
 		}
 
-		link.href = URL.createObjectURL(blob)
-		link.download = filename || 'data.json'
-		link.dispatchEvent(new MouseEvent('click'))
+		link.href = URL.createObjectURL( blob );
+		link.download = filename || 'data.json';
+		link.dispatchEvent( new MouseEvent( 'click' ) );
+
 	}
 
-	function saveArrayBuffer(buffer, filename) {
-		save(new Blob([buffer], { type: 'application/octet-stream' }), filename)
+	function saveArrayBuffer( buffer, filename ) {
+
+		save( new Blob( [ buffer ], { type: 'application/octet-stream' } ), filename );
+
 	}
 
-	function saveString(text, filename) {
-		save(new Blob([text], { type: 'text/plain' }), filename)
+	function saveString( text, filename ) {
+
+		save( new Blob( [ text ], { type: 'text/plain' } ), filename );
+
 	}
 
-	function getAnimations(scene) {
-		const animations = []
+	function getAnimations( scene ) {
 
-		scene.traverse(function (object) {
-			animations.push(...object.animations)
-		})
+		const animations = [];
 
-		return animations
+		scene.traverse( function ( object ) {
+
+			animations.push( ...object.animations );
+
+		} );
+
+		return animations;
+
 	}
 
-	return container
+	return container;
+
 }
 
-export { MenubarFile }
+export { MenubarFile };
