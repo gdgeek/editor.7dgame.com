@@ -1,4 +1,4 @@
-import * as THREE from 'three'
+import * as THREE from 'three';
 /*
 import { MetaFactory } from './MetaFactory.js'
 class SceneBuilder {

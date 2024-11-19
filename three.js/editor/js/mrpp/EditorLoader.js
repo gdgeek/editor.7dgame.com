@@ -1,27 +1,36 @@
-import * as THREE from 'three'
+import * as THREE from 'three';
 
-import { SceneCreater } from './SceneCreater.js'
-function EditorLoader(editor) {
-	const scope = this
-	const creater = new SceneCreater(editor)
+import { SceneCreater } from './SceneCreater.js';
+function EditorLoader( editor ) {
 
-	this.load = function (input) {
-		console.error(input)
+	const scope = this;
+	const creater = new SceneCreater( editor );
 
-		const data = JSON.parse(input.data)
+	this.load = function ( input ) {
 
-		console.error(data)
-		console.error(input.resources)
+		console.error( input );
 
-		editor.clear()
+		const data = JSON.parse( input.data );
+
+		console.error( data );
+		console.error( input.resources );
+
+		editor.clear();
 		creater
-			.loadResources(input.resources)
-			.then(resources => {
-				creater.draw(data, resources)
-			})
-			.catch(error => {
-				alert(error)
-			})
-	}
+			.loadResources( input.resources )
+			.then( resources => {
+
+				creater.draw( data, resources );
+
+			} )
+			.catch( error => {
+
+				alert( error );
+
+			} );
+
+	};
+
 }
-export { EditorLoader }
+
+export { EditorLoader };

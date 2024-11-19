@@ -78,6 +78,7 @@ class MetaFactory extends Factory {
 		console.error( 'metaData', data );
 		node.type = data.type;
 		node.uuid = data.parameters.uuid;
+		node.visible = data.parameters.active;
 
 		const transform = data.parameters.transform;
 		this.setTransform( node, transform );
