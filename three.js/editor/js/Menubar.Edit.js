@@ -101,11 +101,11 @@ function MenubarEdit(editor) {
 	option.setTextContent(strings.getKey('menubar/edit/clone'))
 	option.onClick(function () {
 		let object = editor.selected
-
+		console.error("objectSelected:", object)
 		if (object === null || object.parent === null) return // avoid cloning the camera or scene
 
 		object = object.clone()
-
+		console.error("clonedObject: ", object)
 		editor.execute(new AddObjectCommand(editor, object))
 	})
 	options.add(option)

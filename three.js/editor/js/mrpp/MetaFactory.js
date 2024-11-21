@@ -75,7 +75,7 @@ class MetaFactory extends Factory {
 
 		const node = new THREE.Group();
 		node.name = data.parameters.title;
-		console.error( 'metaData', data );
+		console.error( 'addMetaData', data );
 		node.type = data.type;
 		node.uuid = data.parameters.uuid;
 		node.visible = data.parameters.active;
