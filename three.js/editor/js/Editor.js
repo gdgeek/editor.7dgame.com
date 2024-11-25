@@ -181,34 +181,25 @@ Editor.prototype = {
 
 	//
 
-	addObject: function ( object, parent, index ) {
+	addObject: function ( object ) {
+		// 保存原始type
+		const originalType = object.type;
 
+		// 现有的addObject逻辑
 		var scope = this;
+		object.traverse(function (child) {
+			if (child.geometry !== undefined) scope.addGeometry(child.geometry);
+			if (child.material !== undefined) scope.addMaterial(child.material);
+			scope.addCamera(child);
+			scope.addHelper(child);
+		});
 
-		object.traverse( function ( child ) {
+		// 恢复type
+		object.type = originalType;
 
-			if ( child.geometry !== undefined ) scope.addGeometry( child.geometry );
-			if ( child.material !== undefined ) scope.addMaterial( child.material );
-
-			scope.addCamera( child );
-			scope.addHelper( child );
-
-		} );
-
-		if ( parent === undefined ) {
-
-			this.scene.add( object );
-
-		} else {
-
-			parent.children.splice( index, 0, object );
-			object.parent = parent;
-
-		}
-
-		this.signals.objectAdded.dispatch( object );
+		this.scene.add(object);
+		this.signals.objectAdded.dispatch(object);
 		this.signals.sceneGraphChanged.dispatch();
-
 	},
 
 	moveObject: function ( object, parent, before ) {

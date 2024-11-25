@@ -274,6 +274,15 @@ class VOXMesh extends Mesh {
 
 		super(geometry, material);
 
+		this.chunk = chunk;
+		this.cell = cell;
+
+	}
+
+	clone() {
+		const cloned = new VOXMesh(this.chunk, this.cell);
+		cloned.copy(this);
+		return cloned;
 	}
 
 }

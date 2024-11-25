@@ -100,13 +100,22 @@ function MenubarEdit(editor) {
 	option.setClass('option')
 	option.setTextContent(strings.getKey('menubar/edit/clone'))
 	option.onClick(function () {
-		let object = editor.selected
-		console.error("objectSelected:", object)
-		if (object === null || object.parent === null) return // avoid cloning the camera or scene
+		let object = editor.selected;
+		if (object === null || object.parent === null) return;
 
-		object = object.clone()
-		console.error("clonedObject: ", object)
-		editor.execute(new AddObjectCommand(editor, object))
+		object = object.clone();
+
+		// 保持原始type
+		if(editor.selected.type) {
+			object.type = editor.selected.type;
+		}
+
+		// 复制components
+		if(editor.selected.components) {
+			object.components = JSON.parse(JSON.stringify(editor.selected.components));
+		}
+
+		editor.execute(new AddObjectCommand(editor, object));
 	})
 	options.add(option)
 
