@@ -111,9 +111,23 @@ function MenubarEdit(editor) {
 			object.type = editor.selected.type;
 		}
 
-		// 复制components
+		// 复制components并重新生成UUID
 		if(editor.selected.components) {
 			object.components = JSON.parse(JSON.stringify(editor.selected.components));
+			// 为每个组件的选择项生成新的UUID
+			object.components.forEach(component => {
+				if(component.parameters && component.parameters.uuid) {
+					component.parameters.uuid = THREE.MathUtils.generateUUID();
+				}
+				// 如果组件中包含选择项,也重新生成UUID
+				if(component.parameters && component.parameters.options) {
+					Object.keys(component.parameters.options).forEach(key => {
+						const newUuid = THREE.MathUtils.generateUUID();
+						component.parameters.options[newUuid] = component.parameters.options[key];
+						delete component.parameters.options[key];
+					});
+				}
+			});
 		}
 
 		editor.execute(new AddObjectCommand(editor, object));
