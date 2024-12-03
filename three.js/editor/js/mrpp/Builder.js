@@ -48,6 +48,8 @@ class Builder {
 				ret = this.node( 'Video', data.name + ' [video]' );
 				ret.parameters.width = 0.5;
 				ret.parameters.loop = false;
+				ret.parameters.muted = false;
+				ret.parameters.volume = 1;
 				ret.parameters.play = true;
 				ret.parameters.console = true;
 
