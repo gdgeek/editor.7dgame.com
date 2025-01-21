@@ -195,6 +195,68 @@ function MenubarEdit(editor) {
 		material.needsUpdate = needsUpdate
 	}
 
+	// 添加键盘快捷键事件监听
+	document.addEventListener('keydown', function(event) {
+		// 检查是否按下Ctrl键(Windows)或Command键(Mac)
+		const isCtrlOrCmd = event.ctrlKey || event.metaKey;
+
+		if (isCtrlOrCmd) {
+			switch (event.key.toLowerCase()) {
+				case 'c': // Ctrl+C
+					event.preventDefault(); // 阻止默认的复制行为
+					copySelected();
+					break;
+				case 'v': // Ctrl+V
+					event.preventDefault(); // 阻止默认的粘贴行为
+					pasteSelected();
+					break;
+			}
+		}
+	});
+
+	// 用于存储复制的对象
+	let copiedObject = null;
+
+	// 复制功能
+	function copySelected() {
+		const object = editor.selected;
+		if (object === null || object.parent === null) return;
+		copiedObject = object;
+	}
+
+	// 粘贴功能
+	function pasteSelected() {
+		if (copiedObject === null) return;
+
+		const object = copiedObject.clone();
+
+		// 保持原始type
+		if(copiedObject.type) {
+			object.type = copiedObject.type;
+		}
+
+		// 复制components并重新生成UUID
+		if(copiedObject.components) {
+			object.components = JSON.parse(JSON.stringify(copiedObject.components));
+			// 为每个组件的选择项生成新的UUID
+			object.components.forEach(component => {
+				if(component.parameters && component.parameters.uuid) {
+					component.parameters.uuid = THREE.MathUtils.generateUUID();
+				}
+				// 如果组件中包含选择项,也重新生成UUID
+				if(component.parameters && component.parameters.options) {
+					Object.keys(component.parameters.options).forEach(key => {
+						const newUuid = THREE.MathUtils.generateUUID();
+						component.parameters.options[newUuid] = component.parameters.options[key];
+						delete component.parameters.options[key];
+					});
+				}
+			});
+		}
+
+		editor.execute(new AddObjectCommand(editor, object));
+	}
+
 	return container
 }
 
