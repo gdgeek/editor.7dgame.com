@@ -147,6 +147,14 @@ function Strings( config ) {
 			'sidebar/components/select/trigger': 'Collision Trigger',
 			'sidebar/components/select/button': 'New',
 
+			'sidebar/command': 'Command',
+			'sidebar/command/select': 'Select',
+			'sidebar/command/select/voice': 'Voice Command',
+			'sidebar/command/select/button': 'New',
+			'sidebar/command/remove': 'Remove',
+			'sidebar/command/voice/id': 'ID',
+			'sidebar/command/voice/action': 'Action',
+
 			'sidebar/entity': 'Entity(Custom)',
 			'sidebar/entity/button': 'Edit',
 
@@ -840,6 +848,14 @@ function Strings( config ) {
 			'sidebar/components/select/trigger': '碰撞触发',
 			'sidebar/components/select/button': '新建',
 
+			'sidebar/command': '指令',
+			'sidebar/command/select': '选择项',
+			'sidebar/command/select/voice': '语音指令',
+			'sidebar/command/select/button': '新建',
+			'sidebar/command/remove': '删除',
+			'sidebar/command/voice/id': '识别码',
+			'sidebar/command/voice/action': '语音',
+
 			'sidebar/entity': '组件（自定义）',
 			'sidebar/entity/button': '编辑',
 
@@ -1196,6 +1212,11 @@ function Strings( config ) {
 			'sidebar/components/select/moved': '移動可能',
 			'sidebar/components/select/trigger': '衝突トリガー',
 			'sidebar/components/select/button': '新規作成',
+
+			'sidebar/command': 'コマンド',
+			'sidebar/command/select': '選択項目',
+			'sidebar/command/select/voice': '音声コマンド',
+			'sidebar/ccommand/select/button': '新規作成',
 
 			'sidebar/entity': 'コンポーネント（カスタム）',
 			'sidebar/entity/button': '編集',

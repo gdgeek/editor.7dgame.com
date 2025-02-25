@@ -5,6 +5,7 @@ import { SidebarProperties } from './Sidebar.Properties.js'
 import { SidebarMeta } from './Sidebar.Meta.js'
 import { SidebarEvents } from './Sidebar.Events.js'
 import { SidebarComponent } from './Sidebar.Component.js'
+import { SidebarCommand } from './Sidebar.Command.js'
 import { SidebarAnimation } from './Sidebar.Animation.js'
 import { SidebarProject } from './Sidebar.Project.js'
 import { SidebarSettings } from './Sidebar.Settings.js'
@@ -26,6 +27,7 @@ function Sidebar(editor) {
 	if (editor.type.toLowerCase() == 'meta') {
 		scene.add(new SidebarComponent(editor))
 		scene.add(new SidebarEvents(editor))
+		scene.add(new SidebarCommand(editor))
 	} else if (editor.type.toLowerCase() == 'verse') {
 		scene.add(new SidebarMeta(editor))
 	}

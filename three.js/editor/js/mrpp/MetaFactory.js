@@ -414,7 +414,10 @@ class MetaFactory extends Factory {
 			}
 
 		} );
-		node.components = data.children.components;
+
+		// 设置components和commands
+		node.components = data.children.components || [];
+		node.commands = data.children.commands || [];
 
 		node.userData = userData;
 		for ( let i = 0; i < data.children.entities.length; ++ i ) {

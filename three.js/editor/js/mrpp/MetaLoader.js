@@ -131,7 +131,7 @@ function MetaLoader( editor ) {
 
 
 
-		entity.children = { 'entities': [], 'components': node.components };
+		entity.children = { 'entities': [], 'components': node.components, 'commands': node.commands };
 		node.children.forEach( child => {
 
 			const ce = self.writeEntity( child );

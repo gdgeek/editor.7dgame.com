@@ -87,16 +87,17 @@ function Editor() {
 		scriptChanged: new Signal(),
 		scriptRemoved: new Signal(),
 
-
 		componentAdded: new Signal(),
 		componentChanged: new Signal(),
 		componentRemoved: new Signal(),
-
 
 		eventAdded: new Signal(),
 		eventChanged: new Signal(),
 		eventRemoved: new Signal(),
 
+		commandAdded: new Signal(),
+		commandChanged: new Signal(),
+		commandRemoved: new Signal(),
 
 		windowResize: new Signal(),
 
@@ -164,6 +165,13 @@ Editor.prototype = {
 
 		this.scene.userData = JSON.parse( JSON.stringify( scene.userData ) );
 
+		// 初始化场景中所有对象的 commands 数组
+		scene.traverse(function(object) {
+			if (object.commands === undefined) {
+				object.commands = [];
+			}
+		});
+
 		// avoid render per object
 
 		this.signals.sceneGraphChanged.active = false;
@@ -184,6 +192,11 @@ Editor.prototype = {
 	addObject: function ( object ) {
 		// 保存原始type
 		const originalType = object.type;
+
+		// 初始化 commands 数组
+		if (object.commands === undefined) {
+			object.commands = [];
+		}
 
 		// 现有的addObject逻辑
 		var scope = this;
@@ -577,6 +590,10 @@ Editor.prototype = {
 		var uuid = null;
 
 		if ( object !== null ) {
+			// 确保选中的对象有 commands 数组
+			if (object.commands === undefined) {
+				object.commands = [];
+			}
 
 			uuid = object.uuid;
 
