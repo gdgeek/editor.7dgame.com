@@ -46,12 +46,13 @@ class VoiceCommand {
 
     {
       const row = new UIRow();
-      const voiceLabel = new UIText(strings.getKey("sidebar/command/voice/label")).setWidth('90px'); // 为“语音”设置标签
+      const voiceLabel = new UIText(strings.getKey("sidebar/command/voice/label")).setWidth('90px'); // 为"语音"设置标签
 
       const checkboxContainer = document.createElement('div');
-      checkboxContainer.style.display = 'flex';
-      checkboxContainer.style.flexDirection = 'column'; // 竖排布局
-      checkboxContainer.style.gap = '10px'; // 设置间距
+      checkboxContainer.style.display = 'grid';
+      checkboxContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
+      checkboxContainer.style.gap = '10px';
+      checkboxContainer.style.width = '200px';
 
       // 选项和对应的翻译键值
       const voiceOptions = {
@@ -69,7 +70,7 @@ class VoiceCommand {
         reset: new UICheckbox().onChange(this.update.bind(this))
       };
 
-      // 按照竖排布局排列复选框及标签
+      // 按照2x2网格布局排列复选框及标签
       for (const [option, label] of Object.entries(voiceOptions)) {
         const optionContainer = document.createElement('div');
         optionContainer.style.display = 'flex';
@@ -78,13 +79,14 @@ class VoiceCommand {
 
         const labelElement = document.createElement('span');
         labelElement.textContent = label;
+        labelElement.style.fontSize = '12px';
 
         optionContainer.appendChild(this.voiceCheckboxes[option].dom);
         optionContainer.appendChild(labelElement);
         checkboxContainer.appendChild(optionContainer);
       }
 
-      row.add(voiceLabel);  // 添加“语音”标签
+      row.add(voiceLabel);  // 添加"语音"标签
       row.dom.appendChild(checkboxContainer);  // 将复选框容器添加到 row 中
       container.add(row);  // 将这一行加入到 container 中
     }
