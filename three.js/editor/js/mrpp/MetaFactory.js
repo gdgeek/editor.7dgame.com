@@ -291,14 +291,15 @@ class MetaFactory extends Factory {
 	async getText( data, resources ) {
 
 		const text = data.parameters.text;
+		console.error("text",data);
 
 		const geometry = new THREE.PlaneGeometry(
-			0.1 * text.length + 0.05,
-			0.1 + 0.05
+			(0.1 * text.length + 0.05)*0.21,
+			(0.1 + 0.05)*0.8
 		);
 		const material = new THREE.MeshBasicMaterial( {
 			color: 0x8888ff,
-			side: THREE.DoubleSide
+			side: THREE.DoubleSide,
 		} );
 		const plane = new THREE.Mesh( geometry, material );
 
