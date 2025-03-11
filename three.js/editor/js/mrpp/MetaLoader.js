@@ -222,7 +222,7 @@ function MetaLoader( editor ) {
 		}
 
 		editor.signals.sceneGraphChanged.dispatch();
-		let lights = editor.scene.getObjectByName( '$lights' );
+		let lights = editor.scene.getObjectByName('$lights');
 		if ( lights == null ) {
 
 			lights = new THREE.Group();
@@ -240,7 +240,7 @@ function MetaLoader( editor ) {
 			light3.name = 'light3';
 			lights.add( light3 );
 			scene.add( lights );
-			factory.lockNode( lights );
+			factory.lockNode(lights);
 			editor.signals.sceneGraphChanged.dispatch();
 
 		}
