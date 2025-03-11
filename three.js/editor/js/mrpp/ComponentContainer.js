@@ -5,7 +5,7 @@ import { RotateComponent } from './components/RotateComponent.js';
 import { ActionComponent } from './components/ActionComponent.js';
 import { MovedComponent } from './components/MovedComponent.js';
 import { TriggerComponent } from './components/TriggerComponent.js';
-
+import { TooltipComponent } from './components/TooltipComponent.js';
 
 class ComponentContainer {
 
@@ -21,6 +21,9 @@ class ComponentContainer {
 				return MovedComponent.Create();
 			case 'trigger':
 				return TriggerComponent.Create();
+			case 'tooltip':
+				return TooltipComponent.Create();
+
 
 		}
 		// return {}
@@ -44,6 +47,9 @@ class ComponentContainer {
 				break;
 			case 'trigger':
 				this.handler = new TriggerComponent( editor, object, component );
+				break;
+			case 'tooltip':
+				this.handler = new TooltipComponent( editor, object, component );
 				break;
 			default:
 				console.error( 'ComponentContainer: Unknown component type.' );
