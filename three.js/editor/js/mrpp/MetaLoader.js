@@ -3,7 +3,7 @@ import { MetaFactory } from './MetaFactory.js';
 //import { SceneBuilder } from './SceneBuilder.js'
 function MetaLoader(editor) {
 
-	let json = null;
+	this.json = null;
 	editor.selector = function (object) {
 
 		if (object.userData.type != undefined) {
@@ -17,15 +17,39 @@ function MetaLoader(editor) {
 
 	const self = this;
 
+	this.getMeta = async function () {
+		return await this.write(editor.scene);
+	};
+	this.isChanged = function (json) {
+		return this.json !== json;
+	}
 
+	this.changed = async function () {
+		const meta = await this.getMeta();
+		return this.isChanged(JSON.stringify({  meta, events: editor.scene.events }));
+	}
 
 	this.save = async function () {
-		const root = editor.scene;
-		const meta = await this.write(root);
-		editor.signals.messageSend.dispatch({
-			action: 'save-meta',
-			data: { meta, events: editor.scene.events },
-		});
+
+		const meta = await this.getMeta();
+		const data ={  meta, events: editor.scene.events };
+		const json = JSON.stringify(data);
+		const changed = this.isChanged(json);
+
+
+		if (changed) {
+			editor.signals.messageSend.dispatch({
+				action: 'save-meta',
+				data
+			});
+			this.json = json;
+		} else {
+			editor.signals.messageSend.dispatch({
+				action: 'save-meta-none'
+			});
+		}
+
+
 
 
 	};
@@ -265,6 +289,8 @@ function MetaLoader(editor) {
 		}
 
 
+		this.json = JSON.stringify( { meta: await this.write(root), events: editor.scene.events });
+	//	alert(this.json)
 
 	};
 

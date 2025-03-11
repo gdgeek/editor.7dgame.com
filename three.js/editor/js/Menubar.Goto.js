@@ -50,14 +50,13 @@ function MenubarGoto( editor ) {
 	option.setTextContent( strings.getKey( 'menubar/code/script' ) );
 	option.onClick( async function () {
 
-		if(editor.verseLoader){
-			const changed = await editor.verseLoader.changed();
-			if(changed){
-				const userConfirmed = confirm('确认再没保存的情况下进行离开编辑器?');
-				if (!userConfirmed) return;
-			}
-		}
+		const changed = (editor.verseLoader && await editor.verseLoader.changed()) || (editor.metaLoader && await editor.metaLoader.changed());
 
+
+		if(changed){
+			const userConfirmed = confirm('确认再没保存的情况下进行离开编辑器?');
+			if (!userConfirmed) return;
+		}
 
 		const data = {
 			action: 'goto',

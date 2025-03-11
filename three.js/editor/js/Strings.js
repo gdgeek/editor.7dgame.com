@@ -772,7 +772,7 @@ function Strings( config ) {
 			'menubar/add/perspectivecamera': '透视相机',
 			'menubar/add/orthographiccamera': '正交相机',
 
-			'menubar/code': '编码',
+			'menubar/code': '脚本',
 			'menubar/code/script': '脚本编辑',
 
 			'menubar/status/autosave': '自动保存',

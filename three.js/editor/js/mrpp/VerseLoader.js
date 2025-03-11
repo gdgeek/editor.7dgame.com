@@ -7,7 +7,7 @@ import { MetaFactory } from './MetaFactory.js';
 function VerseLoader(editor) {
 
 	const types = ['Module'];
-	let json = null;
+	this.json = null;
 	const factory = new MetaFactory();
 	const self = this;
 
@@ -20,25 +20,27 @@ function VerseLoader(editor) {
 		self.save();
 	});
 
-
+	this.getVerse = async function () {
+		return await this.write( editor.scene);
+	};
+	this.isChanged = function (json) {
+		return this.json !== json;
+	}
 	this.changed = async function () {
-		const root = editor.scene;
-		const verse = await this.write(root);
-
-		if (json === JSON.stringify(verse)) {
-			return false;
-		} else {
-			return verse;
-		}
+		const verse = await this.getVerse();
+		return this.isChanged(JSON.stringify({ verse }));
 	}
 	this.save = async function () {
-		const verse = await this.changed();
-		if (verse) {
+		const verse = await this.getVerse();
+		const data = { verse };
+		const json = JSON.stringify(data);
+		const changed = this.isChanged(json);
+		if (changed) {
 			editor.signals.messageSend.dispatch({
 				action: 'save-verse',
-				data: { verse }
+				data
 			});
-			json = JSON.stringify(verse);
+			this.json = json;
 		} else {
 			editor.signals.messageSend.dispatch({
 				action: 'save-verse-none'
@@ -137,13 +139,9 @@ function VerseLoader(editor) {
 		const exclude = ['type', 'draggable', 'custom'];
 
 		Object.keys(node.userData).forEach(key => {
-
 			if (!exclude.includes(key)) {
-
 				data.parameters[key] = node.userData[key];
-
 			}
-
 		});
 		//console.error('data.parameters: ', data.parameters);
 		//entity.parameters.transform.active = true
@@ -298,8 +296,9 @@ function VerseLoader(editor) {
 		}
 
 
-		const data = await this.write(root);
-		json = JSON.stringify(data);
+		//	const data = await this.write(root);
+		this.json = JSON.stringify({ verse: await this.write(root) });
+		//alert(this.json)
 		editor.signals.sceneGraphChanged.dispatch();
 
 	};
