@@ -299,7 +299,6 @@ function VerseLoader(editor) {
 
 
 		const data = await this.write(root);
-
 		json = JSON.stringify(data);
 		editor.signals.sceneGraphChanged.dispatch();
 

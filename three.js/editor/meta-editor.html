@@ -78,69 +78,69 @@
 
 		Number.prototype.format = function () {
 
-			return this.toString().replace( /(\d)(?=(\d{3})+(?!\d))/g, '$1,' );
+			return this.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
 
-};
+		};
 
 
 
 		const editor = new Editor();
 
 		editor.type = 'meta';
-		editor.signals.messageSend.add( function ( e ) {
+		editor.signals.messageSend.add(function (e) {
 
 			const data = {
 				...e,
 				from: 'scene.meta.editor',
 				verify: 'mrpp.com'
 			};
-			window.parent.postMessage( data, '*' );
+			window.parent.postMessage(data, '*');
 
-} );
+		});
 
 
 		window.editor = editor; // Expose editor to Console
 		window.THREE = THREE; // Expose THREE to APP Scripts and Console
 		window.VRButton = VRButton; // Expose VRButton to APP Scripts
 
-		const viewport = new Viewport( editor );
-		document.body.appendChild( viewport.dom );
+		const viewport = new Viewport(editor);
+		document.body.appendChild(viewport.dom);
 
-		const toolbar = new Toolbar( editor );
-		document.body.appendChild( toolbar.dom );
+		const toolbar = new Toolbar(editor);
+		document.body.appendChild(toolbar.dom);
 
-		const script = new Script( editor );
-		document.body.appendChild( script.dom );
+		const script = new Script(editor);
+		document.body.appendChild(script.dom);
 
-		const player = new Player( editor );
-		document.body.appendChild( player.dom );
+		const player = new Player(editor);
+		document.body.appendChild(player.dom);
 
-		const sidebar = new Sidebar( editor );
-		document.body.appendChild( sidebar.dom );
+		const sidebar = new Sidebar(editor);
+		document.body.appendChild(sidebar.dom);
 
-		const menubar = new Menubar( editor );
-		document.body.appendChild( menubar.dom );
+		const menubar = new Menubar(editor);
+		document.body.appendChild(menubar.dom);
 
-		const resizer = new Resizer( editor );
-		document.body.appendChild( resizer.dom );
+		const resizer = new Resizer(editor);
+		document.body.appendChild(resizer.dom);
 
 		//
 
-		editor.storage.init( function () {
+		editor.storage.init(function () {
 
-			editor.storage.get( function ( state ) {
+			editor.storage.get(function (state) {
 
-				if ( isLoadingFromHash ) return;
+				if (isLoadingFromHash) return;
 
-				const selected = editor.config.getKey( 'selected' );
+				const selected = editor.config.getKey('selected');
 
-				if ( selected !== undefined ) {
+				if (selected !== undefined) {
 
-					editor.selectByUuid( selected );
-		
-		}
-		
-	} );
+					editor.selectByUuid(selected);
+
+				}
+
+			});
 
 			//
 
@@ -148,155 +148,146 @@
 
 			function saveState() {
 
-				if ( editor.config.getKey( 'autosave' ) === false ) {
+				if (editor.config.getKey('autosave') === false) {
 
 					return;
-		
-		}
 
-				clearTimeout( timeout );
+				}
 
-				timeout = setTimeout( function () {
+				clearTimeout(timeout);
+
+				timeout = setTimeout(function () {
 
 					editor.signals.savingStarted.dispatch();
 
-					timeout = setTimeout( function () {
+					timeout = setTimeout(function () {
 
-						editor.storage.set( editor.toJSON() );
+						editor.storage.set(editor.toJSON());
 
 						editor.signals.savingFinished.dispatch();
-		
-					}, 100 );
-		
-		}, 1000 );
-		
-	}
+
+					}, 100);
+
+				}, 1000);
+
+			}
 
 			const signals = editor.signals;
 
-			signals.geometryChanged.add( saveState );
-			signals.objectAdded.add( saveState );
-			signals.objectChanged.add( saveState );
-			signals.objectRemoved.add( saveState );
-			signals.materialChanged.add( saveState );
-			signals.sceneBackgroundChanged.add( saveState );
-			signals.sceneEnvironmentChanged.add( saveState );
-			signals.sceneFogChanged.add( saveState );
-			signals.sceneGraphChanged.add( saveState );
-			signals.scriptChanged.add( saveState );
-			signals.historyChanged.add( saveState );
+			signals.geometryChanged.add(saveState);
+			signals.objectAdded.add(saveState);
+			signals.objectChanged.add(saveState);
+			signals.objectRemoved.add(saveState);
+			signals.materialChanged.add(saveState);
+			signals.sceneBackgroundChanged.add(saveState);
+			signals.sceneEnvironmentChanged.add(saveState);
+			signals.sceneFogChanged.add(saveState);
+			signals.sceneGraphChanged.add(saveState);
+			signals.scriptChanged.add(saveState);
+			signals.historyChanged.add(saveState);
 
-} );
+		});
 
 		//
 
-		document.addEventListener( 'dragover', function ( event ) {
+		document.addEventListener('dragover', function (event) {
 
 			event.preventDefault();
 			event.dataTransfer.dropEffect = 'copy';
 
-} );
+		});
 
-		document.addEventListener( 'drop', function ( event ) {
+		document.addEventListener('drop', function (event) {
 
 			event.preventDefault();
+			if (event.dataTransfer.types[0] === 'text/plain') return; // Outliner drop
+			if (event.dataTransfer.items) {
+				editor.loader.loadItemList(event.dataTransfer.items);
+			} else {
+				editor.loader.loadFiles(event.dataTransfer.files);
+			}
 
-			if ( event.dataTransfer.types[ 0 ] === 'text/plain' ) return; // Outliner drop
-
-			if ( event.dataTransfer.items ) {
-
-				editor.loader.loadItemList( event.dataTransfer.items );
-		
-	} else {
-
-				editor.loader.loadFiles( event.dataTransfer.files );
-		
-	}
-
-} );
+		});
 
 		function onWindowResize() {
 
 			editor.signals.windowResize.dispatch();
 
-}
+		}
 
-		window.addEventListener( 'resize', onWindowResize );
+		window.addEventListener('resize', onWindowResize);
 
 		onWindowResize();
-
-		//
 
 		let isLoadingFromHash = false;
 		const hash = window.location.hash;
 
-		if ( hash.slice( 1, 6 ) === 'file=' ) {
+		if (hash.slice(1, 6) === 'file=') {
 
-			const file = hash.slice( 6 );
+			const file = hash.slice(6);
 
-			if ( confirm( 'Any unsaved data will be lost. Are you sure?' ) ) {
+			if (confirm('Any unsaved data will be lost. Are you sure?')) {
 
 				const loader = new THREE.FileLoader();
 				loader.crossOrigin = '';
-				await loader.load( file, function ( text ) {
+				await loader.load(file, function (text) {
 
 					editor.clear();
-					editor.fromJSON( JSON.parse( text ) );
-		
-		} );
+					editor.fromJSON(JSON.parse(text));
+
+				});
 
 				isLoadingFromHash = true;
-		
-	}
 
-}
+			}
+
+		}
 
 		// ServiceWorker
 
-		if ( 'serviceWorker' in navigator ) {
+		if ('serviceWorker' in navigator) {
 
 			try {
 
-				navigator.serviceWorker.register( 'sw.js' );
-		
-	} catch ( error ) { }
+				navigator.serviceWorker.register('sw.js');
 
-}
+			} catch (error) { }
 
-		const loader = new MetaLoader( editor );
+		}
 
-
-		window.addEventListener( 'message', e => {
+		const loader = new MetaLoader(editor);
+		editor.metaLoader = loader;
+		window.addEventListener('message', e => {
 
 			const data = e.data;
 
-			if ( data.action && data.from && data.from === 'scene.meta.web' ) {
+			if (data.action && data.from && data.from === 'scene.meta.web') {
 
-				editor.signals.messageReceive.dispatch( {
+				editor.signals.messageReceive.dispatch({
 					action: data.action,
 					data: data.data
-				} );
-		
-	}
+				});
+
+			}
 
 
 
-		} );
+		});
 
-		editor.signals.messageReceive.add( async function ( params ) {
+		editor.signals.messageReceive.add(async function (params) {
 
 
-			if ( params.action == 'load' ) {
+			if (params.action == 'load') {
 
 				const data = params.data;
-				loader.load( data.data );
-		
-	}
+				loader.load(data.data);
 
-} );
-		editor.signals.messageSend.dispatch( {
+			}
+
+		});
+		editor.signals.messageSend.dispatch({
 			action: 'ready'
-		} );
+		});
 	</script>
 </body>
 
