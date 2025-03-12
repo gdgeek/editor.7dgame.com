@@ -1,42 +1,51 @@
 import * as THREE from 'three';
-//import { SceneBuilder } from './SceneBuilder.js'
 import { GLTFLoader } from '../../../examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from '../../../examples/jsm/loaders/DRACOLoader.js';
 import { VerseFactory } from './VerseFactory.js';
 import { MetaFactory } from './MetaFactory.js';
+
 function VerseLoader(editor) {
 
 	const types = ['Module'];
-
-	editor.selector = function (object) {
-
-		return types.includes(object.type);
-
-	};
-
+	this.json = null;
+	const factory = new MetaFactory();
 	const self = this;
 
+	editor.selector = function (object) {
+		return types.includes(object.type);
+	};
+
+
 	editor.signals.upload.add(function () {
-
 		self.save();
-
 	});
-	const factory = new MetaFactory();
 
-
-
-
+	this.getVerse = async function () {
+		return await this.write( editor.scene);
+	};
+	this.isChanged = function (json) {
+		return this.json !== json;
+	}
+	this.changed = async function () {
+		const verse = await this.getVerse();
+		return this.isChanged(JSON.stringify({ verse }));
+	}
 	this.save = async function () {
-
-		const root = editor.scene;
-		const verse = await this.write(root);
-		console.error('Verse:', verse);
-
-		editor.signals.messageSend.dispatch({
-			action: 'save-verse',
-			data: { verse }
-		});
-
+		const verse = await this.getVerse();
+		const data = { verse };
+		const json = JSON.stringify(data);
+		const changed = this.isChanged(json);
+		if (changed) {
+			editor.signals.messageSend.dispatch({
+				action: 'save-verse',
+				data
+			});
+			this.json = json;
+		} else {
+			editor.signals.messageSend.dispatch({
+				action: 'save-verse-none'
+			});
+		}
 	};
 
 	this.compareObjectsAndPrintDifferences = function (obj1, obj2, path = '', tolerance = 0.0001) {
@@ -130,17 +139,13 @@ function VerseLoader(editor) {
 		const exclude = ['type', 'draggable', 'custom'];
 
 		Object.keys(node.userData).forEach(key => {
-
 			if (!exclude.includes(key)) {
-
 				data.parameters[key] = node.userData[key];
-
 			}
-
 		});
-		console.error('data.parameters: ', data.parameters);
+		//console.error('data.parameters: ', data.parameters);
 		//entity.parameters.transform.active = true
-		console.error('node.visible', node.visible);
+		//console.error('node.visible', node.visible);
 		data.parameters.active = node.visible;
 		return data;
 
@@ -172,7 +177,7 @@ function VerseLoader(editor) {
 
 		});
 		data.children = { modules };
-		console.error(data);
+		//console.error(data);
 		return data;
 
 	};
@@ -196,7 +201,7 @@ function VerseLoader(editor) {
 
 				const meta = metas.get(item.parameters.meta_id.toString());
 
-				console.error(meta);
+				//console.error(meta);
 				const node = factory.addModule(item);
 				node.userData.custom = meta.custom;
 				root.add(node);
@@ -224,7 +229,6 @@ function VerseLoader(editor) {
 	};
 
 	this.load = async function (verse) {
-
 		let scene = editor.scene;
 		if (scene == null) {
 
@@ -277,7 +281,7 @@ function VerseLoader(editor) {
 
 			});
 			const metas = new Map();
-			console.error(verse);
+			//console.error(verse);
 			verse.metas.forEach(item => {
 
 				metas.set(item.id.toString(), item);
@@ -292,7 +296,9 @@ function VerseLoader(editor) {
 		}
 
 
-
+		//	const data = await this.write(root);
+		this.json = JSON.stringify({ verse: await this.write(root) });
+		//alert(this.json)
 		editor.signals.sceneGraphChanged.dispatch();
 
 	};

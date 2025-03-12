@@ -1131,7 +1131,7 @@ function SidebarObject( editor ) {
 
 		}
 
-		console.error( 'object', object );
+		//console.error( 'object', object );
 		objectVisible.setValue( object.visible );
 		objectFrustumCulled.setValue( object.frustumCulled );
 		objectRenderOrder.setValue( object.renderOrder );

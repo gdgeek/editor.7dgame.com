@@ -146,6 +146,7 @@ function Strings( config ) {
 			'sidebar/components/select/moved': 'Movable',
 			'sidebar/components/select/trigger': 'Collision Trigger',
 			'sidebar/components/select/button': 'New',
+			'sidebar/components/select/tooltip': 'Tooltip',
 
 			'sidebar/command': 'Command',
 			'sidebar/command/select': 'Select',
@@ -774,7 +775,7 @@ function Strings( config ) {
 			'menubar/add/perspectivecamera': '透视相机',
 			'menubar/add/orthographiccamera': '正交相机',
 
-			'menubar/code': '编码',
+			'menubar/code': '脚本',
 			'menubar/code/script': '脚本编辑',
 
 			'menubar/status/autosave': '自动保存',
@@ -853,6 +854,7 @@ function Strings( config ) {
 			'sidebar/components/select/moved': '可移动',
 			'sidebar/components/select/trigger': '碰撞触发',
 			'sidebar/components/select/button': '新建',
+			'sidebar/components/select/tooltip': '文本提示工具',
 
 			'sidebar/command': '指令',
 			'sidebar/command/select': '选择项',
@@ -1223,6 +1225,7 @@ function Strings( config ) {
 			'sidebar/components/select/moved': '移動可能',
 			'sidebar/components/select/trigger': '衝突トリガー',
 			'sidebar/components/select/button': '新規作成',
+			'sidebar/components/select/tooltip': 'テキストヒントツール',
 
 			'sidebar/command': 'コマンド',
 			'sidebar/command/select': '選択項目',

@@ -65,7 +65,8 @@ function SidebarComponent( editor ) {
 				'Rotate': strings.getKey( 'sidebar/components/select/rotate' ),
 				'Action': strings.getKey( 'sidebar/components/select/action' ),
 				'Moved': strings.getKey( 'sidebar/components/select/moved' ),
-				'Trigger': strings.getKey( 'sidebar/components/select/trigger' ),
+				'Trigger': strings.getKey('sidebar/components/select/trigger'),
+				'Tooltip':strings.getKey('sidebar/components/select/tooltip')
 			} );
 			select.setValue( 'Rotate' );
 			select.onChange( function () { // 下拉框选项改变时触发的事件

@@ -18,17 +18,13 @@ function MenubarGoto( editor ) {
 	editor.signals.messageReceive.add( async function ( params ) {
 
 		if ( params.action === 'resource' ) {
-
 			resources.set( params.data.id.toString(), params.data );
-
 			const data = builder.resource( params.data );
 			if ( data != null ) {
 
 				const node = await factory.building( data, resources );
 				if ( node != null ) {
-
 					editor.execute( new AddObjectCommand( editor, node ) );
-
 				}
 
 			}
@@ -52,7 +48,15 @@ function MenubarGoto( editor ) {
 	const option = new UIRow();
 	option.setClass( 'option' );
 	option.setTextContent( strings.getKey( 'menubar/code/script' ) );
-	option.onClick( function () {
+	option.onClick( async function () {
+
+		const changed = (editor.verseLoader && await editor.verseLoader.changed()) || (editor.metaLoader && await editor.metaLoader.changed());
+
+
+		if(changed){
+			const userConfirmed = confirm('确认再没保存的情况下进行离开编辑器?');
+			if (!userConfirmed) return;
+		}
 
 		const data = {
 			action: 'goto',
