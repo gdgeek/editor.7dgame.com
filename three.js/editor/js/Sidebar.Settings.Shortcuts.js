@@ -23,7 +23,7 @@ function SidebarSettingsShortcuts( editor ) {
 	headerRow.add( new UIText( strings.getKey( 'sidebar/settings/shortcuts' ).toUpperCase() ) );
 	container.add( headerRow );
 
-	const shortcuts = [ 'translate', 'rotate', 'scale', 'undo', 'focus' ];
+	const shortcuts = [ 'translate', 'rotate', 'scale', 'undo', 'focus', 'save' ];
 
 	function createShortcutInput( name ) {
 
@@ -95,6 +95,11 @@ function SidebarSettingsShortcuts( editor ) {
 
 	}
 
+	// 设置默认的保存快捷键为's'
+	if (config.getKey('settings/shortcuts/save') === undefined) {
+		config.setKey('settings/shortcuts/save', 's');
+	}
+
 	document.addEventListener( 'keydown', function ( event ) {
 
 		switch ( event.key.toLowerCase() ) {
@@ -159,6 +164,19 @@ function SidebarSettingsShortcuts( editor ) {
 				if ( editor.selected !== null ) {
 
 					editor.focus( editor.selected );
+
+				}
+
+				break;
+
+			case config.getKey( 'settings/shortcuts/save' ):
+
+				if ( IS_MAC ? event.metaKey : event.ctrlKey ) {
+
+					event.preventDefault(); // 防止浏览器默认保存行为
+
+					editor.signals.sceneGraphChanged.dispatch();
+					editor.signals.upload.dispatch();
 
 				}
 
