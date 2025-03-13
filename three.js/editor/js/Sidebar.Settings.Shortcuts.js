@@ -2,6 +2,7 @@ import { UIPanel, UIText, UIRow, UIInput } from './libs/ui.js';
 
 import { RemoveObjectCommand } from './commands/RemoveObjectCommand.js';
 
+//
 function SidebarSettingsShortcuts( editor ) {
 
 	const strings = editor.strings;
