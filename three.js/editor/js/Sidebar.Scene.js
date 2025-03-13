@@ -394,7 +394,7 @@ function SidebarScene(editor) {
 
 				}
 
-				if (!object.userData.hidden) {
+				if (editor.selector(object)) {
 
 					if (object.userData.draggable != undefined) {
 
