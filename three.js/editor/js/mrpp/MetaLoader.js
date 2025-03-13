@@ -21,6 +21,8 @@ function MetaLoader(editor) {
 		return await this.write(editor.scene);
 	};
 	this.isChanged = function (json) {
+		alert(json)
+		alert(this.json)
 		return this.json !== json;
 	}
 
@@ -38,6 +40,7 @@ function MetaLoader(editor) {
 
 
 		if (changed) {
+
 			editor.signals.messageSend.dispatch({
 				action: 'save-meta',
 				data
