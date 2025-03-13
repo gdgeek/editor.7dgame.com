@@ -96,11 +96,6 @@ function SidebarSettingsShortcuts( editor ) {
 
 	}
 
-	// 设置默认的保存快捷键为's'
-	if (config.getKey('settings/shortcuts/save') === undefined) {
-		config.setKey('settings/shortcuts/save', 's');
-	}
-
 	document.addEventListener( 'keydown', function ( event ) {
 
 		switch ( event.key.toLowerCase() ) {
