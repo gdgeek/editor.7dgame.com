@@ -5,7 +5,7 @@ class Factory {
 	}
 	lockNode( node ) {
 
-		//node.userData.hidden = true
+		node.userData.hidden = true
 		node.children.forEach( item => {
 			this.lockNode( item );
 		} );

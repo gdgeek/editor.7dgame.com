@@ -573,7 +573,7 @@ Editor.prototype = {
 
 		if ( this.selector != null ) {
 
-			while ( object != null && ! this.selector( object ) ) {
+			while ( object != null && ! this.selector( object )  ) {
 
 				object = object.parent;
 

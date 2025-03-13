@@ -12,6 +12,9 @@ function VerseLoader(editor) {
 	const self = this;
 
 	editor.selector = function (object) {
+		if(object.userData.hidden){
+			return false;
+		}
 		return types.includes(object.type);
 	};
 

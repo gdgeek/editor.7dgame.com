@@ -6,10 +6,13 @@ function MetaLoader(editor) {
 	this.json = null;
 	editor.selector = function (object) {
 
-		if (object.userData.type != undefined) {
+		if(object.userData.hidden){
+			return false;
+		}
+		/*if (object.userData.type != undefined) {
 
 			return true;
-		}
+		}*/
 
 		return true;
 
@@ -21,8 +24,6 @@ function MetaLoader(editor) {
 		return await this.write(editor.scene);
 	};
 	this.isChanged = function (json) {
-		alert(json)
-		alert(this.json)
 		return this.json !== json;
 	}
 
