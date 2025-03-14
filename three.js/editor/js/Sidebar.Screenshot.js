@@ -25,7 +25,7 @@ function SidebarScreenshot(editor) {
     resolutionRow.setClass('row');
     resolutionRow.setMarginBottom('10px');
 
-    const resolutionLabel = new UIText(strings.getKey('sidebar/screenshot/resolution'));
+    const resolutionLabel = new UIText(strings.getKey('sidebar/screenshot/resolution')).setWidth('90px');
     resolutionRow.add(resolutionLabel);
 
     const resolutionSelect = new UISelect().setWidth('150px');
@@ -62,7 +62,7 @@ function SidebarScreenshot(editor) {
     filenameRow.setClass('row');
     filenameRow.setMarginBottom('10px');
 
-    const filenameLabel = new UIText(strings.getKey('sidebar/screenshot/filename'));
+    const filenameLabel = new UIText(strings.getKey('sidebar/screenshot/filename')).setWidth('90px');
     filenameRow.add(filenameLabel);
 
     const filenameInput = new UIInput().setWidth('150px').setValue('screenshot');
@@ -75,7 +75,7 @@ function SidebarScreenshot(editor) {
     formatRow.setClass('row');
     formatRow.setMarginBottom('10px');
 
-    const formatLabel = new UIText(strings.getKey('sidebar/screenshot/format'));
+    const formatLabel = new UIText(strings.getKey('sidebar/screenshot/format')).setWidth('90px');
     formatRow.add(formatLabel);
 
     const formatSelect = new UISelect().setWidth('150px');

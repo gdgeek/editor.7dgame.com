@@ -56,7 +56,7 @@ function SidebarComponent( editor ) {
 			topContainer.add( new UIBreak() );
 			topContainer.add( new UIBreak() );
 
-			const label = new UIText( strings.getKey( 'sidebar/components/select' ) );
+			const label = new UIText( strings.getKey( 'sidebar/components/select' ) ).setWidth( '90px' );
 			topContainer.add( label );
 
 			// 创建下拉框

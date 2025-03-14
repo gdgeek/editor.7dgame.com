@@ -71,17 +71,17 @@ class ComponentContainer {
 
 		const remove = new UIButton( strings.getKey( 'sidebar/script/remove' ) );
 		remove.setMarginLeft( '4px' );
-		remove.onClick( function () {
-
-			if ( confirm( 'Are you sure?' ) ) {
-
-				this.editor.execute( new RemoveComponentCommand( this.editor, this.object, this.component ) );
-
-			}
-
-		}.bind( this ) );
-		container.add( remove );
-		container.add( new UIBreak() );
+		remove.onClick( function (event) {
+			this.editor.showConfirmation(strings.getKey('sidebar/components/remove/confirm'),
+				function() {
+					this.editor.execute(new RemoveComponentCommand(this.editor, this.object, this.component));
+				}.bind(this),
+				null,
+				event
+			);
+		}.bind(this));
+		container.add(remove);
+		container.add(new UIBreak());
 
 	}
 

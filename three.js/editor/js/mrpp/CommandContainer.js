@@ -36,10 +36,17 @@ class CommandContainer {
 
 		const remove = new UIButton(strings.getKey('sidebar/command/remove'));
 		remove.setMarginLeft('4px');
-		remove.onClick(function() {
-			if (confirm('确定要删除这个命令吗？')) {
-				this.editor.execute(new RemoveCommandCommand(this.editor, this.object, this.command));
-			}
+		remove.onClick(function(event) {
+			this.editor.showConfirmation(strings.getKey('sidebar/command/remove/confirm'),
+				// 确认回调
+				function() {
+					this.editor.execute(new RemoveCommandCommand(this.editor, this.object, this.command));
+				}.bind(this),
+				// 取消回调
+				null,
+				// 事件对象
+				event
+			);
 		}.bind(this));
 		container.add(remove);
 		container.add(new UIBreak());

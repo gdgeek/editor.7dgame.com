@@ -38,7 +38,7 @@ function SidebarCommand(editor) {
 			topContainer.add(new UIBreak());
 			topContainer.add(new UIBreak());
 
-			const label = new UIText(strings.getKey('sidebar/command/select'));
+			const label = new UIText(strings.getKey('sidebar/command/select')).setWidth('90px');
 			topContainer.add(label);
 
 			// 创建下拉框

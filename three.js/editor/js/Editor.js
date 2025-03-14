@@ -109,7 +109,9 @@ function Editor() {
 		viewportCameraChanged: new Signal(),
 
 		messageSend: new Signal(),
-		messageReceive: new Signal()
+		messageReceive: new Signal(),
+
+		notificationAdded: new Signal()
 	};
 
 	this.config = new Config();
@@ -783,7 +785,6 @@ Editor.prototype = {
 	},
 
 	showNotification: function (message, isError) {
-		// 使用临时通知元素（已确认有效）
 		console.log('显示通知:', message);
 
 		// 创建临时通知元素
@@ -826,6 +827,217 @@ Editor.prototype = {
 
 		// 同时触发通知信号，保持兼容性
 		this.signals.notificationAdded.dispatch(message);
+	},
+
+	showConfirmation: function (message, onConfirm, onCancel, event) {
+		console.log('显示确认框:', message);
+
+		// 创建确认通知元素
+		const confirmNotification = document.createElement('div');
+		confirmNotification.style.position = 'fixed';
+		confirmNotification.style.backgroundColor = 'var(--popconfirm-bg, rgba(50, 50, 50, 0.95))';
+		confirmNotification.style.color = 'var(--popconfirm-text, #fff)';
+		confirmNotification.style.padding = '12px';
+		confirmNotification.style.borderRadius = '6px';
+		confirmNotification.style.zIndex = '10000';
+		confirmNotification.style.fontFamily = 'Arial, sans-serif';
+		confirmNotification.style.fontSize = '14px';
+		confirmNotification.style.boxShadow = '0 3px 6px -4px rgba(0,0,0,0.12), 0 6px 16px 0 rgba(0,0,0,0.08)';
+		confirmNotification.style.minWidth = '200px';
+		confirmNotification.style.maxWidth = '250px';
+
+		// 创建箭头元素
+		const arrow = document.createElement('div');
+		arrow.style.position = 'absolute';
+		arrow.style.width = '8px';
+		arrow.style.height = '8px';
+		arrow.style.backgroundColor = 'var(--popconfirm-bg, rgba(50, 50, 50, 0.95))';
+		arrow.style.transform = 'rotate(45deg)';
+		arrow.style.zIndex = '9999';
+		confirmNotification.appendChild(arrow);
+
+		// 根据点击事件计算位置
+		if (event) {
+			// 获取点击位置
+			const rect = event.target.getBoundingClientRect();
+			const arrowGap = 13; // 箭头到按钮的距离
+
+			// 默认显示在按钮下方
+			const buttonCenterX = rect.left + (rect.width / 2);
+			confirmNotification.style.left = (buttonCenterX - 28) + 'px';
+			confirmNotification.style.top = (rect.bottom + arrowGap) + 'px';
+
+			// 设置箭头位置为弹出框中间，指向上
+			arrow.style.left = '28px';
+			arrow.style.top = '-4px';
+			arrow.style.bottom = 'auto';
+
+			// 检查是否会超出视窗边界并调整位置
+			setTimeout(() => {
+				const notificationRect = confirmNotification.getBoundingClientRect();
+				const viewportWidth = window.innerWidth;
+				const viewportHeight = window.innerHeight;
+
+				// 如果会超出右边界，向左偏移
+				if (notificationRect.right > viewportWidth) {
+					const leftOffset = viewportWidth - notificationRect.width - 10;
+					confirmNotification.style.left = leftOffset + 'px';
+					// 调整箭头位置
+					const arrowLeft = buttonCenterX - leftOffset - 4;
+					arrow.style.left = Math.max(8, Math.min(notificationRect.width - 8, arrowLeft)) + 'px';
+				}
+
+				// 如果会超出左边界，向右偏移
+				if (notificationRect.left < 10) {
+					confirmNotification.style.left = '10px';
+					// 调整箭头位置
+					const arrowLeft = buttonCenterX - 10 - 4;
+					arrow.style.left = Math.max(8, Math.min(notificationRect.width - 8, arrowLeft)) + 'px';
+				}
+
+				// 如果会超出下边界，显示在按钮上方
+				if (notificationRect.bottom > viewportHeight - 10) {
+					confirmNotification.style.top = (rect.top - arrowGap - notificationRect.height) + 'px';
+					arrow.style.top = 'auto';
+					arrow.style.bottom = '-4px';
+				}
+			}, 0);
+		} else {
+			// 默认显示在右下角
+			confirmNotification.style.bottom = '20px';
+			confirmNotification.style.right = '20px';
+			arrow.style.display = 'none';
+		}
+
+		// 创建消息文本
+		const messageText = document.createElement('div');
+		messageText.textContent = message;
+		messageText.style.marginBottom = '12px';
+		messageText.style.color = 'var(--popconfirm-text, #fff)';
+		confirmNotification.appendChild(messageText);
+
+		// 创建按钮容器
+		const buttonContainer = document.createElement('div');
+		buttonContainer.style.display = 'flex';
+		buttonContainer.style.justifyContent = 'flex-end';
+		buttonContainer.style.gap = '8px';
+		confirmNotification.appendChild(buttonContainer);
+
+		// 创建取消按钮
+		const cancelButton = document.createElement('button');
+		cancelButton.textContent = '取消';
+		cancelButton.style.padding = '4px 12px';
+		cancelButton.style.border = '1px solid var(--popconfirm-btn-border, rgba(255,255,255,0.2))';
+		cancelButton.style.borderRadius = '4px';
+		cancelButton.style.backgroundColor = 'transparent';
+		cancelButton.style.color = 'var(--popconfirm-text, #fff)';
+		cancelButton.style.cursor = 'pointer';
+		cancelButton.style.fontSize = '12px';
+		cancelButton.style.transition = 'all 0.2s';
+
+		// 添加悬停效果
+		cancelButton.addEventListener('mouseover', function() {
+			cancelButton.style.backgroundColor = 'var(--popconfirm-btn-hover-bg, rgba(255,255,255,0.1))';
+		});
+		cancelButton.addEventListener('mouseout', function() {
+			cancelButton.style.backgroundColor = 'transparent';
+		});
+
+		cancelButton.addEventListener('click', function() {
+			confirmNotification.style.opacity = '0';
+			setTimeout(function() {
+				if (document.body.contains(confirmNotification)) {
+					document.body.removeChild(confirmNotification);
+				}
+				if (onCancel) onCancel();
+			}, 300);
+		});
+		buttonContainer.appendChild(cancelButton);
+
+		// 确认按钮
+		const confirmButton = document.createElement('button');
+		confirmButton.textContent = '确认';
+		confirmButton.style.padding = '4px 12px';
+		confirmButton.style.border = 'none';
+		confirmButton.style.borderRadius = '4px';
+		confirmButton.style.backgroundColor = 'var(--popconfirm-primary-btn-bg, #e74c3c)';
+		confirmButton.style.color = '#fff';
+		confirmButton.style.cursor = 'pointer';
+		confirmButton.style.fontSize = '12px';
+		confirmButton.style.transition = 'all 0.2s';
+
+		// 添加悬停效果
+		confirmButton.addEventListener('mouseover', function() {
+			confirmButton.style.backgroundColor = 'var(--popconfirm-primary-btn-hover-bg, #d44637)';
+		});
+		confirmButton.addEventListener('mouseout', function() {
+			confirmButton.style.backgroundColor = 'var(--popconfirm-primary-btn-bg, #e74c3c)';
+		});
+
+		confirmButton.addEventListener('click', function() {
+			confirmNotification.style.opacity = '0';
+			setTimeout(function() {
+				if (document.body.contains(confirmNotification)) {
+					document.body.removeChild(confirmNotification);
+				}
+				if (onConfirm) onConfirm();
+			}, 300);
+		});
+		buttonContainer.appendChild(confirmButton);
+
+		// 设置过渡效果
+		confirmNotification.style.transition = 'all 0.2s cubic-bezier(0.645, 0.045, 0.355, 1)';
+		confirmNotification.style.opacity = '0';
+		confirmNotification.style.transform = 'translateY(4px)';
+		document.body.appendChild(confirmNotification);
+
+		// 触发重排后显示元素
+		setTimeout(function() {
+			confirmNotification.style.opacity = '1';
+			confirmNotification.style.transform = 'translateY(0)';
+		}, 10);
+
+		// 10秒后自动淡出并移除确认框（如果用户没有操作）
+		const autoCloseTimeout = setTimeout(function() {
+			if (document.body.contains(confirmNotification)) {
+				confirmNotification.style.opacity = '0';
+				confirmNotification.style.transform = 'translateY(4px)';
+				setTimeout(function() {
+					if (document.body.contains(confirmNotification)) {
+						document.body.removeChild(confirmNotification);
+					}
+					if (onCancel) onCancel();
+				}, 300);
+			}
+		}, 10000);
+
+		// 如果用户点击了按钮，清除自动关闭的定时器
+		confirmButton.addEventListener('click', function() {
+			clearTimeout(autoCloseTimeout);
+		});
+		cancelButton.addEventListener('click', function() {
+			clearTimeout(autoCloseTimeout);
+		});
+
+		// 点击其他区域关闭确认框
+		const clickOutsideHandler = function(e) {
+			if (!confirmNotification.contains(e.target) && e.target !== event?.target) {
+				document.removeEventListener('click', clickOutsideHandler);
+				confirmNotification.style.opacity = '0';
+				confirmNotification.style.transform = 'translateY(4px)';
+				setTimeout(function() {
+					if (document.body.contains(confirmNotification)) {
+						document.body.removeChild(confirmNotification);
+					}
+					if (onCancel) onCancel();
+				}, 300);
+			}
+		};
+
+		// 延迟添加点击事件，避免立即触发
+		setTimeout(() => {
+			document.addEventListener('click', clickOutsideHandler);
+		}, 100);
 	}
 };
 
