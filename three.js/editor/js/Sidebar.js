@@ -9,6 +9,7 @@ import { SidebarCommand } from './Sidebar.Command.js'
 import { SidebarAnimation } from './Sidebar.Animation.js'
 import { SidebarProject } from './Sidebar.Project.js'
 import { SidebarSettings } from './Sidebar.Settings.js'
+import { SidebarScreenshot } from './Sidebar.Screenshot.js'
 
 function Sidebar(editor) {
 	const strings = editor.strings
@@ -33,10 +34,12 @@ function Sidebar(editor) {
 	}
 	const project = new SidebarProject(editor)
 	const settings = new SidebarSettings(editor)
+	const screenshot = new SidebarScreenshot(editor)
 
 	container.addTab('scene', strings.getKey('sidebar/scene'), scene)
 	container.addTab('project', strings.getKey('sidebar/project'), project)
 	container.addTab('settings', strings.getKey('sidebar/settings'), settings)
+	container.addTab('screenshot', strings.getKey('sidebar/screenshot'), screenshot)
 	container.select('scene')
 
 	return container

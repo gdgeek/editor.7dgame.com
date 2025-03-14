@@ -371,7 +371,14 @@ function Strings( config ) {
 			'viewport/info/objects': 'Objects',
 			'viewport/info/vertices': 'Vertices',
 			'viewport/info/triangles': 'Triangles',
-			'viewport/info/frametime': 'Frametime'
+			'viewport/info/frametime': 'Frametime',
+			'sidebar/screenshot': 'Screenshot',
+			'sidebar/screenshot/resolution': 'Resolution',
+			'sidebar/screenshot/filename': 'Filename',
+			'sidebar/screenshot/format': 'Format',
+			'sidebar/screenshot/capture': 'Capture Screenshot',
+			'sidebar/screenshot/preview': 'Preview',
+			'sidebar/screenshot/download': 'Download Image'
 		},
 
 		fr: {
@@ -708,7 +715,14 @@ function Strings( config ) {
 			'viewport/info/objects': 'Objets',
 			'viewport/info/vertices': 'Sommets',
 			'viewport/info/triangles': 'Triangles',
-			'viewport/info/frametime': 'Temps de trame'
+			'viewport/info/frametime': 'Temps de trame',
+			'sidebar/screenshot': 'Screenshot',
+			'sidebar/screenshot/resolution': 'Resolution',
+			'sidebar/screenshot/filename': 'Filename',
+			'sidebar/screenshot/format': 'Format',
+			'sidebar/screenshot/capture': 'Capture Screenshot',
+			'sidebar/screenshot/preview': 'Preview',
+			'sidebar/screenshot/download': 'Download Image'
 		},
 
 		zh: {
@@ -1079,7 +1093,14 @@ function Strings( config ) {
 			'viewport/info/objects': '物体',
 			'viewport/info/vertices': '顶点',
 			'viewport/info/triangles': '三角形',
-			'viewport/info/frametime': '帧时'
+			'viewport/info/frametime': '帧时',
+			'sidebar/screenshot': '截图',
+			'sidebar/screenshot/resolution': '分辨率',
+			'sidebar/screenshot/filename': '文件名',
+			'sidebar/screenshot/format': '格式',
+			'sidebar/screenshot/capture': '截取快照',
+			'sidebar/screenshot/preview': '预览',
+			'sidebar/screenshot/download': '下载图片'
 		},
 
 		ja: {
@@ -1450,7 +1471,14 @@ function Strings( config ) {
 			'viewport/info/objects': 'オブジェクト',
 			'viewport/info/vertices': '頂点',
 			'viewport/info/triangles': '三角形',
-			'viewport/info/frametime': 'フレーム時間'
+			'viewport/info/frametime': 'フレーム時間',
+			'sidebar/screenshot': 'Screenshot',
+			'sidebar/screenshot/resolution': 'Resolution',
+			'sidebar/screenshot/filename': 'Filename',
+			'sidebar/screenshot/format': 'Format',
+			'sidebar/screenshot/capture': 'Capture Screenshot',
+			'sidebar/screenshot/preview': 'Preview',
+			'sidebar/screenshot/download': 'Download Image'
 		}
 	};
 

@@ -573,7 +573,7 @@ Editor.prototype = {
 
 		if ( this.selector != null ) {
 
-			while ( object != null && ! this.selector( object )  ) {
+			while ( object != null && ! this.selector( object ) ) {
 
 				object = object.parent;
 
@@ -780,6 +780,52 @@ Editor.prototype = {
 
 		this.history.redo();
 
+	},
+
+	showNotification: function (message, isError) {
+		// 使用临时通知元素（已确认有效）
+		console.log('显示通知:', message);
+
+		// 创建临时通知元素
+		const tempNotification = document.createElement('div');
+		tempNotification.style.position = 'fixed';
+		tempNotification.style.bottom = '20px';
+		tempNotification.style.right = '20px';
+		tempNotification.style.backgroundColor = isError ? 'rgba(255, 0, 0, 0.8)' : 'rgb(67, 166, 70, 0.8)';
+		tempNotification.style.color = '#fff';
+		tempNotification.style.padding = '10px 15px';
+		tempNotification.style.borderRadius = '4px';
+		tempNotification.style.zIndex = '10000';
+		tempNotification.style.fontFamily = 'Arial, sans-serif';
+		tempNotification.style.fontSize = '14px';
+		tempNotification.style.transition = 'opacity 0.3s';
+		tempNotification.style.opacity = '1';
+		tempNotification.style.cursor = 'pointer';
+		tempNotification.textContent = message;
+		document.body.appendChild(tempNotification);
+
+		// 添加点击事件，点击通知可以关闭它
+		tempNotification.addEventListener('click', function() {
+			tempNotification.style.opacity = '0';
+			setTimeout(function() {
+				if (document.body.contains(tempNotification)) {
+					document.body.removeChild(tempNotification);
+				}
+			}, 300);
+		});
+
+		// 3秒后自动淡出并移除临时通知
+		setTimeout(function() {
+			tempNotification.style.opacity = '0';
+			setTimeout(function() {
+				if (document.body.contains(tempNotification)) {
+					document.body.removeChild(tempNotification);
+				}
+			}, 300);
+		}, 3000);
+
+		// 同时触发通知信号，保持兼容性
+		this.signals.notificationAdded.dispatch(message);
 	}
 };
 
