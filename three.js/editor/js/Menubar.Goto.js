@@ -5,6 +5,7 @@ import { UIPanel, UIRow, UIHorizontalRule } from './libs/ui.js';
 import { AddObjectCommand } from './commands/AddObjectCommand.js';
 import { MetaFactory } from './mrpp/MetaFactory.js';
 import { Builder } from './mrpp/Builder.js';
+import { DialogUtils } from './utils/DialogUtils.js';
 
 function MenubarGoto( editor ) {
 
@@ -48,14 +49,25 @@ function MenubarGoto( editor ) {
 	const option = new UIRow();
 	option.setClass( 'option' );
 	option.setTextContent( strings.getKey( 'menubar/code/script' ) );
-	option.onClick( async function () {
+	option.onClick( async function (event) {
 
 		const changed = (editor.verseLoader && await editor.verseLoader.changed()) || (editor.metaLoader && await editor.metaLoader.changed());
 
 
 		if(changed){
-			const userConfirmed = confirm('确认再没保存的情况下进行离开编辑器?');
-			if (!userConfirmed) return;
+			// const userConfirmed = confirm('确认再没保存的情况下进行离开编辑器?');
+            // if (!userConfirmed) return;
+
+
+			DialogUtils.showConfirm(strings.getKey('sidebar/confirm/scene/modified'), function() {
+				// 用户点击确认按钮
+				const data = {
+					action: 'goto',
+					data: { 'target': 'blockly.js' }
+				};
+				editor.signals.messageSend.dispatch( data );
+			}, null, event.parent);
+			return;
 		}
 
 		const data = {
