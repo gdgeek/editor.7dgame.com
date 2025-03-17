@@ -59,7 +59,7 @@ function MenubarGoto( editor ) {
             // if (!userConfirmed) return;
 
 
-			DialogUtils.showConfirm('场景发生了修改，确认在没保存的情况下进行离开编辑器?', function() {
+			DialogUtils.showConfirm(strings.getKey('sidebar/confirm/scene/modified'), function() {
 				// 用户点击确认按钮
 				const data = {
 					action: 'goto',

@@ -164,6 +164,8 @@ function Strings( config ) {
 			'sidebar/entity': 'Entity(Custom)',
 			'sidebar/entity/button': 'Edit',
 
+			'sidebar/confirm/scene/modified': 'The scene has been modified, confirm to leave the editor without saving?',
+
 			'sidebar/geometry/type': 'Type',
 			'sidebar/geometry/new': 'New',
 			'sidebar/geometry/uuid': 'UUID',
@@ -888,6 +890,8 @@ function Strings( config ) {
 			'sidebar/entity': '组件（自定义）',
 			'sidebar/entity/button': '编辑',
 
+			'sidebar/confirm/scene/modified': '场景发生了修改，确认在没保存的情况下进行离开编辑器?',
+
 			'sidebar/geometry/type': '类型',
 			'sidebar/geometry/new': '更新',
 			'sidebar/geometry/uuid': '识别码',
@@ -1266,6 +1270,8 @@ function Strings( config ) {
 
 			'sidebar/entity': 'コンポーネント（カスタム）',
 			'sidebar/entity/button': '編集',
+
+			'sidebar/confirm/scene/modified': 'シーンが変更されました。保存せずに編集器を離れますか？',
 
 			'sidebar/geometry/type': 'タイプ',
 			'sidebar/geometry/new': '更新',
