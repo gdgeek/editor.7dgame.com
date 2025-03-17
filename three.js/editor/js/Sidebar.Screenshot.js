@@ -133,13 +133,24 @@ function SidebarScreenshot(editor) {
 
     // 下载按钮
     const downloadButton = new UIButton(strings.getKey('sidebar/screenshot/download'));
-    downloadButton.setWidth('100%');
+    downloadButton.setWidth('48%');
     downloadButton.dom.style.backgroundColor = '#2196F3';
     downloadButton.dom.style.color = '#fff';
     downloadButton.dom.style.padding = '8px';
+    downloadButton.dom.style.marginRight = '4%';
     downloadButton.setMarginBottom('10px');
     downloadButton.setDisplay('none'); // 初始隐藏
     previewPanel.add(downloadButton);
+
+    // 上传作为封面按钮
+    const uploadAsCoverButton = new UIButton(strings.getKey('sidebar/screenshot/uploadAsCover') || '上传作为封面');
+    uploadAsCoverButton.setWidth('48%');
+    uploadAsCoverButton.dom.style.backgroundColor = '#FF9800';
+    uploadAsCoverButton.dom.style.color = '#fff';
+    uploadAsCoverButton.dom.style.padding = '8px';
+    uploadAsCoverButton.setMarginBottom('10px');
+    uploadAsCoverButton.setDisplay('none'); // 初始隐藏
+    previewPanel.add(uploadAsCoverButton);
 
     // 事件处理
     resolutionSelect.onChange(function() {
@@ -167,6 +178,22 @@ function SidebarScreenshot(editor) {
 
             // 显示下载通知
             editor.showNotification('图片已下载: ' + currentFilename, false);
+        }
+    });
+
+    // 上传作为封面按钮点击事件
+    uploadAsCoverButton.onClick(function() {
+        if (currentImageDataURL) {
+            // 发送消息到父窗口，将截图数据作为封面上传
+            editor.signals.messageSend.dispatch({
+                action: 'upload-cover',
+                data: {
+                    imageData: currentImageDataURL,
+                    filename: currentFilename
+                }
+            });
+
+            editor.showNotification('正在上传封面...', false);
         }
     });
 
@@ -243,6 +270,7 @@ function SidebarScreenshot(editor) {
             previewImage.src = dataURL;
             previewPanel.setDisplay(''); // 显示预览面板
             downloadButton.setDisplay(''); // 显示下载按钮
+            uploadAsCoverButton.setDisplay(''); // 显示上传作为封面按钮
 
             // 自动下载
             const link = document.createElement('a');

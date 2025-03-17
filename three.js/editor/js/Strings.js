@@ -384,7 +384,8 @@ function Strings( config ) {
 			'sidebar/screenshot/format': 'Format',
 			'sidebar/screenshot/capture': 'Capture Screenshot',
 			'sidebar/screenshot/preview': 'Preview',
-			'sidebar/screenshot/download': 'Download Image'
+			'sidebar/screenshot/download': 'Download Image',
+			'sidebar/screenshot/uploadAsCover': 'Upload as Cover'
 		},
 
 		fr: {
@@ -728,7 +729,8 @@ function Strings( config ) {
 			'sidebar/screenshot/format': 'Format',
 			'sidebar/screenshot/capture': 'Capture Screenshot',
 			'sidebar/screenshot/preview': 'Preview',
-			'sidebar/screenshot/download': 'Download Image'
+			'sidebar/screenshot/download': 'Download Image',
+			'sidebar/screenshot/uploadAsCover': 'Upload as Cover'
 		},
 
 		zh: {
@@ -1114,7 +1116,8 @@ function Strings( config ) {
 			'sidebar/screenshot/format': '格式',
 			'sidebar/screenshot/capture': '截取快照',
 			'sidebar/screenshot/preview': '预览',
-			'sidebar/screenshot/download': '下载图片'
+			'sidebar/screenshot/download': '下载图片',
+			'sidebar/screenshot/uploadAsCover': '上传作为封面'
 		},
 
 		ja: {
@@ -1498,7 +1501,8 @@ function Strings( config ) {
 			'sidebar/screenshot/format': 'Format',
 			'sidebar/screenshot/capture': 'Capture Screenshot',
 			'sidebar/screenshot/preview': 'Preview',
-			'sidebar/screenshot/download': 'Download Image'
+			'sidebar/screenshot/download': 'Download Image',
+			'sidebar/screenshot/uploadAsCover': 'Upload as Cover'
 		}
 	};
 
