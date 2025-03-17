@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { UIPanel, UIRow, UIButton, UIInput, UISelect, UIText } from './libs/ui.js';
+import { UIBoolean } from './libs/ui.three.js';
 
 function SidebarScreenshot(editor) {
     const strings = editor.strings;
@@ -87,6 +88,18 @@ function SidebarScreenshot(editor) {
     formatRow.add(formatSelect);
 
     settingsPanel.add(formatRow);
+
+    // 显示网格线设置
+    const showGridRow = new UIRow();
+    showGridRow.setClass('row');
+    showGridRow.setMarginBottom('10px');
+
+    const showGridLabel = new UIText(strings.getKey('sidebar/settings/viewport/grid')).setWidth('90px');
+    showGridRow.add(showGridLabel);
+
+    const showGrid = new UIBoolean(true);
+    showGridRow.add(showGrid);
+    settingsPanel.add(showGridRow);
 
     // 截图按钮
     const buttonRow = new UIRow();
@@ -241,17 +254,101 @@ function SidebarScreenshot(editor) {
 
         try {
             // 创建一个临时的渲染器来截图
-            const tempRenderer = new THREE.WebGLRenderer({ preserveDrawingBuffer: true, antialias: true });
+            const tempRenderer = new THREE.WebGLRenderer({
+                preserveDrawingBuffer: true,
+                antialias: true,
+                alpha: true
+            });
+
+            // 设置渲染器尺寸
             tempRenderer.setSize(width, height);
-            tempRenderer.setClearColor(0xffffff, 0); // 透明背景
+			
+            // 设置渲染器属性以匹配编辑器的渲染器
+            tempRenderer.outputEncoding = THREE.sRGBEncoding; // 默认使用sRGB编码
+
+            // 物理正确光照
+            const physicallyCorrectLights = editor.config.getKey('project/renderer/physicallyCorrectLights');
+            if (physicallyCorrectLights !== undefined) {
+                tempRenderer.physicallyCorrectLights = physicallyCorrectLights;
+            }
+
+            // 阴影
+            const shadows = editor.config.getKey('project/renderer/shadows');
+            if (shadows !== undefined) {
+                tempRenderer.shadowMap.enabled = shadows;
+            }
+
+            // 阴影类型
+            const shadowType = editor.config.getKey('project/renderer/shadowType');
+            if (shadowType !== undefined) {
+                tempRenderer.shadowMap.type = shadowType;
+            }
+
+            // 色调映射
+            const toneMapping = editor.config.getKey('project/renderer/toneMapping');
+            if (toneMapping !== undefined) {
+                tempRenderer.toneMapping = toneMapping;
+            }
+
+            // 色调映射曝光
+            const toneMappingExposure = editor.config.getKey('project/renderer/toneMappingExposure');
+            if (toneMappingExposure !== undefined) {
+                tempRenderer.toneMappingExposure = toneMappingExposure;
+            }
+
+            // 获取当前背景色
+            // 检查是否有媒体查询以确定背景色
+            let bgColor = 0xaaaaaa; // 默认背景色
+            if (window.matchMedia) {
+                const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+                bgColor = mediaQuery.matches ? 0x333333 : 0xaaaaaa;
+            }
+            tempRenderer.setClearColor(bgColor, 1);
+
+            // 如果场景有背景色或背景纹理，应用它
+            if (scene.background) {
+                // 如果场景已经设置了背景，临时渲染器会自动使用它
+				tempRenderer.setClearColor(scene.background, 1);
+            }
+
+            // 如果场景有雾效，它会自动被渲染
+
 
             // 更新相机宽高比
             const originalAspect = camera.aspect;
             camera.aspect = width / height;
             camera.updateProjectionMatrix();
 
-            // 渲染场景
+            // 获取用户设置的网格线显示状态
+            const shouldShowGrid = showGrid.getValue();
+
+            // 渲染主场景
             tempRenderer.render(scene, camera);
+
+            // 如果需要渲染网格线，创建并添加到场景中
+            if (shouldShowGrid) {
+                // 创建一个与编辑器中相同的网格线
+                const grid = new THREE.Group();
+
+                const grid1 = new THREE.GridHelper(30, 30, 0x888888);
+                grid1.material.color.setHex(0x888888);
+                grid1.material.vertexColors = false;
+                grid.add(grid1);
+
+                const grid2 = new THREE.GridHelper(30, 6, 0x222222);
+                grid2.material.color.setHex(0x222222);
+                grid2.material.depthFunc = THREE.AlwaysDepth;
+                grid2.material.vertexColors = false;
+                grid.add(grid2);
+
+                // 添加网格线到场景并渲染
+                scene.add(grid);
+                tempRenderer.autoClear = false;
+                tempRenderer.render(scene, camera);
+                scene.remove(grid);
+            }
+
+            tempRenderer.autoClear = true;
 
             // 获取图像数据
             const format = formatSelect.getValue();

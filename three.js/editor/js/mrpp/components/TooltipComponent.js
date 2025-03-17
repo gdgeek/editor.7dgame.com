@@ -30,6 +30,7 @@ class TooltipComponent {
         text: '',
         from: { uuid: '', x: 0, y: 0, z: 0 },
         to: { uuid: '', x: 0, y: 0, z: 0 },
+				action: 'tooltip'
       }
     };
   }

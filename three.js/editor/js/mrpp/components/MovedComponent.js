@@ -21,7 +21,8 @@ class MovedComponent {
           x: { enable: false, min: 0, max: 0 },
           y: { enable: false, min: 0, max: 0 },
           z: { enable: false, min: 0, max: 0 }
-        }
+        },
+				action: 'moved'
       }
     }
     return component;
