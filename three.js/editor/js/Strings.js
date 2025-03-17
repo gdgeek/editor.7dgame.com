@@ -160,6 +160,9 @@ function Strings( config ) {
 			'sidebar/command/voice/scaleDown': 'Scale Down',
 			'sidebar/command/voice/decompose': 'Decompose',
 			'sidebar/command/voice/reset': 'Reset',
+			'sidebar/command/voice/nextStep': 'Next Step',
+			'sidebar/command/voice/returnMain': 'Return Main Menu',
+			'sidebar/command/voice/closeTextCard': 'Close Text Card',
 
 			'sidebar/entity': 'Entity(Custom)',
 			'sidebar/entity/button': 'Edit',
@@ -884,6 +887,10 @@ function Strings( config ) {
 			'sidebar/command/voice/scaleDown': '缩小',
 			'sidebar/command/voice/decompose': '分解',
 			'sidebar/command/voice/reset': '还原',
+			'sidebar/command/voice/nextStep': '下一步',
+			'sidebar/command/voice/returnMain': '返回主界面',
+			'sidebar/command/voice/closeTextCard': '关闭说明卡',
+
 
 			'sidebar/entity': '组件（自定义）',
 			'sidebar/entity/button': '编辑',
@@ -1263,6 +1270,9 @@ function Strings( config ) {
 			'sidebar/command/voice/scaleDown': '縮小',
 			'sidebar/command/voice/decompose': '分解',
 			'sidebar/command/voice/reset': 'リセット',
+			'sidebar/command/voice/nextStep': '次のステップ',
+			'sidebar/command/voice/returnMain': 'メイン画面に戻る',
+			'sidebar/command/voice/closeTextCard': '説明カードを閉じる',
 
 			'sidebar/entity': 'コンポーネント（カスタム）',
 			'sidebar/entity/button': '編集',
