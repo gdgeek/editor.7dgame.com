@@ -32,34 +32,17 @@ function SidebarScreenshot(editor) {
 
     const resolutionSelect = new UISelect().setWidth('150px');
     resolutionSelect.setOptions({
-        'current': '当前视口大小',
+        'current': '当前视口',
         '1920x1080': '1920 × 1080 (FHD)',
         '1280x720': '1280 × 720 (HD)',
-        '3840x2160': '3840 × 2160 (4K)',
-        'custom': '自定义'
+        '3840x2160': '3840 × 2160 (4K)'
     });
     resolutionSelect.setValue('current');
     resolutionRow.add(resolutionSelect);
 
     settingsPanel.add(resolutionRow);
 
-    // 自定义分辨率（默认隐藏）
-    const customResolutionRow = new UIRow();
-    customResolutionRow.setClass('row');
-    customResolutionRow.setMarginBottom('10px');
-    customResolutionRow.setDisplay('none');
-
-    const widthInput = new UIInput().setWidth('70px').setValue('1920');
-    customResolutionRow.add(widthInput);
-
-    customResolutionRow.add(new UIText(' × ').setMarginLeft('5px').setMarginRight('5px'));
-
-    const heightInput = new UIInput().setWidth('70px').setValue('1080');
-    customResolutionRow.add(heightInput);
-
-    settingsPanel.add(customResolutionRow);
-
-	// 背景色设置
+    // 背景色设置
     const backgroundRow = new UIRow();
     backgroundRow.setClass('row');
     backgroundRow.setMarginBottom('10px');
@@ -186,11 +169,28 @@ function SidebarScreenshot(editor) {
 
     // 事件处理
     resolutionSelect.onChange(function() {
-        if (resolutionSelect.getValue() === 'custom') {
-            customResolutionRow.setDisplay('');
-        } else {
-            customResolutionRow.setDisplay('none');
-        }
+        // 更新配置
+        editor.config.setKey('screenshot/resolution', resolutionSelect.getValue());
+    });
+
+    // 背景色设置事件
+    backgroundSelect.onChange(function() {
+        editor.config.setKey('screenshot/background', backgroundSelect.getValue());
+    });
+
+    // 文件名设置事件
+    filenameInput.onChange(function() {
+        editor.config.setKey('screenshot/filename', filenameInput.getValue());
+    });
+
+    // 文件格式设置事件
+    formatSelect.onChange(function() {
+        editor.config.setKey('screenshot/format', formatSelect.getValue());
+    });
+
+    // 显示网格线设置事件
+    showGrid.onChange(function() {
+        editor.config.setKey('screenshot/showGrid', showGrid.getValue());
     });
 
     captureButton.onClick(function() {
@@ -262,9 +262,6 @@ function SidebarScreenshot(editor) {
         if (resolution === 'current') {
             width = originalSize.width;
             height = originalSize.height;
-        } else if (resolution === 'custom') {
-            width = parseInt(widthInput.getValue());
-            height = parseInt(heightInput.getValue());
         } else {
             const dims = resolution.split('x');
             width = parseInt(dims[0]);
