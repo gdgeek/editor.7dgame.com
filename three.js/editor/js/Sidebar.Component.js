@@ -6,20 +6,12 @@ import { ComponentContainer } from './mrpp/ComponentContainer.js';
 
 function SidebarComponent( editor ) {
 
-
-
-
-
-
 	const strings = editor.strings;
 
 	const signals = editor.signals;
 
 	const container = new UIPanel();
 	container.setDisplay( 'none' );
-
-
-
 
 	const topContainer = new UIRow();
 	container.add( topContainer );
@@ -36,23 +28,21 @@ function SidebarComponent( editor ) {
 		const object = editor.selected;
 
 		if ( object === null ) {
-
 			return;
-
 		}
-
-
-
 
 		const components = object.components;
 
-
-
 		if ( components !== undefined ) {
 
-			topContainer.setDisplay( 'block' );
+			// 只有当有组件实例时才显示组件标题和内容
+			if (components.length > 0) {
+				topContainer.setDisplay( 'block' );
+				topContainer.add( new UIText( strings.getKey( 'sidebar/components' ).toUpperCase() ) );
+			}
 
-			topContainer.add( new UIText( strings.getKey( 'sidebar/components' ).toUpperCase() ) );
+			// 注释掉选择项内容（下拉框和新建按钮）
+			/*
 			topContainer.add( new UIBreak() );
 			topContainer.add( new UIBreak() );
 
@@ -91,10 +81,8 @@ function SidebarComponent( editor ) {
 
 			}.bind( this ) );
 			topContainer.add( newComponent );
-
+			*/
 		}
-
-
 
 		if ( components !== undefined && components.length > 0 ) {
 
@@ -107,8 +95,6 @@ function SidebarComponent( editor ) {
 
 					const cc = new ComponentContainer( editor, object, component );
 					cc.renderer( componentsContainer );
-
-
 
 					// 将水平分隔线添加到容器中
 					componentsContainer.add( new UIBreak() );

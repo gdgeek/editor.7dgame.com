@@ -32,9 +32,14 @@ function SidebarCommand(editor) {
 		const commands = object.commands;
 
 		if (commands !== undefined) {
-			topContainer.setDisplay('block');
+			// 只有当有指令实例时才显示指令标题和内容
+			if (commands.length > 0) {
+				topContainer.setDisplay('block');
+				topContainer.add(new UIText(strings.getKey('sidebar/command').toUpperCase()));
+			}
 
-			topContainer.add(new UIText(strings.getKey('sidebar/command').toUpperCase()));
+			// 注释掉选择项内容（下拉框和新建按钮）
+			/*
 			topContainer.add(new UIBreak());
 			topContainer.add(new UIBreak());
 
@@ -62,6 +67,7 @@ function SidebarCommand(editor) {
 				}
 			}.bind(this));
 			topContainer.add(newCommand);
+			*/
 		}
 
 		if (commands !== undefined && commands.length > 0) {
