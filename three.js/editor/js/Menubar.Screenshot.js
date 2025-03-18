@@ -170,26 +170,109 @@ function MenubarScreenshot(editor) {
             const dataURL = tempRenderer.domElement.toDataURL(mimeType, quality);
             const finalFilename = filename + '.' + format;
 
-            // 播放截图动画效果
+            // 播放截图动画效果，但不自动消失
             ScreenshotUtils.playAnimation(dataURL, null, function() {
-                // 动画完成后显示确认对话框
-                editor.showConfirmation(
-                    strings.getKey('menubar/screenshot/confirm_upload'),
-                    function() {
-                        editor.signals.messageSend.dispatch({
-                            action: 'upload-cover',
-                            data: {
-                                imageData: dataURL,
-                                filename: finalFilename
-                            }
-                        });
+                // 创建预览容器
+                const previewContainer = document.createElement('div');
+                previewContainer.style.position = 'fixed';
+                previewContainer.style.top = '50%';
+                previewContainer.style.left = '50%';
+                previewContainer.style.transform = 'translate(-50%, -50%)';
+                previewContainer.style.zIndex = '1000';
+                previewContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                previewContainer.style.padding = '20px';
+                previewContainer.style.borderRadius = '5px';
+                previewContainer.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.5)';
+                previewContainer.style.display = 'flex';
+                previewContainer.style.flexDirection = 'column';
+                previewContainer.style.alignItems = 'center';
 
-                        editor.showNotification(strings.getKey('menubar/screenshot/uploading'), false);
-                    },
-                    function() {
-                        editor.showNotification(strings.getKey('menubar/screenshot/upload_canceled'), false);
-                    }
-                );
+                // 创建预览图片
+                const previewImage = document.createElement('img');
+                previewImage.src = dataURL;
+                previewImage.style.maxWidth = '80vw';
+                previewImage.style.maxHeight = '60vh';
+                previewImage.style.marginBottom = '15px';
+                previewImage.style.border = '1px solid #ccc';
+                previewContainer.appendChild(previewImage);
+
+                // 创建按钮容器
+                const buttonContainer = document.createElement('div');
+                buttonContainer.style.display = 'flex';
+                buttonContainer.style.justifyContent = 'space-between';
+                buttonContainer.style.width = '100%';
+
+                // 创建取消按钮（左侧）
+                const cancelButton = document.createElement('button');
+                cancelButton.textContent = strings.getKey('menubar/screenshot/cancel') || '取消';
+                cancelButton.style.padding = '8px 15px';
+                cancelButton.style.backgroundColor = '#f44336';
+                cancelButton.style.color = 'white';
+                cancelButton.style.border = 'none';
+                cancelButton.style.borderRadius = '4px';
+                cancelButton.style.cursor = 'pointer';
+                cancelButton.style.flex = '1';
+                cancelButton.style.marginRight = '5px';
+                cancelButton.addEventListener('click', function() {
+                    editor.showNotification(strings.getKey('menubar/screenshot/upload_canceled'), false);
+                    document.body.removeChild(previewContainer);
+                });
+                buttonContainer.appendChild(cancelButton);
+
+                // 创建下载按钮（中间）
+                const downloadButton = document.createElement('button');
+                downloadButton.textContent = strings.getKey('menubar/screenshot/download') || '下载';
+                downloadButton.style.padding = '8px 15px';
+                downloadButton.style.backgroundColor = '#2196F3'; // 蓝色
+                downloadButton.style.color = 'white';
+                downloadButton.style.border = 'none';
+                downloadButton.style.borderRadius = '4px';
+                downloadButton.style.cursor = 'pointer';
+                downloadButton.style.flex = '1';
+                downloadButton.style.marginLeft = '5px';
+                downloadButton.style.marginRight = '5px';
+                downloadButton.addEventListener('click', function() {
+                    // 创建下载链接
+                    const link = document.createElement('a');
+                    link.href = dataURL;
+                    link.download = finalFilename;
+                    link.click();
+
+                    // 显示下载通知
+                    editor.showNotification(strings.getKey('menubar/screenshot/downloaded') || '图片已下载: ' + finalFilename, false);
+                });
+                buttonContainer.appendChild(downloadButton);
+
+                // 创建上传封面按钮（右侧）
+                const uploadButton = document.createElement('button');
+                uploadButton.textContent = strings.getKey('menubar/screenshot/upload') || '上传作为封面';
+                uploadButton.style.padding = '8px 15px';
+                uploadButton.style.backgroundColor = '#FF9800'; // 橙色
+                uploadButton.style.color = 'white';
+                uploadButton.style.border = 'none';
+                uploadButton.style.borderRadius = '4px';
+                uploadButton.style.cursor = 'pointer';
+                uploadButton.style.flex = '1';
+                uploadButton.style.marginLeft = '5px';
+                uploadButton.addEventListener('click', function() {
+                    editor.signals.messageSend.dispatch({
+                        action: 'upload-cover',
+                        data: {
+                            imageData: dataURL,
+                            filename: finalFilename
+                        }
+                    });
+
+                    editor.showNotification(strings.getKey('menubar/screenshot/uploading'), false);
+                    document.body.removeChild(previewContainer);
+                });
+                buttonContainer.appendChild(uploadButton);
+
+                // 添加按钮容器到预览容器
+                previewContainer.appendChild(buttonContainer);
+
+                // 添加预览容器到页面
+                document.body.appendChild(previewContainer);
             });
 
             // 恢复相机宽高比

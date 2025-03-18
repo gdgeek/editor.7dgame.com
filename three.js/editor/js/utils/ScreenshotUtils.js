@@ -136,38 +136,47 @@ class ScreenshotUtils {
                     // 放大到标准预览大小
                     screenshotPreview.style.transform = 'translate(-50%, -50%) scale(1)';
 
-                    // 过一段时间后隐藏预览
-                    setTimeout(() => {
-                        if (previewContainer) {
-                            // 缩小并移动到预览区域的位置
-                            const previewRect = previewContainer.getBoundingClientRect();
-                            const centerX = previewRect.left + previewRect.width / 2;
-                            const centerY = previewRect.top + previewRect.height / 2;
-
-                            const viewportWidth = window.innerWidth;
-                            const viewportHeight = window.innerHeight;
-
-                            // 计算从屏幕中心到预览区域的位置变换
-                            const translateX = ((centerX / viewportWidth) * 200) - 100; // 转换为-100到100的范围
-                            const translateY = ((centerY / viewportHeight) * 200) - 100; // 转换为-100到100的范围
-
-                            screenshotPreview.style.transform = `translate(${translateX}%, ${translateY}%) scale(0.2)`;
-                        } else {
-                            // 如果没有指定预览容器，则直接缩小并淡出
-                            screenshotPreview.style.transform = 'translate(-50%, -50%) scale(0.2)';
-                        }
-
-                        screenshotPreview.style.opacity = '0';
-
-                        // 完全隐藏动画
+                    // 在菜单栏截图时，如果没有指定预览容器，并且有回调函数，则直接调用回调
+                    // 这样可以让自定义的预览容器代替默认动画
+                    if (!previewContainer && callback && typeof callback === 'function') {
+                        // 隐藏动画容器
+                        animationContainer.style.display = 'none';
+                        // 调用回调函数
+                        callback();
+                    } else {
+                        // 过一段时间后隐藏预览
                         setTimeout(() => {
-                            animationContainer.style.display = 'none';
-                            // 如果有回调函数，则调用
-                            if (callback && typeof callback === 'function') {
-                                callback();
+                            if (previewContainer) {
+                                // 缩小并移动到预览区域的位置
+                                const previewRect = previewContainer.getBoundingClientRect();
+                                const centerX = previewRect.left + previewRect.width / 2;
+                                const centerY = previewRect.top + previewRect.height / 2;
+
+                                const viewportWidth = window.innerWidth;
+                                const viewportHeight = window.innerHeight;
+
+                                // 计算从屏幕中心到预览区域的位置变换
+                                const translateX = ((centerX / viewportWidth) * 200) - 100; // 转换为-100到100的范围
+                                const translateY = ((centerY / viewportHeight) * 200) - 100; // 转换为-100到100的范围
+
+                                screenshotPreview.style.transform = `translate(${translateX}%, ${translateY}%) scale(0.2)`;
+                            } else {
+                                // 如果没有指定预览容器，则直接缩小并淡出
+                                screenshotPreview.style.transform = 'translate(-50%, -50%) scale(0.2)';
                             }
-                        }, 500);
-                    }, 800);
+
+                            screenshotPreview.style.opacity = '0';
+
+                            // 完全隐藏动画
+                            setTimeout(() => {
+                                animationContainer.style.display = 'none';
+                                // 如果有回调函数，则调用
+                                if (callback && typeof callback === 'function') {
+                                    callback();
+                                }
+                            }, 500);
+                        }, 800);
+                    }
                 }, 300);
             }, 150);
         }, 10);

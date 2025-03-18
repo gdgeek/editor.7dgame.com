@@ -406,6 +406,10 @@ function Strings( config ) {
 			'menubar/screenshot/error/viewport_not_found': 'Cannot find viewport element',
 			'menubar/screenshot/error/canvas_not_found': 'Cannot find renderer canvas',
 			'menubar/screenshot/error/capture_failed': 'Screenshot failed',
+			'menubar/screenshot/download': 'Download',
+			'menubar/screenshot/downloaded': 'Downloaded: ',
+			'menubar/screenshot/upload': 'Upload as cover',
+			'menubar/screenshot/cancel': 'Cancel',
 
 			'menubar/component/confirm': 'Do you want to add the "{0}" component to the current object?',
 			'menubar/component/success': 'Successfully added "{0}" component',
@@ -816,6 +820,8 @@ function Strings( config ) {
 			'sidebar/screenshot/preview': '预览',
 			'sidebar/screenshot/download': '下载图片',
 			'sidebar/screenshot/uploadAsCover': '上传作为封面',
+			'sidebar/screenshot/upload': '上传作为封面',
+			'sidebar/screenshot/cancel': '取消',
 
 			'menubar/screenshot': '截图',
 			'menubar/screenshot/capture': '截取快照',
@@ -825,6 +831,10 @@ function Strings( config ) {
 			'menubar/screenshot/error/viewport_not_found': '无法找到视口元素',
 			'menubar/screenshot/error/canvas_not_found': '无法找到渲染画布',
 			'menubar/screenshot/error/capture_failed': '截图失败',
+			'menubar/screenshot/download': '下载',
+			'menubar/screenshot/downloaded': '图片已下载: ',
+			'menubar/screenshot/upload': '上传作为封面',
+			'menubar/screenshot/cancel': '取消',
 
 			'menubar/component/confirm': '你想将"{0}"组件添加到当前对象吗？',
 			'menubar/component/success': '成功添加"{0}"组件',
@@ -1231,6 +1241,8 @@ function Strings( config ) {
 			'sidebar/screenshot/preview': 'プレビュー',
 			'sidebar/screenshot/download': '画像をダウンロード',
 			'sidebar/screenshot/uploadAsCover': 'カバーとしてアップロード',
+			'sidebar/screenshot/upload': 'カバーとしてアップロード',
+			'sidebar/screenshot/cancel': 'キャンセル',
 
 			'menubar/screenshot': 'スクリーンショット',
 			'menubar/screenshot/capture': 'スクリーンショットをキャプチャ',
@@ -1240,6 +1252,10 @@ function Strings( config ) {
 			'menubar/screenshot/error/viewport_not_found': 'ビューポート要素が見つかりません',
 			'menubar/screenshot/error/canvas_not_found': 'レンダラーキャンバスが見つかりません',
 			'menubar/screenshot/error/capture_failed': 'スクリーンショットに失敗しました',
+			'menubar/screenshot/download': 'ダウンロード',
+			'menubar/screenshot/downloaded': 'ダウンロード完了: ',
+			'menubar/screenshot/upload': 'カバーとしてアップロード',
+			'menubar/screenshot/cancel': 'キャンセル',
 
 			'menubar/component/confirm': '現在のオブジェクトに "{0}" コンポーネントを追加しますか？',
 			'menubar/component/success': '"{0}" コンポーネントが正常に追加されました',
