@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { UIPanel, UIRow } from './libs/ui.js';
+import { ScreenshotUtils } from './utils/ScreenshotUtils.js';
 
 function MenubarScreenshot(editor) {
     const strings = editor.strings;
@@ -66,24 +67,27 @@ function MenubarScreenshot(editor) {
             editor.config.setKey('view/grid', showGridState);
             editor.signals.showGridChanged.dispatch(showGridState);
 
-            // 显示截图成功的提示，并询问是否上传为封面
-            editor.showConfirmation(
-                strings.getKey('menubar/screenshot/confirm_upload'),
-                function() {
-                    editor.signals.messageSend.dispatch({
-                        action: 'upload-cover',
-                        data: {
-                            imageData: dataURL,
-                            filename: filename
-                        }
-                    });
+            // 播放截图动画效果
+            ScreenshotUtils.playAnimation(dataURL, null, function() {
+                // 动画完成后显示确认对话框
+                editor.showConfirmation(
+                    strings.getKey('menubar/screenshot/confirm_upload'),
+                    function() {
+                        editor.signals.messageSend.dispatch({
+                            action: 'upload-cover',
+                            data: {
+                                imageData: dataURL,
+                                filename: filename
+                            }
+                        });
 
-                    editor.showNotification(strings.getKey('menubar/screenshot/uploading'), false);
-                },
-                function() {
-                    editor.showNotification(strings.getKey('menubar/screenshot/upload_canceled'), false);
-                }
-            );
+                        editor.showNotification(strings.getKey('menubar/screenshot/uploading'), false);
+                    },
+                    function() {
+                        editor.showNotification(strings.getKey('menubar/screenshot/upload_canceled'), false);
+                    }
+                );
+            });
         } catch (error) {
             console.error('截图过程中出现错误:', error);
             editor.showNotification(strings.getKey('menubar/screenshot/error/capture_failed') + ': ' + error.message, true);

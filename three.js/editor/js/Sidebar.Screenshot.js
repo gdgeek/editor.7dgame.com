@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { UIPanel, UIRow, UIButton, UIInput, UISelect, UIText } from './libs/ui.js';
 import { UIBoolean } from './libs/ui.three.js';
+import { ScreenshotUtils } from './utils/ScreenshotUtils.js';
 
 function SidebarScreenshot(editor) {
     const strings = editor.strings;
@@ -58,6 +59,24 @@ function SidebarScreenshot(editor) {
 
     settingsPanel.add(customResolutionRow);
 
+	// 背景色设置
+    const backgroundRow = new UIRow();
+    backgroundRow.setClass('row');
+    backgroundRow.setMarginBottom('10px');
+
+    const backgroundLabel = new UIText(strings.getKey('sidebar/screenshot/background') || '背景色').setWidth('90px');
+    backgroundRow.add(backgroundLabel);
+
+    const backgroundSelect = new UISelect().setWidth('150px');
+    backgroundSelect.setOptions({
+        'original': '原始背景',
+        'white': '白色背景'
+    });
+    backgroundSelect.setValue('original');
+    backgroundRow.add(backgroundSelect);
+
+    settingsPanel.add(backgroundRow);
+
     // 文件名设置
     const filenameRow = new UIRow();
     filenameRow.setClass('row');
@@ -97,7 +116,7 @@ function SidebarScreenshot(editor) {
     const showGridLabel = new UIText(strings.getKey('sidebar/settings/viewport/grid')).setWidth('90px');
     showGridRow.add(showGridLabel);
 
-    const showGrid = new UIBoolean(true);
+    const showGrid = new UIBoolean(false);
     showGridRow.add(showGrid);
     settingsPanel.add(showGridRow);
 
@@ -142,7 +161,7 @@ function SidebarScreenshot(editor) {
     previewImage.style.width = '100%';
     previewImage.style.height = 'auto';
     previewImage.style.display = 'block';
-    previewImageContainer.dom.appendChild(previewImage);
+    previewImageContainer.dom.appendChild(previewImage)
 
     // 下载按钮
     const downloadButton = new UIButton(strings.getKey('sidebar/screenshot/download'));
@@ -262,7 +281,7 @@ function SidebarScreenshot(editor) {
 
             // 设置渲染器尺寸
             tempRenderer.setSize(width, height);
-			
+
             // 设置渲染器属性以匹配编辑器的渲染器
             tempRenderer.outputEncoding = THREE.sRGBEncoding; // 默认使用sRGB编码
 
@@ -303,16 +322,25 @@ function SidebarScreenshot(editor) {
                 const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
                 bgColor = mediaQuery.matches ? 0x333333 : 0xaaaaaa;
             }
-            tempRenderer.setClearColor(bgColor, 1);
 
-            // 如果场景有背景色或背景纹理，应用它
-            if (scene.background) {
-                // 如果场景已经设置了背景，临时渲染器会自动使用它
-				tempRenderer.setClearColor(scene.background, 1);
+            // 获取用户设置的背景色选项
+            const backgroundOption = backgroundSelect.getValue();
+
+            // 设置背景色
+            if (backgroundOption === 'white') {
+                // 设置为白色背景
+                tempRenderer.setClearColor(0xffffff, 1);
+				// tempRenderer.setClearColor(0xeeffff, 1);
+            } else {
+                // 使用默认背景色
+                tempRenderer.setClearColor(bgColor, 1);
+
+                // 如果场景有背景色或背景纹理，应用它
+                if (scene.background) {
+                    // 如果场景已经设置了背景，临时渲染器会自动使用它
+                    tempRenderer.setClearColor(scene.background, 1);
+                }
             }
-
-            // 如果场景有雾效，它会自动被渲染
-
 
             // 更新相机宽高比
             const originalAspect = camera.aspect;
@@ -362,6 +390,9 @@ function SidebarScreenshot(editor) {
             // 保存当前图片数据和文件名
             currentImageDataURL = dataURL;
             currentFilename = filename;
+
+            // 播放截图动画
+            ScreenshotUtils.playAnimation(dataURL, previewImageContainer.dom);
 
             // 更新预览图片
             previewImage.src = dataURL;
