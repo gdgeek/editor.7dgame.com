@@ -593,11 +593,7 @@ Editor.prototype = {
 		var uuid = null;
 
 		if ( object !== null ) {
-			// 确保选中的对象有 commands 数组
-			if (object.commands === undefined) {
-				object.commands = [];
-			}
-
+			
 			uuid = object.uuid;
 
 		}
@@ -605,6 +601,7 @@ Editor.prototype = {
 		this.selected = object;
 
 		this.config.setKey( 'selected', uuid );
+		console.log('选中的对象:', object);
 		this.signals.objectSelected.dispatch( object );
 
 	},
