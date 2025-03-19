@@ -32,24 +32,15 @@ function MenubarCommand(editor) {
         typeRow.setTextContent(commandTypes[type]);
         typeRow.onClick(function(event) {
             if (editor.selected !== null) {
-                const message = strings.getKey('menubar/command/confirm').replace('{0}', commandTypes[type]);
+                const command = CommandContainer.Create(type);
 
-                editor.showConfirmation(
-                    message,
-                    function() {
-                        const command = CommandContainer.Create(type);
+                if (command !== undefined) {
+                    const cmd = new AddCommandCommand(editor, editor.selected, command);
+                    editor.execute(cmd);
 
-                        if (command !== undefined) {
-                            const cmd = new AddCommandCommand(editor, editor.selected, command);
-                            editor.execute(cmd);
-
-                            const successMessage = strings.getKey('menubar/command/success').replace('{0}', commandTypes[type]);
-                            editor.showNotification(successMessage, false);
-                        }
-                    },
-                    null,
-                    event
-                );
+                    const successMessage = strings.getKey('menubar/command/success').replace('{0}', commandTypes[type]);
+                    editor.showNotification(successMessage, false);
+                }
             } else {
                 editor.showNotification(strings.getKey('menubar/command/select_object_first'), true);
             }

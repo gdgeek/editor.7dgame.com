@@ -36,24 +36,15 @@ function MenubarComponent(editor) {
         typeRow.setTextContent(componentTypes[type]);
         typeRow.onClick(function(event) {
             if (editor.selected !== null) {
-                const message = strings.getKey('menubar/component/confirm').replace('{0}', componentTypes[type]);
+                const component = ComponentContainer.Create(type);
 
-                editor.showConfirmation(
-                    message,
-                    function() {
-                        const component = ComponentContainer.Create(type);
+                if (component !== undefined) {
+                    const command = new AddComponentCommand(editor, editor.selected, component);
+                    editor.execute(command);
 
-                        if (component !== undefined) {
-                            const command = new AddComponentCommand(editor, editor.selected, component);
-                            editor.execute(command);
-
-                            const successMessage = strings.getKey('menubar/component/success').replace('{0}', componentTypes[type]);
-                            editor.showNotification(successMessage, false);
-                        }
-                    },
-                    null,
-                    event
-                );
+                    const successMessage = strings.getKey('menubar/component/success').replace('{0}', componentTypes[type]);
+                    editor.showNotification(successMessage, false);
+                }
             } else {
                 editor.showNotification(strings.getKey('menubar/component/select_object_first'), true);
             }
