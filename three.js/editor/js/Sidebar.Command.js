@@ -36,6 +36,10 @@ function SidebarCommand(editor) {
 			if (commands.length > 0) {
 				topContainer.setDisplay('block');
 				topContainer.add(new UIText(strings.getKey('sidebar/command').toUpperCase()));
+			} else {
+				// 没有指令时整个容器不显示
+				container.setDisplay('none');
+				return;
 			}
 
 			// 注释掉选择项内容（下拉框和新建按钮）
@@ -68,9 +72,14 @@ function SidebarCommand(editor) {
 			}.bind(this));
 			topContainer.add(newCommand);
 			*/
+		} else {
+			// 没有指令属性时整个容器不显示
+			container.setDisplay('none');
+			return;
 		}
 
 		if (commands !== undefined && commands.length > 0) {
+			container.setDisplay('block');
 			commandsContainer.setDisplay('block');
 			for (let i = 0; i < commands.length; i++) {
 				(function(object, command) {
@@ -83,6 +92,9 @@ function SidebarCommand(editor) {
 					commandsContainer.add(new UIBreak());
 				})(object, commands[i]);
 			}
+		} else {
+			// 没有指令时整个容器不显示
+			container.setDisplay('none');
 		}
 	}
 

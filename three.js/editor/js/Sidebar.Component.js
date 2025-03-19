@@ -39,6 +39,10 @@ function SidebarComponent( editor ) {
 			if (components.length > 0) {
 				topContainer.setDisplay( 'block' );
 				topContainer.add( new UIText( strings.getKey( 'sidebar/components' ).toUpperCase() ) );
+			} else {
+				// 没有组件时整个容器不显示
+				container.setDisplay( 'none' );
+				return;
 			}
 
 			// 注释掉选择项内容（下拉框和新建按钮）
@@ -82,10 +86,14 @@ function SidebarComponent( editor ) {
 			}.bind( this ) );
 			topContainer.add( newComponent );
 			*/
+		} else {
+			// 没有组件属性时整个容器不显示
+			container.setDisplay( 'none' );
+			return;
 		}
 
 		if ( components !== undefined && components.length > 0 ) {
-
+			container.setDisplay( 'block' );
 			componentsContainer.setDisplay( 'block' );
 			for ( let i = 0; i < components.length; i ++ ) {
 
@@ -96,13 +104,14 @@ function SidebarComponent( editor ) {
 					const cc = new ComponentContainer( editor, object, component );
 					cc.renderer( componentsContainer );
 
-					// 将水平分隔线添加到容器中
 					componentsContainer.add( new UIBreak() );
-
 				} )( object, components[ i ] );
 
 			}
 
+		} else {
+			// 没有组件时整个容器不显示
+			container.setDisplay( 'none' );
 		}
 
 	}
