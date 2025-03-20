@@ -1,5 +1,6 @@
 import { UIPanel, UISelect, UIBreak, UIText, UIRow, UITextArea, UINumber } from '../../libs/ui.js';
 import { SetValueCommand } from '../../commands/SetValueCommand.js';
+import { Strings } from '../../Strings.js';
 
 class TooltipComponent {
   constructor(editor, object, component) {
@@ -7,6 +8,7 @@ class TooltipComponent {
     this.object = object;
     this.component = component;
     this.targetList = []; // 仅包含 'Voxel', 'Polygen'
+    this.strings = new Strings(editor.config);
 
     // 遍历所有子节点，分类存入 targetList
     const traverseChildren = (node) => {
@@ -68,7 +70,7 @@ class TooltipComponent {
     this.textInput = new UITextArea().setWidth('150px').setHeight('60px').setFontSize('12px')
       .onChange(() => this.update('text', this.textInput.getValue()));
     this.textInput.setValue(this.component.parameters.text);
-    textRow.add(new UIText('Text').setWidth('90px'));
+    textRow.add(new UIText(this.strings.getKey('sidebar/components/tooltip/text')).setWidth('90px'));
     textRow.add(this.textInput);
     container.add(textRow);
 
@@ -76,7 +78,7 @@ class TooltipComponent {
     const lengthRow = new UIRow();
     this.lengthInput = new UINumber(this.component.parameters.length).setWidth('150px').setStep(0.1)
       .onChange(() => this.update('length', this.lengthInput.getValue()));
-    lengthRow.add(new UIText('Length').setWidth('90px'));
+    lengthRow.add(new UIText(this.strings.getKey('sidebar/components/tooltip/length')).setWidth('90px'));
     lengthRow.add(this.lengthInput);
     container.add(lengthRow);
 
@@ -90,7 +92,7 @@ class TooltipComponent {
     this.targetSelect.setOptions(targetOptions);
     this.targetSelect.setValue(this.getSelectedUUID('target'));
     this.targetSelect.onChange(() => this.updatePosition('target'));
-    targetRow.add(new UIText('Target Position').setWidth('90px'));
+    targetRow.add(new UIText(this.strings.getKey('sidebar/components/tooltip/target')).setWidth('90px'));
     targetRow.add(this.targetSelect);
     container.add(targetRow);
   }
