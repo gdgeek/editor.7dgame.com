@@ -1,4 +1,4 @@
-import { UIPanel, UISelect, UINumber, UIBreak, UIText, UIRow, UIInput, UITextArea } from '../../libs/ui.js';
+import { UIPanel, UISelect, UIBreak, UIText, UIRow, UITextArea, UINumber } from '../../libs/ui.js';
 import { SetValueCommand } from '../../commands/SetValueCommand.js';
 
 class TooltipComponent {
@@ -6,20 +6,25 @@ class TooltipComponent {
     this.editor = editor;
     this.object = object;
     this.component = component;
-    this.fromList = []; // 仅包含 'Voxel', 'Polygen'
-    this.toList = []; // 仅包含 'Entity'
+    this.targetList = []; // 仅包含 'Voxel', 'Polygen'
 
-    // 递归遍历所有子节点
+    // 遍历所有子节点，分类存入 targetList
     const traverseChildren = (node) => {
       if (node.type === 'Voxel' || node.type === 'Polygen') {
-        this.fromList.push(node);
-      } else if (node.type === 'Entity') {
-        this.toList.push(node);
+        this.targetList.push(node);
       }
       node.children.forEach(traverseChildren);
     };
 
-    traverseChildren(editor.scene); // 从根节点开始遍历
+    traverseChildren(editor.scene);
+
+    // 监听对象变更，确保 target 坐标随模型更新
+    this.editor.signals.objectChanged.add((changedObject) => {
+      if (this.targetList.some(item => item.uuid === changedObject.uuid)) {
+        console.log(`Object changed: ${changedObject.uuid}, updating target position...`);
+        this.updateNodePosition('target', changedObject);
+      }
+    });
   }
 
   static Create() {
@@ -28,9 +33,9 @@ class TooltipComponent {
       parameters: {
         uuid: THREE.MathUtils.generateUUID(),
         text: '',
-        from: { uuid: '', x: 0, y: 0, z: 0 },
-        to: { uuid: '', x: 0, y: 0, z: 0 },
-				action: 'tooltip'
+        target: { uuid: '', x: 0, y: 0, z: 0 },
+        length: 0.25, // 默认长度
+        action: 'tooltip'
       }
     };
   }
@@ -48,77 +53,66 @@ class TooltipComponent {
     textRow.add(this.textInput);
     container.add(textRow);
 
-    // From position selection
-    const fromRow = new UIRow();
-    this.fromSelect = new UISelect().setWidth('150px');
-    const fromOptions = { '': 'None' };
-    this.fromList.forEach(item => {
-      fromOptions[item.uuid] = item.name || item.uuid;
-    });
-    this.fromSelect.setOptions(fromOptions);
-    this.fromSelect.setValue(this.getSelectedUUID('from'));
-    this.fromSelect.onChange(() => this.updatePosition('from'));
-    fromRow.add(new UIText('From Position').setWidth('90px'));
-    fromRow.add(this.fromSelect);
-    container.add(fromRow);
+    // Length input
+    const lengthRow = new UIRow();
+    this.lengthInput = new UINumber(this.component.parameters.length).setWidth('150px').setStep(0.1)
+      .onChange(() => this.update('length', this.lengthInput.getValue()));
+    lengthRow.add(new UIText('Length').setWidth('90px'));
+    lengthRow.add(this.lengthInput);
+    container.add(lengthRow);
 
-    // To position selection
-    const toRow = new UIRow();
-    this.toSelect = new UISelect().setWidth('150px');
-    const toOptions = { '': 'None' };
-    this.toList.forEach(item => {
-      toOptions[item.uuid] = item.name || item.uuid;
+    // Target position selection
+    const targetRow = new UIRow();
+    this.targetSelect = new UISelect().setWidth('150px');
+    const targetOptions = { '': 'None' };
+    this.targetList.forEach(item => {
+      targetOptions[item.uuid] = item.name || item.uuid;
     });
-    this.toSelect.setOptions(toOptions);
-    this.toSelect.setValue(this.getSelectedUUID('to'));
-    this.toSelect.onChange(() => this.updatePosition('to'));
-    toRow.add(new UIText('To Position').setWidth('90px'));
-    toRow.add(this.toSelect);
-    container.add(toRow);
+    this.targetSelect.setOptions(targetOptions);
+    this.targetSelect.setValue(this.getSelectedUUID('target'));
+    this.targetSelect.onChange(() => this.updatePosition('target'));
+    targetRow.add(new UIText('Target Position').setWidth('90px'));
+    targetRow.add(this.targetSelect);
+    container.add(targetRow);
   }
 
   getSelectedUUID(type) {
-    return this.component.parameters[type]?.uuid || ''; // 直接返回 UUID
+    return this.component.parameters[type]?.uuid || '';
   }
 
-  getBoundingBoxCenter(object) {
+  updateNodePosition(type, object) {
+    if (!object) return;
+
     const box = new THREE.Box3().setFromObject(object);
     const center = new THREE.Vector3();
-    box.getCenter(center); // 计算中心点
-    return center;
+    box.getCenter(center);
+
+    console.log(`Updating ${type} position to center of object ${object.uuid}:`, center);
+
+    this.update(type, {
+      uuid: object.uuid,
+      x: center.x,
+      y: center.y,
+      z: center.z
+    });
   }
 
   update(key, value) {
+    console.log(`Updating parameter: ${key} ->`, value);
     this.component.parameters[key] = value;
     this.editor.execute(new SetValueCommand(this.editor, this.component.parameters, key, value));
     this.editor.signals.componentChanged.dispatch(this.component);
   }
 
   updatePosition(type) {
-    const selectedUUID = type === 'from' ? this.fromSelect.getValue() : this.toSelect.getValue();
-    const selectedObject = (type === 'from' ? this.fromList : this.toList).find(item => item.uuid === selectedUUID);
+    const selectedUUID = this.targetSelect.getValue();
+    const selectedObject = this.targetList.find(item => item.uuid === selectedUUID);
 
-    // from：获取模型碰撞盒中心
-    // to：获取空节点位置
     if (selectedObject) {
-      let newPosition;
-      if (type === 'from') {
-        const center = this.getBoundingBoxCenter(selectedObject); // 获取碰撞盒中心
-        newPosition = {
-          uuid: selectedObject.uuid,
-          x: center.x, // 使用碰撞盒中心
-          y: center.y,
-          z: center.z
-        };
-      } else {
-        newPosition = {
-          uuid: selectedObject.uuid,
-          x: selectedObject.position.x,
-          y: selectedObject.position.y,
-          z: selectedObject.position.z
-        };
-      }
-      this.update(type, newPosition);
+      console.log(`Target selected: ${selectedUUID}, updating position...`);
+      this.updateNodePosition(type, selectedObject);
+    } else {
+      console.log(`No valid target selected.`);
     }
   }
 
