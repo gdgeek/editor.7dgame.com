@@ -38,14 +38,12 @@ class CommandContainer {
 		remove.setMarginLeft('4px');
 		remove.onClick(function(event) {
 			this.editor.showConfirmation(strings.getKey('sidebar/command/remove/confirm'),
-				// 确认回调
 				function() {
 					this.editor.execute(new RemoveCommandCommand(this.editor, this.object, this.command));
 				}.bind(this),
-				// 取消回调
 				null,
-				// 事件对象
-				event
+				event,
+				true
 			);
 		}.bind(this));
 		container.add(remove);

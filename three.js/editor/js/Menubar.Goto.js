@@ -59,14 +59,19 @@ function MenubarGoto( editor ) {
             // if (!userConfirmed) return;
 
 
-			DialogUtils.showConfirm(strings.getKey('sidebar/confirm/scene/modified'), function() {
+			editor.showConfirmation(strings.getKey('sidebar/confirm/scene/modified'), async function() {
+
+				// editor.signals.sceneGraphChanged.dispatch();//
+				await editor.signals.upload.dispatch();
 				// 用户点击确认按钮
 				const data = {
 					action: 'goto',
 					data: { 'target': 'blockly.js' }
 				};
-				editor.signals.messageSend.dispatch( data );
-			}, null, event.parent);
+				setTimeout(() => {
+					editor.signals.messageSend.dispatch( data );
+				}, 3000);
+			}, null, event.parent, false);
 			return;
 		}
 

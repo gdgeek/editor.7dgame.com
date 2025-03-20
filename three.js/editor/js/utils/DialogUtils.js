@@ -16,7 +16,7 @@ class DialogUtils {
         notification.style.position = 'fixed';
         notification.style.bottom = '20px';
         notification.style.right = '20px';
-        notification.style.backgroundColor = isError ? 'rgba(255, 0, 0, 0.8)' : 'rgba(67, 166, 70, 0.8)';
+        notification.style.backgroundColor = isError ? 'rgba(231, 76, 60, 0.8)' : 'rgba(67, 166, 70, 0.8)';
         notification.style.color = '#fff';
         notification.style.padding = '10px 15px';
         notification.style.borderRadius = '4px';
@@ -68,9 +68,10 @@ class DialogUtils {
      * @param {Function} onConfirm - 确认回调函数
      * @param {Function} onCancel - 取消回调函数
      * @param {Event} event - 触发事件，用于定位确认框位置
+     * @param {boolean} isError - 是否为错误提示，默认为false
      * @returns {HTMLElement} - 返回创建的确认框元素
      */
-    static showConfirm(message, onConfirm, onCancel, event) {
+    static showConfirm(message, onConfirm, onCancel, event, isError = false) {
         // 创建确认通知元素
         const confirmNotification = document.createElement('div');
         confirmNotification.style.position = 'fixed';
@@ -198,7 +199,7 @@ class DialogUtils {
         confirmButton.style.padding = '4px 12px';
         confirmButton.style.border = 'none';
         confirmButton.style.borderRadius = '4px';
-        confirmButton.style.backgroundColor = 'var(--popconfirm-primary-btn-bg, #e74c3c)';
+        confirmButton.style.backgroundColor = isError ? 'var(--popconfirm-primary-btn-bg, #e74c3c)' : 'var(--popconfirm-primary-btn-bg, rgb(67, 166, 70))';
         confirmButton.style.color = '#fff';
         confirmButton.style.cursor = 'pointer';
         confirmButton.style.fontSize = '12px';
@@ -206,10 +207,10 @@ class DialogUtils {
 
         // 添加悬停效果
         confirmButton.addEventListener('mouseover', function() {
-            confirmButton.style.backgroundColor = 'var(--popconfirm-primary-btn-hover-bg, #d44637)';
+            confirmButton.style.backgroundColor = isError ? 'var(--popconfirm-primary-btn-hover-bg, #d44637)' : 'var(--popconfirm-primary-btn-hover-bg, rgb(57, 149, 63))';
         });
         confirmButton.addEventListener('mouseout', function() {
-            confirmButton.style.backgroundColor = 'var(--popconfirm-primary-btn-bg, #e74c3c)';
+            confirmButton.style.backgroundColor = isError ? 'var(--popconfirm-primary-btn-bg, #e74c3c)' : 'var(--popconfirm-primary-btn-bg, rgb(67, 166, 70))';
         });
 
         confirmButton.addEventListener('click', function() {

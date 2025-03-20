@@ -593,7 +593,7 @@ Editor.prototype = {
 		var uuid = null;
 
 		if ( object !== null ) {
-			
+
 			uuid = object.uuid;
 
 		}
@@ -792,11 +792,11 @@ Editor.prototype = {
 		this.signals.notificationAdded.dispatch(message);
 	},
 
-	showConfirmation: function (message, onConfirm, onCancel, event) {
+	showConfirmation: function (message, onConfirm, onCancel, event, isError = false) {
 		console.log('显示确认框:', message);
 
 		// 使用 DialogUtils 显示确认框
-		DialogUtils.showConfirm(message, onConfirm, onCancel, event);
+		DialogUtils.showConfirm(message, onConfirm, onCancel, event, isError);
 	},
 
 

@@ -77,7 +77,8 @@ class ComponentContainer {
 					this.editor.execute(new RemoveComponentCommand(this.editor, this.object, this.component));
 				}.bind(this),
 				null,
-				event
+				event,
+				true
 			);
 		}.bind(this));
 		container.add(remove);
