@@ -30,6 +30,8 @@ class MovedComponent {
 
 
   refresh(container) {
+		container.add(new UIBreak())
+    container.add(new UIBreak())
 
     const strings = this.editor.strings;
     {
