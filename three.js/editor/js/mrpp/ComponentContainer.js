@@ -9,7 +9,7 @@ import { TooltipComponent } from './components/TooltipComponent.js';
 
 class ComponentContainer {
 
-	static Create( type ) {
+	static Create( type, editor ) {
 
 		switch ( type.toLowerCase() ) {
 
@@ -22,13 +22,13 @@ class ComponentContainer {
 			case 'trigger':
 				return TriggerComponent.Create();
 			case 'tooltip':
-				return TooltipComponent.Create();
-
+				return TooltipComponent.Create(editor);
 
 		}
 		// return {}
 
 	}
+
 	constructor( editor, object, component ) {
 
 		this.editor = editor;

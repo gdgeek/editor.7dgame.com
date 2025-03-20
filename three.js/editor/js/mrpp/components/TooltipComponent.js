@@ -27,13 +27,32 @@ class TooltipComponent {
     });
   }
 
-  static Create() {
+	static Create(editor) {
+
+    const selectedObject = editor.selected;
+    let target = { uuid: '', x: 0, y: 0, z: 0 };
+
+    if (selectedObject && (selectedObject.type.toLowerCase() === 'polygen' || selectedObject.type.toLowerCase() === 'voxel')) {
+      const box = new THREE.Box3().setFromObject(selectedObject);
+      const center = new THREE.Vector3();
+      box.getCenter(center);
+
+      target = {
+        uuid: selectedObject.uuid,
+        x: center.x,
+        y: center.y,
+        z: center.z
+      };
+    }
+
+		console.log("target", target);
+
     return {
       type: 'Tooltip',
       parameters: {
         uuid: THREE.MathUtils.generateUUID(),
         text: '',
-        target: { uuid: '', x: 0, y: 0, z: 0 },
+        target: target,
         length: 0.25, // 默认长度
         action: 'tooltip'
       }

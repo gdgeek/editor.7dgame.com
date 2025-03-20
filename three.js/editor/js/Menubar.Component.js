@@ -36,7 +36,7 @@ function MenubarComponent(editor) {
         typeRow.setTextContent(componentTypes[type]);
         typeRow.onClick(function(event) {
             if (editor.selected !== null) {
-                const component = ComponentContainer.Create(type);
+                const component = ComponentContainer.Create(type, editor);
 
                 if (component !== undefined) {
                     const command = new AddComponentCommand(editor, editor.selected, component);
