@@ -112,7 +112,7 @@ class Builder {
 	}
 	entity() {
 
-		const ret = this.node( 'Entity', 'Entity' );
+		const ret = this.node( 'Point', 'Point' );
 		return ret;
 
 	}

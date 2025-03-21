@@ -40,7 +40,7 @@ function Strings( config ) {
 			'menubar/add/audio': 'Audio',
 			'menubar/add/picture': 'Picture',
 			'menubar/add/video': 'Video',
-			'menubar/add/meta': 'Entity',
+			'menubar/add/meta': 'Point',
 			'menubar/add/prefab': 'Prefab',
 			'menubar/add/group': 'Group',
 			'menubar/add/plane': 'Plane',
@@ -177,7 +177,7 @@ function Strings( config ) {
 			'sidebar/command/voice/returnMain': 'Return Main Menu',
 			'sidebar/command/voice/closeTooltip': 'Close Tooltip',
 
-			'sidebar/entity': 'Entity(Custom)',
+			'sidebar/entity': 'Point(Custom)',
 			'sidebar/entity/button': 'Edit',
 
 			'sidebar/confirm/scene/modified': 'The scene has been modified, whether to save?',
@@ -462,7 +462,7 @@ function Strings( config ) {
 			'menubar/add/audio': '音频',
 			'menubar/add/picture': '图片',
 			'menubar/add/video': '视频',
-			'menubar/add/meta': '组件',
+			'menubar/add/meta': '实体',
 			'menubar/add/prefab': '预设',
 			'menubar/add/group': '组',
 			'menubar/add/plane': '平面',
@@ -602,7 +602,7 @@ function Strings( config ) {
 			'sidebar/command/voice/closeTooltip': '关闭说明卡',
 
 
-			'sidebar/entity': '组件（自定义）',
+			'sidebar/entity': '实体（自定义）',
 			'sidebar/entity/button': '编辑',
 
 			'sidebar/confirm/scene/modified': '场景发生了修改，是否保存?',
