@@ -181,6 +181,7 @@ function Strings( config ) {
 			'sidebar/command/voice/nextStep': 'Next Step',
 			'sidebar/command/voice/returnMain': 'Return Main Menu',
 			'sidebar/command/voice/closeTooltip': 'Close Tooltip',
+			'sidebar/command/voice/openTooltip': 'Open Tooltip',
 
 			'sidebar/entity': 'Point(Custom)',
 			'sidebar/entity/button': 'Edit',
@@ -611,6 +612,7 @@ function Strings( config ) {
 			'sidebar/command/voice/nextStep': '下一步',
 			'sidebar/command/voice/returnMain': '返回主界面',
 			'sidebar/command/voice/closeTooltip': '关闭说明卡',
+			'sidebar/command/voice/openTooltip': '显示说明卡',
 
 			'sidebar/entity': '实体（自定义）',
 			'sidebar/entity/button': '编辑',
@@ -1041,6 +1043,7 @@ function Strings( config ) {
 			'sidebar/command/voice/nextStep': '次のステップ',
 			'sidebar/command/voice/returnMain': 'メイン画面に戻る',
 			'sidebar/command/voice/closeTooltip': '説明カードを閉じる',
+			'sidebar/command/voice/openTooltip': '説明カードを開く',
 
 			'sidebar/entity': 'コンポーネント（カスタム）',
 			'sidebar/entity/button': '編集',

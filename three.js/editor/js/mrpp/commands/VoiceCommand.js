@@ -49,6 +49,7 @@ class VoiceCommand {
         nextStep: strings.getKey('sidebar/command/voice/nextStep'),
         returnMain: strings.getKey('sidebar/command/voice/returnMain'),
         closeTooltip: strings.getKey('sidebar/command/voice/closeTooltip'),
+        openTooltip: strings.getKey('sidebar/command/voice/openTooltip'),
       };
 
       this.voiceSelect = new UISelect().setWidth('150px').setFontSize('12px');
