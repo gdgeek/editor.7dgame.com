@@ -67,7 +67,12 @@ function Strings( config ) {
 			'menubar/add/perspectivecamera': 'PerspectiveCamera',
 			'menubar/add/orthographiccamera': 'OrthographicCamera',
 
-
+			'menubar/replace': 'Replace',
+			'menubar/replace/polygen': 'Polygen',
+			'menubar/replace/voxel': 'Voxel',
+			'menubar/replace/picture': 'Picture',
+			'menubar/replace/noselection': 'Please select an object first',
+			'menubar/replace/success': 'Successfully replaced object',
 			'menubar/component': 'Component',
 			'menubar/component/list': 'View Components',
 
@@ -489,6 +494,12 @@ function Strings( config ) {
 			'menubar/add/perspectivecamera': '透视相机',
 			'menubar/add/orthographiccamera': '正交相机',
 
+			'menubar/replace': '替换',
+			'menubar/replace/polygen': '模型',
+			'menubar/replace/voxel': '体素',
+			'menubar/replace/picture': '图片',
+			'menubar/replace/noselection': '请先选择一个对象',
+			'menubar/replace/success': '替换成功',
 			'menubar/component': '组件',
 			'menubar/component/list': '查看组件',
 			'menubar/component/confirm': '确定要为当前对象添加 "{0}" 组件吗？',
@@ -600,7 +611,6 @@ function Strings( config ) {
 			'sidebar/command/voice/nextStep': '下一步',
 			'sidebar/command/voice/returnMain': '返回主界面',
 			'sidebar/command/voice/closeTooltip': '关闭说明卡',
-
 
 			'sidebar/entity': '实体（自定义）',
 			'sidebar/entity/button': '编辑',
@@ -914,6 +924,12 @@ function Strings( config ) {
 			'menubar/add/perspectivecamera': '透視カメラ',
 			'menubar/add/orthographiccamera': '直交カメラ',
 
+			'menubar/replace': '置換',
+			'menubar/replace/polygen': 'モデル',
+			'menubar/replace/voxel': 'ボクセル',
+			'menubar/replace/picture': '画像',
+			'menubar/replace/noselection': '先にオブジェクトを選択してください',
+			'menubar/replace/success': '成功しました',
 			'menubar/component': 'コンポーネント',
 			'menubar/component/list': 'コンポーネントを表示',
 			'menubar/component/confirm': '現在のオブジェクトに "{0}" コンポーネントを追加しますか？',
