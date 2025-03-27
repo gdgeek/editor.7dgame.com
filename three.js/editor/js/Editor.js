@@ -192,7 +192,7 @@ Editor.prototype = {
 
 	//
 
-	addObject: function ( object ) {
+	addObject: function ( object, parent, index ) {
 		// 保存原始type
 		const originalType = object.type;
 
@@ -213,7 +213,19 @@ Editor.prototype = {
 		// 恢复type
 		object.type = originalType;
 
-		this.scene.add(object);
+		// 添加到指定的父级，如果没有父级则添加到场景中
+		if (parent !== undefined) {
+			// 如果指定了索引，则在父级的特定位置插入
+			if (index !== undefined) {
+				parent.children.splice(index, 0, object);
+				object.parent = parent;
+			} else {
+				parent.add(object);
+			}
+		} else {
+			this.scene.add(object);
+		}
+
 		this.signals.objectAdded.dispatch(object);
 		this.signals.sceneGraphChanged.dispatch();
 	},

@@ -128,7 +128,6 @@ function MenubarReplace( editor ) {
 							const components = selected.components ? [...selected.components] : [];
 							const commands = selected.commands ? [...selected.commands] : [];
 
-
 							// 删除旧对象
 							editor.execute( new RemoveObjectCommand( editor, selected ) );
 
@@ -136,14 +135,20 @@ function MenubarReplace( editor ) {
 							node.position.copy( position );
 							node.rotation.copy( rotation );
 							node.scale.copy( scale );
-							node.parent = parent;
 							node.uuid = uuid;
 
 							node.components = components;
 							node.commands = commands;
 
-							// 添加新对象
-							editor.execute( new AddObjectCommand( editor, node ) );
+							const cmd = new AddObjectCommand( editor, node );
+						
+							cmd.execute = function() {
+								editor.addObject(node, parent);
+								editor.select(node);
+							};
+							// 执行修改后的命令
+							editor.execute( cmd );
+
 							editor.showNotification(strings.getKey( 'menubar/replace/success' ), false);
 						}
 					}

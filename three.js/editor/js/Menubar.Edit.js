@@ -130,7 +130,34 @@ function MenubarEdit(editor) {
 			});
 		}
 
-		editor.execute(new AddObjectCommand(editor, object));
+		if(editor.selected.commands) {
+			object.commands = JSON.parse(JSON.stringify(editor.selected.commands));
+			object.commands.forEach(command => {
+				if(command.parameters && command.parameters.uuid) {
+					command.parameters.uuid = THREE.MathUtils.generateUUID();
+				}
+				if(command.parameters && command.parameters.options) {
+					Object.keys(command.parameters.options).forEach(key => {
+						const newUuid = THREE.MathUtils.generateUUID();
+						command.parameters.options[newUuid] = command.parameters.options[key];
+						delete command.parameters.options[key];
+					});
+				}
+			});
+		}
+
+		// editor.execute(new AddObjectCommand(editor, object));
+
+		const parent = editor.selected.parent;
+
+		const cmd = new AddObjectCommand(editor, object);
+
+		cmd.execute = function() {
+			editor.addObject(object, parent);
+			editor.select(object);
+		};
+
+		editor.execute(cmd);
 	})
 	options.add(option)
 
@@ -249,6 +276,22 @@ function MenubarEdit(editor) {
 						const newUuid = THREE.MathUtils.generateUUID();
 						component.parameters.options[newUuid] = component.parameters.options[key];
 						delete component.parameters.options[key];
+					});
+				}
+			});
+		}
+
+		if(copiedObject.commands) {
+			object.commands = JSON.parse(JSON.stringify(copiedObject.commands));
+			object.commands.forEach(command => {
+				if(command.parameters && command.parameters.uuid) {
+					command.parameters.uuid = THREE.MathUtils.generateUUID();
+				}
+				if(command.parameters && command.parameters.options) {
+					Object.keys(command.parameters.options).forEach(key => {
+						const newUuid = THREE.MathUtils.generateUUID();
+						command.parameters.options[newUuid] = command.parameters.options[key];
+						delete command.parameters.options[key];
 					});
 				}
 			});
