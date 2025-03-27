@@ -27,6 +27,17 @@ class TooltipComponent {
         this.updateNodePosition('target', changedObject);
       }
     });
+
+    // 监听对象选中，当选中Voxel或Polygen类型对象时自动更新target
+    this.editor.signals.objectSelected.add((selectedObject) => {
+      if (selectedObject && (selectedObject.type === 'Voxel' || selectedObject.type === 'Polygen')) {
+        console.log(`New object selected: ${selectedObject.uuid}, updating target...`);
+
+        if (this.targetSelect) {
+          this.targetSelect.setValue(selectedObject.uuid);
+        }
+      }
+    });
   }
 
 	static Create(editor) {
