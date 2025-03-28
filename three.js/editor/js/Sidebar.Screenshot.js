@@ -8,6 +8,9 @@ function SidebarScreenshot(editor) {
     const signals = editor.signals;
     const config = editor.config;
 
+    // 页面刷新时重置背景色配置为original
+    editor.config.setKey('screenshot/background', 'original');
+
     const container = new UIPanel();
     container.setBorderTop('0');
     container.setPaddingTop('20px');
@@ -32,7 +35,7 @@ function SidebarScreenshot(editor) {
 
     const resolutionSelect = new UISelect().setWidth('150px');
     resolutionSelect.setOptions({
-        'current': '当前视口',
+        'current': strings.getKey('sidebar/screenshot/resolution/current'),
         '1920x1080': '1920 × 1080 (FHD)',
         '1280x720': '1280 × 720 (HD)',
         '3840x2160': '3840 × 2160 (4K)'
@@ -47,15 +50,21 @@ function SidebarScreenshot(editor) {
     backgroundRow.setClass('row');
     backgroundRow.setMarginBottom('10px');
 
-    const backgroundLabel = new UIText(strings.getKey('sidebar/screenshot/background') || '背景色').setWidth('90px');
+    const backgroundLabel = new UIText(strings.getKey('sidebar/screenshot/background')).setWidth('90px');
     backgroundRow.add(backgroundLabel);
 
     const backgroundSelect = new UISelect().setWidth('150px');
     backgroundSelect.setOptions({
-        'original': '原始背景',
-        'white': '白色背景'
+        'original': strings.getKey('sidebar/screenshot/background/original'),
+        'white': strings.getKey('sidebar/screenshot/background/white'),
+        'light': strings.getKey('sidebar/screenshot/background/light'),
+        'dark': strings.getKey('sidebar/screenshot/background/dark'),
     });
-    backgroundSelect.setValue('original');
+
+    // 从配置中读取背景色设置，如果没有则默认为original
+    const savedBackground = editor.config.getKey('screenshot/background') || 'original';
+    backgroundSelect.setValue(savedBackground);
+
     backgroundRow.add(backgroundSelect);
 
     settingsPanel.add(backgroundRow);
@@ -158,7 +167,7 @@ function SidebarScreenshot(editor) {
     previewPanel.add(downloadButton);
 
     // 上传作为封面按钮
-    const uploadAsCoverButton = new UIButton(strings.getKey('sidebar/screenshot/uploadAsCover') || '上传作为封面');
+    const uploadAsCoverButton = new UIButton(strings.getKey('sidebar/screenshot/uploadAsCover'));
     uploadAsCoverButton.setWidth('48%');
     uploadAsCoverButton.dom.style.backgroundColor = '#FF9800';
     uploadAsCoverButton.dom.style.color = '#fff';
@@ -175,7 +184,11 @@ function SidebarScreenshot(editor) {
 
     // 背景色设置事件
     backgroundSelect.onChange(function() {
-        editor.config.setKey('screenshot/background', backgroundSelect.getValue());
+        const newBackground = backgroundSelect.getValue();
+        editor.config.setKey('screenshot/background', newBackground);
+
+        // 发送背景色变更信号
+        editor.signals.screenshotBackgroundChanged.dispatch(newBackground);
     });
 
     // 文件名设置事件
@@ -209,7 +222,7 @@ function SidebarScreenshot(editor) {
             link.click();
 
             // 显示下载通知
-            editor.showNotification('图片已下载: ' + currentFilename, false);
+            editor.showNotification(strings.getKey('menubar/screenshot/downloaded') + currentFilename, false);
         }
     });
 
@@ -225,7 +238,7 @@ function SidebarScreenshot(editor) {
                 }
             });
 
-            editor.showNotification('正在上传封面...', false);
+            editor.showNotification(strings.getKey('menubar/screenshot/uploading'), false);
         }
     });
 
@@ -234,14 +247,14 @@ function SidebarScreenshot(editor) {
         // 获取渲染器和相机
         const viewportElement = document.getElementById('viewport');
         if (!viewportElement) {
-            editor.showNotification('无法找到视口元素', true);
+            editor.showNotification(strings.getKey('menubar/screenshot/error/viewport_not_found'), true);
             return;
         }
 
         // 获取渲染器 - 直接从DOM中获取
         const rendererDomElement = viewportElement.querySelector('canvas');
         if (!rendererDomElement) {
-            editor.showNotification('无法找到渲染器画布', true);
+            editor.showNotification(strings.getKey('menubar/screenshot/error/canvas_not_found'), true);
             return;
         }
 
@@ -327,7 +340,12 @@ function SidebarScreenshot(editor) {
             if (backgroundOption === 'white') {
                 // 设置为白色背景
                 tempRenderer.setClearColor(0xffffff, 1);
-				// tempRenderer.setClearColor(0xeeffff, 1);
+            } else if (backgroundOption === 'light') {
+                // 设置为浅色背景
+                tempRenderer.setClearColor(0xeeffff, 1);
+            } else if (backgroundOption === 'dark') {
+                // 设置为深色背景
+                tempRenderer.setClearColor(0x333333, 1);
             } else {
                 // 使用默认背景色
                 tempRenderer.setClearColor(bgColor, 1);
@@ -405,7 +423,7 @@ function SidebarScreenshot(editor) {
 
             // 显示成功消息
             console.log('正在显示通知: 截图已保存为 ' + filename);
-            editor.showNotification('截图已保存为 ' + filename, false);
+            editor.showNotification(strings.getKey('menubar/screenshot/downloaded') + filename, false);
 
             // 恢复相机宽高比
             camera.aspect = originalAspect;
@@ -417,7 +435,7 @@ function SidebarScreenshot(editor) {
             console.error('截图保存失败:', error);
 
             console.log('正在显示错误通知: ' + error.message);
-            editor.showNotification('截图保存失败: ' + error.message, true);
+            editor.showNotification(strings.getKey('menubar/screenshot/error/capture_failed') + ': ' + error.message, true);
         }
     }
 

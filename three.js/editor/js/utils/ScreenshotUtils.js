@@ -136,8 +136,7 @@ class ScreenshotUtils {
                     // 放大到标准预览大小
                     screenshotPreview.style.transform = 'translate(-50%, -50%) scale(1)';
 
-                    // 在菜单栏截图时，如果没有指定预览容器，并且有回调函数，则直接调用回调
-                    // 这样可以让自定义的预览容器代替默认动画
+                   // 在菜单栏截图时，如果没有指定预览容器，并且有回调函数，则直接调用回调
                     if (!previewContainer && callback && typeof callback === 'function') {
                         // 隐藏动画容器
                         animationContainer.style.display = 'none';

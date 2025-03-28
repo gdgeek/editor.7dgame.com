@@ -127,7 +127,12 @@ function MenubarScreenshot(editor) {
             // 设置背景色
             if (background === 'white') {
                 tempRenderer.setClearColor(0xffffff, 1);
+            } else if (background === 'light') {
+                tempRenderer.setClearColor(0xeeffff, 1);
+            } else if (background === 'dark') {
+                tempRenderer.setClearColor(0x333333, 1);
             } else {
+                // 使用默认背景色
                 tempRenderer.setClearColor(bgColor, 1);
                 if (scene.background) {
                     tempRenderer.setClearColor(scene.background, 1);
@@ -204,7 +209,7 @@ function MenubarScreenshot(editor) {
 
                 // 创建取消按钮（左侧）
                 const cancelButton = document.createElement('button');
-                cancelButton.textContent = strings.getKey('menubar/screenshot/cancel') || '取消';
+                cancelButton.textContent = strings.getKey('menubar/screenshot/cancel');
                 cancelButton.style.padding = '8px 15px';
                 cancelButton.style.backgroundColor = '#f44336';
                 cancelButton.style.color = 'white';
@@ -221,7 +226,7 @@ function MenubarScreenshot(editor) {
 
                 // 创建下载按钮（中间）
                 const downloadButton = document.createElement('button');
-                downloadButton.textContent = strings.getKey('menubar/screenshot/download') || '下载';
+                downloadButton.textContent = strings.getKey('menubar/screenshot/download');
                 downloadButton.style.padding = '8px 15px';
                 downloadButton.style.backgroundColor = '#2196F3'; // 蓝色
                 downloadButton.style.color = 'white';
@@ -239,13 +244,13 @@ function MenubarScreenshot(editor) {
                     link.click();
 
                     // 显示下载通知
-                    editor.showNotification(strings.getKey('menubar/screenshot/downloaded') || '图片已下载: ' + finalFilename, false);
+                    editor.showNotification(strings.getKey('menubar/screenshot/downloaded') + finalFilename, false);
                 });
                 buttonContainer.appendChild(downloadButton);
 
-                // 创建上传封面按钮（右侧）
+                // 上传封面按钮（右侧）
                 const uploadButton = document.createElement('button');
-                uploadButton.textContent = strings.getKey('menubar/screenshot/upload') || '上传作为封面';
+                uploadButton.textContent = strings.getKey('menubar/screenshot/upload');
                 uploadButton.style.padding = '8px 15px';
                 uploadButton.style.backgroundColor = '#FF9800'; // 橙色
                 uploadButton.style.color = 'white';
