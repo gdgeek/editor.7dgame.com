@@ -128,6 +128,14 @@ function MenubarReplace( editor ) {
 							const components = selected.components ? [...selected.components] : [];
 							const commands = selected.commands ? [...selected.commands] : [];
 
+							// 需要继承的子对象
+							const childrenToInherit = [];
+							selected.children.forEach(child => {
+								if (child.type !== 'Object3D') {
+									childrenToInherit.push(child.clone());
+								}
+							});
+
 							// 删除旧对象
 							editor.execute( new RemoveObjectCommand( editor, selected ) );
 
@@ -140,8 +148,13 @@ function MenubarReplace( editor ) {
 							node.components = components;
 							node.commands = commands;
 
+							// 添加继承的子对象
+							childrenToInherit.forEach(child => {
+								node.add(child);
+							});
+
 							const cmd = new AddObjectCommand( editor, node );
-						
+
 							cmd.execute = function() {
 								editor.addObject(node, parent);
 								editor.select(node);

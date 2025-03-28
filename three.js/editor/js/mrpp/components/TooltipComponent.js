@@ -23,7 +23,6 @@ class TooltipComponent {
     // 监听对象变更，确保 target 坐标随模型更新
     this.editor.signals.objectChanged.add((changedObject) => {
       if (this.targetList.some(item => item.uuid === changedObject.uuid)) {
-        console.log(`Object changed: ${changedObject.uuid}, updating target position...`);
         this.updateNodePosition('target', changedObject);
       }
     });
@@ -117,8 +116,6 @@ class TooltipComponent {
     const center = new THREE.Vector3();
     box.getCenter(center);
 
-    console.log(`Updating ${type} position to center of object ${object.uuid}:`, center);
-
     this.update(type, {
       uuid: object.uuid,
       x: center.x,
@@ -128,7 +125,6 @@ class TooltipComponent {
   }
 
   update(key, value) {
-    console.log(`Updating parameter: ${key} ->`, value);
     this.component.parameters[key] = value;
     this.editor.execute(new SetValueCommand(this.editor, this.component.parameters, key, value));
     this.editor.signals.componentChanged.dispatch(this.component);
@@ -139,7 +135,6 @@ class TooltipComponent {
     const selectedObject = this.targetList.find(item => item.uuid === selectedUUID);
 
     if (selectedObject) {
-      console.log(`Target selected: ${selectedUUID}, updating position...`);
       this.updateNodePosition(type, selectedObject);
     } else {
       console.log(`No valid target selected.`);
