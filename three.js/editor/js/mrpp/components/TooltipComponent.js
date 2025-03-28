@@ -22,7 +22,8 @@ class TooltipComponent {
 
     // 监听对象变更，确保 target 坐标随模型更新
     this.editor.signals.objectChanged.add((changedObject) => {
-      if (this.targetList.some(item => item.uuid === changedObject.uuid)) {
+      const targetUUID = this.component.parameters.target?.uuid;
+      if (targetUUID && targetUUID === changedObject.uuid) {
         this.updateNodePosition('target', changedObject);
       }
     });
@@ -31,7 +32,10 @@ class TooltipComponent {
     this.editor.signals.objectSelected.add((selectedObject) => {
       if (selectedObject && (selectedObject.type === 'Voxel' || selectedObject.type === 'Polygen')) {
         if (this.targetSelect) {
-          this.targetSelect.setValue(selectedObject.uuid);
+          const currentUUID = this.targetSelect.getValue();
+          if (!currentUUID || currentUUID !== selectedObject.uuid) {
+            this.targetSelect.setValue(selectedObject.uuid);
+          }
         }
       }
     });
@@ -116,8 +120,11 @@ class TooltipComponent {
     const center = new THREE.Vector3();
     box.getCenter(center);
 
+    // 保留原始uuid，仅更新位置坐标
+    const originalUUID = this.component.parameters[type]?.uuid || object.uuid;
+
     this.update(type, {
-      uuid: object.uuid,
+      uuid: originalUUID,
       x: center.x,
       y: center.y,
       z: center.z
@@ -132,9 +139,19 @@ class TooltipComponent {
 
   updatePosition(type) {
     const selectedUUID = this.targetSelect.getValue();
+
+    // 选择"None"，清空target
+    if (selectedUUID === '') {
+      this.update(type, { uuid: '', x: 0, y: 0, z: 0 });
+      return;
+    }
+
     const selectedObject = this.targetList.find(item => item.uuid === selectedUUID);
 
     if (selectedObject) {
+
+      this.component.parameters[type].uuid = selectedUUID;
+
       this.updateNodePosition(type, selectedObject);
     } else {
       console.log(`No valid target selected.`);
