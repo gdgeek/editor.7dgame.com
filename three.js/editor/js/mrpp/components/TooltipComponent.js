@@ -43,17 +43,11 @@ class TooltipComponent {
         const center = new THREE.Vector3();
         box.getCenter(center);
 
-        // 1. 减去物体的位置，确保计算基于 位置(0,0,0)
-        center.sub(selectedObject.position);
+        // 1. 计算物体的世界矩阵逆变换（确保移除父级影响）
+        const inverseWorldMatrix = new THREE.Matrix4().copy(selectedObject.matrixWorld).invert();
 
-        // 2. 反向应用物体的旋转，确保计算基于 旋转(0,0,0)
-        const inverseQuaternion = selectedObject.quaternion.clone().invert();
-        center.applyQuaternion(inverseQuaternion);
-
-        // 3. 反向应用物体的缩放，确保计算基于 缩放(1,1,1)
-        center.x /= selectedObject.scale.x;
-        center.y /= selectedObject.scale.y;
-        center.z /= selectedObject.scale.z;
+        // 2. 计算全局中心点，并移除父级影响
+        center.applyMatrix4(inverseWorldMatrix);
 
         target = {
           uuid: selectedObject.uuid,
@@ -143,8 +137,9 @@ class TooltipComponent {
         const center = new THREE.Vector3();
         box.getCenter(center);
 
-        // 减去物体的当前位置，获取物体在原点（0,0,0）时的中心坐标
-        center.sub(selectedObject.position);
+        // 计算世界矩阵逆变换，去除父级影响
+        const inverseWorldMatrix = new THREE.Matrix4().copy(selectedObject.matrixWorld).invert();
+        center.applyMatrix4(inverseWorldMatrix);
 
         // 更新目标和位置
         this.update(type, {
