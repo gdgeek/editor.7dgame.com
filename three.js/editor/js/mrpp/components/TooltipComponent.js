@@ -105,24 +105,6 @@ class TooltipComponent {
     return this.component.parameters[type]?.uuid || '';
   }
 
-  updateNodePosition(type, object) {
-    if (!object) return;
-		console.log("object", object);
-    const box = new THREE.Box3().setFromObject(object);
-    const center = new THREE.Vector3();
-    box.getCenter(center);
-
-    // 保留原始uuid，仅更新位置坐标
-    const originalUUID = this.component.parameters[type]?.uuid || object.uuid;
-
-    this.update(type, {
-      uuid: originalUUID,
-      x: center.x,
-      y: center.y,
-      z: center.z
-    });
-  }
-
   update(key, value) {
     this.component.parameters[key] = value;
     this.editor.execute(new SetValueCommand(this.editor, this.component.parameters, key, value));
