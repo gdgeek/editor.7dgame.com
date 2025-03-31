@@ -20,14 +20,6 @@ class TooltipComponent {
 
     traverseChildren(editor.scene);
 
-    // 监听对象变更，确保 target 坐标随模型更新
-    this.editor.signals.objectChanged.add((changedObject) => {
-      const targetUUID = this.component.parameters.target?.uuid;
-      if (targetUUID && targetUUID === changedObject.uuid) {
-        this.updateNodePosition('target', changedObject);
-      }
-    });
-
     // 监听对象选中，当选中Voxel或Polygen类型对象时自动更新target
     this.editor.signals.objectSelected.add((selectedObject) => {
       if (selectedObject && (selectedObject.type === 'Voxel' || selectedObject.type === 'Polygen')) {
@@ -115,7 +107,7 @@ class TooltipComponent {
 
   updateNodePosition(type, object) {
     if (!object) return;
-
+		console.log("object", object);
     const box = new THREE.Box3().setFromObject(object);
     const center = new THREE.Vector3();
     box.getCenter(center);
@@ -139,6 +131,7 @@ class TooltipComponent {
 
   updatePosition(type) {
     const selectedUUID = this.targetSelect.getValue();
+    const currentUUID = this.component.parameters[type]?.uuid || '';
 
     // 选择"None"，清空target
     if (selectedUUID === '') {
@@ -146,15 +139,26 @@ class TooltipComponent {
       return;
     }
 
-    const selectedObject = this.targetList.find(item => item.uuid === selectedUUID);
+    // 目标变化时才更新位置
+    if (selectedUUID !== currentUUID) {
+      const selectedObject = this.targetList.find(item => item.uuid === selectedUUID);
 
-    if (selectedObject) {
+      if (selectedObject) {
+        // 获取当前选中对象的中心点坐标
+        const box = new THREE.Box3().setFromObject(selectedObject);
+        const center = new THREE.Vector3();
+        box.getCenter(center);
 
-      this.component.parameters[type].uuid = selectedUUID;
-
-      this.updateNodePosition(type, selectedObject);
-    } else {
-      console.log(`No valid target selected.`);
+        // 更新目标和位置
+        this.update(type, {
+          uuid: selectedUUID,
+          x: center.x,
+          y: center.y,
+          z: center.z
+        });
+      } else {
+        console.log(`No valid target selected.`);
+      }
     }
   }
 
