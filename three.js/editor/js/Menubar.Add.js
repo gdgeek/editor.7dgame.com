@@ -29,15 +29,34 @@ function MenubarAdd( editor ) {
 	options.setClass( 'options' );
 	container.add( options );
 
+	// 存储所有创建的资源菜单项的映射
+	const resourceMenuItems = new Map();
 
 	let option = null;
 
 	if ( editor.type.toLowerCase() == 'meta' ) {
 
+		// 更新资源菜单项的可见性
+		const updateResourceMenuItems = function(availableTypes) {
+			if (!availableTypes || !Array.isArray(availableTypes)) return;
+
+			// 先隐藏所有资源菜单项
+			resourceMenuItems.forEach((menuItem) => {
+				menuItem.dom.style.display = 'none';
+			});
+
+			// 显示可用的资源菜单项
+			availableTypes.forEach(type => {
+				const menuItem = resourceMenuItems.get(type);
+				if (menuItem) {
+					menuItem.dom.style.display = 'block';
+				}
+			});
+		};
+
 		editor.signals.messageReceive.add( async function ( params ) {
 
 			if ( params.action === 'load-resource' ) {
-
 
 				const data = params.data;
 				//data.src = convertToHttps(data.src)
@@ -57,6 +76,8 @@ function MenubarAdd( editor ) {
 
 				}
 
+			} else if ( params.action === 'available-resource-types' ) {
+				updateResourceMenuItems( params.data );
 			}
 
 		} );
@@ -73,8 +94,6 @@ function MenubarAdd( editor ) {
 		} );
 		options.add( option );
 
-
-
 		// Text
 		option = new UIRow();
 		option.setClass( 'option' );
@@ -87,85 +106,40 @@ function MenubarAdd( editor ) {
 		} );
 		options.add( option );
 
-
-		// Voxel
-		option = new UIRow();
-		option.setClass( 'option' );
-		option.setTextContent( strings.getKey( 'menubar/add/voxel' ) );
-		option.onClick( async function () {
-
-			editor.signals.messageSend.dispatch(
-				{
-					action: 'load-resource',
-					data: { type: 'voxel' }
-				} );
-
-		} );
-		options.add( option );
-
-
-
-		// Polygen
-		option = new UIRow();
-		option.setClass( 'option' );
-		option.setTextContent( strings.getKey( 'menubar/add/polygen' ) );
-		option.onClick( async function () {
-
-			editor.signals.messageSend.dispatch( {
-				action: 'load-resource',
-				data: { type: 'polygen' }
+		// 创建资源类型菜单项的函数
+		const createResourceMenuItem = function(resourceType) {
+			const menuItem = new UIRow();
+			menuItem.setClass( 'option' );
+			menuItem.setTextContent( strings.getKey( 'menubar/add/' + resourceType ) );
+			menuItem.onClick( async function () {
+				editor.signals.messageSend.dispatch(
+					{
+						action: 'load-resource',
+						data: { type: resourceType }
+					} );
 			} );
+			// 存储创建的菜单项
+			resourceMenuItems.set(resourceType, menuItem);
+			return menuItem;
+		};
 
-		} );
-		options.add( option );
+		// 初始创建所有可能的资源类型菜单项，默认先隐藏
+		const allPossibleResourceTypes = ['voxel', 'polygen', 'audio', 'picture', 'video'];
+		allPossibleResourceTypes.forEach(type => {
+			const menuItem = createResourceMenuItem(type);
+			menuItem.dom.style.display = 'none'; // 默认隐藏
+			options.add(menuItem);
+		});
 
+		// 请求获取可用的资源类型
+		editor.signals.messageSend.dispatch({
+			action: 'get-available-resource-types'
+		});
 
-		// Audio
-		option = new UIRow();
-		option.setClass( 'option' );
-		option.setTextContent( strings.getKey( 'menubar/add/audio' ) );
-		option.onClick( async function () {
-
-			editor.signals.messageSend.dispatch(
-				{
-					action: 'load-resource',
-					data: { type: 'audio' }
-				} );
-
-		} );
-		options.add( option );
-
-
-		// Picture
-		option = new UIRow();
-		option.setClass( 'option' );
-		option.setTextContent( strings.getKey( 'menubar/add/picture' ) );
-		option.onClick( async function () {
-
-			editor.signals.messageSend.dispatch(
-				{
-					action: 'load-resource',
-					data: { type: 'picture' }
-				} );
-
-		} );
-		options.add( option );
-
-
-		// Video
-		option = new UIRow();
-		option.setClass( 'option' );
-		option.setTextContent( strings.getKey( 'menubar/add/video' ) );
-		option.onClick( async function () {
-
-			editor.signals.messageSend.dispatch(
-				{
-					action: 'load-resource',
-					data: { type: 'video' }
-				} );
-
-		} );
-		options.add( option );
+		// 如果编辑器已经加载了可用资源类型，立即更新菜单
+		if (editor.availableResourceTypes) {
+			updateResourceMenuItems(editor.availableResourceTypes);
+		}
 
 	} else if ( editor.type.toLowerCase() == 'verse' ) {
 

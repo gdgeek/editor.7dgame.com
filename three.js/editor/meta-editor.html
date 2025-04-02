@@ -270,18 +270,29 @@
 
 			}
 
-
-
 		});
 
 		editor.signals.messageReceive.add(async function (params) {
 
-
-			if (params.action == 'load') {
+			if (params.action === 'load') {
 
 				const data = params.data;
 				loader.load(data.data);
 
+				// 如果消息中包含可用资源类型，在编辑器上存储它们
+				console.log("Received load message with data:", data);
+				if (data.availableResourceTypes) {
+					editor.availableResourceTypes = data.availableResourceTypes;
+					
+					// 触发一个自定义事件，通知菜单更新资源类型
+					editor.signals.messageReceive.dispatch({
+						action: 'available-resource-types',
+						data: data.availableResourceTypes
+					});
+				}
+			} else if (params.action === 'available-resource-types') { 
+				// 直接处理可用资源类型列表
+				editor.availableResourceTypes = params.data;
 			}
 
 		});
