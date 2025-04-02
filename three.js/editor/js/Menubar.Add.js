@@ -172,7 +172,7 @@ function MenubarAdd( editor ) {
 				node.userData.custom = data.custom;
 				if ( data && data.data ) {
 
-					await factory.readMeta( node, JSON.parse( data.data ), resources, editor );
+					await factory.readMeta( node, data.data, resources, editor );
 
 				}
 

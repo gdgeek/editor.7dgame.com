@@ -276,10 +276,11 @@ function MetaLoader(editor) {
 
 			const data = meta.data;
 			const resources = new Map();
-
+			console.error(meta)
+			//alert(meta)
 			meta.resources.forEach(r => {
 
-				console.error(r);
+			//	console.error(r);
 				resources.set(r.id.toString(), r);
 
 			});
