@@ -264,7 +264,6 @@ function VerseLoader(editor) {
 
 		const root = editor.scene;
 
-
 		if (verse.data !== null) {
 
 			const data = verse.data;
