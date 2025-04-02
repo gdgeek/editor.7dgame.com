@@ -208,7 +208,7 @@ function VerseLoader(editor) {
 				editor.signals.sceneGraphChanged.dispatch();
 				if (meta && meta.data && meta.custom != 0) {
 
-					await factory.readMeta(node, JSON.parse(meta.data), resources);
+					await factory.readMeta(node, meta.data, resources);
 					editor.signals.sceneGraphChanged.dispatch();
 
 				}
@@ -267,7 +267,7 @@ function VerseLoader(editor) {
 
 		if (verse.data !== null) {
 
-			const data = JSON.parse(verse.data);
+			const data = verse.data;
 			if (typeof self.data !== 'undefined') {
 
 				await this.removeNode(self.data, data);

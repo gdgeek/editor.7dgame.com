@@ -241,7 +241,7 @@ function MetaLoader(editor) {
 
 		} else {
 
-			scene.events = JSON.parse(meta.events);
+			scene.events = meta.events;
 
 		}
 
@@ -274,7 +274,7 @@ function MetaLoader(editor) {
 
 		if (meta.data) {
 
-			const data = JSON.parse(meta.data);
+			const data = meta.data;
 			const resources = new Map();
 
 			meta.resources.forEach(r => {
