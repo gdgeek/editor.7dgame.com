@@ -124,6 +124,7 @@ function MenubarReplace( editor ) {
 							const scale = selected.scale.clone();
 							const parent = selected.parent;
 							const uuid = selected.uuid;
+							const name = selected.name;
 
 							const components = selected.components ? [...selected.components] : [];
 							const commands = selected.commands ? [...selected.commands] : [];
@@ -144,6 +145,7 @@ function MenubarReplace( editor ) {
 							node.rotation.copy( rotation );
 							node.scale.copy( scale );
 							node.uuid = uuid;
+							node.name = name;
 
 							node.components = components;
 							node.commands = commands;
