@@ -16,7 +16,7 @@ class VoiceCommand {
       type: 'Voice',
       parameters: {
         uuid: THREE.MathUtils.generateUUID(),
-        voice: '',
+        action: '',
         parameter: ''
       }
     };
@@ -62,13 +62,13 @@ class VoiceCommand {
   }
 
   update() {
-    this.component.parameters.voice = this.voiceSelect.getValue();
+    this.component.parameters.action = this.voiceSelect.getValue();
 
     const command = new SetValueCommand(
       this.editor,
       this.component.parameters,
       'voice',
-      this.component.parameters.voice
+      this.component.parameters.action
     );
 
     this.editor.execute(command);
@@ -77,7 +77,7 @@ class VoiceCommand {
 
   updateUI() {
     this.uuid.setValue(this.component.parameters.uuid);
-    this.voiceSelect.setValue(this.component.parameters.voice);
+    this.voiceSelect.setValue(this.component.parameters.action);
   }
 
   renderer(container) {
