@@ -241,8 +241,8 @@ function MetaLoader(editor) {
 
 		} else {
 
-			// scene.events = meta.events;
-			scene.events = JSON.parse(meta.events);
+			scene.events = meta.events;
+			// scene.events = JSON.parse(meta.events);
 
 		}
 
@@ -275,8 +275,8 @@ function MetaLoader(editor) {
 
 		if (meta.data) {
 
-			// const data = meta.data;
-			const data = JSON.parse(meta.data);
+			const data = meta.data;
+			// const data = JSON.parse(meta.data);
 			const resources = new Map();
 			console.error(meta)
 			//alert(meta)
