@@ -23,6 +23,10 @@ function VerseLoader(editor) {
 		self.save();
 	});
 
+	editor.signals.release.add(function () {
+		self.publish();
+	});
+
 	this.getVerse = async function () {
 		return await this.write( editor.scene);
 	};
@@ -49,6 +53,18 @@ function VerseLoader(editor) {
 				action: 'save-verse-none'
 			});
 		}
+	};
+
+	this.publish = async function () {
+		const verse = await this.getVerse();
+		const data = { verse };
+		const json = JSON.stringify(data);
+
+		editor.signals.messageSend.dispatch({
+			action: "release-verse",
+			data,
+		});
+		this.json = json;
 	};
 
 	this.compareObjectsAndPrintDifferences = function (obj1, obj2, path = '', tolerance = 0.0001) {

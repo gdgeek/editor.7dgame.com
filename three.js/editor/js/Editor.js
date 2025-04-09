@@ -28,6 +28,7 @@ function Editor() {
 	this.selector = null;
 	this.signals = {
 		upload: new Signal(),
+		release: new Signal(),
 		// script
 
 		editScript: new Signal(),
