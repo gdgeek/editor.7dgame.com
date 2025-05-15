@@ -50,6 +50,10 @@ class VoiceCommand {
         returnMain: strings.getKey('sidebar/command/voice/returnMain'),
         closeTooltip: strings.getKey('sidebar/command/voice/closeTooltip'),
         openTooltip: strings.getKey('sidebar/command/voice/openTooltip'),
+        vertical: strings.getKey('sidebar/command/voice/vertical'),
+        horizontal: strings.getKey('sidebar/command/voice/horizontal'),
+        hidden: strings.getKey('sidebar/command/voice/hidden'),
+        visible: strings.getKey('sidebar/command/voice/visible'),
       };
 
       this.voiceSelect = new UISelect().setWidth('150px').setFontSize('12px');

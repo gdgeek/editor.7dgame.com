@@ -182,6 +182,10 @@ function Strings( config ) {
 			'sidebar/command/voice/returnMain': 'Return Main Menu',
 			'sidebar/command/voice/closeTooltip': 'Close Tooltip',
 			'sidebar/command/voice/openTooltip': 'Open Tooltip',
+			'sidebar/command/voice/vertical': 'Vertical',
+			'sidebar/command/voice/horizontal': 'Horizontal',
+			'sidebar/command/voice/hidden': 'Hidden',
+			'sidebar/command/voice/visible': 'Visible',
 
 			'sidebar/entity': 'Point(Custom)',
 			'sidebar/entity/button': 'Edit',
@@ -619,6 +623,10 @@ function Strings( config ) {
 			'sidebar/command/voice/returnMain': '返回主界面',
 			'sidebar/command/voice/closeTooltip': '关闭说明卡',
 			'sidebar/command/voice/openTooltip': '显示说明卡',
+			'sidebar/command/voice/vertical': '垂直展示',
+			'sidebar/command/voice/horizontal': '水平展示',
+			'sidebar/command/voice/hidden': '隐藏模式',
+			'sidebar/command/voice/visible': '显示模式',
 
 			'sidebar/entity': '实体（自定义）',
 			'sidebar/entity/button': '编辑',
@@ -1056,6 +1064,10 @@ function Strings( config ) {
 			'sidebar/command/voice/returnMain': 'メイン画面に戻る',
 			'sidebar/command/voice/closeTooltip': '説明カードを閉じる',
 			'sidebar/command/voice/openTooltip': '説明カードを開く',
+			'sidebar/command/voice/vertical': '垂直展示',
+			'sidebar/command/voice/horizontal': '水平展示',
+			'sidebar/command/voice/hidden': '隠しモード',
+			'sidebar/command/voice/visible': '表示モード',
 
 			'sidebar/entity': 'コンポーネント（カスタム）',
 			'sidebar/entity/button': '編集',
