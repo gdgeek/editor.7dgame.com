@@ -46,24 +46,32 @@ function MenubarGoto( editor ) {
 
 	// Blockly
 
-	const option = new UIRow();
-	option.setClass( 'option' );
-	option.setTextContent( strings.getKey( 'menubar/code/script' ) );
-	option.onClick( async function (event) {
+	const scriptOption = new UIRow();
+	scriptOption.setClass( 'option' );
+	scriptOption.setTextContent( strings.getKey( 'menubar/code/script' ) );
 
+	// 设置按钮初始状态为禁用
+	scriptOption.dom.classList.add('disabled');
+	scriptOption.dom.style.opacity = '0.5';
+	scriptOption.dom.style.pointerEvents = 'none';
+
+	scriptOption.onClick( async function (event) {
+		// 如果还在加载中，则不允许前往脚本编辑器
+		if (editor.metaLoader && editor.metaLoader.getLoadingStatus()) {
+			console.warn('Cannot go to script editor while models are still loading');
+			return;
+		}
+
+		// 检查场景是否有修改
 		const changed = (editor.verseLoader && await editor.verseLoader.changed()) || (editor.metaLoader && await editor.metaLoader.changed());
 
-
-		if(changed){
-			// const userConfirmed = confirm('确认再没保存的情况下进行离开编辑器?');
-            // if (!userConfirmed) return;
-
-
+		if(changed) {
+			// 只有在场景有修改时才显示确认框
 			editor.showConfirmation(strings.getKey('sidebar/confirm/scene/modified'), async function() {
-
-				// editor.signals.sceneGraphChanged.dispatch();//
+				// 用户点击确认按钮，先保存场景
 				await editor.signals.upload.dispatch();
-				// 用户点击确认按钮
+
+				// 延迟导航到脚本编辑器，确保保存完成
 				const data = {
 					action: 'goto',
 					data: { 'target': 'blockly.js' }
@@ -72,17 +80,30 @@ function MenubarGoto( editor ) {
 					editor.signals.messageSend.dispatch( data );
 				}, 3000);
 			}, null, event.parent, false);
-			return;
+		} else {
+			// 如果没有修改，直接导航到脚本编辑器
+			const data = {
+				action: 'goto',
+				data: { 'target': 'blockly.js' }
+			};
+			editor.signals.messageSend.dispatch( data );
 		}
-
-		const data = {
-			action: 'goto',
-			data: { 'target': 'blockly.js' }
-		};
-		editor.signals.messageSend.dispatch( data );
-
 	} );
-	options.add( option );
+	options.add( scriptOption );
+
+	// 处理加载状态的变化
+	editor.signals.savingStarted.add(function () {
+		scriptOption.dom.classList.add('disabled');
+		scriptOption.dom.style.opacity = '0.5';
+		scriptOption.dom.style.pointerEvents = 'none';
+	});
+
+	editor.signals.savingFinished.add(function () {
+		scriptOption.dom.classList.remove('disabled');
+		scriptOption.dom.style.opacity = '1';
+		scriptOption.dom.style.pointerEvents = 'auto';
+	});
+
 	return container;
 
 }

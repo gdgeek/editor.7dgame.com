@@ -8,6 +8,9 @@ function VerseLoader(editor) {
 
 	const types = ['Module'];
 	this.json = null;
+	this.isLoading = true;
+	this.loadingPromises = [];
+
 	const factory = new MetaFactory();
 	const self = this;
 
@@ -28,16 +31,27 @@ function VerseLoader(editor) {
 	});
 
 	this.getVerse = async function () {
-		return await this.write( editor.scene);
+		return await this.write(editor.scene);
 	};
 	this.isChanged = function (json) {
+		if (this.json === null) return false;
 		return this.json !== json;
 	}
 	this.changed = async function () {
 		const verse = await this.getVerse();
 		return this.isChanged(JSON.stringify({ verse }));
 	}
+
+	this.getLoadingStatus = function() {
+		return this.isLoading;
+	}
+
 	this.save = async function () {
+		if (this.isLoading) {
+			console.warn('Cannot save while modules are still loading');
+			return;
+		}
+
 		const verse = await this.getVerse();
 		const data = { verse };
 		const json = JSON.stringify(data);
@@ -49,6 +63,7 @@ function VerseLoader(editor) {
 			});
 			this.json = json;
 		} else {
+			console.log('No changes detected, sending save-verse-none');
 			editor.signals.messageSend.dispatch({
 				action: 'save-verse-none'
 			});
@@ -56,6 +71,11 @@ function VerseLoader(editor) {
 	};
 
 	this.publish = async function () {
+		if (this.isLoading) {
+			console.warn('Cannot publish while modules are still loading');
+			return;
+		}
+
 		const verse = await this.getVerse();
 		const data = { verse };
 		const json = JSON.stringify(data);
@@ -199,65 +219,75 @@ function VerseLoader(editor) {
 	};
 
 	this.read = async function (root, data, resources, metas) {
-
+		return new Promise(async (resolve, reject) => {
+			try {
 		root.uuid = data.parameters.uuid;
+				const loadingPromises = [];
+
 		if (data.children.anchors) {
-
-			data.children.anchors.forEach(async item => {
-
-				await self.addAnchor(item, root);
-
-			});
-
+					for (const item of data.children.anchors) {
+						const anchorPromise = this.addAnchor(item, root);
+						loadingPromises.push(anchorPromise);
+					}
 		}
 
 		if (data.children.modules) {
-
-			data.children.modules.forEach(async item => {
-
+					for (const item of data.children.modules) {
+						const modulePromise = new Promise(async (moduleResolve) => {
+							try {
 				const meta = metas.get(item.parameters.meta_id.toString());
-
-				//console.error(meta);
 				const node = factory.addModule(item);
 				node.userData.custom = meta.custom;
 				root.add(node);
 				editor.signals.sceneGraphChanged.dispatch();
-				if (meta && meta.data && meta.custom != 0) {
 
+				if (meta && meta.data && meta.custom != 0) {
 					await factory.readMeta(node, meta.data, resources);
 					editor.signals.sceneGraphChanged.dispatch();
-
 				}
 
 				await factory.addGizmo(node);
 				editor.signals.sceneGraphChanged.dispatch();
+								moduleResolve();
+							} catch (error) {
+								console.error('Error loading module:', error);
+								moduleResolve();
+							}
+						});
 
-			});
+						loadingPromises.push(modulePromise);
+					}
+				}
 
-		}
-
+				await Promise.all(loadingPromises);
+				resolve();
+			} catch (err) {
+				console.error('Error in read method:', err);
+				reject(err);
+			}
+		});
 	};
 
 	this.clear = async function () {
-
 		this.scene.clear();
-
 	};
 
 	this.load = async function (verse) {
+		this.isLoading = true;
+		this.loadingPromises = [];
+
+		editor.signals.savingStarted.dispatch();
+
 		let scene = editor.scene;
 		if (scene == null) {
-
 			scene = new THREE.Scene();
 			scene.name = 'Scene';
 			editor.setScene(scene);
-
 		}
 
 		editor.signals.sceneGraphChanged.dispatch();
 		let lights = editor.scene.getObjectByName('$lights');
 		if (lights == null) {
-
 			lights = new THREE.Group();
 			lights.name = '$lights';
 			const light1 = new THREE.DirectionalLight(0xffffff, 0.5);
@@ -275,49 +305,53 @@ function VerseLoader(editor) {
 			scene.add(lights);
 			factory.lockNode(lights);
 			editor.signals.sceneGraphChanged.dispatch();
-
 		}
 
 		const root = editor.scene;
 
 		if (verse.data !== null) {
-
 			const data = verse.data;
 			if (typeof self.data !== 'undefined') {
-
 				await this.removeNode(self.data, data);
-
 			}
 
 			const resources = new Map();
 			verse.resources.forEach(item => {
-
 				resources.set(item.id.toString(), item);
-
 			});
+
 			const metas = new Map();
-			//console.error(verse);
 			verse.metas.forEach(item => {
-
 				metas.set(item.id.toString(), item);
-
 			});
-			await this.read(root, data, resources, metas);
+
+			const loadPromise = this.read(root, data, resources, metas);
+			this.loadingPromises.push(loadPromise);
+
+			Promise.all(this.loadingPromises).then(async () => {
+				this.isLoading = false;
+				editor.signals.savingFinished.dispatch();
+
 			const copy = await this.write(root);
-
 			self.compareObjectsAndPrintDifferences(data, copy);
+
 			editor.signals.sceneGraphChanged.dispatch();
-
-		}
-
-
-
 		this.json = JSON.stringify({ verse: await this.write(root) });
 
-		editor.signals.sceneGraphChanged.dispatch();
-
+				console.log('All modules loaded successfully');
+			}).catch(error => {
+				console.error('Error loading modules:', error);
+				this.isLoading = false;
+				editor.signals.savingFinished.dispatch();
+			});
+		} else {
+			this.isLoading = false;
+			editor.signals.savingFinished.dispatch();
+			this.json = JSON.stringify({ verse: await this.write(root) });
+		}
 	};
 
+	editor.signals.savingStarted.dispatch();
 }
 
 export { VerseLoader };

@@ -73,28 +73,75 @@ function MenubarFile( editor ) {
 	//options.add(new UIHorizontalRule())
 
 	// SAVE
-	option = new UIRow();
-	option.setClass( 'option' );
-	option.setTextContent( strings.getKey( 'menubar/file/save' ) );
-	option.onClick( function () {
+	const saveOption = new UIRow();
+	saveOption.setClass( 'option' );
+	saveOption.setTextContent( strings.getKey( 'menubar/file/save' ) );
+
+	// 设置按钮初始状态为禁用
+	saveOption.dom.classList.add('disabled');
+	saveOption.dom.style.opacity = '0.5';
+	saveOption.dom.style.pointerEvents = 'none';
+
+	saveOption.onClick( function () {
+		if (editor.metaLoader && editor.metaLoader.getLoadingStatus()) {
+			console.warn('Cannot save while models are still loading');
+			return;
+		}
 
 		editor.signals.sceneGraphChanged.dispatch();
 		editor.signals.upload.dispatch();
-
 	} );
-	options.add( option );
+	options.add( saveOption );
+
+	// 处理加载状态的变化
+	editor.signals.savingStarted.add(function () {
+		saveOption.dom.classList.add('disabled');
+		saveOption.dom.style.opacity = '0.5';
+		saveOption.dom.style.pointerEvents = 'none';
+	});
+
+	editor.signals.savingFinished.add(function () {
+		saveOption.dom.classList.remove('disabled');
+		saveOption.dom.style.opacity = '1';
+		saveOption.dom.style.pointerEvents = 'auto';
+	});
 
 	// PUBLISH
-	option = new UIRow();
-	option.setClass( 'option' );
-	option.setTextContent( strings.getKey( 'menubar/file/publish' ) );
-	option.onClick( function () {
+	const publishOption = new UIRow();
+	publishOption.setClass( 'option' );
+	publishOption.setTextContent( strings.getKey( 'menubar/file/publish' ) );
+
+	// 设置发布按钮初始状态为禁用
+	publishOption.dom.classList.add('disabled');
+	publishOption.dom.style.opacity = '0.5';
+	publishOption.dom.style.pointerEvents = 'none';
+
+	publishOption.onClick( function () {
+		// 在加载过程中禁止发布
+		if (editor.verseLoader && editor.verseLoader.getLoadingStatus()) {
+			console.warn('Cannot publish while modules are still loading');
+			return;
+		}
+
 		editor.signals.sceneGraphChanged.dispatch();
 		editor.signals.release.dispatch();
 	} );
 
 	if (editor.type && editor.type.toLowerCase() === 'verse') {
-		options.add( option );
+		options.add( publishOption );
+
+		// 为发布按钮添加加载状态响应
+		editor.signals.savingStarted.add(function () {
+			publishOption.dom.classList.add('disabled');
+			publishOption.dom.style.opacity = '0.5';
+			publishOption.dom.style.pointerEvents = 'none';
+		});
+
+		editor.signals.savingFinished.add(function () {
+			publishOption.dom.classList.remove('disabled');
+			publishOption.dom.style.opacity = '1';
+			publishOption.dom.style.pointerEvents = 'auto';
+		});
 	}
 
 	/*

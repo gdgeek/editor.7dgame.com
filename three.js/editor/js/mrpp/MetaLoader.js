@@ -4,6 +4,8 @@ import { MetaFactory } from './MetaFactory.js';
 function MetaLoader(editor) {
 
 	this.json = null;
+	this.isLoading = true;
+	this.loadingPromises = [];
 	editor.selector = function (object) {
 
 		if(object.userData.hidden){
@@ -24,6 +26,7 @@ function MetaLoader(editor) {
 		return await this.write(editor.scene);
 	};
 	this.isChanged = function (json) {
+		if (this.json === null) return false;
 		return this.json !== json;
 	}
 
@@ -33,15 +36,17 @@ function MetaLoader(editor) {
 	}
 
 	this.save = async function () {
+		if (this.isLoading) {
+			console.warn('Cannot save while models are still loading');
+			return;
+		}
 
 		const meta = await this.getMeta();
-		const data ={  meta, events: editor.scene.events };
+		const data = { meta, events: editor.scene.events };
 		const json = JSON.stringify(data);
 		const changed = this.isChanged(json);
 
-
 		if (changed) {
-
 			editor.signals.messageSend.dispatch({
 				action: 'save-meta',
 				data
@@ -52,20 +57,19 @@ function MetaLoader(editor) {
 				action: 'save-meta-none'
 			});
 		}
-
-
-
-
 	};
 
+	this.getLoadingStatus = function() {
+		return this.isLoading;
+	}
 
-
-
+	this.initLoading = function() {
+		this.isLoading = true;
+		editor.signals.savingStarted.dispatch();
+	}
 
 	editor.signals.upload.add(function () {
-
 		self.save();
-
 	});
 
 
@@ -246,6 +250,11 @@ function MetaLoader(editor) {
 
 		}
 
+		this.isLoading = true;
+		this.loadingPromises = [];
+
+		editor.signals.savingStarted.dispatch();
+
 		editor.signals.sceneGraphChanged.dispatch();
 		let lights = editor.scene.getObjectByName('$lights');
 		if (lights == null) {
@@ -287,20 +296,36 @@ function MetaLoader(editor) {
 
 			});
 
-
 			root.uuid = data.parameters.uuid;
-			await factory.readMeta(root, data, resources);
+			const loadPromise = factory.readMeta(root, data, resources, editor);
+			this.loadingPromises.push(loadPromise);
+
+			Promise.all(this.loadingPromises).then(async () => {
+				this.isLoading = false;
+				editor.signals.savingFinished.dispatch();
+				editor.signals.sceneGraphChanged.dispatch();
+
+				const metaData = await this.write(root);
+				this.json = JSON.stringify({ meta: metaData, events: editor.scene.events });
+				console.log('All models loaded successfully');
+			}).catch(error => {
+				console.error('Error loading models:', error);
+				this.isLoading = false;
+				editor.signals.savingFinished.dispatch();
+			});
 
 			editor.signals.sceneGraphChanged.dispatch();
 
+		} else {
+			this.isLoading = false;
+			editor.signals.savingFinished.dispatch();
+
+			const metaData = await this.write(root);
+			this.json = JSON.stringify({ meta: metaData, events: editor.scene.events });
 		}
-
-
-		this.json = JSON.stringify( { meta: await this.write(root), events: editor.scene.events });
-	//	alert(this.json)
-
 	};
 
+	editor.signals.savingStarted.dispatch();
 }
 
 export { MetaLoader };
