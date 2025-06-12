@@ -37,8 +37,8 @@ function Sidebar(editor) {
 	const screenshot = new SidebarScreenshot(editor)
 
 	container.addTab('scene', strings.getKey('sidebar/scene'), scene)
-	container.addTab('project', strings.getKey('sidebar/project'), project)
-	container.addTab('settings', strings.getKey('sidebar/settings'), settings)
+	// container.addTab('project', strings.getKey('sidebar/project'), project)
+	// container.addTab('settings', strings.getKey('sidebar/settings'), settings)
 	container.addTab('screenshot', strings.getKey('sidebar/screenshot'), screenshot)
 	container.select('scene')
 

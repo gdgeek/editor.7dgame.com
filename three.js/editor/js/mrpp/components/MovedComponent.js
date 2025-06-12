@@ -63,45 +63,45 @@ class MovedComponent {
 
       container.add(row)
     }
-    {
-      this.row = new UIRow()
-      const scalable = new UICheckbox().setValue(this.component.parameters.scalable)
-        .setWidth('50px').onChange((item) => {
-          console.error(item)
-          this.editor.execute(new SetValueCommand(this.editor, this.component.parameters, 'scalable', scalable.getValue()));
-        });
-      this.row.add(
-        new UIText('可缩放').setWidth('90px')
-      )
-      this.row.add(scalable)
-      container.add(this.row)
-    }
-    {
+    // {
+    //   this.row = new UIRow()
+    //   const scalable = new UICheckbox().setValue(this.component.parameters.scalable)
+    //     .setWidth('50px').onChange((item) => {
+    //       console.error(item)
+    //       this.editor.execute(new SetValueCommand(this.editor, this.component.parameters, 'scalable', scalable.getValue()));
+    //     });
+    //   this.row.add(
+    //     new UIText('可缩放').setWidth('90px')
+    //   )
+    //   this.row.add(scalable)
+    //   container.add(this.row)
+    // }
+    // {
 
-      const limitX = this.limitIt(
-        new UIRow().add(
-          new UIText('X限位').setWidth('90px')
-        ), 'x')
-      container.add(limitX)
-    }
+    //   const limitX = this.limitIt(
+    //     new UIRow().add(
+    //       new UIText('X限位').setWidth('90px')
+    //     ), 'x')
+    //   container.add(limitX)
+    // }
 
-    {
+    // {
 
-      const limitY = this.limitIt(
-        new UIRow().add(
-          new UIText('Y限位').setWidth('90px')
-        ), 'y')
-      container.add(limitY)
-    }
+    //   const limitY = this.limitIt(
+    //     new UIRow().add(
+    //       new UIText('Y限位').setWidth('90px')
+    //     ), 'y')
+    //   container.add(limitY)
+    // }
 
-    {
+    // {
 
-      const limitZ = this.limitIt(
-        new UIRow().add(
-          new UIText('Z限位').setWidth('90px')
-        ), 'z')
-      container.add(limitZ)
-    }
+    //   const limitZ = this.limitIt(
+    //     new UIRow().add(
+    //       new UIText('Z限位').setWidth('90px')
+    //     ), 'z')
+    //   container.add(limitZ)
+    // }
     {
       const trigger = this.trigger(new UIRow().add(
         new UIText('触发事件').setWidth('90px')
