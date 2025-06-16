@@ -102,12 +102,12 @@ class MovedComponent {
     //     ), 'z')
     //   container.add(limitZ)
     // }
-    {
-      const trigger = this.trigger(new UIRow().add(
-        new UIText('触发事件').setWidth('90px')
-      ), this.component.parameters.action)
-      container.add(trigger)
-    }
+    // {
+    //   const trigger = this.trigger(new UIRow().add(
+    //     new UIText('触发事件').setWidth('90px')
+    //   ), this.component.parameters.action)
+    //   container.add(trigger)
+    // }
 
   }
   trigger(container, action) {

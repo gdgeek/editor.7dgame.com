@@ -29,6 +29,12 @@ function MenubarComponent(editor) {
         'Tooltip': strings.getKey('sidebar/components/select/tooltip')
     };
 
+    // 互斥组件类型
+    const mutuallyExclusiveTypes = ['Action', 'Moved', 'Trigger'];
+
+    // 存储组件菜单项的引用
+    const typeRows = {};
+
     // 为每种组件类型创建菜单选项
     Object.keys(componentTypes).forEach(function(type) {
         const typeRow = new UIRow();
@@ -36,6 +42,37 @@ function MenubarComponent(editor) {
         typeRow.setTextContent(componentTypes[type]);
         typeRow.onClick(function(event) {
             if (editor.selected !== null) {
+                // 确保对象有components属性
+                if (editor.selected.components === undefined) {
+                    editor.selected.components = [];
+                }
+
+                // 检查互斥组件
+                if (mutuallyExclusiveTypes.includes(type)) {
+                    // 检查是否已经存在互斥组件
+                    let hasExclusiveComponent = false;
+                    let existingType = null;
+
+                    for (let i = 0; i < editor.selected.components.length; i++) {
+                        const compType = editor.selected.components[i].type;
+                        if (mutuallyExclusiveTypes.includes(compType) && compType !== type) {
+                            hasExclusiveComponent = true;
+                            existingType = compType;
+                            break;
+                        }
+                    }
+
+                    if (hasExclusiveComponent) {
+                        // 已存在互斥组件，显示提示信息
+                        editor.showNotification(
+                            strings.getKey('menubar/component/mutually_exclusive') ||
+                            '只能选择一个互斥组件：点击触发、可移动或碰撞触发',
+                            true
+                        );
+                        return;
+                    }
+                }
+
                 const component = ComponentContainer.Create(type, editor);
 
                 if (component !== undefined) {
@@ -50,13 +87,24 @@ function MenubarComponent(editor) {
             }
         });
         options.add(typeRow);
+
+        // 存储引用以便后续更新状态
+        typeRows[type] = typeRow;
     });
 
     // 初始时检查并设置菜单可见性
     updateVisibility();
+    updateMutuallyExclusiveOptions();
 
-    // 监听对象选择变化，更新菜单可见性
-    signals.objectSelected.add(updateVisibility);
+    // 监听对象选择变化，更新菜单可见性和互斥选项
+    signals.objectSelected.add(function() {
+        updateVisibility();
+        updateMutuallyExclusiveOptions();
+    });
+
+    // 监听组件添加和移除事件，更新互斥选项状态
+    signals.componentAdded.add(updateMutuallyExclusiveOptions);
+    signals.componentRemoved.add(updateMutuallyExclusiveOptions);
 
     // 更新菜单可见性的函数
     function updateVisibility() {
@@ -70,6 +118,63 @@ function MenubarComponent(editor) {
             }
         } else {
             container.setDisplay('none');
+        }
+    }
+
+    // 更新互斥组件选项的可用状态
+    function updateMutuallyExclusiveOptions() {
+        if (editor.selected !== null) {
+            // 确保对象有components属性
+            if (editor.selected.components === undefined) {
+                editor.selected.components = [];
+            }
+
+            // 检查当前选中对象已有的组件
+            const existingComponents = editor.selected.components;
+
+            // 检查是否已存在互斥组件中的一个
+            let existingExclusiveType = null;
+
+            for (let i = 0; i < existingComponents.length; i++) {
+                const compType = existingComponents[i].type;
+                if (mutuallyExclusiveTypes.includes(compType)) {
+                    existingExclusiveType = compType;
+                    break;
+                }
+            }
+
+            // 更新互斥组件的可用状态
+            mutuallyExclusiveTypes.forEach(function(type) {
+                if (existingExclusiveType && type !== existingExclusiveType) {
+                    // 如果已存在互斥组件且当前组件不是已存在的组件，则禁用
+                    typeRows[type].setClass('option disabled');
+                    typeRows[type].dom.style.opacity = '0.5';
+                    typeRows[type].dom.style.cursor = 'not-allowed';
+
+                    // 保存原始的onClick处理函数
+                    if (!typeRows[type].originalOnClick) {
+                        typeRows[type].originalOnClick = typeRows[type].onClick;
+                    }
+
+                    // 设置为显示提示信息的onClick处理函数
+                    typeRows[type].onClick(function(event) {
+                        const message = strings.getKey('menubar/component/mutually_exclusive') ||
+                                       '只能选择一个互斥组件：点击触发、可移动或碰撞触发';
+                        editor.showNotification(message, true);
+                        event.stopPropagation();
+                    });
+                } else {
+                    // 启用组件
+                    typeRows[type].setClass('option');
+                    typeRows[type].dom.style.opacity = '';
+                    typeRows[type].dom.style.cursor = '';
+
+                    // 恢复原始的onClick处理函数
+                    if (typeRows[type].originalOnClick) {
+                        typeRows[type].onClick(typeRows[type].originalOnClick);
+                    }
+                }
+            });
         }
     }
 

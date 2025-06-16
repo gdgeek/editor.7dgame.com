@@ -436,7 +436,8 @@ function Strings( config ) {
 
 			'menubar/command/confirm': 'Do you want to add the "{0}" command to the current object?',
 			'menubar/command/success': 'Successfully added "{0}" command',
-			'menubar/command/select_object_first': 'Please select an object first'
+			'menubar/command/select_object_first': 'Please select an object first',
+			'menubar/component/mutually_exclusive': 'Only one of these components can be selected: Click Action, Movable or Collision Trigger'
 		},
 
 
@@ -879,7 +880,8 @@ function Strings( config ) {
 
 			'menubar/command/confirm': '你想将"{0}"命令添加到当前对象吗？',
 			'menubar/command/success': '成功添加"{0}"命令',
-			'menubar/command/select_object_first': '请先选择一个对象'
+			'menubar/command/select_object_first': '请先选择一个对象',
+			'menubar/component/mutually_exclusive': '只能选择一个互斥组件：点击触发、可移动或碰撞触发'
 		},
 
 		ja: {
@@ -1319,7 +1321,8 @@ function Strings( config ) {
 
 			'menubar/command/confirm': '現在のオブジェクトに "{0}" コマンドを追加しますか？',
 			'menubar/command/success': '"{0}" コマンドが正常に追加されました',
-			'menubar/command/select_object_first': '先にオブジェクトを選択してください'
+			'menubar/command/select_object_first': '先にオブジェクトを選択してください',
+			'menubar/component/mutually_exclusive': 'Only one of these components can be selected: Click Action, Movable or Collision Trigger'
 		}
 	};
 

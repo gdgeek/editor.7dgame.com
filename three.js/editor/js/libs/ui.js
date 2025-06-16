@@ -398,6 +398,16 @@ class UISelect extends UIElement {
 
 	}
 
+	getSelectedHtml() {
+
+		if (this.dom.selectedIndex !== -1) {
+			return this.dom.options[this.dom.selectedIndex].innerHTML;
+		}
+
+		return '';
+
+	}
+
 	setValue(value) {
 
 		value = String(value);
