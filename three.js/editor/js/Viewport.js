@@ -66,6 +66,89 @@ function Viewport( editor ) {
 	selectionBox.visible = false;
 	sceneHelpers.add( selectionBox );
 
+	// 增强的计算包围盒函数
+	function computeEnhancedBoundingBox(object) {
+		// 创建一个新的Box3
+		const boundingBox = new THREE.Box3();
+
+		// 确保更新世界矩阵
+		object.updateWorldMatrix(true, true);
+
+		// 递归函数，处理对象及其子对象
+		function processObject(obj) {
+			// 跳过隐藏的对象
+			if (obj.visible === false) return;
+
+			const geometry = obj.geometry;
+
+			if (geometry !== undefined) {
+				// 如果有几何体
+				if (geometry.boundingBox === null) {
+					geometry.computeBoundingBox();
+				}
+
+				// 几何体的顶点
+				if (geometry.attributes && geometry.attributes.position) {
+					const position = geometry.attributes.position;
+					const vector = new THREE.Vector3();
+
+					// 处理每个顶点，考虑到世界变换
+					for (let i = 0; i < position.count; i++) {
+						vector.fromBufferAttribute(position, i);
+						vector.applyMatrix4(obj.matrixWorld);
+						boundingBox.expandByPoint(vector);
+					}
+				}
+
+				// 如果是骨骼或蒙皮模型
+				if (obj.isSkinnedMesh) {
+					// 处理骨骼
+					const skeleton = obj.skeleton;
+					if (skeleton) {
+						for (let i = 0; i < skeleton.bones.length; i++) {
+							const bone = skeleton.bones[i];
+							const bonePoint = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
+							boundingBox.expandByPoint(bonePoint);
+						}
+					}
+				}
+			}
+
+			// 处理子对象
+			if (obj.children && obj.children.length > 0) {
+				for (let i = 0; i < obj.children.length; i++) {
+					processObject(obj.children[i]);
+				}
+			}
+		}
+
+		// 开始处理
+		processObject(object);
+
+		// 如果包围盒为空，增加一个小的默认尺寸
+		if (boundingBox.isEmpty()) {
+			boundingBox.set(
+				new THREE.Vector3(-0.5, -0.5, -0.5),
+				new THREE.Vector3(0.5, 0.5, 0.5)
+			);
+			boundingBox.applyMatrix4(object.matrixWorld);
+		}
+
+		// 扩展一点点，确保完全包围
+		const size = new THREE.Vector3();
+		boundingBox.getSize(size);
+
+		// 为小的包围盒增加一定的缓冲量
+		if (Math.max(size.x, size.y, size.z) < 1.0) {
+			boundingBox.expandByScalar(0.1);
+		} else {
+			// 为大的包围盒增加比例缓冲
+			boundingBox.expandByScalar(size.length() * 0.01);
+		}
+
+		return boundingBox;
+	}
+
 	let objectPositionOnDown = null;
 	let objectRotationOnDown = null;
 	let objectScaleOnDown = null;
@@ -77,7 +160,8 @@ function Viewport( editor ) {
 
 		if ( object !== undefined ) {
 
-			box.setFromObject( object, true );
+			// box.setFromObject( object, true );
+			box.copy(computeEnhancedBoundingBox(object));
 
 			const helper = editor.helpers[ object.id ];
 
@@ -423,7 +507,8 @@ function Viewport( editor ) {
 
 		if ( object !== null && object !== scene && object !== camera ) {
 
-			box.setFromObject( object, true );
+			// box.setFromObject( object, true );
+			box.copy(computeEnhancedBoundingBox(object));
 
 			if ( box.isEmpty() === false ) {
 
@@ -449,7 +534,8 @@ function Viewport( editor ) {
 
 		if ( object !== undefined ) {
 
-			box.setFromObject( object, true );
+			// box.setFromObject( object, true );
+			box.copy(computeEnhancedBoundingBox(object));
 
 		}
 
@@ -461,7 +547,8 @@ function Viewport( editor ) {
 
 		if ( editor.selected === object ) {
 
-			box.setFromObject( object, true );
+			// box.setFromObject( object, true );
+			box.copy(computeEnhancedBoundingBox(object));
 
 		}
 
