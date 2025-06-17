@@ -28,7 +28,6 @@ function Viewport( editor ) {
 	container.add( new ViewportCamera( editor ) );
 	container.add( new ViewportInfo( editor ) );
 
-	//
 
 	let renderer = null;
 	let pmremGenerator = null;

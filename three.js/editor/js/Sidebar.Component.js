@@ -42,6 +42,16 @@ function SidebarComponent( editor ) {
 			return;
 		}
 
+		// 只有当编辑器类型为meta且选中对象类型为mesh、polygen或voxel时才显示组件模块
+		if (!(editor.type && editor.type.toLowerCase() === 'meta')) {
+			return;
+		}
+
+		const objectType = object.type ? object.type.toLowerCase() : '';
+		if (!(objectType === 'mesh' || objectType === 'polygen' || objectType === 'voxel')) {
+			return;
+		}
+
 		// 确保对象有components属性
 		if ( object.components === undefined ) {
 			object.components = [];
@@ -177,8 +187,16 @@ function SidebarComponent( editor ) {
 	// signals
 	signals.objectSelected.add( function ( object ) {
 		if ( object !== null && editor.camera !== object ) {
-			container.setDisplay( 'block' );
-			update();
+			// 修改为与顶部菜单栏一致的显示逻辑
+			if (editor.type && editor.type.toLowerCase() === 'meta') {
+				const objectType = object.type ? object.type.toLowerCase() : '';
+				if (objectType === 'mesh' || objectType === 'polygen' || objectType === 'voxel') {
+					container.setDisplay( 'block' );
+					update();
+					return;
+				}
+			}
+			container.setDisplay( 'none' );
 		} else {
 			container.setDisplay( 'none' );
 		}
