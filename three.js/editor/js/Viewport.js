@@ -127,8 +127,10 @@ function Viewport( editor ) {
 		// 如果包围盒为空，增加一个小的默认尺寸
 		if (boundingBox.isEmpty()) {
 			boundingBox.set(
-				new THREE.Vector3(-0.5, -0.5, -0.5),
-				new THREE.Vector3(0.5, 0.5, 0.5)
+				// new THREE.Vector3(-0.5, -0.5, -0.5),
+				// new THREE.Vector3(0.5, 0.5, 0.5)
+				new THREE.Vector3(-0.05, -0.05, -0.05),
+				new THREE.Vector3(0.05, 0.05, 0.05)
 			);
 			boundingBox.applyMatrix4(object.matrixWorld);
 		}
@@ -137,13 +139,12 @@ function Viewport( editor ) {
 		const size = new THREE.Vector3();
 		boundingBox.getSize(size);
 
-		// 为小的包围盒增加一定的缓冲量
-		if (Math.max(size.x, size.y, size.z) < 1.0) {
-			boundingBox.expandByScalar(0.1);
-		} else {
-			// 为大的包围盒增加比例缓冲
-			boundingBox.expandByScalar(size.length() * 0.01);
-		}
+		// 增加缓冲量
+		// if (Math.max(size.x, size.y, size.z) < 1.0) {
+		// 	boundingBox.expandByScalar(size.length() * 0.001);
+		// } else {
+		// 	boundingBox.expandByScalar(size.length() * 0.01);
+		// }
 
 		return boundingBox;
 	}
