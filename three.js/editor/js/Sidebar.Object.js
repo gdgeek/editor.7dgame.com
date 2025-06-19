@@ -32,6 +32,13 @@ function SidebarObject( editor ) {
 	container.setPaddingTop( '20px' );
 	container.setDisplay( 'none' );
 
+	// 存储复制的变换数据
+	const clipboard = {
+		position: null,
+		rotation: null,
+		scale: null
+	};
+
 	// Actions
 
 	/*
@@ -143,21 +150,81 @@ function SidebarObject( editor ) {
 	const objectPositionRow = new UIRow();
 	const objectPositionX = new UINumber()
 		.setPrecision( 3 )
-		.setWidth( '50px' )
+		.setWidth( '40px' )
 		.onChange( update );
 	const objectPositionY = new UINumber()
 		.setPrecision( 3 )
-		.setWidth( '50px' )
+		.setWidth( '40px' )
 		.onChange( update );
 	const objectPositionZ = new UINumber()
 		.setPrecision( 3 )
-		.setWidth( '50px' )
+		.setWidth( '40px' )
 		.onChange( update );
+
+	// 位置复制粘贴按钮
+	const positionCopyButton = new UIButton('')
+		.setWidth('24px')
+		.onClick(function() {
+			if (editor.selected !== null) {
+				clipboard.position = new THREE.Vector3(
+					objectPositionX.getValue(),
+					objectPositionY.getValue(),
+					objectPositionZ.getValue()
+				);
+				editor.showNotification('位置数据复制成功');
+			}
+		});
+
+	positionCopyButton.dom.title = '复制';
+
+	// 添加复制图标
+	const positionCopyIcon = document.createElement('img');
+	positionCopyIcon.src = 'images/copy.png';
+	positionCopyIcon.style.width = '12px';
+	positionCopyIcon.style.height = '12px';
+	positionCopyIcon.style.display = 'block';
+	positionCopyIcon.style.margin = '0 auto';
+	positionCopyButton.dom.appendChild(positionCopyIcon);
+
+	const positionPasteButton = new UIButton('')
+		.setMarginLeft('2px')
+		.setWidth('24px')
+		.onClick(function() {
+			if (editor.selected !== null && clipboard.position !== null) {
+				editor.execute(new SetPositionCommand(editor, editor.selected, clipboard.position.clone()));
+			}
+		});
+
+	positionPasteButton.dom.title = '粘贴';
+
+	// 添加粘贴图标
+	const positionPasteIcon = document.createElement('img');
+	positionPasteIcon.src = 'images/paste.png';
+	positionPasteIcon.style.width = '12px';
+	positionPasteIcon.style.height = '12px';
+	positionPasteIcon.style.display = 'block';
+	positionPasteIcon.style.margin = '0 auto';
+	positionPasteButton.dom.appendChild(positionPasteIcon);
+
+	// 默认隐藏复制粘贴按钮
+	positionCopyButton.dom.style.display = 'none';
+	positionPasteButton.dom.style.display = 'none';
+
+	// 添加鼠标悬停事件
+	objectPositionRow.dom.addEventListener('mouseenter', function() {
+		positionCopyButton.dom.style.display = '';
+		positionPasteButton.dom.style.display = '';
+	});
+	objectPositionRow.dom.addEventListener('mouseleave', function() {
+		positionCopyButton.dom.style.display = 'none';
+		positionPasteButton.dom.style.display = 'none';
+	});
 
 	objectPositionRow.add(
 		new UIText( strings.getKey( 'sidebar/object/position' ) ).setWidth( '90px' )
 	);
 	objectPositionRow.add( objectPositionX, objectPositionY, objectPositionZ );
+	objectPositionRow.add( positionCopyButton, positionPasteButton );
 
 	container.add( objectPositionRow );
 
@@ -168,25 +235,85 @@ function SidebarObject( editor ) {
 		.setStep( 10 )
 		.setNudge( 0.1 )
 		.setUnit( '°' )
-		.setWidth( '50px' )
+		.setWidth( '40px' )
 		.onChange( update );
 	const objectRotationY = new UINumber()
 		.setStep( 10 )
 		.setNudge( 0.1 )
 		.setUnit( '°' )
-		.setWidth( '50px' )
+		.setWidth( '40px' )
 		.onChange( update );
 	const objectRotationZ = new UINumber()
 		.setStep( 10 )
 		.setNudge( 0.1 )
 		.setUnit( '°' )
-		.setWidth( '50px' )
+		.setWidth( '40px' )
 		.onChange( update );
+
+	// 旋转复制粘贴按钮
+	const rotationCopyButton = new UIButton('')
+		.setWidth('24px')
+		.onClick(function() {
+			if (editor.selected !== null) {
+				clipboard.rotation = new THREE.Euler(
+					objectRotationX.getValue() * THREE.MathUtils.DEG2RAD,
+					objectRotationY.getValue() * THREE.MathUtils.DEG2RAD,
+					objectRotationZ.getValue() * THREE.MathUtils.DEG2RAD
+				);
+				editor.showNotification('旋转数据复制成功');
+			}
+		});
+
+	rotationCopyButton.dom.title = '复制';
+
+	// 添加复制图标
+	const rotationCopyIcon = document.createElement('img');
+	rotationCopyIcon.src = 'images/copy.png';
+	rotationCopyIcon.style.width = '12px';
+	rotationCopyIcon.style.height = '12px';
+	rotationCopyIcon.style.display = 'block';
+	rotationCopyIcon.style.margin = '0 auto';
+	rotationCopyButton.dom.appendChild(rotationCopyIcon);
+
+	const rotationPasteButton = new UIButton('')
+		.setMarginLeft('2px')
+		.setWidth('24px')
+		.onClick(function() {
+			if (editor.selected !== null && clipboard.rotation !== null) {
+				editor.execute(new SetRotationCommand(editor, editor.selected, clipboard.rotation.clone()));
+			}
+		});
+
+	rotationPasteButton.dom.title = '粘贴';
+
+	// 添加粘贴图标
+	const rotationPasteIcon = document.createElement('img');
+	rotationPasteIcon.src = 'images/paste.png';
+	rotationPasteIcon.style.width = '12px';
+	rotationPasteIcon.style.height = '12px';
+	rotationPasteIcon.style.display = 'block';
+	rotationPasteIcon.style.margin = '0 auto';
+	rotationPasteButton.dom.appendChild(rotationPasteIcon);
+
+	// 默认隐藏复制粘贴按钮
+	rotationCopyButton.dom.style.display = 'none';
+	rotationPasteButton.dom.style.display = 'none';
+
+	// 添加鼠标悬停事件
+	objectRotationRow.dom.addEventListener('mouseenter', function() {
+		rotationCopyButton.dom.style.display = '';
+		rotationPasteButton.dom.style.display = '';
+	});
+	objectRotationRow.dom.addEventListener('mouseleave', function() {
+		rotationCopyButton.dom.style.display = 'none';
+		rotationPasteButton.dom.style.display = 'none';
+	});
 
 	objectRotationRow.add(
 		new UIText( strings.getKey( 'sidebar/object/rotation' ) ).setWidth( '90px' )
 	);
 	objectRotationRow.add( objectRotationX, objectRotationY, objectRotationZ );
+	objectRotationRow.add( rotationCopyButton, rotationPasteButton );
 
 	container.add( objectRotationRow );
 
@@ -195,21 +322,81 @@ function SidebarObject( editor ) {
 	const objectScaleRow = new UIRow();
 	const objectScaleX = new UINumber( 1 )
 		.setPrecision( 3 )
-		.setWidth( '50px' )
+		.setWidth( '40px' )
 		.onChange( update );
 	const objectScaleY = new UINumber( 1 )
 		.setPrecision( 3 )
-		.setWidth( '50px' )
+		.setWidth( '40px' )
 		.onChange( update );
 	const objectScaleZ = new UINumber( 1 )
 		.setPrecision( 3 )
-		.setWidth( '50px' )
+		.setWidth( '40px' )
 		.onChange( update );
+
+	// 缩放复制粘贴按钮
+	const scaleCopyButton = new UIButton('')
+		.setWidth('24px')
+		.onClick(function() {
+			if (editor.selected !== null) {
+				clipboard.scale = new THREE.Vector3(
+					objectScaleX.getValue(),
+					objectScaleY.getValue(),
+					objectScaleZ.getValue()
+				);
+				editor.showNotification('缩放数据复制成功');
+			}
+		});
+
+	scaleCopyButton.dom.title = '复制';
+
+	// 添加复制图标
+	const scaleCopyIcon = document.createElement('img');
+	scaleCopyIcon.src = 'images/copy.png';
+	scaleCopyIcon.style.width = '12px';
+	scaleCopyIcon.style.height = '12px';
+	scaleCopyIcon.style.display = 'block';
+	scaleCopyIcon.style.margin = '0 auto';
+	scaleCopyButton.dom.appendChild(scaleCopyIcon);
+
+	const scalePasteButton = new UIButton('')
+		.setMarginLeft('2px')
+		.setWidth('24px')
+		.onClick(function() {
+			if (editor.selected !== null && clipboard.scale !== null) {
+				editor.execute(new SetScaleCommand(editor, editor.selected, clipboard.scale.clone()));
+			}
+		});
+
+	scalePasteButton.dom.title = '粘贴';
+
+	// 添加粘贴图标
+	const scalePasteIcon = document.createElement('img');
+	scalePasteIcon.src = 'images/paste.png';
+	scalePasteIcon.style.width = '12px';
+	scalePasteIcon.style.height = '12px';
+	scalePasteIcon.style.display = 'block';
+	scalePasteIcon.style.margin = '0 auto';
+	scalePasteButton.dom.appendChild(scalePasteIcon);
+
+	// 默认隐藏复制粘贴按钮
+	scaleCopyButton.dom.style.display = 'none';
+	scalePasteButton.dom.style.display = 'none';
+
+	// 添加鼠标悬停事件
+	objectScaleRow.dom.addEventListener('mouseenter', function() {
+		scaleCopyButton.dom.style.display = '';
+		scalePasteButton.dom.style.display = '';
+	});
+	objectScaleRow.dom.addEventListener('mouseleave', function() {
+		scaleCopyButton.dom.style.display = 'none';
+		scalePasteButton.dom.style.display = 'none';
+	});
 
 	objectScaleRow.add(
 		new UIText( strings.getKey( 'sidebar/object/scale' ) ).setWidth( '90px' )
 	);
 	objectScaleRow.add( objectScaleX, objectScaleY, objectScaleZ );
+	objectScaleRow.add( scaleCopyButton, scalePasteButton );
 
 	container.add( objectScaleRow );
 
