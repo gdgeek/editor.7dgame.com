@@ -81,6 +81,7 @@ function Strings( config ) {
 			'menubar/command/confirm': 'Do you want to add the "{0}" command to the current object?',
 			'menubar/command/success': 'Successfully added "{0}" command',
 			'menubar/command/select_object_first': 'Please select an object first',
+			'menubar/command/already_exists': 'This object already has a voice command, you cannot add another one',
 
 			'menubar/code': 'Code',
 			'menubar/code/script': 'Script Edit',
@@ -437,6 +438,7 @@ function Strings( config ) {
 			'menubar/command/confirm': 'Do you want to add the "{0}" command to the current object?',
 			'menubar/command/success': 'Successfully added "{0}" command',
 			'menubar/command/select_object_first': 'Please select an object first',
+			'menubar/command/already_exists': 'This object already has a voice command, you cannot add another one',
 			'menubar/component/mutually_exclusive': 'Only one of these components can be selected: Click Action, Movable or Collision Trigger'
 		},
 
@@ -523,6 +525,7 @@ function Strings( config ) {
 			'menubar/command/confirm': '确定要为当前对象添加 "{0}" 指令吗？',
 			'menubar/command/success': '已成功添加 "{0}" 指令',
 			'menubar/command/select_object_first': '请先选择一个对象',
+			'menubar/command/already_exists': '此对象已添加语音指令，不能重复添加',
 
 			'menubar/code': '脚本',
 			'menubar/code/script': '脚本编辑',
@@ -881,6 +884,7 @@ function Strings( config ) {
 			'menubar/command/confirm': '你想将"{0}"命令添加到当前对象吗？',
 			'menubar/command/success': '成功添加"{0}"命令',
 			'menubar/command/select_object_first': '请先选择一个对象',
+			'menubar/command/already_exists': '此对象已添加语音指令，不能重复添加',
 			'menubar/component/mutually_exclusive': '只能选择一个互斥组件：点击触发、可移动或碰撞触发'
 		},
 
@@ -965,6 +969,7 @@ function Strings( config ) {
 			'menubar/command/confirm': '現在のオブジェクトに "{0}" コマンドを追加しますか？',
 			'menubar/command/success': '"{0}" コマンドが正常に追加されました',
 			'menubar/command/select_object_first': '先にオブジェクトを選択してください',
+			'menubar/command/already_exists': 'このオブジェクトは既に音声コマンドが設定されています。別の音声コマンドを追加することはできません。',
 
 			'menubar/code': 'コーディング',
 			'menubar/code/script': 'スクリプト編集',
@@ -1322,6 +1327,7 @@ function Strings( config ) {
 			'menubar/command/confirm': '現在のオブジェクトに "{0}" コマンドを追加しますか？',
 			'menubar/command/success': '"{0}" コマンドが正常に追加されました',
 			'menubar/command/select_object_first': '先にオブジェクトを選択してください',
+			'menubar/command/already_exists': 'このオブジェクトは既に音声コマンドが設定されています。別の音声コマンドを追加することはできません。',
 			'menubar/component/mutually_exclusive': 'Only one of these components can be selected: Click Action, Movable or Collision Trigger'
 		}
 	};

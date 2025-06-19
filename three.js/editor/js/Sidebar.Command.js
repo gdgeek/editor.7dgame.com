@@ -42,7 +42,6 @@ function SidebarCommand(editor) {
 				return;
 			}
 
-			// 注释掉选择项内容（下拉框和新建按钮）
 			/*
 			topContainer.add(new UIBreak());
 			topContainer.add(new UIBreak());
