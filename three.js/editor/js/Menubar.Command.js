@@ -33,8 +33,29 @@ function MenubarCommand(editor) {
         const typeRow = new UIRow();
         typeRow.setClass('option');
         typeRow.setTextContent(commandTypes[type]);
+
         typeRow.onClick(function(event) {
             if (editor.selected !== null) {
+                // 检查是否已经有语音指令
+                let hasVoiceCommand = false;
+                if (editor.selected.commands) {
+                    for (let i = 0; i < editor.selected.commands.length; i++) {
+                        if (editor.selected.commands[i].type === 'Voice') {
+                            hasVoiceCommand = true;
+                            break;
+                        }
+                    }
+                }
+
+                // 如果已有语音指令，显示提示并不创建新的指令
+                if (hasVoiceCommand) {
+                    const message = strings.getKey('menubar/command/already_exists') ||
+                                   '此对象已添加语音指令，不能重复添加';
+                    editor.showNotification(message, true);
+                    return;
+                }
+
+                // 如果没有语音指令，则创建新的指令
                 const command = CommandContainer.Create(type);
 
                 if (command !== undefined) {
@@ -48,6 +69,7 @@ function MenubarCommand(editor) {
                 editor.showNotification(strings.getKey('menubar/command/select_object_first'), true);
             }
         });
+
         options.add(typeRow);
 
         // 存储引用以便后续更新状态
@@ -106,29 +128,11 @@ function MenubarCommand(editor) {
                 typeRows['Voice'].setClass('option disabled');
                 typeRows['Voice'].dom.style.opacity = '0.5';
                 typeRows['Voice'].dom.style.cursor = 'not-allowed';
-
-                // 保存原始的onClick处理函数
-                if (!typeRows['Voice'].originalOnClick) {
-                    typeRows['Voice'].originalOnClick = typeRows['Voice'].onClick;
-                }
-
-                // 设置为显示提示信息的onClick处理函数
-                typeRows['Voice'].onClick(function(event) {
-                    const message = strings.getKey('menubar/command/already_exists') ||
-                                   '此对象已添加语音指令，不能重复添加';
-                    editor.showNotification(message, true);
-                    event.stopPropagation();
-                });
             } else {
                 // 启用指令
                 typeRows['Voice'].setClass('option');
                 typeRows['Voice'].dom.style.opacity = '';
                 typeRows['Voice'].dom.style.cursor = '';
-
-                // 恢复原始的onClick处理函数
-                if (typeRows['Voice'].originalOnClick) {
-                    typeRows['Voice'].onClick(typeRows['Voice'].originalOnClick);
-                }
             }
         }
     }
