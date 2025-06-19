@@ -652,8 +652,8 @@ function SidebarObject( editor ) {
 		let hideTimeout = null;
 
 		// 检查鼠标是否在数据区域（不包括单一属性复制粘贴按钮）
-		const isInDataArea = function(event, rowDom) {
-			const rect = rowDom.getBoundingClientRect();
+		const isInDataArea = function(event, element) {
+			const rect = element.getBoundingClientRect();
 			const relativeX = event.clientX - rect.left;
 
 			// 判断鼠标X坐标是否在数据区域范围内
@@ -696,27 +696,40 @@ function SidebarObject( editor ) {
 					hideTransformActions();
 				}
 				hideTimeout = null;
-			}, 100);
+			}, 200);
 		};
+
+		// 创建一个覆盖整个变换数据区域的透明层（包括行与行之间的间隙）
+		const transformAreaOverlay = document.createElement('div');
+		transformAreaOverlay.className = 'transform-area-overlay';
+		transformAreaOverlay.style.position = 'absolute';
+		transformAreaOverlay.style.top = (objectPositionRow.dom.offsetTop - 5) + 'px';
+		transformAreaOverlay.style.left = dataAreaLeft + 'px';
+		transformAreaOverlay.style.width = dataAreaWidth + 'px';
+		transformAreaOverlay.style.height = (objectScaleRow.dom.offsetTop + objectScaleRow.dom.offsetHeight - objectPositionRow.dom.offsetTop + 10) + 'px';
+		transformAreaOverlay.style.zIndex = '1';
+		transformAreaOverlay.style.pointerEvents = 'none'; // 不要阻止下层元素的事件
+
+		container.dom.appendChild(transformAreaOverlay);
 
 		// 全局鼠标移动事件
 		const handleGlobalMouseMove = function(event) {
-			// 检查鼠标是否在任意相关区域（数据区域或按钮区域）
-			let inDataArea = false;
-			for (const row of rows) {
-				if (row.dom.contains(event.target) && isInDataArea(event, row.dom)) {
-					inDataArea = true;
-					break;
-				}
-			}
+			// 计算鼠标是否在变换数据区域内
+			const overlayRect = transformAreaOverlay.getBoundingClientRect();
+			const inOverlayArea = (
+				event.clientX >= overlayRect.left &&
+				event.clientX <= overlayRect.right &&
+				event.clientY >= overlayRect.top &&
+				event.clientY <= overlayRect.bottom
+			);
 
 			const inButtonArea = isInButtonArea(event);
 
 			// 更新状态
-			isMouseInRelevantArea = inDataArea || inButtonArea ||
-			                         transformActionsRow.dom.contains(event.target) ||
-			                         transformCopyButton.dom.contains(event.target) ||
-			                         transformPasteButton.dom.contains(event.target);
+			isMouseInRelevantArea = inOverlayArea || inButtonArea ||
+								transformActionsRow.dom.contains(event.target) ||
+								transformCopyButton.dom.contains(event.target) ||
+								transformPasteButton.dom.contains(event.target);
 
 			// 根据鼠标位置决定显示或隐藏
 			if (isMouseInRelevantArea) {
