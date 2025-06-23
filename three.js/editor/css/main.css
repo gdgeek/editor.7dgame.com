@@ -246,6 +246,11 @@ textarea, input { outline: none; } /* osx */
 	content: '◎'
 }
 
+/* 资源缺失样式 */
+#outliner .resource-missing {
+	color: #aaa;
+}
+
 /*  */
 
 button {

@@ -14,7 +14,12 @@ function MenubarReplace( editor ) {
 	const builder = new Builder();
 	const strings = editor.strings;
 
-	const resources = new Map();
+	// 将resources暴露到window全局对象，与Add.js中的共享
+	const resources = window.resources || new Map();
+	if (!window.resources) {
+		window.resources = resources;
+	}
+
 	const container = new UIPanel();
 
 	container.setClass( 'menu' );
@@ -105,12 +110,27 @@ function MenubarReplace( editor ) {
 			if ( params.action === 'replace-resource' ) {
 
 				const data = params.data;
+
+				// 将资源同时保存到本地和全局资源集合
 				resources.set( data.id.toString(), data );
 
+				// 添加到editor.resources
+				if (!editor.resources) editor.resources = [];
+
+				// 更新或添加资源
+				const existingIndex = editor.resources.findIndex(resource =>
+					resource && resource.id == data.id
+				);
+
+				if (existingIndex >= 0) {
+					editor.resources[existingIndex] = data;
+				} else {
+					editor.resources.push(data);
+				}
+
+				// 创建对象
 				const raw = builder.resource( data );
-
 				if ( raw ) {
-
 					const node = await factory.building( raw, resources );
 					if ( node ) {
 						const selected = editor.selected;

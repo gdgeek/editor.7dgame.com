@@ -290,6 +290,11 @@
 						data: data.availableResourceTypes
 					});
 				}
+				
+				// 保存resources信息到编辑器对象中
+				if (data.data && data.data.resources) {
+					editor.resources = data.data.resources;
+				}
 			} else if (params.action === 'available-resource-types') { 
 				// 直接处理可用资源类型列表
 				editor.availableResourceTypes = params.data;

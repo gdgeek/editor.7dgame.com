@@ -10,6 +10,7 @@ import {
 	UINumber
 } from './libs/ui.js';
 import { UIOutliner, UITexture } from './libs/ui.three.js';
+import { RemoveObjectCommand } from './commands/RemoveObjectCommand.js';
 
 function SidebarScene(editor) {
 
@@ -30,6 +31,56 @@ function SidebarScene(editor) {
 		option.draggable = draggable;
 		option.innerHTML = buildHTML(object);
 		option.value = object.id;
+
+		// 检查资源是否存在
+		if (object.userData && object.userData.resource) {
+			const resourceId = object.userData.resource;
+			// 检查资源是否存在
+			let resourceExists = false;
+
+			// 检查资源是否在editor.resources或window.resources中存在
+			if (editor.resources && Array.isArray(editor.resources)) {
+				resourceExists = editor.resources.some(resource =>
+					resource && resource.id === parseInt(resourceId)
+				);
+			}
+
+			// 如果在全局资源集合中存在
+			if (!resourceExists && window.resources) {
+				resourceExists = window.resources.has(resourceId.toString());
+			}
+
+			// 如果资源不存在，添加禁用状态
+			if (!resourceExists) {
+				option.classList.add('resource-missing');
+				option.style.opacity = '0.5';
+				option.style.pointerEvents = 'none';
+				option.title = '该资源不存在';
+
+				// 添加删除按钮
+				const deleteButton = document.createElement('img');
+				deleteButton.src = 'images/delete.png';
+				deleteButton.style.float = 'right';
+				deleteButton.style.width = '16px';
+				deleteButton.style.height = '16px';
+				deleteButton.style.margin = '2px';
+				deleteButton.style.cursor = 'pointer';
+				deleteButton.style.pointerEvents = 'auto';
+				deleteButton.title = '删除';
+
+				// 阻止事件冒泡，让删除按钮可点击
+				deleteButton.addEventListener('click', function(event) {
+					event.stopPropagation();
+					event.preventDefault();
+
+					if (object !== null && object.parent !== null) {
+						editor.execute(new RemoveObjectCommand(editor, object));
+					}
+				});
+
+				option.appendChild(deleteButton);
+			}
+		}
 
 		// opener
 
@@ -525,6 +576,16 @@ function SidebarScene(editor) {
 	signals.editorCleared.add(refreshUI);
 
 	signals.sceneGraphChanged.add(refreshUI);
+
+	// 监听资源变化，触发UI刷新
+	signals.messageReceive.add(function(params) {
+		if (params.action === 'load-resource' || params.action === 'replace-resource') {
+			refreshUI();
+		}
+	});
+
+	// 当对象被添加到场景时，刷新UI
+	signals.objectAdded.add(refreshUI);
 
 	/*
 	signals.objectChanged.add( function ( object ) {

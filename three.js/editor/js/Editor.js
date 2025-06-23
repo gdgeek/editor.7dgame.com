@@ -23,7 +23,7 @@ _DEFAULT_CAMERA.lookAt( new THREE.Vector3() );
 
 function Editor() {
 
-	var Signal = signals.Signal;
+	const Signal = signals.Signal;
 
 	this.selector = null;
 	this.signals = {
@@ -155,6 +155,9 @@ function Editor() {
 
 	this.addCamera( this.camera );
 
+	this.type = '';
+	this.resources = []; // 保存场景中的资源信息
+
 }
 
 Editor.prototype = {
@@ -225,6 +228,26 @@ Editor.prototype = {
 			}
 		} else {
 			this.scene.add(object);
+		}
+
+		// 如果是新加入的对象，检查它是否有资源信息并添加到全局resources
+		if (object.userData && object.userData.resource && window.resources) {
+			const resourceId = object.userData.resource;
+
+			// 确保资源数据在editor.resources和window.resources之间同步
+			const resourceData = window.resources.get(resourceId.toString());
+			if (resourceData) {
+				// 查找并更新或添加到editor.resources
+				const existingIndex = this.resources.findIndex(res =>
+					res && res.id === parseInt(resourceId)
+				);
+
+				if (existingIndex >= 0) {
+					this.resources[existingIndex] = resourceData;
+				} else {
+					this.resources.push(resourceData);
+				}
+			}
 		}
 
 		this.signals.objectAdded.dispatch(object);
@@ -723,6 +746,11 @@ Editor.prototype = {
 
 		this.setScene( await loader.parseAsync( json.scene ) );
 
+		// 保存资源信息
+		if (json.resources !== undefined) {
+			this.resources = json.resources;
+		}
+
 	},
 
 	toJSON: function () {
@@ -766,7 +794,8 @@ Editor.prototype = {
 			camera: this.camera.toJSON(),
 			scene: this.scene.toJSON(),
 			scripts: this.scripts,
-			history: this.history.toJSON()
+			history: this.history.toJSON(),
+			resources: this.resources // 保存资源信息
 		};
 
 	},
