@@ -152,6 +152,60 @@ function Viewport( editor ) {
 	let objectPositionOnDown = null;
 	let objectRotationOnDown = null;
 	let objectScaleOnDown = null;
+	// 存储多选对象的原始变换
+	let multipleObjectsTransformOnDown = [];
+
+	// 创建一个空的组作为多选对象的临时父级
+	const multiSelectGroup = new THREE.Group();
+	multiSelectGroup.name = "多选临时组";
+	multiSelectGroup.visible = false;
+	sceneHelpers.add(multiSelectGroup);
+
+	// 将multiSelectGroup暴露给editor以便其他组件可以访问
+	editor.multiSelectGroup = multiSelectGroup;
+
+	// 防止自动移位的标记
+	let preventAutoMove = false;
+
+	// 存储多选对象中心点
+	const multiSelectionCenter = new THREE.Vector3();
+
+	// 计算多个对象的共同包围盒
+	function computeMultiSelectionBoundingBox(objects) {
+		const boundingBox = new THREE.Box3();
+
+		for (let i = 0; i < objects.length; i++) {
+			if (objects[i]) {
+				const objectBox = computeEnhancedBoundingBox(objects[i]);
+				boundingBox.union(objectBox);
+			}
+		}
+
+		return boundingBox;
+	}
+
+	// 更新所有选中对象的变换
+	function updateMultiSelectionTransforms(forceUpdateCenter = false) {
+		const selectedObjects = multiSelectGroup.userData.selectedObjects || [];
+		if (selectedObjects.length === 0) return;
+
+		// 只有当强制更新中心点或中心点未定义时才计算中心点
+		if (forceUpdateCenter || multiSelectionCenter.lengthSq() === 0) {
+			const bbox = computeMultiSelectionBoundingBox(selectedObjects);
+			bbox.getCenter(multiSelectionCenter);
+
+			// 设置临时组的初始位置为所有对象的中心
+			multiSelectGroup.position.copy(multiSelectionCenter);
+		}
+
+		// 计算每个对象相对于中心的偏移
+		for (let i = 0; i < selectedObjects.length; i++) {
+			const obj = selectedObjects[i];
+			if (obj) {
+				obj.userData.offsetFromCenter = obj.position.clone().sub(multiSelectionCenter);
+			}
+		}
+	}
 
 	const transformControls = new TransformControls( camera, container.dom );
 	transformControls.addEventListener( 'change', function () {
@@ -160,19 +214,42 @@ function Viewport( editor ) {
 
 		if ( object !== undefined ) {
 
-			// box.setFromObject( object, true );
-			box.copy(computeEnhancedBoundingBox(object));
+			if (object === multiSelectGroup) {
+				// 多选模式：根据临时组的变换更新所有子对象
+				const selectedObjects = editor.getSelectedObjects();
 
-			const helper = editor.helpers[ object.id ];
+				// 获取变换模式
+				const mode = transformControls.getMode();
 
-			if ( helper !== undefined && helper.isSkeletonHelper !== true ) {
+				// 根据模式调用相应的回调函数
+				if (mode === 'translate' && object.userData.onPositionChange) {
+					object.userData.onPositionChange();
+				} else if (mode === 'rotate' && object.userData.onRotationChange) {
+					object.userData.onRotationChange();
+				} else if (mode === 'scale' && object.userData.onScaleChange) {
+					object.userData.onScaleChange();
+				}
 
-				helper.update();
+				// 计算所有选中对象的共同包围盒
+				box.copy(computeMultiSelectionBoundingBox(selectedObjects));
 
+				// 刷新侧边栏
+				signals.refreshSidebarObject3D.dispatch(object);
+
+				// 触发编辑器信号，通知侧边栏多选面板更新
+				signals.multipleObjectsTransformChanged.dispatch(object);
+			} else {
+				// 单选模式：正常更新
+				box.copy(computeEnhancedBoundingBox(object));
+
+				const helper = editor.helpers[ object.id ];
+
+				if ( helper !== undefined && helper.isSkeletonHelper !== true ) {
+					helper.update();
+				}
+
+				signals.refreshSidebarObject3D.dispatch( object );
 			}
-
-			signals.refreshSidebarObject3D.dispatch( object );
-
 		}
 
 		render();
@@ -182,9 +259,31 @@ function Viewport( editor ) {
 
 		const object = transformControls.object;
 
-		objectPositionOnDown = object.position.clone();
-		objectRotationOnDown = object.rotation.clone();
-		objectScaleOnDown = object.scale.clone();
+		if (object === multiSelectGroup) {
+			// 多选模式：保存每个选中对象的原始变换
+			multipleObjectsTransformOnDown = [];
+			const selectedObjects = multiSelectGroup.userData.selectedObjects || [];
+
+			// 设置防止自动移位标记
+			preventAutoMove = true;
+
+			for (let i = 0; i < selectedObjects.length; i++) {
+				const obj = selectedObjects[i];
+				if (obj) { // 确保对象存在
+					multipleObjectsTransformOnDown.push({
+						object: obj,
+						position: obj.position.clone(),
+						rotation: obj.rotation.clone(),
+						scale: obj.scale.clone()
+					});
+				}
+			}
+		} else {
+			// 单选模式
+			objectPositionOnDown = object.position.clone();
+			objectRotationOnDown = object.rotation.clone();
+			objectScaleOnDown = object.scale.clone();
+		}
 
 		controls.enabled = false;
 
@@ -195,40 +294,83 @@ function Viewport( editor ) {
 
 		if ( object !== undefined ) {
 
-			switch ( transformControls.getMode() ) {
+			if (object === multiSelectGroup) {
+				// 多选模式：为每个对象创建单独的命令
+				const selectedObjects = multiSelectGroup.userData.selectedObjects || [];
 
-				case 'translate':
+				// 根据变换模式决定要应用的命令
+				switch (transformControls.getMode()) {
+					case 'translate':
+						for (let i = 0; i < multipleObjectsTransformOnDown.length; i++) {
+							const data = multipleObjectsTransformOnDown[i];
+							const obj = data.object;
+							// 确保对象存在且位置已更改
+							if (obj && !data.position.equals(obj.position)) {
+								editor.execute(new SetPositionCommand(editor, obj, obj.position, data.position));
+							}
+						}
+						break;
 
-					if ( ! objectPositionOnDown.equals( object.position ) ) {
+					case 'rotate':
+						for (let i = 0; i < multipleObjectsTransformOnDown.length; i++) {
+							const data = multipleObjectsTransformOnDown[i];
+							const obj = data.object;
+							// 确保对象存在且旋转已更改
+							if (obj && !data.rotation.equals(obj.rotation)) {
+								editor.execute(new SetRotationCommand(editor, obj, obj.rotation, data.rotation));
+							}
+						}
+						break;
 
-						editor.execute( new SetPositionCommand( editor, object, object.position, objectPositionOnDown ) );
+					case 'scale':
+						for (let i = 0; i < multipleObjectsTransformOnDown.length; i++) {
+							const data = multipleObjectsTransformOnDown[i];
+							const obj = data.object;
+							// 确保对象存在且缩放已更改
+							if (obj && !data.scale.equals(obj.scale)) {
+								editor.execute(new SetScaleCommand(editor, obj, obj.scale, data.scale));
+							}
+						}
+						break;
+				}
 
+				// 清除临时存储的对象变换数据
+				multipleObjectsTransformOnDown = [];
+
+				// 更新选中对象的中心点和偏移量，但不强制重新计算中心点
+				if (preventAutoMove) {
+					// 当preventAutoMove为true时，不更新中心点，只更新对象的偏移量
+					const selectedObjects = multiSelectGroup.userData.selectedObjects || [];
+					for (let i = 0; i < selectedObjects.length; i++) {
+						const obj = selectedObjects[i];
+						if (obj) {
+							// 更新偏移量，保持原中心点不变
+							obj.userData.offsetFromCenter = obj.position.clone().sub(multiSelectGroup.position);
+						}
 					}
+				}
+			} else {
+				// 单选模式
+				switch (transformControls.getMode()) {
+					case 'translate':
+						if (!objectPositionOnDown.equals(object.position)) {
+							editor.execute(new SetPositionCommand(editor, object, object.position, objectPositionOnDown));
+						}
+						break;
 
-					break;
+					case 'rotate':
+						if (!objectRotationOnDown.equals(object.rotation)) {
+							editor.execute(new SetRotationCommand(editor, object, object.rotation, objectRotationOnDown));
+						}
+						break;
 
-				case 'rotate':
-
-					if ( ! objectRotationOnDown.equals( object.rotation ) ) {
-
-						editor.execute( new SetRotationCommand( editor, object, object.rotation, objectRotationOnDown ) );
-
-					}
-
-					break;
-
-				case 'scale':
-
-					if ( ! objectScaleOnDown.equals( object.scale ) ) {
-
-						editor.execute( new SetScaleCommand( editor, object, object.scale, objectScaleOnDown ) );
-
-					}
-
-					break;
-
+					case 'scale':
+						if (!objectScaleOnDown.equals(object.scale)) {
+							editor.execute(new SetScaleCommand(editor, object, object.scale, objectScaleOnDown));
+						}
+						break;
+				}
 			}
-
 		}
 
 		controls.enabled = true;
@@ -507,17 +649,120 @@ function Viewport( editor ) {
 
 		if ( object !== null && object !== scene && object !== camera ) {
 
-			// box.setFromObject( object, true );
-			box.copy(computeEnhancedBoundingBox(object));
+			// 检查是否存在多选
+			const selectedObjects = editor.getSelectedObjects();
 
-			if ( box.isEmpty() === false ) {
+			if (selectedObjects.length > 1) {
+				// 多选模式
+				// 记录当前所有被选择的对象，确保所有对象都被处理
+				multiSelectGroup.userData.selectedObjects = [...selectedObjects];
 
-				selectionBox.visible = true;
+				// 计算所有选中对象的共同包围盒
+				box.copy(computeMultiSelectionBoundingBox(selectedObjects));
 
+				if (box.isEmpty() === false) {
+					selectionBox.visible = true;
+				}
+
+				// 清空临时组并设置为可见
+				while (multiSelectGroup.children.length > 0) {
+					multiSelectGroup.remove(multiSelectGroup.children[0]);
+				}
+				multiSelectGroup.visible = true;
+
+				// 重置中心点和防止自动移位标记
+				multiSelectionCenter.set(0, 0, 0);
+				preventAutoMove = false;
+
+				// 更新选中对象的变换，强制重新计算中心点
+				updateMultiSelectionTransforms(true);
+
+				// 重置临时组的旋转和缩放
+				multiSelectGroup.rotation.set(0, 0, 0);
+				multiSelectGroup.scale.set(1, 1, 1);
+
+				// 附加变换控制器到临时组
+				transformControls.attach(multiSelectGroup);
+
+				// 添加更新函数
+				multiSelectGroup.userData.onPositionChange = function() {
+					const objects = multiSelectGroup.userData.selectedObjects || [];
+					if (objects.length === 0) return;
+
+					// 使用存储的中心点和偏移量
+					for (let i = 0; i < objects.length; i++) {
+						const obj = objects[i];
+						if (obj && obj.userData.offsetFromCenter) {
+							// 根据临时组的新位置和原始偏移计算新位置
+							const newPos = multiSelectGroup.position.clone().add(obj.userData.offsetFromCenter);
+							obj.position.copy(newPos);
+						}
+					}
+				};
+
+				multiSelectGroup.userData.onRotationChange = function() {
+					const objects = multiSelectGroup.userData.selectedObjects || [];
+					if (objects.length === 0) return;
+
+					const groupWorldMatrix = new THREE.Matrix4();
+					groupWorldMatrix.makeRotationFromEuler(multiSelectGroup.rotation);
+
+					for (let i = 0; i < objects.length; i++) {
+						const obj = objects[i];
+						if (obj && obj.userData.offsetFromCenter) {
+							// 创建向量来表示偏移
+							const offset = obj.userData.offsetFromCenter.clone();
+
+							// 应用组的旋转到偏移向量
+							offset.applyMatrix4(groupWorldMatrix);
+
+							// 计算新位置
+							const newPos = multiSelectGroup.position.clone().add(offset);
+							obj.position.copy(newPos);
+
+							// 应用相同的旋转
+							obj.rotation.copy(multiSelectGroup.rotation);
+						}
+					}
+				};
+
+				multiSelectGroup.userData.onScaleChange = function() {
+					const objects = multiSelectGroup.userData.selectedObjects || [];
+					if (objects.length === 0) return;
+
+					for (let i = 0; i < objects.length; i++) {
+						const obj = objects[i];
+						if (obj && obj.userData.offsetFromCenter) {
+							// 根据临时组的缩放调整偏移
+							const scaledOffset = obj.userData.offsetFromCenter.clone()
+								.multiply(multiSelectGroup.scale);
+
+							// 计算新位置
+							const newPos = multiSelectGroup.position.clone().add(scaledOffset);
+							obj.position.copy(newPos);
+
+							// 应用相同的缩放
+							obj.scale.copy(multiSelectGroup.scale);
+						}
+					}
+				};
+
+			} else {
+				// 单选模式
+				multiSelectGroup.visible = false;
+				multiSelectionCenter.set(0, 0, 0); // 清除中心点
+				box.copy(computeEnhancedBoundingBox(object));
+
+				if (box.isEmpty() === false) {
+					selectionBox.visible = true;
+				}
+
+				transformControls.attach(object);
 			}
-
-			transformControls.attach( object );
-
+		} else {
+			// 无选择
+			multiSelectGroup.visible = false;
+			multiSelectionCenter.set(0, 0, 0); // 清除中心点
 		}
 
 		render();

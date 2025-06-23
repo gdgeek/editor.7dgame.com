@@ -5,6 +5,7 @@ import { TGALoader } from '../../../examples/jsm/loaders/TGALoader.js';
 
 import { UIElement, UISpan, UIDiv, UIRow, UIButton, UICheckbox, UIText, UINumber } from './ui.js';
 import { MoveObjectCommand } from '../commands/MoveObjectCommand.js';
+import { MoveMultipleObjectsCommand } from '../commands/MoveMultipleObjectsCommand.js';
 
 class UITexture extends UISpan {
 
@@ -392,6 +393,10 @@ class UIOutliner extends UIDiv {
 		this.selectedIndex = - 1;
 		this.selectedValue = null;
 
+		// 多选支持
+		this.selectedIndices = [];
+		this.selectedValues = [];
+
 	}
 
 	selectIndex( index ) {
@@ -418,14 +423,47 @@ class UIOutliner extends UIDiv {
 
 		}
 
-		function onClick() {
+		function onClick(event) {
+			// 多选支持：检查是否按下Ctrl键(Windows)或Command键(Mac)
+			const multiSelect = event.ctrlKey || event.metaKey;
 
-			scope.setValue( this.value );
+			// 或者检查是否按下Shift键（范围选择）
+			const rangeSelect = event.shiftKey;
 
-			const changeEvent = document.createEvent( 'HTMLEvents' );
-			changeEvent.initEvent( 'change', true, true );
-			scope.dom.dispatchEvent( changeEvent );
+			if (rangeSelect && scope.selectedIndex !== -1) {
+				// 实现范围选择
+				const lastIndex = scope.selectedIndex;
+				const currentIndex = options.indexOf(this);
 
+				// 清除当前选择
+				scope.clearSelection();
+
+				// 选择范围内的所有项
+				const start = Math.min(lastIndex, currentIndex);
+				const end = Math.max(lastIndex, currentIndex);
+
+				// 先设置当前点击的为主选择（最后一个）
+				scope.selectedIndex = currentIndex;
+				scope.selectedValue = options[currentIndex].value;
+
+				// 添加整个范围到选择中，确保正确处理selectedValues数组
+				for (let i = start; i <= end; i++) {
+					const element = options[i];
+					element.classList.add('active');
+
+					if (scope.selectedValues.indexOf(element.value) === -1) {
+						scope.selectedIndices.push(i);
+						scope.selectedValues.push(element.value);
+					}
+				}
+			} else {
+				// 单选或Ctrl/Command多选
+				scope.setValue(this.value, multiSelect);
+			}
+
+			const changeEvent = document.createEvent('HTMLEvents');
+			changeEvent.initEvent('change', true, true);
+			scope.dom.dispatchEvent(changeEvent);
 		}
 
 		// Drag
@@ -439,9 +477,16 @@ class UIOutliner extends UIDiv {
 		}
 
 		function onDragStart( event ) {
-
 			event.dataTransfer.setData( 'text', 'foo' );
 
+			// 检查当前拖动的元素是否在选中集合中
+			const draggedId = parseInt(currentDrag.value);
+			if (scope.selectedValues.indexOf(draggedId) === -1) {
+				// 如果拖动的不是选中集合中的元素，清除当前选择并选中该元素
+				scope.clearSelection();
+				scope.setValue(draggedId);
+			}
+			// 此时currentDrag是选中集合中的一个元素
 		}
 
 		function onDragOver( event ) {
@@ -481,65 +526,70 @@ class UIOutliner extends UIDiv {
 			this.className = 'option';
 
 			const scene = scope.scene;
-			const object = scene.getObjectById( currentDrag.value );
 
+			// 获取所有选中的对象
+			const selectedValues = scope.getValues();
+			const selectedObjects = selectedValues.map(id => scene.getObjectById(parseInt(id))).filter(Boolean);
+
+			// 如果没有选中对象，退出
+			if (selectedObjects.length === 0) return;
+
+			// 获取当前拖拽目标
 			const area = event.offsetY / this.clientHeight;
 
 			if ( area < 0.25 ) {
-
-				const nextObject = scene.getObjectById( this.value );
-				moveObject( object, nextObject.parent, nextObject );
+				// 在目标上方插入
+				const nextObject = scene.getObjectById(parseInt(this.value));
+				moveMultipleObjects(selectedObjects, nextObject.parent, nextObject);
 
 			} else if ( area > 0.75 ) {
-
+				// 在目标下方插入
 				let nextObject, parent;
 
 				if ( this.nextSibling !== null ) {
-
-					nextObject = scene.getObjectById( this.nextSibling.value );
+					nextObject = scene.getObjectById(parseInt(this.nextSibling.value));
 					parent = nextObject.parent;
-
 				} else {
-
-					// end of list (no next object)
-
+					// 列表末尾（没有下一个对象）
 					nextObject = null;
-					parent = scene.getObjectById( this.value ).parent;
-
+					parent = scene.getObjectById(parseInt(this.value)).parent;
 				}
 
-				moveObject( object, parent, nextObject );
+				moveMultipleObjects(selectedObjects, parent, nextObject);
 
 			} else {
-
-				const parentObject = scene.getObjectById( this.value );
-				moveObject( object, parentObject );
-
+				// 作为目标的子级
+				const parentObject = scene.getObjectById(parseInt(this.value));
+				moveMultipleObjects(selectedObjects, parentObject);
 			}
-
 		}
 
-		function moveObject( object, newParent, nextObject ) {
+		function moveMultipleObjects(objects, newParent, nextObject) {
+			if (nextObject === null) nextObject = undefined;
 
-			if ( nextObject === null ) nextObject = undefined;
+			// 检查是否有循环引用
+			for (let i = 0; i < objects.length; i++) {
+				let object = objects[i];
+				let newParentIsChild = false;
 
-			let newParentIsChild = false;
+				object.traverse(function(child) {
+					if (child === newParent) newParentIsChild = true;
+				});
 
-			object.traverse( function ( child ) {
+				if (newParentIsChild) return; // 如果存在循环引用则退出
 
-				if ( child === newParent ) newParentIsChild = true;
-
-			} );
-
-			if ( newParentIsChild ) return;
+				// 检查目标是否是被移动对象之一
+				if (objects.indexOf(newParent) !== -1) return;
+			}
 
 			const editor = scope.editor;
-			editor.execute( new MoveObjectCommand( editor, object, newParent, nextObject ) );
+			// 使用已经导入的MoveMultipleObjectsCommand
+			const cmd = new MoveMultipleObjectsCommand(editor, objects, newParent, nextObject);
+			editor.execute(cmd);
 
-			const changeEvent = document.createEvent( 'HTMLEvents' );
-			changeEvent.initEvent( 'change', true, true );
-			scope.dom.dispatchEvent( changeEvent );
-
+			const changeEvent = document.createEvent('HTMLEvents');
+			changeEvent.initEvent('change', true, true);
+			scope.dom.dispatchEvent(changeEvent);
 		}
 
 		//
@@ -580,46 +630,108 @@ class UIOutliner extends UIDiv {
 
 	}
 
-	setValue( value ) {
+	// 获取所有选中的值
+	getValues() {
+		return this.selectedValues.slice();
+	}
 
-		for ( let i = 0; i < this.options.length; i ++ ) {
-
-			const element = this.options[ i ];
-
-			if ( element.value === value ) {
-
-				element.classList.add( 'active' );
-
-				// scroll into view
-
-				const y = element.offsetTop - this.dom.offsetTop;
-				const bottomY = y + element.offsetHeight;
-				const minScroll = bottomY - this.dom.offsetHeight;
-
-				if ( this.dom.scrollTop > y ) {
-
-					this.dom.scrollTop = y;
-
-				} else if ( this.dom.scrollTop < minScroll ) {
-
-					this.dom.scrollTop = minScroll;
-
-				}
-
-				this.selectedIndex = i;
-
-			} else {
-
-				element.classList.remove( 'active' );
-
-			}
-
+	// 清除所有选择
+	clearSelection() {
+		for (let i = 0; i < this.options.length; i++) {
+			this.options[i].classList.remove('active');
 		}
 
-		this.selectedValue = value;
+		this.selectedIndices = [];
+		this.selectedValues = [];
+		this.selectedIndex = -1;
+		this.selectedValue = null;
+	}
+
+	// 将项目添加到多选
+	addToSelection(value, index) {
+		if (index === undefined) {
+			// 如果没有提供索引，查找它
+			for (let i = 0; i < this.options.length; i++) {
+				if (this.options[i].value === value) {
+					index = i;
+					break;
+				}
+			}
+		}
+
+		if (index >= 0 && index < this.options.length) {
+			const element = this.options[index];
+
+			if (this.selectedIndices.indexOf(index) === -1) {
+				this.selectedIndices.push(index);
+				this.selectedValues.push(value);
+				element.classList.add('active');
+			}
+
+			// 更新主选中索引
+			this.selectedIndex = index;
+			this.selectedValue = value;
+		}
+	}
+
+	setValue(value, multiSelect) {
+		if (!multiSelect) {
+			// 单选模式 - 清除所有现有选择
+			this.clearSelection();
+		}
+
+		// 查找值对应的元素
+		let foundIndex = -1;
+
+		for (let i = 0; i < this.options.length; i++) {
+			const element = this.options[i];
+
+			if (element.value === value) {
+				foundIndex = i;
+
+				// 在多选模式下，切换选择状态
+				if (multiSelect) {
+					const existingIndex = this.selectedValues.indexOf(value);
+
+					if (existingIndex === -1) {
+						// 添加到选择
+						this.selectedIndices.push(i);
+						this.selectedValues.push(value);
+						element.classList.add('active');
+					} else {
+						// 从选择中移除
+						this.selectedIndices.splice(existingIndex, 1);
+						this.selectedValues.splice(existingIndex, 1);
+						element.classList.remove('active');
+					}
+				} else {
+					// 单选模式
+					element.classList.add('active');
+					this.selectedIndices = [i];
+					this.selectedValues = [value];
+
+					// 滚动到视图
+					const y = element.offsetTop - this.dom.offsetTop;
+					const bottomY = y + element.offsetHeight;
+					const minScroll = bottomY - this.dom.offsetHeight;
+
+					if (this.dom.scrollTop > y) {
+						this.dom.scrollTop = y;
+					} else if (this.dom.scrollTop < minScroll) {
+						this.dom.scrollTop = minScroll;
+					}
+				}
+
+				// 更新主选中索引和值
+				this.selectedIndex = i;
+				this.selectedValue = value;
+			} else if (!multiSelect) {
+				// 在单选模式下移除其他项的活动状态
+				element.classList.remove('active');
+			}
+		}
 
 		return this;
-
 	}
 
 }

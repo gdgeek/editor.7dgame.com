@@ -165,21 +165,15 @@ textarea, input { outline: none; } /* osx */
 }
 
 #outliner .option.drag {
-
 	border: 1px dashed #999;
-
 }
 
 #outliner .option.dragTop {
-
 	border-top: 1px dashed #999;
-
 }
 
 #outliner .option.dragBottom {
-
 	border-bottom: 1px dashed #999;
-
 }
 
 #outliner .type {
@@ -248,10 +242,15 @@ textarea, input { outline: none; } /* osx */
 
 /* 资源缺失样式 */
 #outliner .resource-missing {
-	color: #aaa;
+	color: #999;
+	font-style: italic;
 }
 
-/*  */
+#outliner .resource-missing:hover {
+	background-color: rgba(255, 235, 235, 0.2);
+}
+
+/* */
 
 button {
 	color: #555;

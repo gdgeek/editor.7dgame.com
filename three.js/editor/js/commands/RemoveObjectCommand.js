@@ -24,6 +24,9 @@ class RemoveObjectCommand extends Command {
 
 		}
 
+		// 处理多选情况
+		this.isInSelection = editor.getSelectedObjects().indexOf(object) !== -1;
+
 	}
 
 	execute() {
@@ -35,8 +38,21 @@ class RemoveObjectCommand extends Command {
 
 	undo() {
 
-		this.editor.addObject( this.object, this.parent, this.index );
-		this.editor.select( this.object );
+		this.parent.children.splice( this.index, 0, this.object );
+		this.object.parent = this.parent;
+		this.editor.signals.objectAdded.dispatch( this.object );
+
+		// 如果之前是多选的一部分，恢复到选择中
+		if (this.isInSelection) {
+			this.editor.select(this.object, true);
+		}
+
+	}
+
+	redo() {
+
+		this.parent.remove( this.object );
+		this.editor.signals.objectRemoved.dispatch( this.object );
 
 	}
 

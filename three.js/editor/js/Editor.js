@@ -113,7 +113,13 @@ function Editor() {
 		messageSend: new Signal(),
 		messageReceive: new Signal(),
 
-		notificationAdded: new Signal()
+		notificationAdded: new Signal(),
+
+		doneLoadObject: new Signal(),
+
+		// 场景树多选相关
+		multiSelectGroup: null,
+		multipleObjectsTransformChanged: new Signal() // 多选对象变换变化信号
 	};
 
 	this.config = new Config();
@@ -148,6 +154,7 @@ function Editor() {
 	this.mixer = new THREE.AnimationMixer( this.scene );
 
 	this.selected = null;
+	this.selectedObjects = []; // 存储多选对象
 	this.helpers = {};
 
 	this.cameras = {};
@@ -301,6 +308,19 @@ Editor.prototype = {
 		} );
 
 		object.parent.remove( object );
+
+		// 从selectedObjects数组中移除
+		const index = this.selectedObjects.indexOf(object);
+		if (index !== -1) {
+			this.selectedObjects.splice(index, 1);
+
+			// 如果当前主选中对象被移除，更新主选中对象
+			if (this.selected === object) {
+				this.selected = this.selectedObjects.length > 0 ?
+					this.selectedObjects[this.selectedObjects.length - 1] : null;
+				this.signals.objectSelected.dispatch(this.selected);
+			}
+		}
 
 		this.signals.objectRemoved.dispatch( object );
 		this.signals.sceneGraphChanged.dispatch();
@@ -608,7 +628,7 @@ Editor.prototype = {
 
 	//
 
-	select: function ( object ) {
+	select: function ( object, multiSelect ) {
 
 		if ( this.selector != null ) {
 
@@ -620,26 +640,52 @@ Editor.prototype = {
 
 		}
 
-		if ( this.selected === object ) {
+		if (multiSelect) {
+			// 多选模式
+			if (object === null) {
+				// 如果传入null且是多选模式，保持当前选择不变
+				return;
+			}
 
-			return;
+			const index = this.selectedObjects.indexOf(object);
 
-		}
+			if (index === -1) {
+				// 添加到选中对象数组，即使是缺失资源的对象
+				this.selectedObjects.push(object);
 
-		var uuid = null;
+				// 更新主选中对象
+				this.selected = object;
+			} else {
+				// 如果已选中，则从数组中移除（切换选择状态）
+				this.selectedObjects.splice(index, 1);
 
-		if ( object !== null ) {
+				// 更新主选中对象为最后一个选中的对象，如果没有则为null
+				this.selected = this.selectedObjects.length > 0 ?
+					this.selectedObjects[this.selectedObjects.length - 1] : null;
+			}
+		} else {
+			// 单选模式 - 清空多选数组
+			this.selectedObjects.length = 0;
 
-			uuid = object.uuid;
+			if (object !== null) {
+				this.selectedObjects.push(object);
+			}
 
+			if ( this.selected === object ) {
+				return;
 		}
 
 		this.selected = object;
+		}
+
+		let uuid = null;
+
+		if ( object !== null ) {
+			uuid = object.uuid;
+		}
 
 		this.config.setKey( 'selected', uuid );
-		console.log('选中的对象:', object);
 		this.signals.objectSelected.dispatch( object );
-
 	},
 
 	selectById: function ( id ) {
@@ -726,6 +772,7 @@ Editor.prototype = {
 		this.mixer.stopAllAction();
 
 		this.deselect();
+		this.selectedObjects.length = 0; // 清空多选数组
 
 		this.signals.editorCleared.dispatch();
 
@@ -841,6 +888,47 @@ Editor.prototype = {
 		DialogUtils.showConfirm(message, onConfirm, onCancel, event, isError);
 	},
 
+	// 获取所有当前选中的对象
+	getSelectedObjects: function () {
+		// 确保返回所有选中对象，包括通过Shift+范围选择的对象
+
+		// 如果使用DOM直接检查UI中选中的元素，获取更准确的多选结果
+		const outlinerElement = document.getElementById('outliner');
+		if (outlinerElement) {
+			const activeElements = outlinerElement.querySelectorAll('.option.active');
+
+			if (activeElements.length > 0) {
+				const selectedObjects = [];
+
+				for (let i = 0; i < activeElements.length; i++) {
+					const objectId = parseInt(activeElements[i].value);
+					if (!isNaN(objectId)) {
+						const object = this.scene.getObjectById(objectId) ||
+									  (this.camera.id === objectId ? this.camera : null);
+
+						if (object) {
+							selectedObjects.push(object);
+						}
+					}
+				}
+
+				// 只有在UI中找到选中对象时才返回，否则回退到内部数组
+				if (selectedObjects.length > 0) {
+					return selectedObjects;
+				}
+			}
+		}
+
+		// 回退到内部数组
+		return this.selectedObjects.slice();
+	},
+
+	// 清空所有选中的对象
+	clearSelection: function () {
+		this.selectedObjects.length = 0;
+		this.selected = null;
+		this.signals.objectSelected.dispatch(null);
+	},
 
 };
 

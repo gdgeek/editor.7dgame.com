@@ -1545,16 +1545,19 @@ function SidebarObject( editor ) {
 	signals.objectSelected.add( function ( object ) {
 
 		if ( object !== null ) {
+			const selectedObjects = editor.getSelectedObjects();
 
-			container.setDisplay( 'block' );
-
-			updateRows( object );
-			updateUI( object );
-
+			if (selectedObjects.length > 1) {
+				// 多选模式，隐藏单对象面板
+				container.setDisplay('none');
+			} else {
+				// 单选模式，显示单对象面板
+				container.setDisplay( 'block' );
+				updateRows( object );
+				updateUI( object );
+			}
 		} else {
-
 			container.setDisplay( 'none' );
-
 		}
 
 	} );

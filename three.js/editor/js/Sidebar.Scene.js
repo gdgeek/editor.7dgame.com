@@ -54,8 +54,11 @@ function SidebarScene(editor) {
 			if (!resourceExists) {
 				option.classList.add('resource-missing');
 				option.style.opacity = '0.5';
-				option.style.pointerEvents = 'none';
-				option.title = '该资源不存在';
+				// option.style.pointerEvents = 'none';
+				// option.style.cursor = 'not-allowed';
+				// 允许选择缺失资源的对象，去掉pointerEvents: none
+				option.setAttribute('title', '该资源不存在');
+				option.dataset.tooltip = '该资源不存在';
 
 				// 添加删除按钮
 				const deleteButton = document.createElement('img');
@@ -67,6 +70,11 @@ function SidebarScene(editor) {
 				deleteButton.style.cursor = 'pointer';
 				deleteButton.style.pointerEvents = 'auto';
 				deleteButton.title = '删除';
+
+				// 确保删除按钮不会覆盖整个选项的悬停提示
+				deleteButton.addEventListener('mouseover', function(event) {
+					event.stopPropagation();
+				});
 
 				// 阻止事件冒泡，让删除按钮可点击
 				deleteButton.addEventListener('click', function(event) {
@@ -200,13 +208,29 @@ function SidebarScene(editor) {
 	const outliner = new UIOutliner(editor);
 	outliner.setId('outliner');
 	outliner.onChange(function () {
-
 		ignoreObjectSelectedSignal = true;
 
-		editor.selectById(parseInt(outliner.getValue()));
+		// 获取所有选中的值，如果有多个就是多选
+		const selectedValues = outliner.getValues();
+
+		if (selectedValues.length > 1) {
+			// 多选模式：处理最后一个选中的对象
+			const lastSelectedId = parseInt(outliner.getValue());
+			const lastSelectedObject = editor.scene.getObjectById(lastSelectedId);
+
+			// 以多选模式选择最后一个对象（这将保留之前的选择）
+			if (lastSelectedObject) {
+				editor.select(lastSelectedObject, true);
+			}
+		} else if (selectedValues.length === 1) {
+			// 单选模式
+			editor.select(editor.scene.getObjectById(parseInt(outliner.getValue())));
+		} else {
+			// 没有选择任何对象
+			editor.clearSelection();
+		}
 
 		ignoreObjectSelectedSignal = false;
-
 	});
 
 	outliner.onDblClick(function () {
@@ -476,9 +500,19 @@ function SidebarScene(editor) {
 		outliner.setOptions(options);
 
 		if (editor.selected !== null) {
-
 			outliner.setValue(editor.selected.id);
+		}
 
+		// 处理多选状态
+		const selectedObjects = editor.getSelectedObjects();
+		if (selectedObjects.length > 1) {
+			// 恢复多选状态
+			for (let i = 0; i < selectedObjects.length; i++) {
+				const object = selectedObjects[i];
+				if (object !== editor.selected) { // 主选中对象已在上面处理
+					outliner.addToSelection(object.id);
+				}
+			}
 		}
 
 		if (scene.background) {
@@ -632,12 +666,32 @@ function SidebarScene(editor) {
 
 			if (needsRefresh) refreshUI();
 
-			outliner.setValue(object.id);
+			// 获取所有选中对象
+			const selectedObjects = editor.getSelectedObjects();
+
+			if (selectedObjects.length > 1) {
+				// 多选模式
+
+				// 先清除outliner中的选中状态
+				outliner.clearSelection();
+
+				// 设置主选择对象
+				outliner.setValue(object.id);
+
+				// 添加其余对象到选择
+				for (let i = 0; i < selectedObjects.length; i++) {
+					const obj = selectedObjects[i];
+					if (obj !== object) { // 跳过主选中对象
+						outliner.addToSelection(obj.id);
+					}
+				}
+			} else {
+				// 单选模式
+				outliner.setValue(object.id);
+			}
 
 		} else {
-
 			outliner.setValue(null);
-
 		}
 
 	});
