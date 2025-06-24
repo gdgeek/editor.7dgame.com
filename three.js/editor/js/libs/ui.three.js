@@ -639,6 +639,7 @@ class UIOutliner extends UIDiv {
 	clearSelection() {
 		for (let i = 0; i < this.options.length; i++) {
 			this.options[i].classList.remove('active');
+			this.options[i].classList.remove('multi-selected');
 		}
 
 		this.selectedIndices = [];
@@ -666,6 +667,15 @@ class UIOutliner extends UIDiv {
 				this.selectedIndices.push(index);
 				this.selectedValues.push(value);
 				element.classList.add('active');
+
+				// 如果是多选状态，添加多选样式类
+				if (this.selectedValues.length > 1) {
+					// 为所有选中项添加多选样式
+					for (let i = 0; i < this.selectedIndices.length; i++) {
+						const selectedIndex = this.selectedIndices[i];
+						this.options[selectedIndex].classList.add('multi-selected');
+					}
+				}
 			}
 
 			// 更新主选中索引
@@ -703,6 +713,7 @@ class UIOutliner extends UIDiv {
 						this.selectedIndices.splice(existingIndex, 1);
 						this.selectedValues.splice(existingIndex, 1);
 						element.classList.remove('active');
+						element.classList.remove('multi-selected');
 					}
 				} else {
 					// 单选模式
@@ -728,6 +739,21 @@ class UIOutliner extends UIDiv {
 			} else if (!multiSelect) {
 				// 在单选模式下移除其他项的活动状态
 				element.classList.remove('active');
+				element.classList.remove('multi-selected');
+			}
+		}
+
+		// 更新多选样式
+		if (this.selectedValues.length > 1) {
+			// 为所有选中项添加多选样式
+			for (let i = 0; i < this.selectedIndices.length; i++) {
+				const selectedIndex = this.selectedIndices[i];
+				this.options[selectedIndex].classList.add('multi-selected');
+			}
+		} else {
+			// 如果只有一个选中项，移除所有多选样式
+			for (let i = 0; i < this.options.length; i++) {
+				this.options[i].classList.remove('multi-selected');
 			}
 		}
 

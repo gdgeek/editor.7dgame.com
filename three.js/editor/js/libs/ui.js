@@ -1131,6 +1131,19 @@ class UITabbedPanel extends UIDiv {
 
 	}
 
+	clear() {
+		// 清除所有标签和面板
+		this.tabsDiv.clear();
+		this.panelsDiv.clear();
+
+		// 重置数组
+		this.tabs = [];
+		this.panels = [];
+
+		// 重置选择
+		this.selected = '';
+	}
+
 }
 
 class UITab extends UIText {

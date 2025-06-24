@@ -498,9 +498,13 @@ select {
 	}
 
 	.Outliner .option.active {
-		background-color: rgba(0,0,0,0.04);
+		background-color: rgba(0,0,0,0.06);
 	}
 
+	/* 多选时的样式 - 颜色略深 */
+	.Outliner .option.multi-selected {
+		background-color: rgba(0,0,0,0.1);
+	}
 
 .TabbedPanel .Tabs {
 	background-color: #ddd;
@@ -673,6 +677,11 @@ select {
 		}
 
 		.Outliner .option.active {
+			background-color: rgba(21,60,94,0.8);
+		}
+
+		/* 暗模式下多选时的样式 - 颜色略深 */
+		.Outliner .option.multi-selected {
 			background-color: rgba(21,60,94,1);
 		}
 

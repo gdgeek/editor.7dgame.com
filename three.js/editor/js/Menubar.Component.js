@@ -42,6 +42,87 @@ function MenubarComponent(editor) {
         typeRow.setTextContent(componentTypes[type]);
         typeRow.onClick(function(event) {
             if (editor.selected !== null) {
+                // 获取当前选中的对象
+                const selectedObjects = editor.getSelectedObjects();
+
+                // 多选对象处理
+                if (selectedObjects.length > 1) {
+                    // 检查互斥组件
+                    if (mutuallyExclusiveTypes.includes(type)) {
+                        // 检查是否有对象已经存在互斥组件
+                        let objectsWithExclusiveComponents = [];
+
+                        for (let i = 0; i < selectedObjects.length; i++) {
+                            const object = selectedObjects[i];
+
+                            // 确保对象有components属性
+                            if (object.components === undefined) {
+                                object.components = [];
+                            }
+
+                            for (let j = 0; j < object.components.length; j++) {
+                                const compType = object.components[j].type;
+                                if (mutuallyExclusiveTypes.includes(compType) && compType !== type) {
+                                    objectsWithExclusiveComponents.push(object.name || `对象 ${i+1}`);
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (objectsWithExclusiveComponents.length > 0) {
+                            // 已存在互斥组件，显示提示信息
+                            const conflictNames = objectsWithExclusiveComponents.length > 3
+                                ? objectsWithExclusiveComponents.slice(0, 3).join(', ') + `...等${objectsWithExclusiveComponents.length}个对象`
+                                : objectsWithExclusiveComponents.join(', ');
+
+                            editor.showNotification(
+                                (strings.getKey('menubar/component/mutually_exclusive') || '只能选择一个互斥组件') +
+                                `\n以下对象已存在互斥组件: ${conflictNames}`,
+                                true
+                            );
+                            return;
+                        }
+
+                        // 为所有选中对象添加组件
+                        for (let i = 0; i < selectedObjects.length; i++) {
+                            const object = selectedObjects[i];
+
+                            // 确保对象有components属性
+                            if (object.components === undefined) {
+                                object.components = [];
+                            }
+
+                            const component = ComponentContainer.Create(type, editor);
+                            if (component !== undefined) {
+                                const command = new AddComponentCommand(editor, object, component);
+                                editor.execute(command);
+                            }
+                        }
+
+                        editor.showNotification(`已为${selectedObjects.length}个选中对象添加${componentTypes[type]}组件`, false);
+
+                    } else {
+                        // 非互斥组件，直接为所有选中对象添加
+                        for (let i = 0; i < selectedObjects.length; i++) {
+                            const object = selectedObjects[i];
+
+                            // 确保对象有components属性
+                            if (object.components === undefined) {
+                                object.components = [];
+                            }
+
+                            const component = ComponentContainer.Create(type, editor);
+                            if (component !== undefined) {
+                                const command = new AddComponentCommand(editor, object, component);
+                                editor.execute(command);
+                            }
+                        }
+
+                        editor.showNotification(`已为${selectedObjects.length}个选中对象添加${componentTypes[type]}组件`, false);
+                    }
+
+                } else {
+                    // 单选对象处理（原有逻辑）
                 // 确保对象有components属性
                 if (editor.selected.components === undefined) {
                     editor.selected.components = [];
@@ -81,6 +162,7 @@ function MenubarComponent(editor) {
 
                     const successMessage = strings.getKey('menubar/component/success').replace('{0}', componentTypes[type]);
                     editor.showNotification(successMessage, false);
+                    }
                 }
             } else {
                 editor.showNotification(strings.getKey('menubar/component/select_object_first'), true);

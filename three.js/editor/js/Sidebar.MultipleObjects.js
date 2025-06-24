@@ -37,29 +37,24 @@ function SidebarMultipleObjects(editor) {
 	multipleObjectsCountRow.add(multipleObjectsCount);
 	container.add(multipleObjectsCountRow);
 
-	// 多选对象名称列表
+	// 多选对象名称列表标题
 	const multipleObjectsNameRow = new UIRow();
-	const multipleObjectsName = new UIInput()
-		.setWidth('150px')
-		.setFontSize('12px')
-		.onChange(function() {
-			// 批量修改所有选中对象的名称
-			const objects = editor.getSelectedObjects();
-			const newName = multipleObjectsName.getValue();
-
-			for (let i = 0; i < objects.length; i++) {
-				const object = objects[i];
-				// 如果有多个对象，给每个对象添加索引
-				const name = objects.length > 1 ?
-					`${newName} (${i + 1})` : newName;
-
-				editor.execute(new SetValueCommand(editor, object, 'name', name));
-			}
-		});
-
 	multipleObjectsNameRow.add(new UIText('名称').setWidth('90px'));
-	multipleObjectsNameRow.add(multipleObjectsName);
 	container.add(multipleObjectsNameRow);
+
+	// 创建名称列表容器 - 纵向排列
+	const namesListContainer = new UIPanel();
+	namesListContainer.dom.style.marginLeft = '0px';
+	namesListContainer.dom.style.marginBottom = '10px';
+	namesListContainer.dom.style.maxHeight = '120px';
+	namesListContainer.dom.style.overflowY = 'auto';
+	namesListContainer.dom.style.border = '1px solid #ccc';
+	namesListContainer.dom.style.borderRadius = '3px';
+	namesListContainer.dom.style.padding = '3px';
+	container.add(namesListContainer);
+
+	// 存储名称文本UI元素的数组
+	const nameTextElements = [];
 
 	// 分割线
 	const separator = new UIPanel();
@@ -144,6 +139,20 @@ function SidebarMultipleObjects(editor) {
 	positionPasteButton.dom.appendChild(positionPasteIcon);
 	positionPasteButton.dom.title = '粘贴位置';
 
+	// 默认隐藏复制粘贴按钮
+	positionCopyButton.dom.style.display = 'none';
+	positionPasteButton.dom.style.display = 'none';
+
+	// 添加鼠标悬停事件
+	multipleObjectsPositionRow.dom.addEventListener('mouseenter', function() {
+		positionCopyButton.dom.style.display = '';
+		positionPasteButton.dom.style.display = '';
+	});
+	multipleObjectsPositionRow.dom.addEventListener('mouseleave', function() {
+		positionCopyButton.dom.style.display = 'none';
+		positionPasteButton.dom.style.display = 'none';
+	});
+
 	multipleObjectsPositionRow.add(positionCopyButton);
 	multipleObjectsPositionRow.add(positionPasteButton);
 
@@ -226,6 +235,20 @@ function SidebarMultipleObjects(editor) {
 	rotationPasteIcon.style.margin = '0 auto';
 	rotationPasteButton.dom.appendChild(rotationPasteIcon);
 	rotationPasteButton.dom.title = '粘贴旋转';
+
+	// 默认隐藏复制粘贴按钮
+	rotationCopyButton.dom.style.display = 'none';
+	rotationPasteButton.dom.style.display = 'none';
+
+	// 添加鼠标悬停事件
+	multipleObjectsRotationRow.dom.addEventListener('mouseenter', function() {
+		rotationCopyButton.dom.style.display = '';
+		rotationPasteButton.dom.style.display = '';
+	});
+	multipleObjectsRotationRow.dom.addEventListener('mouseleave', function() {
+		rotationCopyButton.dom.style.display = 'none';
+		rotationPasteButton.dom.style.display = 'none';
+	});
 
 	multipleObjectsRotationRow.add(rotationCopyButton);
 	multipleObjectsRotationRow.add(rotationPasteButton);
@@ -313,22 +336,412 @@ function SidebarMultipleObjects(editor) {
 	scalePasteButton.dom.appendChild(scalePasteIcon);
 	scalePasteButton.dom.title = '粘贴缩放';
 
+	// 默认隐藏复制粘贴按钮
+	scaleCopyButton.dom.style.display = 'none';
+	scalePasteButton.dom.style.display = 'none';
+
+	// 添加鼠标悬停事件
+	multipleObjectsScaleRow.dom.addEventListener('mouseenter', function() {
+		scaleCopyButton.dom.style.display = '';
+		scalePasteButton.dom.style.display = '';
+	});
+	multipleObjectsScaleRow.dom.addEventListener('mouseleave', function() {
+		scaleCopyButton.dom.style.display = 'none';
+		scalePasteButton.dom.style.display = 'none';
+	});
+
 	multipleObjectsScaleRow.add(scaleCopyButton);
 	multipleObjectsScaleRow.add(scalePasteButton);
 
 	container.add(multipleObjectsScaleRow);
 
+	// 添加全部变换数据的复制粘贴行
+	const transformActionsRow = new UIRow();
+
+	// 全部变换数据复制按钮
+	const transformCopyButton = new UIButton('')
+		.setWidth('24px')
+		.onClick(function() {
+			const positionData = new THREE.Vector3(
+				multipleObjectsPositionX.getValue(),
+				multipleObjectsPositionY.getValue(),
+				multipleObjectsPositionZ.getValue()
+			);
+			const rotationData = new THREE.Vector3(
+				multipleObjectsRotationX.getValue(),
+				multipleObjectsRotationY.getValue(),
+				multipleObjectsRotationZ.getValue()
+			);
+			const scaleData = new THREE.Vector3(
+				multipleObjectsScaleX.getValue(),
+				multipleObjectsScaleY.getValue(),
+				multipleObjectsScaleZ.getValue()
+			);
+
+			// 更新全局剪贴板
+			localStorage.setItem('multipleObjectsTransform', JSON.stringify({
+				position: {
+					x: positionData.x,
+					y: positionData.y,
+					z: positionData.z
+				},
+				rotation: {
+					x: rotationData.x,
+					y: rotationData.y,
+					z: rotationData.z
+				},
+				scale: {
+					x: scaleData.x,
+					y: scaleData.y,
+					z: scaleData.z
+				}
+			}));
+
+			editor.showNotification('全部变换数据已复制');
+		});
+
+	transformCopyButton.dom.title = '复制全部数据';
+
+	// 添加复制图标
+	const transformCopyIcon = document.createElement('img');
+	transformCopyIcon.src = 'images/copy.png';
+	transformCopyIcon.style.width = '12px';
+	transformCopyIcon.style.height = '12px';
+	transformCopyIcon.style.display = 'block';
+	transformCopyIcon.style.margin = '0 auto';
+	transformCopyButton.dom.appendChild(transformCopyIcon);
+
+	// 全部变换数据粘贴按钮
+	const transformPasteButton = new UIButton('')
+		.setMarginLeft('2px')
+		.setWidth('24px')
+		.onClick(function() {
+			const transformData = localStorage.getItem('multipleObjectsTransform');
+			if (transformData) {
+				try {
+					const data = JSON.parse(transformData);
+
+					if (data.position) {
+						multipleObjectsPositionX.setValue(data.position.x);
+						multipleObjectsPositionY.setValue(data.position.y);
+						multipleObjectsPositionZ.setValue(data.position.z);
+						updatePosition();
+					}
+
+					if (data.rotation) {
+						multipleObjectsRotationX.setValue(data.rotation.x);
+						multipleObjectsRotationY.setValue(data.rotation.y);
+						multipleObjectsRotationZ.setValue(data.rotation.z);
+						updateRotation();
+					}
+
+					if (data.scale) {
+						multipleObjectsScaleX.setValue(data.scale.x);
+						multipleObjectsScaleY.setValue(data.scale.y);
+						multipleObjectsScaleZ.setValue(data.scale.z);
+						updateScale();
+					}
+
+					editor.showNotification('全部变换数据已粘贴');
+				} catch (e) {
+					console.error('无法粘贴变换数据', e);
+				}
+			}
+		});
+
+	transformPasteButton.dom.title = '粘贴全部数据';
+
+	// 添加粘贴图标
+	const transformPasteIcon = document.createElement('img');
+	transformPasteIcon.src = 'images/paste.png';
+	transformPasteIcon.style.width = '12px';
+	transformPasteIcon.style.height = '12px';
+	transformPasteIcon.style.display = 'block';
+	transformPasteIcon.style.margin = '0 auto';
+	transformPasteButton.dom.appendChild(transformPasteIcon);
+
+	transformActionsRow.add(transformCopyButton);
+	transformActionsRow.add(transformPasteButton);
+
+	// 默认隐藏全局复制粘贴按钮行
+	transformActionsRow.setDisplay('none');
+
+	container.add(transformActionsRow);
+
+	// 创建变换组边框div
+	const createTransformBorder = function() {
+		// 移除旧的边框（如果存在）
+		const oldBorder = container.dom.querySelector('.transform-border');
+		if (oldBorder) {
+			container.dom.removeChild(oldBorder);
+		}
+
+		// 创建新的边框
+		const transformBorder = document.createElement('div');
+		transformBorder.className = 'transform-border';
+		transformBorder.style.position = 'absolute';
+		transformBorder.style.border = '1px dashed #888';
+		transformBorder.style.borderRadius = '4px';
+		transformBorder.style.pointerEvents = 'none';
+		transformBorder.style.display = 'none';
+		transformBorder.style.zIndex = '0';
+		container.dom.appendChild(transformBorder);
+
+		return transformBorder;
+	};
+
+	// 创建并获取边框元素
+	let transformBorder = createTransformBorder();
+
+	// 更新边框位置和大小
+	const updateBorderPosition = function() {
+		if (!multipleObjectsPositionRow.dom || !multipleObjectsScaleRow.dom) return;
+
+		// 计算数据区域的位置（标签宽度是90px）
+		const labelWidth = 90;
+		const paddingLeft = 5;
+
+		// 获取数据区域的左边界（标签宽度+一些padding）
+		const dataAreaLeft = labelWidth + paddingLeft;
+
+		// 获取位置行的输入框区域
+		const posInputX = multipleObjectsPositionX.dom;
+		const posInputZ = multipleObjectsPositionZ.dom;
+		const scaleInputZ = multipleObjectsScaleZ.dom;
+
+		// 计算数据区域的顶部和底部位置
+		const posRowTop = multipleObjectsPositionRow.dom.offsetTop;
+		const scaleRowBottom = multipleObjectsScaleRow.dom.offsetTop + multipleObjectsScaleRow.dom.offsetHeight;
+
+		// 计算数据区域的宽度（从第一个输入框到最后一个输入框，不包括单属性复制按钮的宽度）
+		// 排除单一属性复制粘贴按钮的宽度(约52px)
+		const dataAreaWidth = posInputZ.offsetLeft + posInputZ.offsetWidth - posInputX.offsetLeft;
+
+		// 设置边框位置和大小，只包围数据区域（不包括单一属性复制粘贴按钮）
+		transformBorder.style.top = (posRowTop - 5) + 'px';
+		transformBorder.style.left = dataAreaLeft + 'px';
+		transformBorder.style.width = dataAreaWidth + 'px';
+		transformBorder.style.height = (scaleRowBottom - posRowTop + 10) + 'px';
+
+		// 获取辅助功能按钮行的位置
+		const actionsRowBottom = multipleObjectsActionsRow.dom.offsetTop;
+
+		// 更新按钮位置，放在数据区域的上方并水平居中，避免与辅助功能按钮冲突
+		const buttonWidth = transformCopyButton.dom.offsetWidth + transformPasteButton.dom.offsetWidth + 2; // +2是按钮间距
+		const buttonLeft = dataAreaLeft + (dataAreaWidth - buttonWidth) / 2;
+
+		transformActionsRow.dom.style.position = 'absolute';
+		transformActionsRow.dom.style.left = buttonLeft + 'px';
+		// 放在变换区域下方，但确保不与辅助功能按钮行重叠
+		const buttonTop = scaleRowBottom + 5;
+
+		// 判断是否会与辅助功能按钮行重叠
+		if (actionsRowBottom > 0 && buttonTop + 24 > actionsRowBottom) {
+			// 如果会重叠，则放在变换区域上方
+			transformActionsRow.dom.style.top = (posRowTop - 30) + 'px';
+		} else {
+			// 否则放在变换区域下方
+			transformActionsRow.dom.style.top = buttonTop + 'px';
+		}
+	};
+
+	// 显示变换操作和边框
+	const showTransformActions = function() {
+		transformActionsRow.setDisplay('');
+		transformBorder.style.display = 'block';
+		updateBorderPosition();
+	};
+
+	// 隐藏变换操作和边框
+	const hideTransformActions = function() {
+		transformActionsRow.setDisplay('none');
+		transformBorder.style.display = 'none';
+	};
+
+	// 存储事件监听器引用，以便稍后移除
+	const eventListeners = [];
+
+	// 移除所有事件监听器
+	const removeAllEventListeners = function() {
+		for (const listener of eventListeners) {
+			listener.element.removeEventListener(listener.type, listener.callback);
+		}
+		eventListeners.length = 0;
+	};
+
+	// 添加事件监听器并保存引用
+	const addEventListenerWithRef = function(element, type, callback) {
+		element.addEventListener(type, callback);
+		eventListeners.push({
+			element: element,
+			type: type,
+			callback: callback
+		});
+	};
+
+	// 创建一个透明的悬停区域覆盖三个变换行的数据区域
+	const createHoverArea = function() {
+		// 移除旧的悬停区域（如果存在）
+		const oldHoverArea = container.dom.querySelector('.transform-hover-area');
+		if (oldHoverArea) {
+			container.dom.removeChild(oldHoverArea);
+		}
+
+		// 移除所有旧的事件监听器
+		removeAllEventListeners();
+
+		if (!multipleObjectsPositionRow.dom || !multipleObjectsScaleRow.dom) return;
+
+		// 计算数据区域的位置信息（用于检测鼠标是否在数据区域）
+		const labelWidth = 90;
+		const paddingLeft = 5;
+		const dataAreaLeft = labelWidth + paddingLeft;
+		const posInputX = multipleObjectsPositionX.dom;
+		const posInputZ = multipleObjectsPositionZ.dom;
+		const dataAreaWidth = posInputZ.offsetLeft + posInputZ.offsetWidth - posInputX.offsetLeft;
+
+		// 用于跟踪鼠标是否在相关区域内
+		let isMouseInRelevantArea = false;
+
+		// 检查鼠标是否要隐藏工具栏的定时器
+		let hideTimeout = null;
+
+		// 安全地显示变换操作和边框
+		const safeShowTransformActions = function() {
+			// 清除任何正在等待的隐藏定时器
+			if (hideTimeout) {
+				clearTimeout(hideTimeout);
+				hideTimeout = null;
+			}
+
+			isMouseInRelevantArea = true;
+			showTransformActions();
+		};
+
+		// 安全地隐藏变换操作和边框，带延迟
+		const safeHideTransformActions = function() {
+			// 清除任何正在等待的隐藏定时器
+			if (hideTimeout) {
+				clearTimeout(hideTimeout);
+			}
+
+			// 设置一个短暂的延迟，给鼠标时间移动到按钮上
+			hideTimeout = setTimeout(function() {
+				if (!isMouseInRelevantArea) {
+					hideTransformActions();
+				}
+				hideTimeout = null;
+			}, 200);
+		};
+
+		// 检查鼠标是否在按钮区域
+		const isInButtonArea = function(event) {
+			const rect = transformActionsRow.dom.getBoundingClientRect();
+			return (
+				event.clientX >= rect.left &&
+				event.clientX <= rect.right &&
+				event.clientY >= rect.top &&
+				event.clientY <= rect.bottom
+			);
+		};
+
+		// 创建一个覆盖整个变换数据区域的透明层（包括行与行之间的间隙）
+		const transformAreaOverlay = document.createElement('div');
+		transformAreaOverlay.className = 'transform-area-overlay';
+		transformAreaOverlay.style.position = 'absolute';
+		transformAreaOverlay.style.top = (multipleObjectsPositionRow.dom.offsetTop - 5) + 'px';
+		transformAreaOverlay.style.left = dataAreaLeft + 'px';
+		transformAreaOverlay.style.width = dataAreaWidth + 'px';
+		transformAreaOverlay.style.height = (multipleObjectsScaleRow.dom.offsetTop + multipleObjectsScaleRow.dom.offsetHeight - multipleObjectsPositionRow.dom.offsetTop + 10) + 'px';
+		transformAreaOverlay.style.zIndex = '1';
+		transformAreaOverlay.style.pointerEvents = 'none'; // 不要阻止下层元素的事件
+
+		container.dom.appendChild(transformAreaOverlay);
+
+		// 全局鼠标移动事件
+		const handleGlobalMouseMove = function(event) {
+			// 计算鼠标是否在变换数据区域内
+			const overlayRect = transformAreaOverlay.getBoundingClientRect();
+			const inOverlayArea = (
+				event.clientX >= overlayRect.left &&
+				event.clientX <= overlayRect.right &&
+				event.clientY >= overlayRect.top &&
+				event.clientY <= overlayRect.bottom
+			);
+
+			const inButtonArea = isInButtonArea(event);
+
+			// 更新状态
+			isMouseInRelevantArea = inOverlayArea || inButtonArea ||
+								transformActionsRow.dom.contains(event.target) ||
+								transformCopyButton.dom.contains(event.target) ||
+								transformPasteButton.dom.contains(event.target);
+
+			// 根据鼠标位置决定显示或隐藏
+			if (isMouseInRelevantArea) {
+				safeShowTransformActions();
+			} else if (transformActionsRow.dom.style.display !== 'none') {
+				safeHideTransformActions();
+			}
+		};
+
+		// 为document添加鼠标移动事件
+		addEventListenerWithRef(document, 'mousemove', handleGlobalMouseMove);
+
+		// 为复制粘贴按钮添加单独的鼠标事件
+		addEventListenerWithRef(transformCopyButton.dom, 'mouseenter', function() {
+			isMouseInRelevantArea = true;
+			safeShowTransformActions();
+		});
+
+		addEventListenerWithRef(transformPasteButton.dom, 'mouseenter', function() {
+			isMouseInRelevantArea = true;
+			safeShowTransformActions();
+		});
+
+		// 为按钮行添加事件
+		addEventListenerWithRef(transformActionsRow.dom, 'mouseenter', function() {
+			isMouseInRelevantArea = true;
+			safeShowTransformActions();
+		});
+
+		// 在document上添加全局点击事件，用于处理点击按钮后的状态
+		addEventListenerWithRef(document, 'click', function(event) {
+			if (transformCopyButton.dom.contains(event.target) || transformPasteButton.dom.contains(event.target)) {
+				// 如果点击的是复制或粘贴按钮，保持显示一小段时间后隐藏
+				setTimeout(function() {
+					isMouseInRelevantArea = false;
+					hideTransformActions();
+				}, 200);
+			}
+		});
+	};
+
 	// 辅助功能按钮
 	const multipleObjectsActionsRow = new UIRow();
 
-	// 重置位置按钮
-	const resetPositionButton = new UIButton('归零位置')
+	// 回到保存前位置按钮
+	const resetPositionButton = new UIButton('恢复位置')
 		.setWidth('80px')
 		.onClick(function() {
-			multipleObjectsPositionX.setValue(0);
-			multipleObjectsPositionY.setValue(0);
-			multipleObjectsPositionZ.setValue(0);
-			updatePosition();
+			// 保存当前选中的对象列表
+			const selectedObjects = editor.getSelectedObjects();
+
+			const multiSelectGroup = editor.multiSelectGroup;
+			if (multiSelectGroup && multiSelectGroup.userData.savedPosition) {
+				const savedPos = multiSelectGroup.userData.savedPosition;
+				multipleObjectsPositionX.setValue(savedPos.x);
+				multipleObjectsPositionY.setValue(savedPos.y);
+				multipleObjectsPositionZ.setValue(savedPos.z);
+				updatePosition();
+				editor.showNotification('已恢复到上次保存的位置');
+
+				// 触发多选对象变换更新信号，确保包围盒更新
+				editor.signals.multipleObjectsTransformChanged.dispatch(multiSelectGroup);
+			} else {
+				// 如果没有保存过位置，提示用户
+				editor.showNotification('未找到已保存的位置');
+			}
 		});
 
 	// 重置旋转按钮
@@ -339,6 +752,12 @@ function SidebarMultipleObjects(editor) {
 			multipleObjectsRotationY.setValue(0);
 			multipleObjectsRotationZ.setValue(0);
 			updateRotation();
+
+			// 触发多选对象变换更新信号，确保包围盒更新
+			const multiSelectGroup = editor.multiSelectGroup;
+			if (multiSelectGroup) {
+				editor.signals.multipleObjectsTransformChanged.dispatch(multiSelectGroup);
+			}
 		});
 
 	// 重置缩放按钮
@@ -349,6 +768,12 @@ function SidebarMultipleObjects(editor) {
 			multipleObjectsScaleY.setValue(1);
 			multipleObjectsScaleZ.setValue(1);
 			updateScale();
+
+			// 触发多选对象变换更新信号，确保包围盒更新
+			const multiSelectGroup = editor.multiSelectGroup;
+			if (multiSelectGroup) {
+				editor.signals.multipleObjectsTransformChanged.dispatch(multiSelectGroup);
+			}
 		});
 
 	multipleObjectsActionsRow.add(resetPositionButton);
@@ -391,6 +816,11 @@ function SidebarMultipleObjects(editor) {
 				}
 			}
 		}
+
+		// 触发多选对象变换更新信号，用于更新包围盒
+		if (multiSelectGroup && objects.length > 0) {
+			editor.signals.multipleObjectsTransformChanged.dispatch(multiSelectGroup);
+		}
 	}
 
 	function updateRotation() {
@@ -423,6 +853,11 @@ function SidebarMultipleObjects(editor) {
 			if (!object.rotation.equals(newRotation)) {
 				editor.execute(new SetRotationCommand(editor, object, newRotation));
 			}
+		}
+
+		// 触发多选对象变换更新信号，用于更新包围盒
+		if (multiSelectGroup && objects.length > 0) {
+			editor.signals.multipleObjectsTransformChanged.dispatch(multiSelectGroup);
 		}
 	}
 
@@ -457,11 +892,35 @@ function SidebarMultipleObjects(editor) {
 				editor.execute(new SetScaleCommand(editor, object, newScale));
 			}
 		}
+
+		// 触发多选对象变换更新信号，用于更新包围盒
+		if (multiSelectGroup && objects.length > 0) {
+			editor.signals.multipleObjectsTransformChanged.dispatch(multiSelectGroup);
+		}
 	}
 
 	// 用于更新UI的方法，但不触发命令
 	function updateUIWithoutCommand(objects) {
 		if (!objects || objects.length === 0) return;
+
+		// 清除现有的名称文本列表
+		namesListContainer.dom.innerHTML = '';
+		nameTextElements.length = 0;
+
+		// 提取所有对象的名称
+		const names = objects.map(obj => obj.name);
+
+		// 显示所有名称列表（纵向排列）
+		for (let i = 0; i < names.length; i++) {
+			const nameText = document.createElement('div');
+			nameText.textContent = `${i + 1}. ${names[i]}`;
+			nameText.style.fontSize = '12px';
+			nameText.style.padding = '3px 6px';
+			nameText.style.borderBottom = i < names.length - 1 ? '1px dotted #ddd' : 'none';
+			nameText.style.color = '#555';
+			namesListContainer.dom.appendChild(nameText);
+			nameTextElements.push(nameText);
+		}
 
 		// 仅更新UI而不触发命令，用于从场景变化同步到面板
 		const multiSelectGroup = editor.multiSelectGroup;
@@ -530,19 +989,23 @@ function SidebarMultipleObjects(editor) {
 		// 更新选中数量
 		multipleObjectsCount.setValue(objects.length.toString());
 
-		// 如果所有对象名称相同，使用该名称，否则显示多个名称
+		// 清除现有的名称文本列表
+		namesListContainer.dom.innerHTML = '';
+		nameTextElements.length = 0;
+
 		// 提取所有对象的名称
 		const names = objects.map(obj => obj.name);
 
-		// 检查所有名称是否相同
-		const allSameName = names.every(name => name === names[0]);
-
-		// 如果所有名称相同，使用该名称，否则显示"多个名称"
-		if (allSameName) {
-			multipleObjectsName.setValue(names[0]);
-		} else {
-			// 创建名称摘要
-			multipleObjectsName.setValue("[多个不同名称]");
+		// 显示所有名称列表（纵向排列）
+		for (let i = 0; i < names.length; i++) {
+			const nameText = document.createElement('div');
+			nameText.textContent = `${i + 1}. ${names[i]}`;
+			nameText.style.fontSize = '12px';
+			nameText.style.padding = '3px 6px';
+			nameText.style.borderBottom = i < names.length - 1 ? '1px dotted #ddd' : 'none';
+			nameText.style.color = '#555';
+			namesListContainer.dom.appendChild(nameText);
+			nameTextElements.push(nameText);
 		}
 
 		// 使用临时组的位置
@@ -560,6 +1023,15 @@ function SidebarMultipleObjects(editor) {
 			multipleObjectsScaleX.setValue(multiSelectGroup.scale.x);
 			multipleObjectsScaleY.setValue(multiSelectGroup.scale.y);
 			multipleObjectsScaleZ.setValue(multiSelectGroup.scale.z);
+
+			// 如果还没有保存过初始位置，则保存当前位置作为初始位置
+			if (!multiSelectGroup.userData.savedPosition) {
+				multiSelectGroup.userData.savedPosition = {
+					x: multiSelectGroup.position.x,
+					y: multiSelectGroup.position.y,
+					z: multiSelectGroup.position.z
+				};
+			}
 		} else {
 			// 如果没有临时组，使用第一个对象的变换
 			const firstObject = objects[0];
@@ -588,6 +1060,12 @@ function SidebarMultipleObjects(editor) {
 			if (selectedObjects.length > 1) {
 				container.setDisplay('block');
 				updateUI(selectedObjects);
+
+				// 延迟执行以确保DOM已更新
+				setTimeout(function() {
+					createHoverArea();
+					transformBorder = createTransformBorder();
+				}, 100);
 			} else {
 				container.setDisplay('none');
 			}
@@ -604,6 +1082,21 @@ function SidebarMultipleObjects(editor) {
 			if (selectedObjects.includes(object)) {
 				updateUI(selectedObjects);
 			}
+		}
+	});
+
+	// 监听保存信号，当场景保存时更新当前多选对象的初始位置
+	signals.upload.add(function() {
+		const multiSelectGroup = editor.multiSelectGroup;
+		if (multiSelectGroup) {
+			// 保存当前位置到userData中
+			multiSelectGroup.userData.savedPosition = {
+				x: multiSelectGroup.position.x,
+				y: multiSelectGroup.position.y,
+				z: multiSelectGroup.position.z
+			};
+
+			console.log('多选对象位置已在保存时更新');
 		}
 	});
 

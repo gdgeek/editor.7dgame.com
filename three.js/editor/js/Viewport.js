@@ -568,6 +568,23 @@ function Viewport( editor ) {
 
 	} );
 
+	// 添加多选对象变换更新信号处理
+	signals.multipleObjectsTransformChanged.add( function ( object ) {
+		if (object === multiSelectGroup) {
+			// 更新选中对象的包围盒
+			const selectedObjects = multiSelectGroup.userData.selectedObjects || [];
+			if (selectedObjects.length > 0) {
+				// 计算所有选中对象的共同包围盒
+				box.copy(computeMultiSelectionBoundingBox(selectedObjects));
+				// 确保包围盒可见
+				if (box.isEmpty() === false) {
+					selectionBox.visible = true;
+				}
+				render();
+			}
+		}
+	} );
+
 	signals.rendererUpdated.add( function () {
 
 		scene.traverse( function ( child ) {
