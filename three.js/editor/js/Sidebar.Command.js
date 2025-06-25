@@ -11,15 +11,13 @@ function SidebarCommand(editor) {
 	const container = new UIPanel();
 	container.setDisplay('none');
 
-	// 标题容器
 	const topContainer = new UIRow();
 	container.add(topContainer);
 
-	// 指令选择容器
+	// 添加指令选择容器
 	const addCommandContainer = new UIRow();
 	container.add(addCommandContainer);
 
-	// 指令实例容器
 	const commandsContainer = new UIRow();
 	container.add(commandsContainer);
 
@@ -33,13 +31,24 @@ function SidebarCommand(editor) {
 
 		// 获取选中的对象
 		const selectedObjects = editor.getSelectedObjects();
+
+		// 判断是否为多选模式
 		const isMultiSelect = selectedObjects.length > 1;
 
-		if (selectedObjects.length === 0) return;
-		if (!(editor.type && editor.type.toLowerCase() === 'meta')) return;
+		// 如果没有选中对象，不显示指令面板
+		if (selectedObjects.length === 0) {
+			return;
+		}
 
+		// 只有当编辑器类型为meta且选中对象类型为合法类型时才显示
+		if (!(editor.type && editor.type.toLowerCase() === 'meta')) {
+			return;
+		}
+
+		// 检查所有选中对象的类型是否合法
 		const validObjectTypes = ['mesh', 'polygen', 'voxel', 'entity'];
 		let allValidType = true;
+
 		for (let i = 0; i < selectedObjects.length; i++) {
 			const objectType = selectedObjects[i].type ? selectedObjects[i].type.toLowerCase() : '';
 			if (!validObjectTypes.includes(objectType)) {
@@ -47,9 +56,15 @@ function SidebarCommand(editor) {
 				break;
 			}
 		}
-		if (!allValidType) return;
 
+		if (!allValidType) {
+			return;
+		}
+
+		// 对于单选模式，直接使用选中的对象
 		const object = isMultiSelect ? null : editor.selected;
+
+		// 确保所有对象都有commands属性
 		for (let i = 0; i < selectedObjects.length; i++) {
 			if (selectedObjects[i].commands === undefined) {
 				selectedObjects[i].commands = [];
@@ -57,34 +72,35 @@ function SidebarCommand(editor) {
 		}
 
 		topContainer.setDisplay('block');
-		addCommandContainer.setDisplay('block');
 		commandsContainer.setDisplay('block');
 		container.setDisplay('block');
 
-		// 标题
+		// 显示指令标题
 		topContainer.add(new UIText(strings.getKey('sidebar/command').toUpperCase()));
 
-		// 选择项部分
-		addCommandContainer.add(new UIBreak());
-		const label = new UIText(strings.getKey('sidebar/command/select') || '选择项').setWidth('90px');
-		addCommandContainer.add(label);
-		const select = new UISelect().setWidth('100px');
-		select.setOptions({
-			'Voice': strings.getKey('sidebar/command/select/voice') || '语音指令'
-		});
-		select.setValue('Voice');
-		addCommandContainer.add(select);
-		const newCommand = new UIButton(strings.getKey('sidebar/command/select/button') || '添加指令');
-		addCommandContainer.add(newCommand);
+		// 单选对象模式
+		if (!isMultiSelect && object) {
+			const commands = object.commands;
 
-		// 多选模式下，选择项下方加分割线
-		if (isMultiSelect) {
-			addCommandContainer.add(new UIHorizontalRule());
-		}
+			// 添加"添加指令"的UI部分 - 与组件部分风格保持一致
+			addCommandContainer.setDisplay('block');
+			addCommandContainer.add(new UIBreak());
 
-		// 新建指令按钮逻辑
-		newCommand.onClick(function() {
-			if (!isMultiSelect && object) {
+			const label = new UIText(strings.getKey('sidebar/command/select') || '选择项').setWidth('90px');
+			addCommandContainer.add(label);
+
+			// 创建下拉框
+			const select = new UISelect().setWidth('100px');
+			select.setOptions({
+				'Voice': strings.getKey('sidebar/command/select/voice') || '语音指令'
+			});
+			select.setValue('Voice');
+			addCommandContainer.add(select);
+
+			// 添加按钮
+			const newCommand = new UIButton(strings.getKey('sidebar/command/select/button') || '添加指令');
+			newCommand.onClick(function() {
+				// 检查是否已经有语音指令
 				let hasVoiceCommand = false;
 				if (object.commands) {
 					for (let i = 0; i < object.commands.length; i++) {
@@ -94,23 +110,69 @@ function SidebarCommand(editor) {
 						}
 					}
 				}
+
+				// 如果已有语音指令，显示提示并不创建新的指令
 				if (hasVoiceCommand) {
-					const message = strings.getKey('menubar/command/already_exists') || '此对象已添加语音指令，不能重复添加';
+					const message = strings.getKey('menubar/command/already_exists') ||
+								   '此对象已添加语音指令，不能重复添加';
 					editor.showNotification(message, true);
 					return;
 				}
+
 				const command = CommandContainer.Create(select.getValue());
+
 				if (command !== undefined) {
 					const cmd = new AddCommandCommand(editor, object, command);
 					editor.execute(cmd);
+
 					const successMessage = strings.getKey('menubar/command/success').replace('{0}', select.getSelectedHtml());
 					editor.showNotification(successMessage, false);
 				}
-			} else if (isMultiSelect) {
+			});
+			addCommandContainer.add(newCommand);
+
+			if (commands !== undefined && commands.length > 0) {
+				for (let i = 0; i < commands.length; i++) {
+					(function(object, command) {
+						commandsContainer.add(new UIHorizontalRule());
+
+						const cc = new CommandContainer(editor, object, command);
+						cc.renderer(commandsContainer);
+
+						// 将水平分隔线添加到容器中
+						commandsContainer.add(new UIBreak());
+					})(object, commands[i]);
+				}
+			}
+		}
+		// 多选对象模式
+		else if (isMultiSelect) {
+			// 添加"添加指令"的UI部分 - 与组件部分风格保持一致
+			addCommandContainer.setDisplay('block');
+			addCommandContainer.add(new UIBreak());
+
+			const label = new UIText(strings.getKey('sidebar/command/select') || '选择项').setWidth('90px');
+			addCommandContainer.add(label);
+
+			// 创建下拉框
+			const select = new UISelect().setWidth('100px');
+			select.setOptions({
+				'Voice': strings.getKey('sidebar/command/select/voice') || '语音指令'
+			});
+			select.setValue('Voice');
+			addCommandContainer.add(select);
+
+			// 添加按钮
+			const newCommand = new UIButton(strings.getKey('sidebar/command/select/button') || '添加指令');
+			newCommand.onClick(function() {
+				// 检查哪些对象已经有语音指令
 				const objectsWithVoiceCommand = [];
 				const objectsToAddCommand = [];
+
 				for (let i = 0; i < selectedObjects.length; i++) {
 					const object = selectedObjects[i];
+
+					// 检查是否已经有语音指令
 					let hasVoiceCommand = false;
 					for (let j = 0; j < object.commands.length; j++) {
 						if (object.commands[j].type === 'Voice') {
@@ -118,41 +180,57 @@ function SidebarCommand(editor) {
 							break;
 						}
 					}
+
 					if (hasVoiceCommand) {
 						objectsWithVoiceCommand.push(object.name || `对象 ${i+1}`);
 					} else {
 						objectsToAddCommand.push(object);
 					}
 				}
+
+				// 如果有对象已经有语音指令，显示提示
 				if (objectsWithVoiceCommand.length > 0) {
 					const conflictNames = objectsWithVoiceCommand.length > 3
 						? objectsWithVoiceCommand.slice(0, 3).join(', ') + `...等${objectsWithVoiceCommand.length}个对象`
 						: objectsWithVoiceCommand.join(', ');
-					editor.showNotification(`以下对象已存在语音指令: ${conflictNames}，将跳过这些对象`, true);
+
+					editor.showNotification(
+						`以下对象已存在语音指令: ${conflictNames}，将跳过这些对象`,
+						true
+					);
 				}
+
+				// 为没有语音指令的对象添加
 				if (objectsToAddCommand.length > 0) {
 					for (let i = 0; i < objectsToAddCommand.length; i++) {
 						const object = objectsToAddCommand[i];
 						const command = CommandContainer.Create('Voice');
+
 						if (command !== undefined) {
 							const cmd = new AddCommandCommand(editor, object, command);
 							editor.execute(cmd);
 						}
 					}
-					editor.showNotification(`已为${objectsToAddCommand.length}个对象添加语音指令`, false);
+
+					editor.showNotification(
+						`已为${objectsToAddCommand.length}个对象添加语音指令`,
+						false
+					);
 				} else if (objectsToAddCommand.length === 0 && objectsWithVoiceCommand.length > 0) {
 					editor.showNotification('所有选中对象都已有语音指令', false);
 				}
-			}
-		});
+			});
+			addCommandContainer.add(newCommand);
 
-		// 按钮禁用状态
-		if (isMultiSelect) {
+			// 更新按钮启用状态
+			// 检查是否所有对象都已经有语音指令
 			let allHaveVoiceCommand = true;
 			let objectsWithVoiceCommand = 0;
+
 			for (let i = 0; i < selectedObjects.length; i++) {
 				const object = selectedObjects[i];
 				let hasVoiceCommand = false;
+
 				for (let j = 0; j < object.commands.length; j++) {
 					if (object.commands[j].type === 'Voice') {
 						hasVoiceCommand = true;
@@ -160,40 +238,41 @@ function SidebarCommand(editor) {
 						break;
 					}
 				}
+
 				if (!hasVoiceCommand) {
 					allHaveVoiceCommand = false;
 				}
 			}
+
+			// 如果所有对象都已有语音指令，禁用添加按钮
 			if (allHaveVoiceCommand) {
 				newCommand.setDisabled(true);
 				newCommand.dom.style.opacity = '0.5';
 				newCommand.dom.style.cursor = 'not-allowed';
 			}
-			// 统计信息和提示信息
+
+			// 显示多选对象的指令信息 - 与组件部分风格保持一致
 			if (objectsWithVoiceCommand > 0) {
 				commandsContainer.add(new UIHorizontalRule());
+
+				// 添加统计信息
 				const statsRow = new UIRow();
 				statsRow.add(new UIText(`${selectedObjects.length}个选中对象中，${objectsWithVoiceCommand}个对象有语音指令`));
 				commandsContainer.add(statsRow);
+
+				// 添加提示信息
 				const noteRow = new UIRow();
 				noteRow.add(new UIText('注意：指令实例是各对象独立的，无法一次编辑所有'));
 				commandsContainer.add(noteRow);
 				commandsContainer.add(new UIBreak());
 			} else {
 				commandsContainer.add(new UIHorizontalRule());
+
+				// 添加提示信息
 				const noteRow = new UIRow();
 				noteRow.add(new UIText('选中的对象中没有语音指令'));
 				commandsContainer.add(noteRow);
 				commandsContainer.add(new UIBreak());
-			}
-		} else if (object && object.commands && object.commands.length > 0) {
-			for (let i = 0; i < object.commands.length; i++) {
-				(function(object, command) {
-					commandsContainer.add(new UIHorizontalRule());
-					const cc = new CommandContainer(editor, object, command);
-					cc.renderer(commandsContainer);
-					commandsContainer.add(new UIBreak());
-				})(object, object.commands[i]);
 			}
 		}
 	}
@@ -201,6 +280,7 @@ function SidebarCommand(editor) {
 	// signals
 	signals.objectSelected.add(function(object) {
 		if (object !== null && editor.camera !== object) {
+			// 修改为与组件部分一致的显示逻辑
 			if (editor.type && editor.type.toLowerCase() === 'meta') {
 				const objectType = object.type ? object.type.toLowerCase() : '';
 				if (objectType === 'mesh' || objectType === 'polygen' || objectType === 'voxel' || objectType === 'entity') {

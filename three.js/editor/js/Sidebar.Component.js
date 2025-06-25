@@ -36,9 +36,14 @@ function SidebarComponent( editor ) {
 		addComponentContainer.clear();
 		addComponentContainer.setDisplay( 'none' );
 
-		const object = editor.selected;
+		// 获取选中的对象
+		const selectedObjects = editor.getSelectedObjects();
 
-		if ( object === null ) {
+		// 判断是否为多选模式
+		const isMultiSelect = selectedObjects.length > 1;
+
+		// 如果没有选中对象，不显示组件面板
+		if (selectedObjects.length === 0) {
 			return;
 		}
 
@@ -47,14 +52,30 @@ function SidebarComponent( editor ) {
 			return;
 		}
 
-		const objectType = object.type ? object.type.toLowerCase() : '';
-		if (!(objectType === 'mesh' || objectType === 'polygen' || objectType === 'voxel')) {
+		// 检查所有选中对象的类型是否合法
+		const validObjectTypes = ['mesh', 'polygen', 'voxel'];
+		let allValidType = true;
+
+		for (let i = 0; i < selectedObjects.length; i++) {
+			const objectType = selectedObjects[i].type ? selectedObjects[i].type.toLowerCase() : '';
+			if (!validObjectTypes.includes(objectType)) {
+				allValidType = false;
+				break;
+			}
+		}
+
+		if (!allValidType) {
 			return;
 		}
 
-		// 确保对象有components属性
-		if ( object.components === undefined ) {
-			object.components = [];
+		// 对于单选模式，直接使用选中的对象
+		const object = isMultiSelect ? null : editor.selected;
+
+		// 确保所有对象都有components属性
+		for (let i = 0; i < selectedObjects.length; i++) {
+			if (selectedObjects[i].components === undefined) {
+				selectedObjects[i].components = [];
+			}
 		}
 
 		topContainer.setDisplay( 'block' );
@@ -87,48 +108,235 @@ function SidebarComponent( editor ) {
 		newComponent.onClick( function () {
 			const selectedType = select.getValue();
 
-			// 检查互斥组件
-			if (mutuallyExclusiveTypes.includes(selectedType)) {
-				// 检查是否已经存在互斥组件
-				let hasExclusiveComponent = false;
-				let existingType = null;
+			// 获取当前选中的对象
+			const selectedObjects = editor.getSelectedObjects();
 
-				for (let i = 0; i < object.components.length; i++) {
-					const compType = object.components[i].type;
-					if (mutuallyExclusiveTypes.includes(compType) && compType !== selectedType) {
-						hasExclusiveComponent = true;
-						existingType = compType;
-						break;
+			// 多选对象处理
+			if (selectedObjects.length > 1) {
+				// 检查互斥组件
+				if (mutuallyExclusiveTypes.includes(selectedType)) {
+					// 检查是否有对象已经存在互斥组件
+					let objectsWithExclusiveComponents = [];
+
+					for (let i = 0; i < selectedObjects.length; i++) {
+						const object = selectedObjects[i];
+
+						// 确保对象有components属性
+						if (object.components === undefined) {
+							object.components = [];
+						}
+
+						for (let j = 0; j < object.components.length; j++) {
+							const compType = object.components[j].type;
+							if (mutuallyExclusiveTypes.includes(compType) && compType !== selectedType) {
+								objectsWithExclusiveComponents.push(object.name || `对象 ${i+1}`);
+								break;
+							}
+						}
+					}
+
+					if (objectsWithExclusiveComponents.length > 0) {
+						// 已存在互斥组件，显示提示信息
+						const conflictNames = objectsWithExclusiveComponents.length > 3
+							? objectsWithExclusiveComponents.slice(0, 3).join(', ') + `...等${objectsWithExclusiveComponents.length}个对象`
+							: objectsWithExclusiveComponents.join(', ');
+
+						editor.showNotification(
+							(strings.getKey('menubar/component/mutually_exclusive') || '只能选择一个互斥组件') +
+							`\n以下对象已存在互斥组件: ${conflictNames}`,
+							true
+						);
+						return;
+					}
+
+					// 为所有选中对象添加组件
+					for (let i = 0; i < selectedObjects.length; i++) {
+						const object = selectedObjects[i];
+
+						// 确保对象有components属性
+						if (object.components === undefined) {
+							object.components = [];
+						}
+
+						const component = ComponentContainer.Create(selectedType, editor);
+						if (component !== undefined) {
+							const command = new AddComponentCommand(editor, object, component);
+							editor.execute(command);
+						}
+					}
+
+					const successMessage = strings.getKey('menubar/component/success').replace('{0}', select.getSelectedHtml());
+					editor.showNotification(`已为${selectedObjects.length}个选中对象添加${select.getSelectedHtml()}组件`, false);
+
+				} else {
+					// 非互斥组件，直接为所有选中对象添加
+					for (let i = 0; i < selectedObjects.length; i++) {
+						const object = selectedObjects[i];
+
+						// 确保对象有components属性
+						if (object.components === undefined) {
+							object.components = [];
+						}
+
+						const component = ComponentContainer.Create(selectedType, editor);
+						if (component !== undefined) {
+							const command = new AddComponentCommand(editor, object, component);
+							editor.execute(command);
+						}
+					}
+
+					const successMessage = strings.getKey('menubar/component/success').replace('{0}', select.getSelectedHtml());
+					editor.showNotification(`已为${selectedObjects.length}个选中对象添加${select.getSelectedHtml()}组件`, false);
+				}
+
+			} else {
+				// 单选对象处理（原有逻辑）
+				// 检查互斥组件
+				if (mutuallyExclusiveTypes.includes(selectedType)) {
+					// 检查是否已经存在互斥组件
+					let hasExclusiveComponent = false;
+					let existingType = null;
+
+					for (let i = 0; i < editor.selected.components.length; i++) {
+						const compType = editor.selected.components[i].type;
+						if (mutuallyExclusiveTypes.includes(compType) && compType !== selectedType) {
+							hasExclusiveComponent = true;
+							existingType = compType;
+							break;
+						}
+					}
+
+					if (hasExclusiveComponent) {
+						// 已存在互斥组件，显示提示信息
+						editor.showNotification(
+							strings.getKey('menubar/component/mutually_exclusive') ||
+							'只能选择一个互斥组件：点击触发、可移动或碰撞触发',
+							true
+						);
+						return;
 					}
 				}
 
-				if (hasExclusiveComponent) {
-					// 已存在互斥组件，显示提示信息
-					editor.showNotification(
-						strings.getKey('menubar/component/mutually_exclusive') ||
-						'只能选择一个互斥组件：点击触发、可移动或碰撞触发',
-						true
-					);
-					return;
+				const component = ComponentContainer.Create( selectedType, editor );
+
+				if ( component !== undefined ) {
+					const command = new AddComponentCommand( editor, editor.selected, component );
+					editor.execute( command );
+
+					const successMessage = strings.getKey('menubar/component/success').replace('{0}', select.getSelectedHtml());
+					editor.showNotification(successMessage, false);
 				}
-			}
-
-			const component = ComponentContainer.Create( selectedType, editor );
-
-			if ( component !== undefined ) {
-				const command = new AddComponentCommand( editor, editor.selected, component );
-				editor.execute( command );
-
-				const successMessage = strings.getKey('menubar/component/success').replace('{0}', select.getSelectedHtml());
-				editor.showNotification(successMessage, false);
 			}
 		} );
 		addComponentContainer.add( newComponent );
 
-		// 更新下拉框中互斥组件的可用性
-		updateMutuallyExclusiveOptions(select, object.components);
+		// 多选模式下，"选择项"下方增加分割线
+		if (isMultiSelect) {
+			// addComponentContainer.add(new UIHorizontalRule());
+		}
 
-		if ( object.components.length > 0 ) {
+		// 在多选模式下，更新可用的组件选项状态
+		if (isMultiSelect) {
+			addComponentContainer.add(new UIHorizontalRule());
+			// 找出所有选中对象中的互斥组件类型
+			const exclusiveTypes = new Set();
+
+			for (let i = 0; i < selectedObjects.length; i++) {
+				const object = selectedObjects[i];
+				if (object.components) {
+					for (let j = 0; j < object.components.length; j++) {
+						const compType = object.components[j].type;
+						if (mutuallyExclusiveTypes.includes(compType)) {
+							exclusiveTypes.add(compType);
+						}
+					}
+				}
+			}
+
+			// 获取下拉选项的DOM元素
+			const options = select.dom.options;
+
+			// 如果找到多种互斥组件类型，则禁用所有互斥组件选项
+			if (exclusiveTypes.size > 1) {
+				for (let i = 0; i < options.length; i++) {
+					const optionValue = options[i].value;
+					if (mutuallyExclusiveTypes.includes(optionValue)) {
+						options[i].disabled = true;
+						options[i].style.color = '#888';
+					}
+				}
+			}
+			// 如果只找到一种互斥组件类型，则只允许选择该类型
+			else if (exclusiveTypes.size === 1) {
+				const existingType = Array.from(exclusiveTypes)[0];
+				for (let i = 0; i < options.length; i++) {
+					const optionValue = options[i].value;
+					if (mutuallyExclusiveTypes.includes(optionValue) && optionValue !== existingType) {
+						options[i].disabled = true;
+						options[i].style.color = '#888';
+					}
+				}
+			}
+		} else if (object) {
+			// 单选模式下，更新下拉框中互斥组件的可用性
+			updateMutuallyExclusiveOptions(select, object.components);
+		}
+
+		// 在多选模式下，显示所有选中对象共有的组件
+		if (isMultiSelect) {
+			// 获取所有选中对象中共有的组件类型
+			const commonComponentTypes = new Map();
+
+			// 先统计每种组件类型在多少个对象中出现
+			for (let i = 0; i < selectedObjects.length; i++) {
+				const object = selectedObjects[i];
+				if (object.components) {
+					// 用于确保每个对象的每种组件类型只计数一次
+					const objectComponentTypes = new Set();
+
+					for (let j = 0; j < object.components.length; j++) {
+						const component = object.components[j];
+						objectComponentTypes.add(component.type);
+					}
+
+					// 更新计数
+					objectComponentTypes.forEach(type => {
+						if (commonComponentTypes.has(type)) {
+							commonComponentTypes.set(type, commonComponentTypes.get(type) + 1);
+						} else {
+							commonComponentTypes.set(type, 1);
+						}
+					});
+				}
+			}
+
+			// 查找所有对象共有的组件类型
+			const trulyCommonTypes = [];
+			commonComponentTypes.forEach((count, type) => {
+				if (count === selectedObjects.length) {
+					trulyCommonTypes.push(type);
+				}
+			});
+
+			// 如果存在共有组件类型，显示这些组件的UI
+			if (trulyCommonTypes.length > 0) {
+				const statsRow = new UIRow();
+				statsRow.add(new UIText('共有组件类型：' + trulyCommonTypes.join(', ')));
+				componentsContainer.add(statsRow);
+
+				const noteRow = new UIRow();
+				noteRow.add(new UIText('注意：组件实例是各对象独立的，无法一次编辑所有'));
+				componentsContainer.add(noteRow);
+				componentsContainer.add(new UIBreak());
+			} else {
+				const noteRow = new UIRow();
+				noteRow.add(new UIText('选中的对象没有共有的组件类型'));
+				componentsContainer.add(noteRow);
+				componentsContainer.add(new UIBreak());
+			}
+		}
+		// 单选模式下显示该对象的所有组件
+		else if (object && object.components && object.components.length > 0) {
 			// 显示已有组件列表
 			componentsContainer.setDisplay( 'block' );
 
