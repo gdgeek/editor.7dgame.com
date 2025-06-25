@@ -349,6 +349,9 @@ function Viewport( editor ) {
 						}
 					}
 				}
+
+                // 确保变换后刷新多选状态
+                editor.signals.multipleObjectsTransformChanged.dispatch(multiSelectGroup);
 			} else {
 				// 单选模式
 				switch (transformControls.getMode()) {

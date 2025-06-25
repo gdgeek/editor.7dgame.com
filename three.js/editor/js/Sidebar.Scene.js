@@ -499,14 +499,17 @@ function SidebarScene(editor) {
 
 		outliner.setOptions(options);
 
+		// 获取所有选中对象
+		const selectedObjects = editor.getSelectedObjects();
+
+		// 先设置主选中对象
 		if (editor.selected !== null) {
 			outliner.setValue(editor.selected.id);
 		}
 
-		// 处理多选状态
-		const selectedObjects = editor.getSelectedObjects();
+		// 如果是多选，恢复所有选中状态
 		if (selectedObjects.length > 1) {
-			// 恢复多选状态
+			// 恢复多选状态，遍历所有选中对象
 			for (let i = 0; i < selectedObjects.length; i++) {
 				const object = selectedObjects[i];
 				if (object !== editor.selected) { // 主选中对象已在上面处理

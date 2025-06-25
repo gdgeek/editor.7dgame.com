@@ -1116,6 +1116,9 @@ function SidebarMultipleObjects(editor) {
 		if (object === editor.multiSelectGroup) {
 			// 更新多选面板UI，但不触发更新命令
 			updateUIWithoutCommand(editor.getSelectedObjects());
+
+			// 触发场景结构树刷新
+			signals.sceneGraphChanged.dispatch();
 		}
 	});
 
