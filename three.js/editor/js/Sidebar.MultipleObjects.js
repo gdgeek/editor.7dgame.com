@@ -13,6 +13,7 @@ import { SetPositionCommand } from './commands/SetPositionCommand.js';
 import { SetRotationCommand } from './commands/SetRotationCommand.js';
 import { SetScaleCommand } from './commands/SetScaleCommand.js';
 import { SetValueCommand } from './commands/SetValueCommand.js';
+import { MultiTransformCommand } from './commands/MultiTransformCommand.js';
 
 function SidebarMultipleObjects(editor) {
 	const strings = editor.strings;
@@ -61,6 +62,98 @@ function SidebarMultipleObjects(editor) {
 	separator.setHeight('6px');
 	container.add(separator);
 
+	// 存储拖动状态的变量
+	let isDragging = false;
+	let dragCommand = null;
+	let dragStartPositions = {};
+	let dragStartRotations = {};
+	let dragStartScales = {};
+	let dragStartGroupTransform = {
+		position: null,
+		rotation: null,
+		scale: null
+	};
+
+	// 拖动开始时的处理函数
+	function onDragStart() {
+		const objects = editor.getSelectedObjects();
+		const multiSelectGroup = editor.multiSelectGroup;
+
+		// 只有在有选中对象和多选组时才处理
+		if (objects.length === 0 || !multiSelectGroup) return;
+
+		// 标记开始拖动
+		isDragging = true;
+
+		// 存储开始拖动时的状态
+		dragStartPositions = {};
+		dragStartRotations = {};
+		dragStartScales = {};
+
+		// 记录每个对象的初始变换
+		objects.forEach(object => {
+			dragStartPositions[object.id] = object.position.clone();
+			dragStartRotations[object.id] = object.rotation.clone();
+			dragStartScales[object.id] = object.scale.clone();
+		});
+
+		// 记录多选组的初始变换
+		dragStartGroupTransform = {
+			position: multiSelectGroup.position.clone(),
+			rotation: multiSelectGroup.rotation.clone(),
+			scale: multiSelectGroup.scale.clone()
+		};
+	}
+
+	// 拖动结束时的处理函数
+	function onDragEnd() {
+		if (!isDragging) return;
+
+		const objects = editor.getSelectedObjects();
+		const multiSelectGroup = editor.multiSelectGroup;
+
+		// 只有在拖动状态且有选中对象时才处理
+		if (objects.length === 0 || !multiSelectGroup) {
+			isDragging = false;
+			return;
+		}
+
+		// 创建命令来记录整个拖动过程
+		const multiCommand = new MultiTransformCommand(editor, objects);
+
+		// 手动设置命令的初始和最终状态
+		objects.forEach(object => {
+			if (dragStartPositions[object.id]) {
+				multiCommand.oldPositions[object.id] = dragStartPositions[object.id];
+				multiCommand.newPositions[object.id] = object.position.clone();
+			}
+			if (dragStartRotations[object.id]) {
+				multiCommand.oldRotations[object.id] = dragStartRotations[object.id];
+				multiCommand.newRotations[object.id] = object.rotation.clone();
+			}
+			if (dragStartScales[object.id]) {
+				multiCommand.oldScales[object.id] = dragStartScales[object.id];
+				multiCommand.newScales[object.id] = object.scale.clone();
+			}
+		});
+
+		// 设置多选组的状态
+		multiCommand.oldGroupPosition = dragStartGroupTransform.position;
+		multiCommand.oldGroupRotation = dragStartGroupTransform.rotation;
+		multiCommand.oldGroupScale = dragStartGroupTransform.scale;
+
+		multiCommand.newGroupPosition = multiSelectGroup.position.clone();
+		multiCommand.newGroupRotation = multiSelectGroup.rotation.clone();
+		multiCommand.newGroupScale = multiSelectGroup.scale.clone();
+
+		// 执行命令
+		editor.execute(multiCommand);
+
+		// 重置拖动状态
+		isDragging = false;
+		dragCommand = null;
+	}
+
 	// 位置
 	const multipleObjectsPositionRow = new UIRow();
 	const multipleObjectsPositionX = new UINumber()
@@ -75,6 +168,17 @@ function SidebarMultipleObjects(editor) {
 		.setPrecision(3)
 		.setWidth('40px')
 		.onChange(updatePosition);
+
+	// 添加拖动事件监听
+	multipleObjectsPositionX.dom.addEventListener('mousedown', onDragStart);
+	multipleObjectsPositionX.dom.addEventListener('mouseup', onDragEnd);
+	multipleObjectsPositionY.dom.addEventListener('mousedown', onDragStart);
+	multipleObjectsPositionY.dom.addEventListener('mouseup', onDragEnd);
+	multipleObjectsPositionZ.dom.addEventListener('mousedown', onDragStart);
+	multipleObjectsPositionZ.dom.addEventListener('mouseup', onDragEnd);
+
+	// 全局鼠标抬起事件，确保捕获在输入框外释放鼠标的情况
+	document.addEventListener('mouseup', onDragEnd);
 
 	multipleObjectsPositionRow.add(new UIText('位置').setWidth('90px'));
 	multipleObjectsPositionRow.add(multipleObjectsPositionX, 'X');
@@ -172,6 +276,14 @@ function SidebarMultipleObjects(editor) {
 		.setPrecision(3)
 		.setWidth('40px')
 		.onChange(updateRotation);
+
+	// 添加拖动事件监听
+	multipleObjectsRotationX.dom.addEventListener('mousedown', onDragStart);
+	multipleObjectsRotationX.dom.addEventListener('mouseup', onDragEnd);
+	multipleObjectsRotationY.dom.addEventListener('mousedown', onDragStart);
+	multipleObjectsRotationY.dom.addEventListener('mouseup', onDragEnd);
+	multipleObjectsRotationZ.dom.addEventListener('mousedown', onDragStart);
+	multipleObjectsRotationZ.dom.addEventListener('mouseup', onDragEnd);
 
 	multipleObjectsRotationRow.add(new UIText('旋转').setWidth('90px'));
 	multipleObjectsRotationRow.add(multipleObjectsRotationX, 'X');
@@ -272,6 +384,14 @@ function SidebarMultipleObjects(editor) {
 		.setWidth('40px')
 		.setValue(1)
 		.onChange(updateScale);
+
+	// 添加拖动事件监听
+	multipleObjectsScaleX.dom.addEventListener('mousedown', onDragStart);
+	multipleObjectsScaleX.dom.addEventListener('mouseup', onDragEnd);
+	multipleObjectsScaleY.dom.addEventListener('mousedown', onDragStart);
+	multipleObjectsScaleY.dom.addEventListener('mouseup', onDragEnd);
+	multipleObjectsScaleZ.dom.addEventListener('mousedown', onDragStart);
+	multipleObjectsScaleZ.dom.addEventListener('mouseup', onDragEnd);
 
 	multipleObjectsScaleRow.add(new UIText('缩放').setWidth('90px'));
 	multipleObjectsScaleRow.add(multipleObjectsScaleX, 'X');
@@ -526,23 +646,33 @@ function SidebarMultipleObjects(editor) {
 		// 获取辅助功能按钮行的位置
 		const actionsRowBottom = multipleObjectsActionsRow.dom.offsetTop;
 
-		// 更新按钮位置，放在数据区域的上方并水平居中，避免与辅助功能按钮冲突
+		// 更新按钮位置，放在数据区域的下方并水平居中
 		const buttonWidth = transformCopyButton.dom.offsetWidth + transformPasteButton.dom.offsetWidth + 2; // +2是按钮间距
 		const buttonLeft = dataAreaLeft + (dataAreaWidth - buttonWidth) / 2;
 
 		transformActionsRow.dom.style.position = 'absolute';
 		transformActionsRow.dom.style.left = buttonLeft + 'px';
-		// 放在变换区域下方，但确保不与辅助功能按钮行重叠
+		// 放在变换区域下方
 		const buttonTop = scaleRowBottom + 5;
 
-		// 判断是否会与辅助功能按钮行重叠
-		if (actionsRowBottom > 0 && buttonTop + 24 > actionsRowBottom) {
-			// 如果会重叠，则放在变换区域上方
-			transformActionsRow.dom.style.top = (posRowTop - 30) + 'px';
-		} else {
-			// 否则放在变换区域下方
-			transformActionsRow.dom.style.top = buttonTop + 'px';
+		// 统一放在下方，与Sidebar.Object.js保持一致
+		transformActionsRow.dom.style.top = buttonTop + 'px';
+	};
+
+	// 创建空白间隙行
+	let spacerRow = null;
+
+	// 创建或获取间隙行
+	const getSpacerRow = function() {
+		if (!spacerRow) {
+			spacerRow = new UIPanel();
+			spacerRow.setDisplay('none');
+			spacerRow.dom.style.border = 'none';
+			spacerRow.dom.style.marginTop = '0';
+			spacerRow.dom.style.marginBottom = '0';
+			container.dom.insertBefore(spacerRow.dom, multipleObjectsActionsRow.dom);
 		}
+		return spacerRow;
 	};
 
 	// 显示变换操作和边框
@@ -550,12 +680,20 @@ function SidebarMultipleObjects(editor) {
 		transformActionsRow.setDisplay('');
 		transformBorder.style.display = 'block';
 		updateBorderPosition();
+
+		// 显示间隙空白行
+		getSpacerRow().setDisplay('');
 	};
 
 	// 隐藏变换操作和边框
 	const hideTransformActions = function() {
 		transformActionsRow.setDisplay('none');
 		transformBorder.style.display = 'none';
+
+		// 隐藏间隙空白行
+		if (spacerRow) {
+			spacerRow.setDisplay('none');
+		}
 	};
 
 	// 存储事件监听器引用，以便稍后移除
@@ -720,38 +858,48 @@ function SidebarMultipleObjects(editor) {
 	// 辅助功能按钮
 	const multipleObjectsActionsRow = new UIRow();
 
-	// 回到保存前位置按钮
-	const resetPositionButton = new UIButton('恢复位置')
+	// 归零位置按钮
+	const resetPositionButton = new UIButton('重置位置')
 		.setWidth('80px')
 		.onClick(function() {
 			// 保存当前选中的对象列表
-			const selectedObjects = editor.getSelectedObjects();
+			// const selectedObjects = editor.getSelectedObjects();
 
+			// const multiSelectGroup = editor.multiSelectGroup;
+            // if (multiSelectGroup && multiSelectGroup.userData.savedPosition) {
+            //     const savedPos = multiSelectGroup.userData.savedPosition;
+            //     multipleObjectsPositionX.setValue(savedPos.x);
+            //     multipleObjectsPositionY.setValue(savedPos.y);
+            //     multipleObjectsPositionZ.setValue(savedPos.z);
+            //     updatePosition();
+            //     editor.showNotification('已恢复到上次保存的位置');
+            // } else {
+            //     // 如果没有保存过位置，提示用户
+            //     editor.showNotification('未找到已保存的位置');
+            // }
+			// 设置位置为(0,0,0)
+			multipleObjectsPositionX.setValue(0);
+			multipleObjectsPositionY.setValue(0);
+			multipleObjectsPositionZ.setValue(0);
+			updatePosition();
+			editor.showNotification('位置已重置');
+
+			// 触发多选对象变换更新信号，确保包围盒更新
 			const multiSelectGroup = editor.multiSelectGroup;
-			if (multiSelectGroup && multiSelectGroup.userData.savedPosition) {
-				const savedPos = multiSelectGroup.userData.savedPosition;
-				multipleObjectsPositionX.setValue(savedPos.x);
-				multipleObjectsPositionY.setValue(savedPos.y);
-				multipleObjectsPositionZ.setValue(savedPos.z);
-				updatePosition();
-				editor.showNotification('已恢复到上次保存的位置');
-
-				// 触发多选对象变换更新信号，确保包围盒更新
+			if (multiSelectGroup) {
 				editor.signals.multipleObjectsTransformChanged.dispatch(multiSelectGroup);
-			} else {
-				// 如果没有保存过位置，提示用户
-				editor.showNotification('未找到已保存的位置');
 			}
 		});
 
 	// 重置旋转按钮
-	const resetRotationButton = new UIButton('归零旋转')
+	const resetRotationButton = new UIButton('重置旋转')
 		.setWidth('80px')
 		.onClick(function() {
 			multipleObjectsRotationX.setValue(0);
 			multipleObjectsRotationY.setValue(0);
 			multipleObjectsRotationZ.setValue(0);
 			updateRotation();
+			editor.showNotification('旋转已重置');
 
 			// 触发多选对象变换更新信号，确保包围盒更新
 			const multiSelectGroup = editor.multiSelectGroup;
@@ -761,13 +909,14 @@ function SidebarMultipleObjects(editor) {
 		});
 
 	// 重置缩放按钮
-	const resetScaleButton = new UIButton('归一缩放')
+	const resetScaleButton = new UIButton('重置缩放')
 		.setWidth('80px')
 		.onClick(function() {
 			multipleObjectsScaleX.setValue(1);
 			multipleObjectsScaleY.setValue(1);
 			multipleObjectsScaleZ.setValue(1);
 			updateScale();
+			editor.showNotification('缩放已重置');
 
 			// 触发多选对象变换更新信号，确保包围盒更新
 			const multiSelectGroup = editor.multiSelectGroup;
@@ -810,11 +959,19 @@ function SidebarMultipleObjects(editor) {
 			if (object.userData.offsetFromCenter) {
 				const newPosition = multiSelectGroup.position.clone().add(object.userData.offsetFromCenter);
 
-				// 只有当位置真的改变时才执行命令
+				// 更新对象位置
 				if (!object.position.equals(newPosition)) {
-					editor.execute(new SetPositionCommand(editor, object, newPosition));
+					object.position.copy(newPosition);
 				}
 			}
+		}
+
+		// 只有在不是拖动状态下才创建和执行命令
+		// 如果是拖动状态，会在onDragEnd中统一创建一个命令
+		if (!isDragging) {
+			const multiCommand = new MultiTransformCommand(editor, objects, 'MultiPositionCommand', '多对象位置变换');
+			multiCommand.updateNewState(); // 更新变换后的状态
+			editor.execute(multiCommand);
 		}
 
 		// 触发多选对象变换更新信号，用于更新包围盒
@@ -849,10 +1006,18 @@ function SidebarMultipleObjects(editor) {
 			const object = objects[i];
 			const newRotation = new THREE.Euler(newX, newY, newZ);
 
-			// 只有当旋转真的改变时才执行命令
+			// 更新对象旋转
 			if (!object.rotation.equals(newRotation)) {
-				editor.execute(new SetRotationCommand(editor, object, newRotation));
+				object.rotation.copy(newRotation);
 			}
+		}
+
+		// 只有在不是拖动状态下才创建和执行命令
+		// 如果是拖动状态，会在onDragEnd中统一创建一个命令
+		if (!isDragging) {
+			const multiCommand = new MultiTransformCommand(editor, objects, 'MultiRotationCommand', '多对象旋转变换');
+			multiCommand.updateNewState(); // 更新变换后的状态
+			editor.execute(multiCommand);
 		}
 
 		// 触发多选对象变换更新信号，用于更新包围盒
@@ -887,10 +1052,18 @@ function SidebarMultipleObjects(editor) {
 			const object = objects[i];
 			const newScale = new THREE.Vector3(newX, newY, newZ);
 
-			// 只有当缩放真的改变时才执行命令
+			// 更新对象缩放
 			if (!object.scale.equals(newScale)) {
-				editor.execute(new SetScaleCommand(editor, object, newScale));
+				object.scale.copy(newScale);
 			}
+		}
+
+		// 只有在不是拖动状态下才创建和执行命令
+		// 如果是拖动状态，会在onDragEnd中统一创建一个命令
+		if (!isDragging) {
+			const multiCommand = new MultiTransformCommand(editor, objects, 'MultiScaleCommand', '多对象缩放变换');
+			multiCommand.updateNewState(); // 更新变换后的状态
+			editor.execute(multiCommand);
 		}
 
 		// 触发多选对象变换更新信号，用于更新包围盒

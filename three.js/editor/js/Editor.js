@@ -74,6 +74,7 @@ function Editor() {
 		objectAdded: new Signal(),
 		objectChanged: new Signal(),
 		objectRemoved: new Signal(),
+		objectsChanged: new Signal(), // 多个对象同时变化的信号
 
 		cameraAdded: new Signal(),
 		cameraRemoved: new Signal(),

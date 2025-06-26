@@ -461,6 +461,48 @@ function SidebarObject( editor ) {
 
 	container.add( objectScaleRow );
 
+	// 添加重置位置/旋转/缩放按钮行
+	const objectResetRow = new UIRow();
+
+	// 重置位置按钮
+	const resetPositionButton = new UIButton('重置位置')
+		.setWidth('80px')
+		.onClick(function() {
+			if (editor.selected !== null) {
+				const newPosition = new THREE.Vector3(0, 0, 0);
+				editor.execute(new SetPositionCommand(editor, editor.selected, newPosition));
+				editor.showNotification('位置已重置');
+			}
+		});
+
+	// 重置旋转按钮
+	const resetRotationButton = new UIButton('重置旋转')
+		.setWidth('80px')
+		.onClick(function() {
+			if (editor.selected !== null) {
+				const newRotation = new THREE.Euler(0, 0, 0);
+				editor.execute(new SetRotationCommand(editor, editor.selected, newRotation));
+				editor.showNotification('旋转已重置');
+			}
+		});
+
+	// 重置缩放按钮
+	const resetScaleButton = new UIButton('重置缩放')
+		.setWidth('80px')
+		.onClick(function() {
+			if (editor.selected !== null) {
+				const newScale = new THREE.Vector3(1, 1, 1);
+				editor.execute(new SetScaleCommand(editor, editor.selected, newScale));
+				editor.showNotification('缩放已重置');
+			}
+		});
+
+	objectResetRow.add(resetPositionButton);
+	objectResetRow.add(resetRotationButton);
+	objectResetRow.add(resetScaleButton);
+
+	container.add(objectResetRow);
+
 	// 添加全部变换数据的复制粘贴行
 	const transformActionsRow = new UIRow();
 
@@ -568,6 +610,9 @@ function SidebarObject( editor ) {
 	// 创建并获取边框元素
 	let transformBorder = createTransformBorder();
 
+	// 创建空白间隙行变量
+	let spacerRow = null;
+
 	// 更新边框位置和大小
 	const updateBorderPosition = function() {
 		if (!objectPositionRow.dom || !objectScaleRow.dom) return;
@@ -607,17 +652,44 @@ function SidebarObject( editor ) {
 		transformActionsRow.dom.style.top = (scaleRowBottom + 5) + 'px';
 	};
 
+	// 创建或获取间隙行
+	const getSpacerRow = function() {
+		if (!spacerRow) {
+			spacerRow = new UIPanel();
+			spacerRow.setDisplay('none');
+			spacerRow.dom.style.border = 'none';
+			spacerRow.dom.style.marginTop = '0';
+			spacerRow.dom.style.marginBottom = '0';
+
+			// 将间隙行插入到适当位置（在objectResetRow前）
+			if (container.dom.contains(objectResetRow.dom)) {
+				container.dom.insertBefore(spacerRow.dom, objectResetRow.dom);
+			} else {
+				container.add(spacerRow);
+			}
+		}
+		return spacerRow;
+	};
+
 	// 显示变换操作和边框
 	const showTransformActions = function() {
 		transformActionsRow.setDisplay('');
 		transformBorder.style.display = 'block';
 		updateBorderPosition();
+
+		// 显示间隙空白行
+		getSpacerRow().setDisplay('');
 	};
 
 	// 隐藏变换操作和边框
 	const hideTransformActions = function() {
 		transformActionsRow.setDisplay('none');
 		transformBorder.style.display = 'none';
+
+		// 隐藏间隙空白行
+		if (spacerRow) {
+			spacerRow.setDisplay('none');
+		}
 	};
 
 	// 创建一个透明的悬停区域覆盖三个变换行的数据区域

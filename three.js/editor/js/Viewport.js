@@ -14,6 +14,7 @@ import { VR } from './Viewport.VR.js';
 import { SetPositionCommand } from './commands/SetPositionCommand.js';
 import { SetRotationCommand } from './commands/SetRotationCommand.js';
 import { SetScaleCommand } from './commands/SetScaleCommand.js';
+import { MultiTransformCommand } from './commands/MultiTransformCommand.js';
 
 import { RoomEnvironment } from '../../examples/jsm/environments/RoomEnvironment.js';
 
@@ -267,6 +268,13 @@ function Viewport( editor ) {
 			// 设置防止自动移位标记
 			preventAutoMove = true;
 
+			// 保存多选组本身的初始变换
+			multiSelectGroup.userData.originalTransform = {
+				position: multiSelectGroup.position.clone(),
+				rotation: multiSelectGroup.rotation.clone(),
+				scale: multiSelectGroup.scale.clone()
+			};
+
 			for (let i = 0; i < selectedObjects.length; i++) {
 				const obj = selectedObjects[i];
 				if (obj) { // 确保对象存在
@@ -295,43 +303,103 @@ function Viewport( editor ) {
 		if ( object !== undefined ) {
 
 			if (object === multiSelectGroup) {
-				// 多选模式：为每个对象创建单独的命令
+				// 多选模式：使用单一命令来处理所有对象的变换
 				const selectedObjects = multiSelectGroup.userData.selectedObjects || [];
+				if (selectedObjects.length === 0 || multipleObjectsTransformOnDown.length === 0) {
+					return;
+				}
 
-				// 根据变换模式决定要应用的命令
-				switch (transformControls.getMode()) {
-					case 'translate':
-						for (let i = 0; i < multipleObjectsTransformOnDown.length; i++) {
-							const data = multipleObjectsTransformOnDown[i];
-							const obj = data.object;
-							// 确保对象存在且位置已更改
-							if (obj && !data.position.equals(obj.position)) {
-								editor.execute(new SetPositionCommand(editor, obj, obj.position, data.position));
-							}
-						}
-						break;
+				// MultiTransformCommand已在文件顶部导入
+				if (typeof MultiTransformCommand === 'undefined') {
+					console.warn('MultiTransformCommand not available, falling back to individual commands');
 
-					case 'rotate':
-						for (let i = 0; i < multipleObjectsTransformOnDown.length; i++) {
-							const data = multipleObjectsTransformOnDown[i];
-							const obj = data.object;
-							// 确保对象存在且旋转已更改
-							if (obj && !data.rotation.equals(obj.rotation)) {
-								editor.execute(new SetRotationCommand(editor, obj, obj.rotation, data.rotation));
+					// 根据变换模式决定要应用的命令
+					switch (transformControls.getMode()) {
+						case 'translate':
+							for (let i = 0; i < multipleObjectsTransformOnDown.length; i++) {
+								const data = multipleObjectsTransformOnDown[i];
+								const obj = data.object;
+								// 确保对象存在且位置已更改
+								if (obj && !data.position.equals(obj.position)) {
+									editor.execute(new SetPositionCommand(editor, obj, obj.position, data.position));
+								}
 							}
-						}
-						break;
+							break;
 
-					case 'scale':
-						for (let i = 0; i < multipleObjectsTransformOnDown.length; i++) {
-							const data = multipleObjectsTransformOnDown[i];
-							const obj = data.object;
-							// 确保对象存在且缩放已更改
-							if (obj && !data.scale.equals(obj.scale)) {
-								editor.execute(new SetScaleCommand(editor, obj, obj.scale, data.scale));
+						case 'rotate':
+							for (let i = 0; i < multipleObjectsTransformOnDown.length; i++) {
+								const data = multipleObjectsTransformOnDown[i];
+								const obj = data.object;
+								// 确保对象存在且旋转已更改
+								if (obj && !data.rotation.equals(obj.rotation)) {
+									editor.execute(new SetRotationCommand(editor, obj, obj.rotation, data.rotation));
+								}
 							}
+							break;
+
+						case 'scale':
+							for (let i = 0; i < multipleObjectsTransformOnDown.length; i++) {
+								const data = multipleObjectsTransformOnDown[i];
+								const obj = data.object;
+								// 确保对象存在且缩放已更改
+								if (obj && !data.scale.equals(obj.scale)) {
+									editor.execute(new SetScaleCommand(editor, obj, obj.scale, data.scale));
+								}
+							}
+							break;
+					}
+				} else {
+					// 创建一个多变换命令
+					const multiCommand = new MultiTransformCommand(editor, selectedObjects);
+
+					// 设置命令的模式和名称
+					const mode = transformControls.getMode();
+					switch (mode) {
+						case 'translate':
+							multiCommand.type = 'MultiPositionCommand';
+							multiCommand.name = '多对象位置变换';
+							break;
+						case 'rotate':
+							multiCommand.type = 'MultiRotationCommand';
+							multiCommand.name = '多对象旋转变换';
+							break;
+						case 'scale':
+							multiCommand.type = 'MultiScaleCommand';
+							multiCommand.name = '多对象缩放变换';
+							break;
+					}
+
+					// 手动设置命令的初始和最终状态
+					for (let i = 0; i < multipleObjectsTransformOnDown.length; i++) {
+						const data = multipleObjectsTransformOnDown[i];
+						const obj = data.object;
+						if (obj) {
+							// 设置初始状态
+							multiCommand.oldPositions[obj.id] = data.position;
+							multiCommand.oldRotations[obj.id] = data.rotation;
+							multiCommand.oldScales[obj.id] = data.scale;
+
+							// 设置当前状态
+							multiCommand.newPositions[obj.id] = obj.position.clone();
+							multiCommand.newRotations[obj.id] = obj.rotation.clone();
+							multiCommand.newScales[obj.id] = obj.scale.clone();
 						}
-						break;
+					}
+
+					// 存储多选组的状态
+					// 获取multiSelectGroup在变换前的值，理论上应该是在mouseDown时保存的
+					// 如果没有原始值，先尝试获取在mouseDown时保存的临时组位置
+					const tmpGroup = multiSelectGroup.userData.originalTransform || {};
+					multiCommand.oldGroupPosition = tmpGroup.position || multiSelectGroup.position.clone();
+					multiCommand.oldGroupRotation = tmpGroup.rotation || multiSelectGroup.rotation.clone();
+					multiCommand.oldGroupScale = tmpGroup.scale || multiSelectGroup.scale.clone();
+
+					multiCommand.newGroupPosition = multiSelectGroup.position.clone();
+					multiCommand.newGroupRotation = multiSelectGroup.rotation.clone();
+					multiCommand.newGroupScale = multiSelectGroup.scale.clone();
+
+					// 执行命令
+					editor.execute(multiCommand);
 				}
 
 				// 清除临时存储的对象变换数据
@@ -475,6 +543,30 @@ function Viewport( editor ) {
 		document.addEventListener( 'mouseup', onMouseUp );
 
 	}
+
+	// 添加objectChanged事件监听器用于处理sidebar中多选对象变换命令
+	editor.signals.objectChanged.add(function(object) {
+		if (object === multiSelectGroup) {
+			// 当多选组发生变化时，应用变换到所有选中对象
+			const selectedObjects = multiSelectGroup.userData.selectedObjects || [];
+
+			if (selectedObjects.length > 0 && multiSelectGroup.userData) {
+				// 如果有onPositionChange等回调，调用它们
+				if (multiSelectGroup.userData.onPositionChange) {
+					multiSelectGroup.userData.onPositionChange();
+				}
+				if (multiSelectGroup.userData.onRotationChange) {
+					multiSelectGroup.userData.onRotationChange();
+				}
+				if (multiSelectGroup.userData.onScaleChange) {
+					multiSelectGroup.userData.onScaleChange();
+				}
+
+				// 触发多选对象变换变化信号
+				editor.signals.multipleObjectsTransformChanged.dispatch(multiSelectGroup);
+			}
+		}
+	});
 
 	function onMouseUp( event ) {
 
