@@ -6,7 +6,8 @@ import {
 	UIInput,
 	UIButton,
 	UIText,
-	UINumber
+	UINumber,
+	UICheckbox
 } from './libs/ui.js';
 
 import { SetPositionCommand } from './commands/SetPositionCommand.js';
@@ -475,6 +476,93 @@ function SidebarMultipleObjects(editor) {
 
 	container.add(multipleObjectsScaleRow);
 
+	// 辅助功能按钮
+	const multipleObjectsActionsRow = new UIRow();
+
+	// 归零位置按钮
+	const resetPositionButton = new UIButton('重置位置')
+		.setWidth('80px')
+		.onClick(function() {
+			// 保存当前选中的对象列表
+			// const selectedObjects = editor.getSelectedObjects();
+
+			// const multiSelectGroup = editor.multiSelectGroup;
+            // if (multiSelectGroup && multiSelectGroup.userData.savedPosition) {
+            //     const savedPos = multiSelectGroup.userData.savedPosition;
+            //     multipleObjectsPositionX.setValue(savedPos.x);
+            //     multipleObjectsPositionY.setValue(savedPos.y);
+            //     multipleObjectsPositionZ.setValue(savedPos.z);
+            //     updatePosition();
+            //     editor.showNotification('已恢复到上次保存的位置');
+            // } else {
+            //     // 如果没有保存过位置，提示用户
+            //     editor.showNotification('未找到已保存的位置');
+            // }
+			// 设置位置为(0,0,0)
+			multipleObjectsPositionX.setValue(0);
+			multipleObjectsPositionY.setValue(0);
+			multipleObjectsPositionZ.setValue(0);
+			updatePosition();
+			editor.showNotification('位置已重置');
+
+			// 触发多选对象变换更新信号，确保包围盒更新
+			const multiSelectGroup = editor.multiSelectGroup;
+			if (multiSelectGroup) {
+				editor.signals.multipleObjectsTransformChanged.dispatch(multiSelectGroup);
+			}
+		});
+
+	// 重置旋转按钮
+	const resetRotationButton = new UIButton('重置旋转')
+		.setWidth('80px')
+		.onClick(function() {
+			multipleObjectsRotationX.setValue(0);
+			multipleObjectsRotationY.setValue(0);
+			multipleObjectsRotationZ.setValue(0);
+			updateRotation();
+			editor.showNotification('旋转已重置');
+
+			// 触发多选对象变换更新信号，确保包围盒更新
+			const multiSelectGroup = editor.multiSelectGroup;
+			if (multiSelectGroup) {
+				editor.signals.multipleObjectsTransformChanged.dispatch(multiSelectGroup);
+			}
+		});
+
+	// 重置缩放按钮
+	const resetScaleButton = new UIButton('重置缩放')
+		.setWidth('80px')
+		.onClick(function() {
+			multipleObjectsScaleX.setValue(1);
+			multipleObjectsScaleY.setValue(1);
+			multipleObjectsScaleZ.setValue(1);
+			updateScale();
+			editor.showNotification('缩放已重置');
+
+			// 触发多选对象变换更新信号，确保包围盒更新
+			const multiSelectGroup = editor.multiSelectGroup;
+			if (multiSelectGroup) {
+				editor.signals.multipleObjectsTransformChanged.dispatch(multiSelectGroup);
+			}
+		});
+
+	multipleObjectsActionsRow.add(resetPositionButton);
+	multipleObjectsActionsRow.add(resetRotationButton);
+	multipleObjectsActionsRow.add(resetScaleButton);
+
+	container.add(multipleObjectsActionsRow);
+
+	// 在这里添加可见性模块，位于重置按钮组后面
+	const multipleObjectsVisibleRow = new UIRow();
+	const multipleObjectsVisible = new UICheckbox().onChange(updateVisibility);
+
+	multipleObjectsVisibleRow.add(
+		new UIText('可见性').setWidth('90px')
+	);
+	multipleObjectsVisibleRow.add(multipleObjectsVisible);
+
+	container.add(multipleObjectsVisibleRow);
+
 	// 添加全部变换数据的复制粘贴行
 	const transformActionsRow = new UIRow();
 
@@ -855,82 +943,6 @@ function SidebarMultipleObjects(editor) {
 		});
 	};
 
-	// 辅助功能按钮
-	const multipleObjectsActionsRow = new UIRow();
-
-	// 归零位置按钮
-	const resetPositionButton = new UIButton('重置位置')
-		.setWidth('80px')
-		.onClick(function() {
-			// 保存当前选中的对象列表
-			// const selectedObjects = editor.getSelectedObjects();
-
-			// const multiSelectGroup = editor.multiSelectGroup;
-            // if (multiSelectGroup && multiSelectGroup.userData.savedPosition) {
-            //     const savedPos = multiSelectGroup.userData.savedPosition;
-            //     multipleObjectsPositionX.setValue(savedPos.x);
-            //     multipleObjectsPositionY.setValue(savedPos.y);
-            //     multipleObjectsPositionZ.setValue(savedPos.z);
-            //     updatePosition();
-            //     editor.showNotification('已恢复到上次保存的位置');
-            // } else {
-            //     // 如果没有保存过位置，提示用户
-            //     editor.showNotification('未找到已保存的位置');
-            // }
-			// 设置位置为(0,0,0)
-			multipleObjectsPositionX.setValue(0);
-			multipleObjectsPositionY.setValue(0);
-			multipleObjectsPositionZ.setValue(0);
-			updatePosition();
-			editor.showNotification('位置已重置');
-
-			// 触发多选对象变换更新信号，确保包围盒更新
-			const multiSelectGroup = editor.multiSelectGroup;
-			if (multiSelectGroup) {
-				editor.signals.multipleObjectsTransformChanged.dispatch(multiSelectGroup);
-			}
-		});
-
-	// 重置旋转按钮
-	const resetRotationButton = new UIButton('重置旋转')
-		.setWidth('80px')
-		.onClick(function() {
-			multipleObjectsRotationX.setValue(0);
-			multipleObjectsRotationY.setValue(0);
-			multipleObjectsRotationZ.setValue(0);
-			updateRotation();
-			editor.showNotification('旋转已重置');
-
-			// 触发多选对象变换更新信号，确保包围盒更新
-			const multiSelectGroup = editor.multiSelectGroup;
-			if (multiSelectGroup) {
-				editor.signals.multipleObjectsTransformChanged.dispatch(multiSelectGroup);
-			}
-		});
-
-	// 重置缩放按钮
-	const resetScaleButton = new UIButton('重置缩放')
-		.setWidth('80px')
-		.onClick(function() {
-			multipleObjectsScaleX.setValue(1);
-			multipleObjectsScaleY.setValue(1);
-			multipleObjectsScaleZ.setValue(1);
-			updateScale();
-			editor.showNotification('缩放已重置');
-
-			// 触发多选对象变换更新信号，确保包围盒更新
-			const multiSelectGroup = editor.multiSelectGroup;
-			if (multiSelectGroup) {
-				editor.signals.multipleObjectsTransformChanged.dispatch(multiSelectGroup);
-			}
-		});
-
-	multipleObjectsActionsRow.add(resetPositionButton);
-	multipleObjectsActionsRow.add(resetRotationButton);
-	multipleObjectsActionsRow.add(resetScaleButton);
-
-	container.add(multipleObjectsActionsRow);
-
 	// 更新函数
 	function updatePosition() {
 		const objects = editor.getSelectedObjects();
@@ -1072,6 +1084,30 @@ function SidebarMultipleObjects(editor) {
 		}
 	}
 
+	// 更新可见性函数
+	function updateVisibility() {
+		const objects = editor.getSelectedObjects();
+		const newVisibility = multipleObjectsVisible.getValue();
+
+		// 为每个对象设置可见性
+		for (let i = 0; i < objects.length; i++) {
+			const object = objects[i];
+			if (object.visible !== newVisibility) {
+				editor.execute(
+					new SetValueCommand(
+						editor,
+						object,
+						'visible',
+						newVisibility
+					)
+				);
+			}
+		}
+
+		// 触发scene变化信号
+		editor.signals.sceneGraphChanged.dispatch();
+	}
+
 	// 用于更新UI的方法，但不触发命令
 	function updateUIWithoutCommand(objects) {
 		if (!objects || objects.length === 0) return;
@@ -1153,6 +1189,17 @@ function SidebarMultipleObjects(editor) {
 			multipleObjectsScaleY.onChangeCallback = origScaleYOnChange;
 			multipleObjectsScaleZ.onChangeCallback = origScaleZOnChange;
 		}
+
+		// 检查可见性
+		// 判断逻辑：如果所有对象都可见则为true，如果有任何一个不可见则为false
+		let allVisible = true;
+		for (let i = 0; i < objects.length; i++) {
+			if (!objects[i].visible) {
+				allVisible = false;
+				break;
+			}
+		}
+		multipleObjectsVisible.setValue(allVisible);
 	}
 
 	// 用于更新UI的方法
@@ -1222,6 +1269,17 @@ function SidebarMultipleObjects(editor) {
 			multipleObjectsScaleY.setValue(firstObject.scale.y);
 			multipleObjectsScaleZ.setValue(firstObject.scale.z);
 		}
+
+		// 检查可见性
+		// 判断逻辑：如果所有对象都可见则为true，如果有任何一个不可见则为false
+		let allVisible = true;
+		for (let i = 0; i < objects.length; i++) {
+			if (!objects[i].visible) {
+				allVisible = false;
+				break;
+			}
+		}
+		multipleObjectsVisible.setValue(allVisible);
 	}
 
 	// 事件监听
