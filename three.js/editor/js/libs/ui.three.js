@@ -405,8 +405,10 @@ class UIOutliner extends UIDiv {
 
 			this.setValue( this.options[ index ].value );
 
-			const changeEvent = document.createEvent( 'HTMLEvents' );
-			changeEvent.initEvent( 'change', true, true );
+			const changeEvent = new CustomEvent('change', {
+				bubbles: true,
+				cancelable: true
+			});
 			this.dom.dispatchEvent( changeEvent );
 
 		}
@@ -461,8 +463,10 @@ class UIOutliner extends UIDiv {
 				scope.setValue(this.value, multiSelect);
 			}
 
-			const changeEvent = document.createEvent('HTMLEvents');
-			changeEvent.initEvent('change', true, true);
+			const changeEvent = new CustomEvent('change', {
+				bubbles: true,
+				cancelable: true
+			});
 			scope.dom.dispatchEvent(changeEvent);
 		}
 
@@ -587,8 +591,10 @@ class UIOutliner extends UIDiv {
 			const cmd = new MoveMultipleObjectsCommand(editor, objects, newParent, nextObject);
 			editor.execute(cmd);
 
-			const changeEvent = document.createEvent('HTMLEvents');
-			changeEvent.initEvent('change', true, true);
+			const changeEvent = new CustomEvent('change', {
+				bubbles: true,
+				cancelable: true
+			});
 			scope.dom.dispatchEvent(changeEvent);
 		}
 
