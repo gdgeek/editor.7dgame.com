@@ -283,7 +283,7 @@ function SidebarCommand(editor) {
 			// 修改为与组件部分一致的显示逻辑
 			if (editor.type && editor.type.toLowerCase() === 'meta') {
 				const objectType = object.type ? object.type.toLowerCase() : '';
-				if (objectType === 'mesh' || objectType === 'polygen' || objectType === 'voxel' || objectType === 'entity') {
+				if (objectType === 'mesh' || objectType === 'entity') {
 					container.setDisplay('block');
 					update();
 					return;
