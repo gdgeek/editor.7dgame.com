@@ -22,7 +22,7 @@ function Sidebar(editor) {
 		new SidebarScene(editor),
 
 		new SidebarProperties(editor),
-		//new SidebarAnimation(editor)
+		new SidebarAnimation(editor)
 	)
 
 	if (editor.type.toLowerCase() == 'meta') {

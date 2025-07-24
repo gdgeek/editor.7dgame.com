@@ -197,6 +197,12 @@ class MetaFactory extends Factory {
 							self.lockNode( item );
 
 						} );
+
+						// 保存模型动画
+						if (gltf.animations && gltf.animations.length > 0) {
+							gltf.scene.animations = gltf.animations;
+						}
+
 						resolve( gltf.scene );
 
 					},
@@ -229,8 +235,25 @@ class MetaFactory extends Factory {
 
 			const resource = resources.get( data.parameters.resource.toString() );
 
+			console.log("polygen", resource.info);
+
+			// 解析动画信息
+			let animInfo = null;
+			try {
+				const resourceInfo = JSON.parse(resource.info);
+				if (resourceInfo && resourceInfo.anim && resourceInfo.anim.length > 0) {
+					animInfo = resourceInfo.anim;
+				}
+			} catch (e) {
+				console.error("解析动画信息失败", e);
+			}
+
 			const node = await this.loadPolygen( resource.file.url );
 
+			// 将动画信息保存到模型中
+			if (node && animInfo) {
+				node.userData.animations = animInfo;
+			}
 
 			return node;
 
