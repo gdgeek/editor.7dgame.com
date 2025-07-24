@@ -81,6 +81,17 @@ class VoiceCommand {
         horizontal: strings.getKey('sidebar/command/voice/horizontal'),
         hidden: strings.getKey('sidebar/command/voice/hidden'),
         visible: strings.getKey('sidebar/command/voice/visible'),
+        showYuelu: strings.getKey('sidebar/command/voice/showYuelu'),
+        showLunan: strings.getKey('sidebar/command/voice/showLunan'),
+        showXiaoxiang: strings.getKey('sidebar/command/voice/showXiaoxiang'),
+        showTianxin: strings.getKey('sidebar/command/voice/showTianxin'),
+        showXinglin: strings.getKey('sidebar/command/voice/showXinglin'),
+        showKaifu: strings.getKey('sidebar/command/voice/showKaifu'),
+        goBack: strings.getKey('sidebar/command/voice/goBack'),
+        bgmOn: strings.getKey('sidebar/command/voice/bgmOn'),
+        bgmOff: strings.getKey('sidebar/command/voice/bgmOff'),
+        sandboxFxOn: strings.getKey('sidebar/command/voice/sandboxFxOn'),
+        sandboxFxOff: strings.getKey('sidebar/command/voice/sandboxFxOff'),
       });
     }
 
