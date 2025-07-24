@@ -312,23 +312,68 @@ class MetaFactory extends Factory {
 
 	}
 	async getText( data, resources ) {
+		// 获取文本内容，如果不存在则使用默认文本
+		const text = data.parameters.text || 'Hello World';
+		console.error("text", data);
 
-		const text = data.parameters.text;
-		console.error("text",data);
-
-		const geometry = new THREE.PlaneGeometry(
-			(0.1 * text.length + 0.05)*0.21,
-			(0.1 + 0.05)*0.8
-		);
-		const material = new THREE.MeshBasicMaterial( {
-			color: 0x8888ff,
-			side: THREE.DoubleSide,
-		} );
-		const plane = new THREE.Mesh( geometry, material );
-
+		// 使用createTextMesh方法创建文本网格
+		const plane = this.createTextMesh(text);
 		plane.name = data.parameters.name + '[text]';
-		return plane;
 
+		// 确保userData中包含text属性
+		if (!plane.userData) plane.userData = {};
+		plane.userData.text = text;
+
+		return plane;
+	}
+
+	// 创建文本网格的辅助方法
+	createTextMesh(text) {
+		// 创建一个动态画布来绘制文本
+		const canvas = document.createElement('canvas');
+		const context = canvas.getContext('2d');
+		const fontSize = 16; // 字体大小
+
+		// 设置画布大小和字体
+		context.font = `${fontSize}px Arial`;
+		const textWidth = context.measureText(text).width;
+
+		// 设置画布尺寸，给文本周围留出一些空间
+		canvas.width = textWidth + 10;
+		canvas.height = fontSize + 10;
+
+		// 清除画布并设置背景色
+		context.fillStyle = '#8888ff';
+		context.fillRect(0, 0, canvas.width, canvas.height);
+
+		// 绘制文本
+		context.fillStyle = '#ffffff';
+		context.font = `${fontSize}px Arial`;
+		context.textAlign = 'center';
+		context.textBaseline = 'middle';
+		context.fillText(text, canvas.width / 2, canvas.height / 2);
+
+		// 创建纹理
+		const texture = new THREE.CanvasTexture(canvas);
+
+		// 创建平面几何体，比例与画布相同
+		const aspectRatio = canvas.width / canvas.height;
+		const geometry = new THREE.PlaneGeometry(0.5 * aspectRatio, 0.5);
+
+		// 创建材质
+		const material = new THREE.MeshBasicMaterial({
+			map: texture,
+			transparent: true,
+			side: THREE.DoubleSide
+		});
+
+		// 创建网格
+		const plane = new THREE.Mesh(geometry, material);
+
+		// 保存原始文本，以便后续更新
+		plane.userData._textContent = text;
+
+		return plane;
 	}
 	async getVoxel( data, resources ) {
 

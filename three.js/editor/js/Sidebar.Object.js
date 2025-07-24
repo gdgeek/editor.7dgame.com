@@ -20,6 +20,7 @@ import { SetPositionCommand } from './commands/SetPositionCommand.js';
 import { SetRotationCommand } from './commands/SetRotationCommand.js';
 import { SetScaleCommand } from './commands/SetScaleCommand.js';
 import { SetColorCommand } from './commands/SetColorCommand.js';
+import { MetaFactory } from './mrpp/MetaFactory.js';
 
 function SidebarObject( editor ) {
 
@@ -1126,37 +1127,96 @@ function SidebarObject( editor ) {
 
 	//container.add(objectRenderOrderRow)
 
-	// user data
+// 文本组件的文本输入
+const objectTextRow = new UIRow();
+const objectText = new UIInput()
+	.setWidth( '150px' )
+	.setFontSize( '12px' )
+	.onChange( function() {
+		if (editor.selected && editor.selected.type === 'Text') {
+			const newText = objectText.getValue();
 
-	const objectUserDataRow = new UIRow();
-	const objectUserData = new UITextArea()
-		.setWidth( '150px' )
-		.setHeight( '40px' )
-		.setFontSize( '12px' )
-		.onChange( update );
-	objectUserData.onKeyUp( function () {
+			// 更新userData中的text
+			const userData = JSON.parse(objectUserData.getValue());
+			userData.text = newText;
 
-		try {
+			// 更新userData文本框
+			objectUserData.setValue(JSON.stringify(userData, null, '  '));
 
-			JSON.parse( objectUserData.getValue() );
-			objectUserData.dom.classList.add( 'success' );
-			objectUserData.dom.classList.remove( 'fail' );
+			// 更新对象的userData
+			editor.execute(
+				new SetValueCommand(editor, editor.selected, 'userData', userData)
+			);
 
-		} catch ( error ) {
-
-			objectUserData.dom.classList.remove( 'success' );
-			objectUserData.dom.classList.add( 'fail' );
-
+			// 更新场景中显示的文本
+			updateTextObject(editor.selected, newText);
 		}
+	});
 
-	} );
+objectTextRow.add(
+	new UIText('文本内容').setWidth('90px')
+);
+objectTextRow.add(objectText);
+container.add(objectTextRow);
+objectTextRow.setDisplay('none'); // 默认隐藏，仅当是文本组件时显示
 
-	objectUserDataRow.add(
-		new UIText( strings.getKey( 'sidebar/object/userdata' ) ).setWidth( '90px' )
-	);
-	objectUserDataRow.add( objectUserData );
-	objectUserDataRow.readOnly = true;
-	container.add( objectUserDataRow );
+// user data
+
+const objectUserDataRow = new UIRow();
+const objectUserData = new UITextArea()
+	.setWidth( '150px' )
+	.setHeight( '40px' )
+	.setFontSize( '12px' )
+	.onChange( update );
+objectUserData.onKeyUp( function () {
+
+	try {
+
+		JSON.parse( objectUserData.getValue() );
+		objectUserData.dom.classList.add( 'success' );
+		objectUserData.dom.classList.remove( 'fail' );
+
+	} catch ( error ) {
+
+		objectUserData.dom.classList.remove( 'success' );
+		objectUserData.dom.classList.add( 'fail' );
+
+	}
+
+} );
+
+objectUserDataRow.add(
+	new UIText( strings.getKey( 'sidebar/object/userdata' ) ).setWidth( '90px' )
+);
+objectUserDataRow.add( objectUserData );
+objectUserDataRow.readOnly = true;
+container.add( objectUserDataRow );
+
+// 更新场景中文本对象的显示
+function updateTextObject(textObject, newText) {
+	// 1. 获取原始几何体和材质
+	const oldGeometry = textObject.geometry;
+	const oldMaterial = textObject.material;
+
+	// 2. 创建MetaFactory实例以使用其createTextMesh方法
+	const factory = new MetaFactory();
+	const newMesh = factory.createTextMesh(newText);
+
+	// 3. 更新几何体和材质
+	textObject.geometry.dispose(); // 释放旧几何体
+	textObject.geometry = newMesh.geometry;
+
+	if (oldMaterial.map) {
+		oldMaterial.map.dispose(); // 释放旧纹理
+	}
+	textObject.material = newMesh.material;
+
+	// 4. 更新内部文本内容记录
+	textObject.userData._textContent = newText;
+
+	// 5. 通知编辑器对象已更改
+	editor.signals.objectChanged.dispatch(textObject);
+}
 
 	//
 
@@ -1348,7 +1408,7 @@ function SidebarObject( editor ) {
 				Math.abs( object.distance - objectDistance.getValue() ) >= 0.01
 			) {
 
-				editor.execute(
+			editor.execute(
 					new SetValueCommand(
 						editor,
 						object,
@@ -1400,7 +1460,7 @@ function SidebarObject( editor ) {
 			if ( object.visible !== objectVisible.getValue() ) {
 
 
-				editor.execute(
+			editor.execute(
 					new SetValueCommand(
 						editor,
 						object,
@@ -1442,7 +1502,7 @@ function SidebarObject( editor ) {
 				object.castShadow !== objectCastShadow.getValue()
 			) {
 
-				editor.execute(
+			editor.execute(
 					new SetValueCommand(
 						editor,
 						object,
@@ -1484,7 +1544,7 @@ function SidebarObject( editor ) {
 
 				if ( object.shadow.normalBias !== objectShadowNormalBias.getValue() ) {
 
-					editor.execute(
+			editor.execute(
 						new SetValueCommand(
 							editor,
 							object.shadow,
@@ -1515,7 +1575,7 @@ function SidebarObject( editor ) {
 				const userData = JSON.parse( objectUserData.getValue() );
 				if ( JSON.stringify( object.userData ) != JSON.stringify( userData ) ) {
 
-					editor.execute(
+			editor.execute(
 						new SetValueCommand( editor, object, 'userData', userData )
 					);
 
@@ -1782,7 +1842,7 @@ function SidebarObject( editor ) {
 
 			objectUserData.setValue( JSON.stringify( object.userData, null, '  ' ) );
 
-		} catch ( error ) {
+	} catch ( error ) {
 
 			console.log( error );
 
@@ -1790,6 +1850,29 @@ function SidebarObject( editor ) {
 
 		objectUserData.setBorderColor( 'transparent' );
 		objectUserData.setBackgroundColor( '' );
+
+		// 处理文本组件的特殊UI
+		if (object.type === 'Text') {
+			// 显示文本框
+			objectTextRow.setDisplay('');
+
+			// 从userData中获取text属性，或者从_textContent中获取
+			let textContent = '';
+			if (object.userData) {
+				if (object.userData.text) {
+					textContent = object.userData.text;
+				} else if (object.userData._textContent) {
+					textContent = object.userData._textContent;
+					// 同步回userData.text以保持一致性
+					object.userData.text = textContent;
+					objectUserData.setValue(JSON.stringify(object.userData, null, '  '));
+				}
+			}
+			objectText.setValue(textContent);
+		} else {
+			// 隐藏文本框
+			objectTextRow.setDisplay('none');
+		}
 
 		updateTransformRows( object );
 
