@@ -52,9 +52,11 @@ class Builder {
 				ret.parameters.volume = 1;
 				ret.parameters.play = true;
 				ret.parameters.console = true;
-
 				break;
-
+			case 'particle':
+				ret = this.node( 'Particle', data.name + ' [particle]' );
+				ret.parameters.width = 0.5; // 添加宽度参数，用于图片和视频渲染
+				break;
 		}
 
 		if ( ret != null ) {

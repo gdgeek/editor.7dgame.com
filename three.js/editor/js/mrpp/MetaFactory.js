@@ -425,6 +425,64 @@ class MetaFactory extends Factory {
 
 	}
 
+	async getParticle( data, resources ) {
+		// 检查资源是否存在
+		if ( resources.has( data.parameters.resource.toString() ) ) {
+			const resource = resources.get( data.parameters.resource.toString() );
+
+			// 获取文件URL
+			let fileUrl = '';
+			if (resource.file && resource.file.url) {
+				fileUrl = resource.file.url;
+			} else if (resource.image && resource.image.url) {
+				fileUrl = resource.image.url;
+			}
+
+			// 获取文件扩展名
+			const fileExt = fileUrl.toLowerCase().split('.').pop();
+
+			// 根据扩展名选择不同的处理方式
+			if (['mp4', 'mov', 'avi'].includes(fileExt)) {
+				// 处理为视频
+				console.log('处理粒子特效为视频类型:', fileUrl);
+				const info = JSON.parse(resource.info || '{}');
+				const size = info.size || { x: 1, y: 1 };
+				const width = data.parameters.width || 0.5;
+				const height = width * (size.y / size.x);
+				return await this.getPlane(resource.image ? resource.image.url : fileUrl, width, height);
+			}
+			else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
+				// 处理为图片
+				console.log('处理粒子特效为图片类型:', fileUrl);
+				const info = JSON.parse(resource.info || '{}');
+				const size = info.size || { x: 1, y: 1 };
+				const width = data.parameters.width || 0.5;
+				const height = width * (size.y / size.x);
+				return await this.getPlane(fileUrl, width, height);
+			}
+			else if (['mp3', 'wav'].includes(fileExt)) {
+				// 处理为音频
+				console.log('处理粒子特效为音频类型:', fileUrl);
+				const entity = new THREE.Group();
+				entity.name = data.parameters.name;
+				entity.userData.resourceId = data.parameters.resource;
+				entity.userData.resourceType = 'particle';
+				entity.userData.audioUrl = fileUrl;
+				return entity;
+			}
+			else {
+				// 默认处理
+				console.log('处理粒子特效为默认类型:', fileUrl);
+				const entity = new THREE.Group();
+				entity.name = data.parameters.name;
+				entity.userData.resourceId = data.parameters.resource;
+				entity.userData.resourceType = 'particle';
+				return entity;
+			}
+		}
+
+		return null;
+	}
 
 	async building( data, resources ) {
 
@@ -446,6 +504,9 @@ class MetaFactory extends Factory {
 				break;
 			case 'voxel':
 				node = await this.getVoxel( data, resources );//resource
+				break;
+			case 'particle':
+				node = await this.getParticle( data, resources );//resource
 				break;
 			case 'text':
 				node = await this.getText( data, resources );

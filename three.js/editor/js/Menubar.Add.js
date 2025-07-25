@@ -137,7 +137,7 @@ function MenubarAdd( editor ) {
 		};
 
 		// 初始创建所有可能的资源类型菜单项，默认先隐藏
-		const allPossibleResourceTypes = ['voxel', 'polygen', 'audio', 'picture', 'video'];
+		const allPossibleResourceTypes = ['voxel', 'polygen', 'audio', 'picture', 'video', 'particle'];
 		allPossibleResourceTypes.forEach(type => {
 			const menuItem = createResourceMenuItem(type);
 			menuItem.dom.style.display = 'none'; // 默认隐藏
