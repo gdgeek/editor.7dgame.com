@@ -155,6 +155,7 @@ function Strings( config ) {
 			'sidebar/object/visible': 'Visible',
 			'sidebar/object/frustumcull': 'Frustum Cull',
 			'sidebar/object/renderorder': 'Render Order',
+			'sidebar/object/text': 'Text Content',
 			'sidebar/object/userdata': 'User data',
 
 			'sidebar/components': 'Components',
@@ -452,7 +453,16 @@ function Strings( config ) {
 			'menubar/command/success': 'Successfully added "{0}" command',
 			'menubar/command/select_object_first': 'Please select an object first',
 			'menubar/command/already_exists': 'This object already has a voice command, you cannot add another one',
-			'menubar/component/mutually_exclusive': 'Only one of these components can be selected: Click Action, Movable or Collision Trigger'
+			'menubar/component/mutually_exclusive': 'Only one of these components can be selected: Click Action, Movable or Collision Trigger',
+
+			'sidebar/media': 'Media Control',
+			'sidebar/media/play': 'Play',
+			'sidebar/media/pause': 'Pause',
+			'sidebar/media/time': 'Time',
+			'sidebar/media/volume': 'Volume',
+			'sidebar/media/speed': 'Speed',
+			'sidebar/media/loop': 'Loop',
+			'sidebar/media/muted': 'Muted'
 		},
 
 
@@ -612,6 +622,7 @@ function Strings( config ) {
 			'sidebar/object/visible': '可见性',
 			'sidebar/object/frustumcull': '视锥体裁剪',
 			'sidebar/object/renderorder': '渲染次序',
+			'sidebar/object/text': '文本内容',
 			'sidebar/object/userdata': '自定义数据',
 
 			'sidebar/components': '组件',
@@ -912,7 +923,16 @@ function Strings( config ) {
 			'menubar/command/success': '成功添加"{0}"命令',
 			'menubar/command/select_object_first': '请先选择一个对象',
 			'menubar/command/already_exists': '此对象已添加语音指令，不能重复添加',
-			'menubar/component/mutually_exclusive': '只能选择一个互斥组件：点击触发、可移动或碰撞触发'
+			'menubar/component/mutually_exclusive': '只能选择一个互斥组件：点击触发、可移动或碰撞触发',
+
+			'sidebar/media': '媒体控制',
+			'sidebar/media/play': '播放',
+			'sidebar/media/pause': '暂停',
+			'sidebar/media/time': '时间',
+			'sidebar/media/volume': '音量',
+			'sidebar/media/speed': '速度',
+			'sidebar/media/loop': '循环',
+			'sidebar/media/muted': '静音'
 		},
 
 		ja: {
@@ -1070,6 +1090,7 @@ function Strings( config ) {
 			'sidebar/object/visible': '可視性',
 			'sidebar/object/frustumcull': '視錐体カリング',
 			'sidebar/object/renderorder': 'レンダリング順序',
+			'sidebar/object/text': 'テキストコンテンツ',
 			'sidebar/object/userdata': 'ユーザーデータ',
 
 			'sidebar/components': 'コンポーネント',
@@ -1368,7 +1389,16 @@ function Strings( config ) {
 			'menubar/command/success': '"{0}" コマンドが正常に追加されました',
 			'menubar/command/select_object_first': '先にオブジェクトを選択してください',
 			'menubar/command/already_exists': 'このオブジェクトは既に音声コマンドが設定されています。別の音声コマンドを追加することはできません。',
-			'menubar/component/mutually_exclusive': 'Only one of these components can be selected: Click Action, Movable or Collision Trigger'
+			'menubar/component/mutually_exclusive': 'Only one of these components can be selected: Click Action, Movable or Collision Trigger',
+
+			'sidebar/media': 'メディアコントロール',
+			'sidebar/media/play': '再生',
+			'sidebar/media/pause': '一時停止',
+			'sidebar/media/time': '時間',
+			'sidebar/media/volume': '音量',
+			'sidebar/media/speed': '速度',
+			'sidebar/media/loop': 'ループ',
+			'sidebar/media/muted': 'ミュート'
 		}
 	};
 

@@ -399,8 +399,8 @@ class MetaFactory extends Factory {
 		}
 
 		return null;
-
 	}
+
 	async getEmpty( data, resources ) {
 
 		const entity = new THREE.Group();

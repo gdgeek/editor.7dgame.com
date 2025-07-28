@@ -1154,7 +1154,7 @@ const objectText = new UIInput()
 	});
 
 objectTextRow.add(
-	new UIText('文本内容').setWidth('90px')
+	new UIText(strings.getKey('sidebar/object/text')).setWidth('90px')
 );
 objectTextRow.add(objectText);
 container.add(objectTextRow);
