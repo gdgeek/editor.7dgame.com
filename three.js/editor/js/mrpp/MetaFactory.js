@@ -270,12 +270,15 @@ class MetaFactory extends Factory {
 
 			const geometry = new THREE.PlaneGeometry( width, height );
 			const loader = new THREE.TextureLoader();
+
 			loader.load( url, texture => {
+				texture.premultiplyAlpha = false;
 
 				const material = new THREE.MeshBasicMaterial( {
 					color: 0xffffff,
 					side: THREE.DoubleSide,
-					map: texture
+					map: texture,
+					transparent: true,
 				} );
 				resolve( new THREE.Mesh( geometry, material ) );
 
