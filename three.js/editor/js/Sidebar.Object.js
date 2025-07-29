@@ -1646,16 +1646,18 @@ function SidebarObject(editor) {
 	function isMediaType(object) {
 		if (object.userData && object.userData.type) {
 			const type = object.userData.type.toLowerCase();
-			if (type === 'video' || type === 'sound') return true;
+			// if (type === 'video' || type === 'sound') return true;
+			if (type === 'sound') return true;
 
-			if (type === 'particle') {
-				if (object.userData.isVideo || object.userData.isAudio) return true;
-			}
+			// if (type === 'particle') {
+			// 	if (object.userData.isVideo || object.userData.isAudio) return true;
+			// }
 		}
 
 		if (object.name) {
 			const name = object.name.toLowerCase();
-			if (name.includes('[video]') || name.includes('[sound]')) return true;
+			// if (name.includes('[video]') || name.includes('[sound]')) return true;
+			if (name.includes('[sound]')) return true;
 		}
 
 		return false;
