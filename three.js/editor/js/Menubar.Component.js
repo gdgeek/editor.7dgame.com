@@ -193,7 +193,7 @@ function MenubarComponent(editor) {
         if (editor.type && editor.type.toLowerCase() === 'meta' && editor.selected !== null) {
             // 只有当选中对象类型为polygen或voxel时才显示
             const objectType = editor.selected.type ? editor.selected.type.toLowerCase() : '';
-            if (objectType === 'mesh' || objectType === 'polygen' || objectType === 'voxel') {
+            if (objectType === 'mesh' || objectType === 'polygen' || objectType === 'voxel' || objectType === 'picture') {
                 container.setDisplay('');
             } else {
                 container.setDisplay('none');
