@@ -95,12 +95,14 @@ function MenubarFile( editor ) {
 
 	// 处理加载状态的变化
 	editor.signals.savingStarted.add(function () {
+
 		saveOption.dom.classList.add('disabled');
 		saveOption.dom.style.opacity = '0.5';
 		saveOption.dom.style.pointerEvents = 'none';
 	});
 
 	editor.signals.savingFinished.add(function () {
+
 		saveOption.dom.classList.remove('disabled');
 		saveOption.dom.style.opacity = '1';
 		saveOption.dom.style.pointerEvents = 'auto';

@@ -135,9 +135,7 @@
 				const selected = editor.config.getKey('selected');
 
 				if (selected !== undefined) {
-
 					editor.selectByUuid(selected);
-
 				}
 
 			});
@@ -148,6 +146,7 @@
 
 			function saveState() {
 
+				
 				if (editor.config.getKey('autosave') === false) {
 
 					return;
@@ -163,7 +162,7 @@
 					timeout = setTimeout(function () {
 
 						editor.storage.set(editor.toJSON());
-
+						
 						editor.signals.savingFinished.dispatch();
 
 					}, 100);
