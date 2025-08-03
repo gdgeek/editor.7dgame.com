@@ -7,6 +7,7 @@ import { SidebarEvents } from './Sidebar.Events.js'
 import { SidebarComponent } from './Sidebar.Component.js'
 import { SidebarCommand } from './Sidebar.Command.js'
 import { SidebarAnimation } from './Sidebar.Animation.js'
+import { SidebarMedia } from './Sidebar.Media.js'
 import { SidebarProject } from './Sidebar.Project.js'
 import { SidebarSettings } from './Sidebar.Settings.js'
 import { SidebarScreenshot } from './Sidebar.Screenshot.js'
@@ -22,7 +23,8 @@ function Sidebar(editor) {
 		new SidebarScene(editor),
 
 		new SidebarProperties(editor),
-		//new SidebarAnimation(editor)
+		new SidebarAnimation(editor),
+		// new SidebarMedia(editor)
 	)
 
 	if (editor.type.toLowerCase() == 'meta') {

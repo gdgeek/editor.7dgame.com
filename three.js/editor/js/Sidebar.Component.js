@@ -53,7 +53,7 @@ function SidebarComponent( editor ) {
 		}
 
 		// 检查所有选中对象的类型是否合法
-		const validObjectTypes = ['mesh', 'polygen', 'voxel'];
+		const validObjectTypes = ['mesh', 'polygen', 'voxel', 'picture'];
 		let allValidType = true;
 
 		for (let i = 0; i < selectedObjects.length; i++) {
@@ -398,7 +398,7 @@ function SidebarComponent( editor ) {
 			// 修改为与顶部菜单栏一致的显示逻辑
 			if (editor.type && editor.type.toLowerCase() === 'meta') {
 				const objectType = object.type ? object.type.toLowerCase() : '';
-				if (objectType === 'mesh' || objectType === 'polygen' || objectType === 'voxel') {
+				if (objectType === 'mesh' || objectType === 'polygen' || objectType === 'voxel' || objectType === 'picture') {
 					container.setDisplay( 'block' );
 					update();
 					return;

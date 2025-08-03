@@ -12,29 +12,29 @@ const isHttps = () => {
 
 	const protocol = window.location.protocol;
 	const isHttps = protocol === 'https:';
-	console.log(isHttps ? '这个网页是使用HTTPS' : '这个网页不是使用HTTPS');
+	console.log( isHttps ? '这个网页是使用HTTPS' : '这个网页不是使用HTTPS' );
 	return isHttps;
 
 };
 
 // 将 URL 转换为 HTTPS 或 HTTP
-const convertToHttps = (url) => {
+const convertToHttps = ( url ) => {
 
-	if (url === undefined || url === null) return '';
+	if ( url === undefined || url === null ) return '';
 
-	if (isHttps()) {
+	if ( isHttps() ) {
 
-		if (url.startsWith('http://')) {
+		if ( url.startsWith( 'http://' ) ) {
 
-			return url.replace('http://', 'https://');
+			return url.replace( 'http://', 'https://' );
 
 		}
 
 	} else {
 
-		if (url.startsWith('https://')) {
+		if ( url.startsWith( 'https://' ) ) {
 
-			return url.replace('https://', 'http://');
+			return url.replace( 'https://', 'http://' );
 
 		}
 
@@ -51,73 +51,73 @@ class MetaFactory extends Factory {
 		super();
 
 	}
-	async addGizmo(node) {
+	async addGizmo( node ) {
 
-		return new Promise(resolve => {
+		return new Promise( resolve => {
 
-			const loader = new GLTFLoader(THREE.DefaultLoadingManager);
-			loader.load('/three.js/mesh/unreal-gizmo.glb', gltf => {
+			const loader = new GLTFLoader( THREE.DefaultLoadingManager );
+			loader.load( '/three.js/mesh/unreal-gizmo.glb', gltf => {
 
 				const mesh = gltf.scene;//.children[0]
-				mesh.scale.set(0.1, 0.1, 0.1);
-				mesh.rotation.set(Math.PI / 2, Math.PI / 2, 0);
-				this.lockNode(gltf.scene);
-				node.add(gltf.scene);
+				mesh.scale.set( 0.1, 0.1, 0.1 );
+				mesh.rotation.set( Math.PI / 2, Math.PI / 2, 0 );
+				this.lockNode( gltf.scene );
+				node.add( gltf.scene );
 				resolve();
 
-			});
+			} );
 
-		});
+		} );
 
 	}
 
-	addModule(data) {
+	addModule( data ) {
 
 		const node = new THREE.Group();
 		node.name = data.parameters.title;
-		console.error('addMetaData', data);
+		console.error( 'addMetaData', data );
 		node.type = data.type;
 		node.uuid = data.parameters.uuid;
 		node.visible = data.parameters.active;
 
 		const transform = data.parameters.transform;
-		this.setTransform(node, transform);
+		this.setTransform( node, transform );
 
 		const userData = {};
 
-		const exclude = ['name', 'title', 'uuid', 'transform', 'active'];
+		const exclude = [ 'name', 'title', 'uuid', 'transform', 'active' ];
 
-		Object.keys(data.parameters).forEach(key => {
+		Object.keys( data.parameters ).forEach( key => {
 
-			if (!exclude.includes(key)) {
+			if ( ! exclude.includes( key ) ) {
 
-				userData[key] = data.parameters[key];
+				userData[ key ] = data.parameters[ key ];
 
 			}
 
-		});
+		} );
 
 		userData.draggable = false;
 		node.userData = userData;
 		return node;
 
 	}
-	async readMeta(root, data, resources, editor = null) {
+	async readMeta( root, data, resources, editor = null ) {
 
 		//alert(resources.size)
-		if (data.children) {
+		if ( data.children ) {
 
-			for (let i = 0; i < data.children.entities.length; ++i) {
+			for ( let i = 0; i < data.children.entities.length; ++ i ) {
 
-				if (data.children.entities[i] != null) {
+				if ( data.children.entities[ i ] != null ) {
 
 					try {
 
-						const node = await this.building(data.children.entities[i], resources);
-						if (node != null) {
+						const node = await this.building( data.children.entities[ i ], resources );
+						if ( node != null ) {
 
-							root.add(node);
-							if (editor != null) {
+							root.add( node );
+							if ( editor != null ) {
 
 								editor.signals.sceneGraphChanged.dispatch();
 
@@ -125,9 +125,9 @@ class MetaFactory extends Factory {
 
 						}
 
-					} catch (error) {
+					} catch ( error ) {
 
-						console.error(error);
+						console.error( error );
 
 					}
 
@@ -140,100 +140,120 @@ class MetaFactory extends Factory {
 	}
 
 
-	async loadVoxel(url) {
+	async loadVoxel( url ) {
 
-		url = convertToHttps(url);
-		return new Promise((resolve, reject) => {
+		url = convertToHttps( url );
+		return new Promise( ( resolve, reject ) => {
 
 			const loader = new VOXLoader();
 			loader.load(
 				url,
-				function (chunks) {
+				function ( chunks ) {
 
-					const chunk = chunks[0];
-					const mesh = new VOXMesh(chunk);
+					const chunk = chunks[ 0 ];
+					const mesh = new VOXMesh( chunk );
 
 					//mesh.scale.set(0.005, 0.005, 0.005)
-					resolve(mesh);
+					resolve( mesh );
 
 				}
 			);
 
-		}, function (xhr) {
+		}, function ( xhr ) {
 
-			console.log((xhr.loaded / xhr.total) * 100 + '% loaded!');
+			console.log( ( xhr.loaded / xhr.total ) * 100 + '% loaded!' );
 
-		}, function (error) {
+		}, function ( error ) {
 
-			reject(error);
-			alert(error);
-			console.error('An error happened');
+			reject( error );
+			alert( error );
+			console.error( 'An error happened' );
 
 		}
 		);
 
 	}
 
-	async loadPolygen(url) {
+	async loadPolygen( url ) {
 
-		url = convertToHttps(url);
+		url = convertToHttps( url );
 		const self = this;
-		return new Promise((resolve, reject) => {
+		return new Promise( ( resolve, reject ) => {
 
-			const loader = new GLTFLoader(THREE.DefaultLoadingManager);
+			const loader = new GLTFLoader( THREE.DefaultLoadingManager );
 			const dracoLoader = new DRACOLoader();
 
-			dracoLoader.setDecoderPath('./draco/');
-			loader.setDRACOLoader(dracoLoader);
+			dracoLoader.setDecoderPath( './draco/' );
+			loader.setDRACOLoader( dracoLoader );
 
 			try {
 
 				loader.load(
 					url,
-					function (gltf) {
+					function ( gltf ) {
 
-						gltf.scene.children.forEach(item => {
+						gltf.scene.children.forEach( item => {
 
-							self.lockNode(item);
+							self.lockNode( item );
 
-						});
-						resolve(gltf.scene);
+						} );
+
+						// 保存模型动画
+						if (gltf.animations && gltf.animations.length > 0) {
+							gltf.scene.animations = gltf.animations;
+						}
+
+						resolve( gltf.scene );
 
 					},
-					function (xhr) {
+					function ( xhr ) {
 						//console.log((xhr.loaded / xhr.total) * 100 + '% loaded!')
 					},
-					function (error) {
+					function ( error ) {
 
-						resolve(null);
-						console.error('An error happened');
+						resolve( null );
+						console.error( 'An error happened' );
 
 					}
 				);
 
-			} catch (error) {
+			} catch ( error ) {
 
-				resolve(null);
-				console.error(error);
+				resolve( null );
+				console.error( error );
 
 			}
 
-		});
+		} );
 
 	}
-	async getPhototype(data, resources) {
-
-		return null;
-	}
-	async getPolygen(data, resources) {
+	async getPolygen( data, resources ) {
 
 
-		if (resources.has(data.parameters.resource.toString())) {
+		if ( resources.has( data.parameters.resource.toString() ) ) {
 
 
-			const resource = resources.get(data.parameters.resource.toString());
-			const node = await this.loadPolygen(resource.file.url);
+			const resource = resources.get( data.parameters.resource.toString() );
 
+			console.log("polygen", resource.info);
+
+			// 解析动画信息
+			let animInfo = null;
+			try {
+				const resourceInfo = JSON.parse(resource.info);
+				if (resourceInfo && resourceInfo.anim && resourceInfo.anim.length > 0) {
+					animInfo = resourceInfo.anim;
+				}
+			} catch (e) {
+				console.error("解析动画信息失败", e);
+			}
+
+			const node = await this.loadPolygen( resource.file.url );
+
+			// 将动画信息保存到模型中
+			if (node && animInfo) {
+				node.userData.animations = animInfo;
+			}
 
 			return node;
 
@@ -243,89 +263,137 @@ class MetaFactory extends Factory {
 
 	}
 
-	async getPlane(url, width, height) {
+	async getPlane( url, width, height ) {
 
-		url = convertToHttps(url);
-		return new Promise(resolve => {
+		url = convertToHttps( url );
+		return new Promise( resolve => {
 
-			const geometry = new THREE.PlaneGeometry(width, height);
+			const geometry = new THREE.PlaneGeometry( width, height );
 			const loader = new THREE.TextureLoader();
-			loader.load(url, texture => {
 
-				const material = new THREE.MeshBasicMaterial({
+			loader.load( url, texture => {
+				texture.premultiplyAlpha = false;
+
+				const material = new THREE.MeshBasicMaterial( {
 					color: 0xffffff,
 					side: THREE.DoubleSide,
-					map: texture
-				});
-				resolve(new THREE.Mesh(geometry, material));
+					map: texture,
+					transparent: true,
+				} );
+				resolve( new THREE.Mesh( geometry, material ) );
 
-			}, function (xhr) {
+			}, function ( xhr ) {
 				//console.log((xhr.loaded / xhr.total) * 100 + '% loaded!')
-			}, function (error) {
+			}, function ( error ) {
 
-				console.error(error);
-				resolve(new THREE.Mesh(geometry));
+				console.error( error );
+				resolve( new THREE.Mesh( geometry ) );
 
-			});
+			} );
 
-		});
+		} );
 
 	}
 
-	async getPicture(data, resources) {
+	async getPicture( data, resources ) {
 
-		const resource = resources.get(data.parameters.resource.toString());
-		const info = JSON.parse(resource.info);
+		const resource = resources.get( data.parameters.resource.toString() );
+		const info = JSON.parse( resource.info );
 		const size = info.size;
 		const width = data.parameters.width;
-		const height = width * (size.y / size.x);
-		const node = await this.getPlane(resource.image.url, width, height);
+		const height = width * ( size.y / size.x );
+		const node = await this.getPlane( resource.image.url, width, height );
 
 		return node;
 
 	}
-	async getEntity(data, resources) {
+	async getEntity( data, resources ) {
 
 		const entity = new THREE.Group();
 		entity.name = data.parameters.name;
 		return entity;
 
 	}
-	async getText(data, resources) {
-
-		const text = data.parameters.text;
+	async getText( data, resources ) {
+		// 获取文本内容，如果不存在则使用默认文本
+		const text = data.parameters.text || 'Hello World';
 		console.error("text", data);
 
-		const geometry = new THREE.PlaneGeometry(
-			(0.1 * text.length + 0.05) * 0.21,
-			(0.1 + 0.05) * 0.8
-		);
+		// 使用createTextMesh方法创建文本网格
+		const plane = this.createTextMesh(text);
+		plane.name = data.parameters.name + '[text]';
+
+		// 确保userData中包含text属性
+		if (!plane.userData) plane.userData = {};
+		plane.userData.text = text;
+
+		return plane;
+	}
+
+	// 创建文本网格的辅助方法
+	createTextMesh(text) {
+		// 创建一个动态画布来绘制文本
+		const canvas = document.createElement('canvas');
+		const context = canvas.getContext('2d');
+		const fontSize = 16; // 字体大小
+
+		// 设置画布大小和字体
+		context.font = `${fontSize}px Arial`;
+		const textWidth = context.measureText(text).width;
+
+		// 设置画布尺寸，给文本周围留出一些空间
+		canvas.width = textWidth + 10;
+		canvas.height = fontSize + 10;
+
+		// 清除画布并设置背景色
+		context.fillStyle = '#8888ff';
+		context.fillRect(0, 0, canvas.width, canvas.height);
+
+		// 绘制文本
+		context.fillStyle = '#ffffff';
+		context.font = `${fontSize}px Arial`;
+		context.textAlign = 'center';
+		context.textBaseline = 'middle';
+		context.fillText(text, canvas.width / 2, canvas.height / 2);
+
+		// 创建纹理
+		const texture = new THREE.CanvasTexture(canvas);
+
+		// 创建平面几何体，比例与画布相同
+		const aspectRatio = canvas.width / canvas.height;
+		const geometry = new THREE.PlaneGeometry(0.5 * aspectRatio, 0.5);
+
+		// 创建材质
 		const material = new THREE.MeshBasicMaterial({
-			color: 0x8888ff,
-			side: THREE.DoubleSide,
+			map: texture,
+			transparent: true,
+			side: THREE.DoubleSide
 		});
+
+		// 创建网格
 		const plane = new THREE.Mesh(geometry, material);
 
-		plane.name = data.parameters.name + '[text]';
+		// 保存原始文本，以便后续更新
+		plane.userData._textContent = text;
+
 		return plane;
-
 	}
-	async getVoxel(data, resources) {
+	async getVoxel( data, resources ) {
 
 
-		if (resources.has(data.parameters.resource.toString())) {
+		if ( resources.has( data.parameters.resource.toString() ) ) {
 
-			const resource = resources.get(data.parameters.resource.toString());
-			return await this.loadVoxel(resource.file.url);
+			const resource = resources.get( data.parameters.resource.toString() );
+			return await this.loadVoxel( resource.file.url );
 
 		}
 
 		return null;
 
 	}
-	async getSound(data, resources) {
+	async getSound( data, resources ) {
 
-		if (resources.has(data.parameters.resource.toString())) {
+		if ( resources.has( data.parameters.resource.toString() ) ) {
 
 			const entity = new THREE.Group();
 			entity.name = data.parameters.name;
@@ -334,103 +402,163 @@ class MetaFactory extends Factory {
 		}
 
 		return null;
-
 	}
-	async getEmpty(data, resources) {
+
+	async getEmpty( data, resources ) {
 
 		const entity = new THREE.Group();
 		entity.name = data.parameters.name;
 		return entity;
 
 	}
-	async getVideo(data, resources) {
+	async getVideo( data, resources ) {
 
-		if (data.parameters.resource == undefined) {
+		if ( data.parameters.resource == undefined ) {
 
 			return null;
 
 		}
 
-		const resource = resources.get(data.parameters.resource.toString());
-		const info = JSON.parse(resource.info);
+		const resource = resources.get( data.parameters.resource.toString() );
+		const info = JSON.parse( resource.info );
 		const size = info.size;
 		const width = data.parameters.width;
-		const height = width * (size.y / size.x);
-		return await this.getPlane(resource.image.url, width, height);
+		const height = width * ( size.y / size.x );
+		return await this.getPlane( resource.image.url, width, height );
 
 	}
 
+	async getParticle( data, resources ) {
+		// 检查资源是否存在
+		if ( resources.has( data.parameters.resource.toString() ) ) {
+			const resource = resources.get( data.parameters.resource.toString() );
 
-	async building(data, resources) {
+			// 获取文件URL
+			let fileUrl = '';
+			if (resource.file && resource.file.url) {
+				fileUrl = resource.file.url;
+			} else if (resource.image && resource.image.url) {
+				fileUrl = resource.image.url;
+			}
 
-		console.log('building: ', data.parameters);
+			// 获取文件扩展名
+			const fileExt = fileUrl.toLowerCase().split('.').pop();
+
+			// 根据扩展名选择不同的处理方式
+			if (['mp4', 'mov', 'avi'].includes(fileExt)) {
+				// 处理为视频
+				console.log('处理粒子特效为视频类型:', fileUrl);
+				const info = JSON.parse(resource.info || '{}');
+				const size = info.size || { x: 1, y: 1 };
+				const width = data.parameters.width || 0.5;
+				const height = width * (size.y / size.x);
+				return await this.getPlane(resource.image ? resource.image.url : fileUrl, width, height);
+			}
+			else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
+				// 处理为图片
+				console.log('处理粒子特效为图片类型:', fileUrl);
+				const info = JSON.parse(resource.info || '{}');
+				const size = info.size || { x: 1, y: 1 };
+				const width = data.parameters.width || 0.5;
+				const height = width * (size.y / size.x);
+				return await this.getPlane(fileUrl, width, height);
+			}
+			else if (['mp3', 'wav'].includes(fileExt)) {
+				// 处理为音频
+				console.log('处理粒子特效为音频类型:', fileUrl);
+				const entity = new THREE.Group();
+				entity.name = data.parameters.name;
+				entity.userData.resourceId = data.parameters.resource;
+				entity.userData.resourceType = 'particle';
+				entity.userData.audioUrl = fileUrl;
+				return entity;
+			}
+			else {
+				// 默认处理
+				console.log('处理粒子特效为默认类型:', fileUrl);
+				const entity = new THREE.Group();
+				entity.name = data.parameters.name;
+				entity.userData.resourceId = data.parameters.resource;
+				entity.userData.resourceType = 'particle';
+				return entity;
+			}
+		}
+
+		return null;
+	}
+
+	async building( data, resources ) {
+
+		console.log( 'building: ', data.parameters );
 		let node = null;
-		switch (data.type.toLowerCase()) {
+		switch ( data.type.toLowerCase() ) {
 
 			case 'polygen':
-				node = await this.getPolygen(data, resources);//resource
+				node = await this.getPolygen( data, resources );//resource
 				break;
 			case 'picture':
-				node = await this.getPicture(data, resources);//resource
+				node = await this.getPicture( data, resources );//resource
 				break;
 			case 'video':
-				node = await this.getVideo(data, resources);//resource
+				node = await this.getVideo( data, resources );//resource
 				break;
 			case 'sound':
-				node = await this.getSound(data, resources);//resource
+				node = await this.getSound( data, resources );//resource
 				break;
 			case 'voxel':
-				node = await this.getVoxel(data, resources);//resource
+				node = await this.getVoxel( data, resources );//resource
+				break;
+			case 'particle':
+				node = await this.getParticle( data, resources );//resource
 				break;
 			case 'text':
-				node = await this.getText(data, resources);
+				node = await this.getText( data, resources );
 				break;
 			case 'entity':
-				node = await this.getEntity(data, resources);
+				node = await this.getEntity( data, resources );
 				break;
 			case 'anchor':
-				node = await this.addAnchor(data);
+				node = await this.addAnchor( data );
 				break;
-
 
 		}
 
-		if (node == null) {
+		if ( node == null ) {
 
-			node = await this.getEmpty(data, resources);
+			node = await this.getEmpty( data, resources );
 
 		}
 
 		node.type = data.type;
 		node.name = data.parameters.name;
 		node.uuid = data.parameters.uuid;
-		this.setTransform(node, data.parameters.transform);
+		this.setTransform( node, data.parameters.transform );
 		node.visible = data.parameters.active;
 
 		const userData = { 'type': data.type };
-		const exclude = ['name', 'uuid', 'transform', 'active'];
+		const exclude = [ 'name', 'uuid', 'transform', 'active' ];
 
-		Object.keys(data.parameters).forEach(key => {
+		Object.keys( data.parameters ).forEach( key => {
 
-			if (!exclude.includes(key)) {
+			if ( ! exclude.includes( key ) ) {
 
-				userData[key] = data.parameters[key];
+				userData[ key ] = data.parameters[ key ];
 
 			}
 
-		});
+		} );
 
 		// 设置components和commands
 		node.components = data.children.components || [];
 		node.commands = data.children.commands || [];
 
 		node.userData = userData;
-		for (let i = 0; i < data.children.entities.length; ++i) {
+		for ( let i = 0; i < data.children.entities.length; ++ i ) {
 
-			const child = await this.building(data.children.entities[i], resources);
-			if (child != null) {
+			const child = await this.building( data.children.entities[ i ], resources );
+			if ( child != null ) {
 
-				node.add(child);
+				node.add( child );
 
 			}
 

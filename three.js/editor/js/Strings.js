@@ -41,6 +41,7 @@ function Strings( config ) {
 			'menubar/add/audio': 'Audio',
 			'menubar/add/picture': 'Picture',
 			'menubar/add/video': 'Video',
+			'menubar/add/particle': 'Particle',
 			'menubar/add/meta': 'Point',
 			'menubar/add/prefab': 'Prefab',
 			'menubar/add/group': 'Group',
@@ -113,6 +114,7 @@ function Strings( config ) {
 			'sidebar/animations/play': 'Play',
 			'sidebar/animations/stop': 'Stop',
 			'sidebar/animations/timescale': 'Time Scale',
+			'sidebar/animations/select': 'Select',
 
 			'sidebar/scene': 'Scene',
 			'sidebar/scene/background': 'Background',
@@ -130,6 +132,7 @@ function Strings( config ) {
 			'sidebar/object/name': 'Name',
 			'sidebar/object/position': 'Position',
 			'sidebar/object/rotation': 'Rotation',
+			'sidebar/object/isRotating': 'Rotate on Start',
 			'sidebar/object/scale': 'Scale',
 			'sidebar/object/fov': 'Fov',
 			'sidebar/object/left': 'Left',
@@ -152,8 +155,10 @@ function Strings( config ) {
 			'sidebar/object/cast': 'cast',
 			'sidebar/object/receive': 'receive',
 			'sidebar/object/visible': 'Visible',
+			'sidebar/object/loop': 'Loop',
 			'sidebar/object/frustumcull': 'Frustum Cull',
 			'sidebar/object/renderorder': 'Render Order',
+			'sidebar/object/text': 'Text Content',
 			'sidebar/object/userdata': 'User data',
 
 			'sidebar/components': 'Components',
@@ -188,6 +193,17 @@ function Strings( config ) {
 			'sidebar/command/voice/horizontal': 'Horizontal',
 			'sidebar/command/voice/hidden': 'Hidden',
 			'sidebar/command/voice/visible': 'Visible',
+			'sidebar/command/voice/showYuelu': 'Show Yuelu Campus',
+			'sidebar/command/voice/showLunan': 'Show Lunan Campus',
+			'sidebar/command/voice/showXiaoxiang': 'Show Xiaoxiang Campus',
+			'sidebar/command/voice/showTianxin': 'Show Tianxin Campus',
+			'sidebar/command/voice/showXinglin': 'Show Xinglin Campus',
+			'sidebar/command/voice/showKaifu': 'Show Kaifu Campus',
+			'sidebar/command/voice/goBack': 'Go Back',
+			'sidebar/command/voice/bgmOn': 'Play Background Music',
+			'sidebar/command/voice/bgmOff': 'Stop Background Music',
+			'sidebar/command/voice/sandboxFxOn': 'Enable Sandbox Effects',
+			'sidebar/command/voice/sandboxFxOff': 'Disable Sandbox Effects',
 
 			'sidebar/entity': 'Point(Custom)',
 			'sidebar/entity/button': 'Edit',
@@ -440,7 +456,16 @@ function Strings( config ) {
 			'menubar/command/success': 'Successfully added "{0}" command',
 			'menubar/command/select_object_first': 'Please select an object first',
 			'menubar/command/already_exists': 'This object already has a voice command, you cannot add another one',
-			'menubar/component/mutually_exclusive': 'Only one of these components can be selected: Click Action, Movable or Collision Trigger'
+			'menubar/component/mutually_exclusive': 'Only one of these components can be selected: Click Action, Movable or Collision Trigger',
+
+			'sidebar/media': 'Media Control',
+			'sidebar/media/play': 'Play',
+			'sidebar/media/pause': 'Pause',
+			'sidebar/media/time': 'Time',
+			'sidebar/media/volume': 'Volume',
+			'sidebar/media/speed': 'Speed',
+			'sidebar/media/loop': 'Loop',
+			'sidebar/media/muted': 'Muted'
 		},
 
 
@@ -484,6 +509,7 @@ function Strings( config ) {
 			'menubar/add/audio': '音频',
 			'menubar/add/picture': '图片',
 			'menubar/add/video': '视频',
+			'menubar/add/particle': '特效',
 			'menubar/add/meta': '实体',
 			'menubar/add/prefab': '预设',
 			'menubar/add/group': '组',
@@ -559,6 +585,7 @@ function Strings( config ) {
 			'sidebar/animations/play': '播放',
 			'sidebar/animations/stop': '暂停',
 			'sidebar/animations/timescale': '时间缩放',
+			'sidebar/animations/select': '选择项',
 
 			'sidebar/scene': '场景',
 			'sidebar/scene/background': '背景',
@@ -576,6 +603,7 @@ function Strings( config ) {
 			'sidebar/object/name': '名称',
 			'sidebar/object/position': '位置',
 			'sidebar/object/rotation': '旋转',
+			'sidebar/object/isRotating': '启动时旋转',
 			'sidebar/object/scale': '缩放',
 			'sidebar/object/fov': '视角',
 			'sidebar/object/left': '左',
@@ -598,8 +626,10 @@ function Strings( config ) {
 			'sidebar/object/cast': '产生',
 			'sidebar/object/receive': '接受',
 			'sidebar/object/visible': '可见性',
+			'sidebar/object/loop': '循环',
 			'sidebar/object/frustumcull': '视锥体裁剪',
 			'sidebar/object/renderorder': '渲染次序',
+			'sidebar/object/text': '文本内容',
 			'sidebar/object/userdata': '自定义数据',
 
 			'sidebar/components': '组件',
@@ -634,6 +664,18 @@ function Strings( config ) {
 			'sidebar/command/voice/horizontal': '水平展示',
 			'sidebar/command/voice/hidden': '隐藏模式',
 			'sidebar/command/voice/visible': '显示模式',
+			'sidebar/command/voice/showYuelu': '展示岳麓山校区',
+			'sidebar/command/voice/showLunan': '展示麓南校区',
+			'sidebar/command/voice/showXiaoxiang': '展示潇湘校区',
+			'sidebar/command/voice/showTianxin': '展示天心校区',
+			'sidebar/command/voice/showXinglin': '展示杏林校区',
+			'sidebar/command/voice/showKaifu': '展示开福校区',
+			'sidebar/command/voice/goBack': '返回',
+			'sidebar/command/voice/bgmOn': '打开背景音乐',
+			'sidebar/command/voice/bgmOff': '关闭背景音乐',
+			'sidebar/command/voice/sandboxFxOn': '打开沙盘特效',
+			'sidebar/command/voice/sandboxFxOff': '关闭沙盘特效',
+
 
 			'sidebar/entity': '实体（自定义）',
 			'sidebar/entity/button': '编辑',
@@ -888,7 +930,16 @@ function Strings( config ) {
 			'menubar/command/success': '成功添加"{0}"命令',
 			'menubar/command/select_object_first': '请先选择一个对象',
 			'menubar/command/already_exists': '此对象已添加语音指令，不能重复添加',
-			'menubar/component/mutually_exclusive': '只能选择一个互斥组件：点击触发、可移动或碰撞触发'
+			'menubar/component/mutually_exclusive': '只能选择一个互斥组件：点击触发、可移动或碰撞触发',
+
+			'sidebar/media': '媒体控制',
+			'sidebar/media/play': '播放',
+			'sidebar/media/pause': '暂停',
+			'sidebar/media/time': '时间',
+			'sidebar/media/volume': '音量',
+			'sidebar/media/speed': '速度',
+			'sidebar/media/loop': '循环',
+			'sidebar/media/muted': '静音'
 		},
 
 		ja: {
@@ -929,6 +980,7 @@ function Strings( config ) {
 			'menubar/add/audio': 'オーディオ',
 			'menubar/add/picture': '画像',
 			'menubar/add/video': 'ビデオ',
+			'menubar/add/particle': 'パーティクル',
 			'menubar/add/meta': 'コンポーネント',
 			'menubar/add/prefab': 'プレハブ',
 			'menubar/add/group': 'グループ',
@@ -1004,6 +1056,7 @@ function Strings( config ) {
 			'sidebar/animations/play': '再生',
 			'sidebar/animations/stop': '停止',
 			'sidebar/animations/timescale': '時間スケール',
+			'sidebar/animations/select': '選択項目',
 
 			'sidebar/scene': 'シーン',
 			'sidebar/scene/background': '背景',
@@ -1021,6 +1074,7 @@ function Strings( config ) {
 			'sidebar/object/name': '名前',
 			'sidebar/object/position': '位置',
 			'sidebar/object/rotation': '回転',
+			'sidebar/object/isRotating': '起動時に回転',
 			'sidebar/object/scale': 'スケール',
 			'sidebar/object/fov': '視野角',
 			'sidebar/object/left': '左',
@@ -1043,8 +1097,10 @@ function Strings( config ) {
 			'sidebar/object/cast': 'キャスト',
 			'sidebar/object/receive': '受信',
 			'sidebar/object/visible': '可視性',
+			'sidebar/object/loop': 'ループ',
 			'sidebar/object/frustumcull': '視錐体カリング',
 			'sidebar/object/renderorder': 'レンダリング順序',
+			'sidebar/object/text': 'テキストコンテンツ',
 			'sidebar/object/userdata': 'ユーザーデータ',
 
 			'sidebar/components': 'コンポーネント',
@@ -1079,6 +1135,17 @@ function Strings( config ) {
 			'sidebar/command/voice/horizontal': '水平展示',
 			'sidebar/command/voice/hidden': '隠しモード',
 			'sidebar/command/voice/visible': '表示モード',
+			'sidebar/command/voice/showYuelu': '岳麓山キャンパスを表示',
+			'sidebar/command/voice/showLunan': '麓南キャンパスを表示',
+			'sidebar/command/voice/showXiaoxiang': '潇湘キャンパスを表示',
+			'sidebar/command/voice/showTianxin': '天心キャンパスを表示',
+			'sidebar/command/voice/showXinglin': '杏林キャンパスを表示',
+			'sidebar/command/voice/showKaifu': '開福キャンパスを表示',
+			'sidebar/command/voice/goBack': '戻る',
+			'sidebar/command/voice/bgmOn': '背景音楽を再生',
+			'sidebar/command/voice/bgmOff': '背景音楽を停止',
+			'sidebar/command/voice/sandboxFxOn': 'サンドボックスエフェクトを有効化',
+			'sidebar/command/voice/sandboxFxOff': 'サンドボックスエフェクトを無効化',
 
 			'sidebar/entity': 'コンポーネント（カスタム）',
 			'sidebar/entity/button': '編集',
@@ -1332,7 +1399,16 @@ function Strings( config ) {
 			'menubar/command/success': '"{0}" コマンドが正常に追加されました',
 			'menubar/command/select_object_first': '先にオブジェクトを選択してください',
 			'menubar/command/already_exists': 'このオブジェクトは既に音声コマンドが設定されています。別の音声コマンドを追加することはできません。',
-			'menubar/component/mutually_exclusive': 'Only one of these components can be selected: Click Action, Movable or Collision Trigger'
+			'menubar/component/mutually_exclusive': 'Only one of these components can be selected: Click Action, Movable or Collision Trigger',
+
+			'sidebar/media': 'メディアコントロール',
+			'sidebar/media/play': '再生',
+			'sidebar/media/pause': '一時停止',
+			'sidebar/media/time': '時間',
+			'sidebar/media/volume': '音量',
+			'sidebar/media/speed': '速度',
+			'sidebar/media/loop': 'ループ',
+			'sidebar/media/muted': 'ミュート'
 		}
 	};
 

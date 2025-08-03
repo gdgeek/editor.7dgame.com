@@ -295,9 +295,23 @@
 				if (data.data && data.data.resources) {
 					editor.resources = data.data.resources;
 				}
+
+				// 保存用户信息
+				if (data.user) {
+					editor.userId = data.user.id;
+					editor.userRoles = data.user.roles;
+					editor.userRole = data.user.role;
+					console.log("Set user role:", editor.userRole);
+				}
 			} else if (params.action === 'available-resource-types') { 
 				// 直接处理可用资源类型列表
 				editor.availableResourceTypes = params.data;
+			} else if (params.action === 'user-info') {
+				// 保存用户信息
+				editor.userId = params.data.id;
+				editor.userRoles = params.data.roles;
+				editor.userRole = params.data.role;
+				console.log("Updated user role:", editor.userRole);
 			}
 
 		});

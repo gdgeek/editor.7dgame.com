@@ -1,4 +1,4 @@
-import { UIPanel, UINumber, UIBreak, UIText, UIButton, UIRow, UIInput, UIHorizontalRule } from '../../libs/ui.js';
+import { UIPanel, UINumber, UIBreak, UIText, UIButton, UIRow, UIInput, UIHorizontalRule,UICheckbox } from '../../libs/ui.js';
 import { RemoveComponentCommand } from '../../commands/RemoveComponentCommand.js';
 import { SetComponentValueCommand } from '../../commands/SetComponentValueCommand.js';
 import { SetValueCommand } from '../../commands/SetValueCommand.js';
@@ -17,17 +17,35 @@ class RotateComponent {
       parameters: {
         uuid: THREE.MathUtils.generateUUID(),
         speed: { x: 0, y: 0, z: 0 },
+        isRotating: true,
 				action: 'rotate'
       }
     }
     return component;
   }
   rotate(container) {
-
+    const strings = this.editor.strings;
 		container.add(new UIBreak())
     container.add(new UIBreak())
 
-    const strings = this.editor.strings;
+    const row = new UIRow();
+    const label = new UIText(strings.getKey('sidebar/object/isRotating')).setWidth('90px');
+    const checkbox = new UICheckbox(this.component.parameters.isRotating);
+
+    checkbox.onChange(() => {
+      const value = checkbox.getValue();
+      const command = new SetValueCommand(
+        this.editor,
+        this.component.parameters,
+        'isRotating',
+        value
+      );
+      this.editor.execute(command);
+    });
+
+    row.add(label, checkbox);
+    container.add(row);
+
     this.objectRotationRow = new UIRow()
     this.objectRotationX = new UINumber()
       .setStep(10)

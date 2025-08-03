@@ -9,6 +9,13 @@ class VoiceCommand {
     this.editor = editor;
     this.object = object;
     this.component = component;
+
+    // 监听用户信息变化，在角色改变时重新加载选项
+    this.editor.signals.messageReceive.add((params) => {
+      if (params.action === 'user-info' && this.voiceSelect) {
+        this.reloadOptions();
+      }
+    });
   }
 
   static Create() {
@@ -41,11 +48,31 @@ class VoiceCommand {
       const row = new UIRow();
       const voiceLabel = new UIText(strings.getKey("sidebar/command/voice/label")).setWidth('90px');
 
-      const voiceOptions = {
-        scaleUp: strings.getKey('sidebar/command/voice/scaleUp'),
-        scaleDown: strings.getKey('sidebar/command/voice/scaleDown'),
-        decompose: strings.getKey('sidebar/command/voice/decompose'),
-        reset: strings.getKey('sidebar/command/voice/reset'),
+      this.voiceSelect = new UISelect().setWidth('150px').setFontSize('12px');
+      this.reloadOptions();
+
+      row.add(voiceLabel);
+      row.add(this.voiceSelect);
+      container.add(row);
+    }
+  }
+
+  reloadOptions() {
+    const strings = this.editor.strings;
+    const currentValue = this.voiceSelect.getValue();
+
+    // 普通用户user可选
+    const voiceOptions = {
+      scaleUp: strings.getKey('sidebar/command/voice/scaleUp'),
+      scaleDown: strings.getKey('sidebar/command/voice/scaleDown'),
+      decompose: strings.getKey('sidebar/command/voice/decompose'),
+      reset: strings.getKey('sidebar/command/voice/reset'),
+    };
+
+    // user以上角色可选
+    const userRole = this.editor.userRole || '';
+    if (userRole !== 'user') {
+      Object.assign(voiceOptions, {
         nextStep: strings.getKey('sidebar/command/voice/nextStep'),
         returnMain: strings.getKey('sidebar/command/voice/returnMain'),
         closeTooltip: strings.getKey('sidebar/command/voice/closeTooltip'),
@@ -54,15 +81,29 @@ class VoiceCommand {
         horizontal: strings.getKey('sidebar/command/voice/horizontal'),
         hidden: strings.getKey('sidebar/command/voice/hidden'),
         visible: strings.getKey('sidebar/command/voice/visible'),
-      };
-
-      this.voiceSelect = new UISelect().setWidth('150px').setFontSize('12px');
-      this.voiceSelect.setOptions(voiceOptions).onChange(this.update.bind(this));
-
-      row.add(voiceLabel);
-      row.add(this.voiceSelect);
-      container.add(row);
+        showYuelu: strings.getKey('sidebar/command/voice/showYuelu'),
+        showLunan: strings.getKey('sidebar/command/voice/showLunan'),
+        showXiaoxiang: strings.getKey('sidebar/command/voice/showXiaoxiang'),
+        showTianxin: strings.getKey('sidebar/command/voice/showTianxin'),
+        showXinglin: strings.getKey('sidebar/command/voice/showXinglin'),
+        showKaifu: strings.getKey('sidebar/command/voice/showKaifu'),
+        goBack: strings.getKey('sidebar/command/voice/goBack'),
+        bgmOn: strings.getKey('sidebar/command/voice/bgmOn'),
+        bgmOff: strings.getKey('sidebar/command/voice/bgmOff'),
+        sandboxFxOn: strings.getKey('sidebar/command/voice/sandboxFxOn'),
+        sandboxFxOff: strings.getKey('sidebar/command/voice/sandboxFxOff'),
+      });
     }
+
+    // 清除并重新设置选项
+    this.voiceSelect.setOptions(voiceOptions);
+
+    // 如果当前值在新选项中存在，则保持选中状态
+    if (currentValue && voiceOptions[currentValue]) {
+      this.voiceSelect.setValue(currentValue);
+    }
+
+    this.voiceSelect.onChange(this.update.bind(this));
   }
 
   update() {

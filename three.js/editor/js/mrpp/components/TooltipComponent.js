@@ -12,7 +12,7 @@ class TooltipComponent {
 
     // 遍历所有子节点，分类存入 targetList
     const traverseChildren = (node) => {
-      if (node.type === 'Voxel' || node.type === 'Polygen') {
+      if (node.type.toLowerCase() === 'voxel' || node.type.toLowerCase() === 'polygen' || node.type.toLowerCase() === 'picture') {
         this.targetList.push(node);
       }
       node.children.forEach(traverseChildren);
@@ -22,7 +22,7 @@ class TooltipComponent {
 
     // 监听对象选中，当选中Voxel或Polygen类型对象时自动更新target
     this.editor.signals.objectSelected.add((selectedObject) => {
-      if (selectedObject && (selectedObject.type === 'Voxel' || selectedObject.type === 'Polygen')) {
+      if (selectedObject && (selectedObject.type.toLowerCase() === 'voxel' || selectedObject.type.toLowerCase() === 'polygen' || selectedObject.type.toLowerCase() === 'picture')) {
         if (this.targetSelect) {
           const currentUUID = this.targetSelect.getValue();
           if (!currentUUID || currentUUID !== selectedObject.uuid) {
@@ -38,7 +38,7 @@ class TooltipComponent {
     const selectedObject = editor.selected;
     let target = { uuid: '', x: 0, y: 0, z: 0 };
 
-    if (selectedObject && (selectedObject.type.toLowerCase() === 'polygen' || selectedObject.type.toLowerCase() === 'voxel')) {
+    if (selectedObject && (selectedObject.type.toLowerCase() === 'polygen' || selectedObject.type.toLowerCase() === 'voxel' || selectedObject.type.toLowerCase() === 'picture')) {
         const box = new THREE.Box3().setFromObject(selectedObject);
         const center = new THREE.Vector3();
         box.getCenter(center);
