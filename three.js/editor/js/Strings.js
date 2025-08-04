@@ -471,7 +471,7 @@ function Strings( config ) {
 
 
 		zh: {
-			'menubar/file': '文件',
+			'menubar/file': '文件~',
 			'menubar/file/new': '新建',
 			'menubar/file/import': '导入',
 			'menubar/file/save': '保存',
