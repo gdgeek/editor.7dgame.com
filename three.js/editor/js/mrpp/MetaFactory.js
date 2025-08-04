@@ -487,7 +487,16 @@ class MetaFactory extends Factory {
 		return null;
 	}
 
-	async building( data, resources ) {
+	async building( data, resources, visited = new Set() ) {
+		
+		// 防止循环引用导致的堆栈溢出
+		if (data.parameters && data.parameters.uuid) {
+			if (visited.has(data.parameters.uuid)) {
+				console.warn('Circular reference detected for entity:', data.parameters.uuid);
+				return null;
+			}
+			visited.add(data.parameters.uuid);
+		}
 
 		console.log( 'building: ', data.parameters );
 		let node = null;

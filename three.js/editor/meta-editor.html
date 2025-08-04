@@ -283,7 +283,7 @@
 				if (data.availableResourceTypes) {
 					editor.availableResourceTypes = data.availableResourceTypes;
 					
-					// 触发一个自定义事件，通知菜单更新资源类型
+					// 直接触发一个自定义事件，通知菜单更新资源类型，避免递归
 					editor.signals.messageReceive.dispatch({
 						action: 'available-resource-types',
 						data: data.availableResourceTypes
@@ -302,9 +302,6 @@
 					editor.userRole = data.user.role;
 					console.log("Set user role:", editor.userRole);
 				}
-			} else if (params.action === 'available-resource-types') { 
-				// 直接处理可用资源类型列表
-				editor.availableResourceTypes = params.data;
 			} else if (params.action === 'user-info') {
 				// 保存用户信息
 				editor.userId = params.data.id;
