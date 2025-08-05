@@ -138,9 +138,9 @@ class Builder {
 		return ret;
 
 	}
-	phototype( data = {}) {
+	phototype( data ) {
 
-		const ret = this.node( 'Phototype', 'Phototype' );
+		const ret = this.node( 'Phototype', data.title +' [phototype]' );
 		ret.parameters.data = data.data || {};
 		return ret;
 	}

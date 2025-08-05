@@ -88,6 +88,7 @@ function MenubarAdd( editor ) {
 
 			const node = await factory.building( builder.phototype(data), resources );
 			editor.execute( new AddObjectCommand( editor, node ) );
+			//await factory.addGizmo( node );
 			console.error('加载phototype:', data);
 		}
 
