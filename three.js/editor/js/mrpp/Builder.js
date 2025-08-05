@@ -44,7 +44,7 @@ class Builder {
 				break;
 			case 'audio':
 				ret = this.node( 'Sound', data.name + ' [sound]' );
-				ret.parameters.loop = true;
+				ret.parameters.loop = false;
 				ret.parameters.volume = 1;
 				ret.parameters.rate = 1;
 				ret.parameters.play = false;
