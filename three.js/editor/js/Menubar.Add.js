@@ -56,11 +56,56 @@ function MenubarAdd( editor ) {
 				}
 			});
 		};
+		const loadResource = async function (data) {
+			// 将资源同时保存到本地和全局资源集合
+			resources.set( data.id.toString(), data );
+
+			// 添加到editor.resources
+			if (!editor.resources) editor.resources = [];
+
+			// 更新或添加资源
+			const existingIndex = editor.resources.findIndex(resource =>
+				resource && resource.id == data.id
+			);
+
+			if (existingIndex >= 0) {
+				editor.resources[existingIndex] = data;
+			} else {
+				editor.resources.push(data);
+			}
+
+			// 创建对象
+			const raw = builder.resource( data );
+			if ( raw ) {
+				const node = await factory.building( raw, resources );
+				if ( node ) {
+					editor.execute( new AddObjectCommand( editor, node ) );
+				}
+			}
+		}
+		const loadPhototype = async function (data) {
+
+
+			const node = await factory.building( builder.phototype(data), resources );
+			editor.execute( new AddObjectCommand( editor, node ) );
+			console.error('加载phototype:', data);
+		}
 
 		editor.signals.messageReceive.add( async function ( params ) {
-
+			switch (params.action) {
+				case 'load-resource':
+					loadResource( params.data );
+					break;
+				case 'available-resource-types':
+					updateResourceMenuItems( params.data );
+					break;
+				case 'load-phototype':
+					loadPhototype( params.data );
+					break;
+			}
+			/*
 			if ( params.action === 'load-resource' ) {
-
+				console.error(params);
 				const data = params.data;
 
 				// 将资源同时保存到本地和全局资源集合
@@ -92,7 +137,7 @@ function MenubarAdd( editor ) {
 			} else if ( params.action === 'available-resource-types' ) {
 				updateResourceMenuItems( params.data );
 			}
-
+*/
 		} );
 
 		// Node

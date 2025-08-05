@@ -307,6 +307,14 @@ class MetaFactory extends Factory {
 		return node;
 
 	}
+	async getPhototype( data, resources ) {
+
+		const entity = new THREE.Group();
+		entity.name = data.parameters.name;
+		console.error('getPhototype', data);
+		return entity;
+
+	}
 	async getEntity( data, resources ) {
 
 		const entity = new THREE.Group();
@@ -488,7 +496,7 @@ class MetaFactory extends Factory {
 	}
 
 	async building( data, resources, visited = new Set() ) {
-		
+
 		// 防止循环引用导致的堆栈溢出
 		if (data.parameters && data.parameters.uuid) {
 			if (visited.has(data.parameters.uuid)) {
@@ -497,7 +505,6 @@ class MetaFactory extends Factory {
 			}
 			visited.add(data.parameters.uuid);
 		}
-
 		console.log( 'building: ', data.parameters );
 		let node = null;
 		switch ( data.type.toLowerCase() ) {
@@ -528,6 +535,9 @@ class MetaFactory extends Factory {
 				break;
 			case 'anchor':
 				node = await this.addAnchor( data );
+				break;
+			case 'phototype':
+				node = await this.getPhototype( data, resources );
 				break;
 
 		}

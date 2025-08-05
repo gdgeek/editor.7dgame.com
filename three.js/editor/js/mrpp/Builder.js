@@ -138,6 +138,12 @@ class Builder {
 		return ret;
 
 	}
+	phototype( data = {}) {
+
+		const ret = this.node( 'Phototype', 'Phototype' );
+		ret.parameters.data = data.data || {};
+		return ret;
+	}
 	entity() {
 
 		const ret = this.node( 'Entity', 'Point' );
