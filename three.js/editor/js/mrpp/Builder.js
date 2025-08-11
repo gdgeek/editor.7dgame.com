@@ -53,7 +53,7 @@ class Builder {
 			case 'video':
 				ret = this.node( 'Video', data.name + ' [video]' );
 				ret.parameters.width = 0.5;
-				ret.parameters.loop = true;
+				ret.parameters.loop = false;
 				ret.parameters.muted = false;
 				ret.parameters.volume = 1;
 				ret.parameters.rate = 1;
