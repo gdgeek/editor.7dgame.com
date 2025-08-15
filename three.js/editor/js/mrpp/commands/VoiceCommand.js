@@ -92,6 +92,11 @@ class VoiceCommand {
         bgmOff: strings.getKey('sidebar/command/voice/bgmOff'),
         sandboxFxOn: strings.getKey('sidebar/command/voice/sandboxFxOn'),
         sandboxFxOff: strings.getKey('sidebar/command/voice/sandboxFxOff'),
+        sandboxRotateOn: strings.getKey('sidebar/command/voice/sandboxRotateOn'),
+        sandboxRotateOff: strings.getKey('sidebar/command/voice/sandboxRotateOff'),
+        campusIntroOn: strings.getKey('sidebar/command/voice/campusIntroOn'),
+        campusIntroOff: strings.getKey('sidebar/command/voice/campusIntroOff'),
+
       });
     }
 
