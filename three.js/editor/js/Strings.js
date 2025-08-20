@@ -204,6 +204,10 @@ function Strings( config ) {
 			'sidebar/command/voice/bgmOff': 'Stop Background Music',
 			'sidebar/command/voice/sandboxFxOn': 'Enable Sandbox Effects',
 			'sidebar/command/voice/sandboxFxOff': 'Disable Sandbox Effects',
+			'sidebar/command/voice/sandboxRotateOn': 'Enable Sandbox Rotation',
+			'sidebar/command/voice/sandboxRotateOff': 'Disable Sandbox Rotation',
+			'sidebar/command/voice/campusIntroOn': 'Enable Campus Introduction',
+			'sidebar/command/voice/campusIntroOff': 'Disable Campus Introduction',
 
 			'sidebar/entity': 'Point(Custom)',
 			'sidebar/entity/button': 'Edit',
@@ -675,6 +679,10 @@ function Strings( config ) {
 			'sidebar/command/voice/bgmOff': '关闭背景音乐',
 			'sidebar/command/voice/sandboxFxOn': '打开沙盘特效',
 			'sidebar/command/voice/sandboxFxOff': '关闭沙盘特效',
+			'sidebar/command/voice/sandboxRotateOn': '打开沙盘旋转',
+			'sidebar/command/voice/sandboxRotateOff': '关闭沙盘旋转',
+			'sidebar/command/voice/campusIntroOn': '打开校区介绍',
+			'sidebar/command/voice/campusIntroOff': '关闭校区介绍',
 
 
 			'sidebar/entity': '实体（自定义）',
@@ -1146,6 +1154,12 @@ function Strings( config ) {
 			'sidebar/command/voice/bgmOff': '背景音楽を停止',
 			'sidebar/command/voice/sandboxFxOn': 'サンドボックスエフェクトを有効化',
 			'sidebar/command/voice/sandboxFxOff': 'サンドボックスエフェクトを無効化',
+			'sidebar/command/voice/sandboxRotateOn': 'サンドボックスの回転を開始',
+			'sidebar/command/voice/sandboxRotateOff': 'サンドボックスの回転を停止',
+			'sidebar/command/voice/campusIntroOn': 'キャンパス紹介を開始',
+			'sidebar/command/voice/campusIntroOff': 'キャンパス紹介を停止',
+
+
 
 			'sidebar/entity': 'コンポーネント（カスタム）',
 			'sidebar/entity/button': '編集',
