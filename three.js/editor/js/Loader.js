@@ -17,20 +17,20 @@ function Loader(editor) {
 
 	// 懒初始化的 KTX2Loader
 	scope.ktx2Loader = null
-	function ensureKTX2(manager) {
-		if (scope.ktx2Loader) return scope.ktx2Loader
-		try {
-			const k = new KTX2Loader(manager)
-				.setTranscoderPath('../examples/jsm/libs/basis/') // basis_transcoder.* 目录（需确保存在）
-				.detectSupport(editor.renderer)
-			manager.addHandler(/\.ktx2$/i, k)
-			scope.ktx2Loader = k
-			return k
-		} catch (e) {
-			console.warn('KTX2Loader 初始化失败', e)
-			return null
-		}
-	}
+	    function ensureKTX2(manager) {
+        if (scope.ktx2Loader) return scope.ktx2Loader
+        try {
+            const k = new KTX2Loader(manager)
+                .setTranscoderPath('../examples/jsm/libs/basis/') // basis_transcoder.* 目录（需确保存在）
+                .detectSupport(editor.renderer)
+            manager.addHandler(/\.ktx2$/i, k)
+            scope.ktx2Loader = k
+            return k
+        } catch (e) {
+            console.warn('KTX2Loader 初始化失败', e)
+            return null
+        }
+    }
 
 	this.loadItemList = function (items) {
 		LoaderUtils.getFilesFromItemList(items, function (files, filesMap) {
@@ -269,7 +269,7 @@ function Loader(editor) {
 						const dracoLoader = new DRACOLoader()
 						dracoLoader.setDecoderPath('../examples/js/libs/draco/gltf/')
 
-						const loader = new GLTFLoader()
+						const loader = new GLTFLoader(manager)
 						loader.setDRACOLoader(dracoLoader)
 						if (scope.ktx2Loader) loader.setKTX2Loader(scope.ktx2Loader)
 						loader.parse(contents, '', function (result) {
