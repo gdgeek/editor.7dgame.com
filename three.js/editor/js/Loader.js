@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 
 import { TGALoader } from '../../examples/jsm/loaders/TGALoader.js'
+import { KTX2Loader } from '../../examples/jsm/loaders/KTX2Loader.js' // KTX2 支持
 
 import { AddObjectCommand } from './commands/AddObjectCommand.js'
 import { SetSceneCommand } from './commands/SetSceneCommand.js'
@@ -13,6 +14,23 @@ function Loader(editor) {
 	const scope = this
 
 	this.texturePath = ''
+
+	// 懒初始化的 KTX2Loader
+	scope.ktx2Loader = null
+	function ensureKTX2(manager) {
+		if (scope.ktx2Loader) return scope.ktx2Loader
+		try {
+			const k = new KTX2Loader(manager)
+				.setTranscoderPath('../examples/jsm/libs/basis/') // basis_transcoder.* 目录（需确保存在）
+				.detectSupport(editor.renderer)
+			manager.addHandler(/\.ktx2$/i, k)
+			scope.ktx2Loader = k
+			return k
+		} catch (e) {
+			console.warn('KTX2Loader 初始化失败', e)
+			return null
+		}
+	}
 
 	this.loadItemList = function (items) {
 		LoaderUtils.getFilesFromItemList(items, function (files, filesMap) {
@@ -40,6 +58,10 @@ function Loader(editor) {
 			})
 
 			manager.addHandler(/\.tga$/i, new TGALoader())
+			// 如果待加载文件中含有 .ktx2 或 glb/gltf（可能引用 .ktx2），提前初始化
+			if (files.some(f => /\.(ktx2|glb|gltf)$/i.test(f.name))) {
+				ensureKTX2(manager)
+			}
 
 			for (let i = 0; i < files.length; i++) {
 				scope.loadFile(files[i], manager)
@@ -241,11 +263,15 @@ function Loader(editor) {
 							'../../examples/jsm/loaders/GLTFLoader.js'
 						)
 
+						// 确保 KTX2 支持（如果未提前初始化）
+						if (!scope.ktx2Loader) ensureKTX2(manager)
+
 						const dracoLoader = new DRACOLoader()
 						dracoLoader.setDecoderPath('../examples/js/libs/draco/gltf/')
 
 						const loader = new GLTFLoader()
 						loader.setDRACOLoader(dracoLoader)
+						if (scope.ktx2Loader) loader.setKTX2Loader(scope.ktx2Loader)
 						loader.parse(contents, '', function (result) {
 							const scene = result.scene
 							scene.name = filename
@@ -281,11 +307,14 @@ function Loader(editor) {
 								'../../examples/jsm/loaders/GLTFLoader.js'
 							)
 
+							if (!scope.ktx2Loader) ensureKTX2(manager)
+
 							const dracoLoader = new DRACOLoader()
 							dracoLoader.setDecoderPath('../examples/js/libs/draco/gltf/')
 
 							loader = new GLTFLoader(manager)
 							loader.setDRACOLoader(dracoLoader)
+							if (scope.ktx2Loader) loader.setKTX2Loader(scope.ktx2Loader)
 						}
 
 						loader.parse(contents, '', function (result) {
@@ -802,6 +831,11 @@ function Loader(editor) {
 				return url
 			})
 
+			// 如果压缩包内存在 ktx2/gltf/glb，初始化一次 KTX2 支持
+			if (!scope.ktx2Loader && /\.(ktx2|gltf|glb)$/i.test(path)) {
+				ensureKTX2(manager)
+			}
+
 			const extension = path.split('.').pop().toLowerCase()
 
 			switch (extension) {
@@ -825,23 +859,18 @@ function Loader(editor) {
 					const { GLTFLoader } = await import(
 						'../../examples/jsm/loaders/GLTFLoader.js'
 					)
-
 					const dracoLoader = new DRACOLoader()
 					dracoLoader.setDecoderPath('../examples/js/libs/draco/gltf/')
-
 					const loader = new GLTFLoader()
 					loader.setDRACOLoader(dracoLoader)
-
+					if (scope.ktx2Loader) loader.setKTX2Loader(scope.ktx2Loader)
 					loader.parse(file.buffer, '', function (result) {
 						const scene = result.scene
-
 						scene.animations.push(...result.animations)
 						editor.execute(new AddObjectCommand(editor, scene))
 					})
-
 					break
 				}
-
 				case 'gltf': {
 					const { DRACOLoader } = await import(
 						'../../examples/jsm/loaders/DRACOLoader.js'
@@ -849,21 +878,19 @@ function Loader(editor) {
 					const { GLTFLoader } = await import(
 						'../../examples/jsm/loaders/GLTFLoader.js'
 					)
-
 					const dracoLoader = new DRACOLoader()
 					dracoLoader.setDecoderPath('../examples/js/libs/draco/gltf/')
-
 					const loader = new GLTFLoader(manager)
 					loader.setDRACOLoader(dracoLoader)
+					if (scope.ktx2Loader) loader.setKTX2Loader(scope.ktx2Loader)
 					loader.parse(strFromU8(file), '', function (result) {
 						const scene = result.scene
-
 						scene.animations.push(...result.animations)
 						editor.execute(new AddObjectCommand(editor, scene))
 					})
-
 					break
 				}
+				// ...existing other extensions...
 			}
 		}
 	}
