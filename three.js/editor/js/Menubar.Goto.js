@@ -10,7 +10,7 @@ import { DialogUtils } from './utils/DialogUtils.js';
 function MenubarGoto( editor ) {
 
 
-	const factory = new MetaFactory();
+	const factory = new MetaFactory(editor);
 	const builder = new Builder();
 	const strings = editor.strings;
 

@@ -74,7 +74,8 @@ function MetaLoader(editor) {
 
 
 	//const builder = new SceneBuilder(editor)
-	const factory = new MetaFactory();
+	editor.renderer = new THREE.WebGLRenderer();
+	const factory = new MetaFactory(editor);
 
 	this.compareObjectsAndPrintDifferences = function (obj1, obj2, path = '', tolerance = 0.0001) {
 

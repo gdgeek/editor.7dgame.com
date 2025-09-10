@@ -1253,7 +1253,7 @@ function SidebarObject(editor) {
 		const oldGeometry = textObject.geometry;
 		const oldMaterial = textObject.material;
 
-		const factory = new MetaFactory();
+		const factory = new MetaFactory(editor);
 		const newMesh = factory.createTextMesh(newText);
 
 		textObject.geometry.dispose(); // 释放旧几何体
