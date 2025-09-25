@@ -231,7 +231,7 @@ function MetaLoader(editor) {
 	};
 
 	this.load = async function (meta) {
-		console.error(meta);
+
 		let scene = editor.scene;
 		if (!scene) {
 			scene = new THREE.Scene();

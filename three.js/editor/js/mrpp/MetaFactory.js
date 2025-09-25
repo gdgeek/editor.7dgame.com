@@ -537,6 +537,7 @@ class MetaFactory extends Factory {
 				node = await this.addAnchor( data );
 				break;
 			case 'phototype':
+
 				node = await this.getPhototype( data, resources );
 				break;
 
