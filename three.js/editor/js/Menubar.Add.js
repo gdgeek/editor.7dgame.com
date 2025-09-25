@@ -10,7 +10,7 @@ import { Builder } from './mrpp/Builder.js';
 
 function MenubarAdd( editor ) {
 
-	const factory = new MetaFactory();
+	const factory = new MetaFactory(editor);
 
 	const builder = new Builder();
 	const strings = editor.strings;

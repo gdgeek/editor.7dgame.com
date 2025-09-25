@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from '../../../examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from '../../../examples/jsm/loaders/DRACOLoader.js';
 import { VOXLoader, VOXMesh } from '../../../examples/jsm/loaders/VOXLoader.js';
+import { KTX2Loader } from '../../../examples/jsm/loaders/KTX2Loader.js';
 
 import { Factory } from './Factory.js';
 
@@ -46,9 +47,13 @@ const convertToHttps = ( url ) => {
 
 class MetaFactory extends Factory {
 
-	constructor() {
+	constructor(editor) {
 
 		super();
+
+		this.editor = editor;
+		this.ktx2Loader = null;
+
 
 	}
 	async addGizmo( node ) {
@@ -184,7 +189,23 @@ class MetaFactory extends Factory {
 			const dracoLoader = new DRACOLoader();
 
 			dracoLoader.setDecoderPath( './draco/' );
-			loader.setDRACOLoader( dracoLoader );
+			loader.setDRACOLoader(dracoLoader);
+
+			// 如果 KTX2Loader 未初始化，则进行初始化
+			if ( this.ktx2Loader === null ) {
+				this.ktx2Loader = new KTX2Loader();
+				this.ktx2Loader.setTranscoderPath( './basis/' );
+				if ( this.editor && this.editor.renderer ) {
+					this.ktx2Loader.detectSupport( this.editor.renderer );
+				} else {
+					console.warn( 'KTX2Loader 初始化失败，因为没有可用的渲染器上下文' );
+				}
+			}
+
+			// 如果 KTX2Loader 已初始化，则将其设置到 GLTFLoader
+			if ( this.ktx2Loader !== null ) {
+				loader.setKTX2Loader( this.ktx2Loader );
+			}
 
 			try {
 

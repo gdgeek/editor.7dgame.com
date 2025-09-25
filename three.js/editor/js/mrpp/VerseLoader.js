@@ -11,7 +11,8 @@ function VerseLoader(editor) {
 	this.isLoading = true;
 	this.loadingPromises = [];
 
-	const factory = new MetaFactory();
+	editor.renderer = new THREE.WebGLRenderer();
+	const factory = new MetaFactory(editor);
 	const self = this;
 
 	editor.selector = function (object) {
