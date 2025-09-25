@@ -160,6 +160,7 @@ function Strings( config ) {
 			'sidebar/object/renderorder': 'Render Order',
 			'sidebar/object/text': 'Text Content',
 			'sidebar/object/userdata': 'User data',
+			'sidebar/object/sortingOrder': 'Canvas Sorting Order',
 
 			'sidebar/components': 'Components',
 			'sidebar/components/select': 'Select',
@@ -635,6 +636,7 @@ function Strings( config ) {
 			'sidebar/object/renderorder': '渲染次序',
 			'sidebar/object/text': '文本内容',
 			'sidebar/object/userdata': '自定义数据',
+			'sidebar/object/sortingOrder': '图片渲染层级',
 
 			'sidebar/components': '组件',
 			'sidebar/components/select': '选择项',
@@ -1110,6 +1112,7 @@ function Strings( config ) {
 			'sidebar/object/renderorder': 'レンダリング順序',
 			'sidebar/object/text': 'テキストコンテンツ',
 			'sidebar/object/userdata': 'ユーザーデータ',
+			'sidebar/object/sortingOrder': '画像のレンダリング順序',
 
 			'sidebar/components': 'コンポーネント',
 			'sidebar/components/select': '選択項目',

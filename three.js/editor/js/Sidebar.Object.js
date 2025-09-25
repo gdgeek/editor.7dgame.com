@@ -11,6 +11,7 @@ import {
 	UITextArea,
 	UIText,
 	UINumber,
+    UISelect,
 } from "./libs/ui.js";
 import { UIBoolean } from "./libs/ui.three.js";
 
@@ -1170,6 +1171,20 @@ function SidebarObject(editor) {
 
 	container.add(objectLoopRow);
 
+
+	//sortingOrder
+	const objectSortingRow = new UIRow();
+	const objectSorting = new UISelect().onChange(update);
+
+	objectSorting.setOptions(
+  	Object.fromEntries([0, 1, 2].map(i => [i, String(i)]))
+	);
+
+	objectSortingRow.add(new UIText(strings.getKey("sidebar/object/sortingOrder")).setWidth("90px"));
+	objectSortingRow.add(objectSorting);
+
+	container.add(objectSortingRow);
+
 	// frustumCulled
 
 	const objectFrustumCulledRow = new UIRow();
@@ -1573,6 +1588,32 @@ function SidebarObject(editor) {
 				console.warn(exception);
 			}
 
+
+			if (isPictureType(object)) {
+			const selectedSorting = parseInt(objectSorting.getValue(), 10) || 0;
+			const currentSorting = (object.userData && object.userData.sortingOrder !== undefined) ?
+				Number(object.userData.sortingOrder) : 0;
+
+			if (currentSorting !== selectedSorting) {
+				const userData = JSON.parse(JSON.stringify(object.userData || {}));
+				userData.sortingOrder = selectedSorting;
+
+				object.renderOrder = 0 - userData.sortingOrder;
+
+				editor.execute(
+					new SetValueCommand(
+						editor,
+						object,
+						"userData",
+						userData
+					)
+				);
+
+			// 触发对象变化信号，确保渲染更新
+			editor.signals.objectChanged.dispatch(object);
+		}
+	}
+
 			if (isMediaType(object)) {
 				if (object.userData.loop !== objectLoop.getValue()) {
 					const userData = JSON.parse(JSON.stringify(object.userData));
@@ -1587,6 +1628,7 @@ function SidebarObject(editor) {
 						)
 					);
 				}
+
 			}
 		}
 	}
@@ -1630,8 +1672,16 @@ function SidebarObject(editor) {
 
 		const isMediaObject = isMediaType(object);
 		objectLoopRow.setDisplay(isMediaObject ? "" : "none");
+		// 仅当对象为图片类型（picture）时显示 sorting order
+		const isPictureObject = isPictureType(object);
+		objectSortingRow.setDisplay(isPictureObject ? "" : "none");
 
-		//
+		 // 新增：如果对象类型为 Module，则隐藏 visible 行
+		if (object && object.type && typeof object.type === 'string' && object.type.toLowerCase() === 'module') {
+			objectVisibleRow.setDisplay('none');
+		} else {
+			objectVisibleRow.setDisplay('');
+		}
 
 		if (object.isLight) {
 			objectReceiveShadow.setDisplay("none");
@@ -1660,6 +1710,25 @@ function SidebarObject(editor) {
 
 		}
 
+		return false;
+	}
+
+	// 判断对象是否为图片类型（picture）
+	function isPictureType(object) {
+		if (!object) return false;
+		try {
+			if (object.userData && object.userData.type) {
+				const type = object.userData.type.toLowerCase();
+				if (type === 'picture') return true;
+			}
+
+			if (object.name) {
+				const name = object.name.toLowerCase();
+				if (name.includes('[picture]') || name.includes('[photo]')) return true;
+			}
+		} catch (e) {
+			// ignore
+		}
 		return false;
 	}
 
@@ -1784,6 +1853,14 @@ function SidebarObject(editor) {
 
 		if (object.castShadow !== undefined) {
 			objectCastShadow.setValue(object.castShadow);
+		}
+
+		// 同步 sortingOrder 值（用于 picture 类型）
+		try {
+			const sortingVal = (object.userData && object.userData.sortingOrder !== undefined) ? object.userData.sortingOrder : 0;
+			objectSorting.setValue(String(sortingVal));
+		} catch (e) {
+			objectSorting.setValue('0');
 		}
 
 		if (object.receiveShadow !== undefined) {

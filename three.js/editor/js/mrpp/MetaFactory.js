@@ -293,21 +293,40 @@ class MetaFactory extends Factory {
 			const loader = new THREE.TextureLoader();
 
 			loader.load( url, texture => {
+				// 完整的纹理配置
 				texture.premultiplyAlpha = false;
+				texture.encoding = THREE.sRGBEncoding;
+				texture.format = THREE.RGBAFormat; // 明确指定RGBA格式
+				texture.needsUpdate = true;
+
+				// 基于 URL 后缀判断是否可能有透明通道
+				const lowerUrl = (url || '').toLowerCase();
+				const isAlphaImage = lowerUrl.endsWith('.png') || lowerUrl.endsWith('.webp');
 
 				const material = new THREE.MeshBasicMaterial( {
 					color: 0xffffff,
 					side: THREE.DoubleSide,
 					map: texture,
-					transparent: true,
+					transparent: isAlphaImage || true, // 允许透明（PNG会用到）
+					alphaTest: isAlphaImage ? 0.01 : 0.0,
+					depthWrite: false, // 透明材质通常不写入深度
+					opacity: 1.0,
+					blending: THREE.NormalBlending
 				} );
-				resolve( new THREE.Mesh( geometry, material ) );
 
-			}, function ( xhr ) {
-				//console.log((xhr.loaded / xhr.total) * 100 + '% loaded!')
+
+				const mesh = new THREE.Mesh( geometry, material );
+				if ( isAlphaImage ) {
+					material.depthTest = false;
+				} else {
+					material.depthTest = true;
+				}
+
+				resolve( mesh );
+
 			}, function ( error ) {
 
-				console.error( error );
+				console.error('Texture loading error:', error);
 				resolve( new THREE.Mesh( geometry ) );
 
 			} );
@@ -319,11 +338,53 @@ class MetaFactory extends Factory {
 	async getPicture( data, resources ) {
 
 		const resource = resources.get( data.parameters.resource.toString() );
-		const info = JSON.parse( resource.info );
-		const size = info.size;
-		const width = data.parameters.width;
+		if ( ! resource ) return null;
+		// 根据文件扩展名选择合适的 URL
+		const fileUrl = resource.file && resource.file.url ? resource.file.url : '';
+		const imageUrl = resource.image && resource.image.url ? resource.image.url : '';
+
+		const lowerFile = fileUrl.toLowerCase();
+
+		let chosenUrl = imageUrl; // 默认使用缩略图
+
+		if (lowerFile.endsWith('.png') || lowerFile.endsWith('.webp')) {
+			// png 或 webp 使用源文件
+			chosenUrl = fileUrl;
+		} else if (lowerFile.endsWith('.jpg') || lowerFile.endsWith('.jpeg')) {
+			// jpg/jpeg 使用缩略图
+			chosenUrl = imageUrl;
+		} else {
+			// 其他格式（比如 gif、webp，但未在前面匹配），如果原始文件存在且是 png/webp 仍然使用源文件
+			if (lowerFile.endsWith('.png') || lowerFile.endsWith('.webp')) {
+				chosenUrl = fileUrl;
+			}
+		}
+
+		// 解析尺寸，防止 info 为空
+		let info = {};
+		try { info = JSON.parse( resource.info || '{}' ); } catch ( e ) { console.warn( 'parse resource.info failed', e ); }
+		const size = info.size || { x: 1, y: 1 };
+		const width = data.parameters.width || 0.5;
 		const height = width * ( size.y / size.x );
-		const node = await this.getPlane( resource.image.url, width, height );
+
+		const node = await this.getPlane( chosenUrl, width, height );
+		if (data.parameters.sortingOrder !== undefined) {
+			node.renderOrder = 0-data.parameters.sortingOrder;
+			console.log('应用已有的 renderOrder:', node.renderOrder);
+		}
+		// 调试信息
+		/* console.log( 'Picture info:', {
+			chosenUrl: chosenUrl,
+			originalFile: fileUrl,
+			thumbnail: imageUrl,
+			size: size,
+			width: width,
+			height: height,
+			texture: node && node.material ? node.material.map : null,
+			sortingOrder: data.parameters.sortingOrder
+
+
+		} ); */
 
 		return node;
 
