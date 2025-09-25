@@ -140,9 +140,9 @@ class Builder {
 
 	}
 	phototype( data ) {
-
 		const ret = this.node( 'Phototype', data.title +' [phototype]' );
 		ret.parameters.data = data.data || {};
+		ret.parameters.phototype = data.phototype || {};
 		return ret;
 	}
 	entity() {
