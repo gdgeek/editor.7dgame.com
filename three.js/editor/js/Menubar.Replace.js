@@ -135,8 +135,8 @@ function MenubarReplace( editor ) {
 					if ( node ) {
 						const selected = editor.selected;
 						if (selected) {
-							console.log('替换前的旧对象:', selected);
-							console.log('替换用的新对象:', node);
+							//console.log('替换前的旧对象:', selected);
+							//console.log('替换用的新对象:', node);
 
 							// 保存旧对象的所有属性
 							const position = selected.position.clone();
@@ -145,17 +145,33 @@ function MenubarReplace( editor ) {
 							const parent = selected.parent;
 							const uuid = selected.uuid;
 							const name = selected.name;
+							const visible = selected.visible;
+
+							// 根据 selectedObjectType 有条件地保存专用属性，避免误用
+                            let sortingOrder = undefined;
+							let loop = undefined;
+
+							 // selectedObjectType 在外层作用域已维护（'picture','audio','video' 等）
+                            const selType = selectedObjectType || (selected.userData && selected.userData.type ? selected.userData.type.toLowerCase() : '');
+
+                            if ( selType === 'picture' ) {
+                                sortingOrder = selected.userData && typeof selected.userData.sortingOrder !== 'undefined' ? selected.userData.sortingOrder : undefined;
+                            }
+
+                            if ( selType === 'audio' || selType === 'video' ) {
+                                loop = selected.userData && typeof selected.userData.loop !== 'undefined' ? selected.userData.loop : undefined;
+							}
 
 							const components = selected.components ? [...selected.components] : [];
 							const commands = selected.commands ? [...selected.commands] : [];
 
-							// 需要继承的子对象
-							// const childrenToInherit = [];
-							// selected.children.forEach(child => {
-							// 	if (child.type !== 'Object3D') {
-							// 		childrenToInherit.push(child.clone());
-							// 	}
-							// });
+							// 保存需要保留的子节点（跳过userData.hidden=true的子节点）
+							const childrenToKeep = [];
+							selected.children.forEach(child => {
+								if (!child.userData || child.userData.hidden !== true) {
+									childrenToKeep.push(child);
+								}
+							});
 
 							// 删除旧对象
 							editor.execute( new RemoveObjectCommand( editor, selected ) );
@@ -166,14 +182,20 @@ function MenubarReplace( editor ) {
 							node.scale.copy( scale );
 							node.uuid = uuid;
 							node.name = name;
+							node.visible = visible;
+
+							 // 恢复 picture/sound/video 专用属性到新对象的 userData（如果有）
+                            if ( ! node.userData ) node.userData = {};
+                            if ( typeof sortingOrder !== 'undefined' ) node.userData.sortingOrder = sortingOrder;
+							if (typeof loop !== 'undefined') node.userData.loop = loop;
 
 							node.components = components;
 							node.commands = commands;
 
-							// 添加继承的子对象
-							// childrenToInherit.forEach(child => {
-							// 	node.add(child);
-							// });
+							// 将需要保留的子节点添加到新对象
+							childrenToKeep.forEach(child => {
+								node.add(child);
+							});
 
 							const cmd = new AddObjectCommand( editor, node );
 
