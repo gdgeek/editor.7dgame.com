@@ -286,13 +286,9 @@ function MetaLoader(editor) {
 		if (meta.data) {
 
 			const data = meta.data;
-			// const data = JSON.parse(meta.data);
 			const resources = new Map();
 			console.error(meta)
-			//alert(meta)
 			meta.resources.forEach(r => {
-
-			//	console.error(r);
 				resources.set(r.id.toString(), r);
 
 			});

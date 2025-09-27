@@ -115,17 +115,17 @@ function MenubarReplace( editor ) {
 				resources.set( data.id.toString(), data );
 
 				// 添加到editor.resources
-				if (!editor.resources) editor.resources = [];
+				if (!editor.data.resources) editor.data.resources = [];
 
 				// 更新或添加资源
-				const existingIndex = editor.resources.findIndex(resource =>
+				const existingIndex = editor.data.resources.findIndex(resource =>
 					resource && resource.id == data.id
 				);
 
 				if (existingIndex >= 0) {
-					editor.resources[existingIndex] = data;
+					editor.data.resources[existingIndex] = data;
 				} else {
-					editor.resources.push(data);
+					editor.data.resources.push(data);
 				}
 
 				// 创建对象

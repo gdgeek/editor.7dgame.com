@@ -61,17 +61,18 @@ function MenubarAdd( editor ) {
 			// 将资源同时保存到本地和全局资源集合
 			resources.set(data.id.toString(), data );
 			// 添加到editor.resources
-			if (!editor.resources) editor.resources = [];
+			//if (!editor.resources) editor.resources = [];
+			if (!editor.data.resources) editor.data.resources = [];
 
 			// 更新或添加资源
-			const existingIndex = editor.resources.findIndex(resource =>
+			const existingIndex = editor.data.resources.findIndex(resource =>
 				resource && resource.id == data.id
 			);
 
 			if (existingIndex >= 0) {
-				editor.resources[existingIndex] = data;
+				editor.data.resources[existingIndex] = data;
 			} else {
-				editor.resources.push(data);
+				editor.data.resources.push(data);
 			}
 
 			// 创建对象
@@ -84,7 +85,7 @@ function MenubarAdd( editor ) {
 			}
 		}
 		const loadPhototype = async function (data) {
-			alert(JSON.stringify(data));
+			//alert(JSON.stringify(data));
 
 			const node = await factory.building( builder.phototype(data), resources );
 			editor.execute( new AddObjectCommand( editor, node ) );
@@ -181,9 +182,6 @@ function MenubarAdd( editor ) {
 				const data = params.data.data;
 				const setup = params.data.setup;
 				const title = params.data.title;
-
-				console.error( data );
-				alert(JSON.stringify(data.resources ));
 				if ( data.resources ) {
 
 					data.resources.forEach( resource => {

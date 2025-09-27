@@ -70,7 +70,7 @@ class VoiceCommand {
     };
 
     // user以上角色可选
-    const userRole = this.editor.userRole || '';
+    const userRole = this.editor.data.user.role || '';
     if (userRole !== 'user') {
       Object.assign(voiceOptions, {
         nextStep: strings.getKey('sidebar/command/voice/nextStep'),

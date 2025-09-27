@@ -4,38 +4,84 @@ import { GLTFLoader } from '../../../examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from '../../../examples/jsm/loaders/DRACOLoader.js';
 import { VOXLoader, VOXMesh } from '../../../examples/jsm/loaders/VOXLoader.js';
 import { KTX2Loader } from '../../../examples/jsm/loaders/KTX2Loader.js';
-
+//import { Editor } from './js/Editor.js';
 import { Factory } from './Factory.js';
+const getResourceFromUrl = async (url) => {
+	return new Promise((resolve, reject) => {
 
+		fetch(url)
+			.then(response => {
+				if (!response.ok) {
+					reject(new Error('网络响应不正常'));
+					//throw new Error('网络响应不正常');
+				}
+
+				return response.json(); // 如果返回的是JSON数据
+
+			})
+			.then(data => {
+				resolve(data);
+				console.log('获取到的数据:', data);
+				// 在这里处理你的数据
+			})
+			.catch(error => {
+				reject(error);
+				console.error('请求出错:', error);
+			});
+	});
+}
+
+
+const getUrlParams = () => {
+	const params = {};
+	// 获取URL中的查询字符串部分（例如 ?id=123&name=test）
+	const queryString = window.location.search.slice(1); // 去除开头的问号 "?"
+
+	if (queryString) {
+		// 按 "&" 分割成键值对数组
+		const pairs = queryString.split('&');
+
+		for (const pair of pairs) {
+			// 按 "=" 分割键和值
+			const [key, value] = pair.split('=');
+			// 解码特殊字符（如空格、中文等）
+			if (key) {
+				params[decodeURIComponent(key)] = decodeURIComponent(value || '');
+			}
+		}
+	}
+
+	return params;
+}
 
 // 检查当前页面是否使用 HTTPS
 const isHttps = () => {
 
 	const protocol = window.location.protocol;
 	const isHttps = protocol === 'https:';
-	console.log( isHttps ? '这个网页是使用HTTPS' : '这个网页不是使用HTTPS' );
+	console.log(isHttps ? '这个网页是使用HTTPS' : '这个网页不是使用HTTPS');
 	return isHttps;
 
 };
 
 // 将 URL 转换为 HTTPS 或 HTTP
-const convertToHttps = ( url ) => {
+const convertToHttps = (url) => {
 
-	if ( url === undefined || url === null ) return '';
+	if (url === undefined || url === null) return '';
 
-	if ( isHttps() ) {
+	if (isHttps()) {
 
-		if ( url.startsWith( 'http://' ) ) {
+		if (url.startsWith('http://')) {
 
-			return url.replace( 'http://', 'https://' );
+			return url.replace('http://', 'https://');
 
 		}
 
 	} else {
 
-		if ( url.startsWith( 'https://' ) ) {
+		if (url.startsWith('https://')) {
 
-			return url.replace( 'https://', 'http://' );
+			return url.replace('https://', 'http://');
 
 		}
 
@@ -56,73 +102,72 @@ class MetaFactory extends Factory {
 
 
 	}
-	async addGizmo( node ) {
+	async addGizmo(node) {
 
-		return new Promise( resolve => {
+		return new Promise(resolve => {
 
-			const loader = new GLTFLoader( THREE.DefaultLoadingManager );
-			loader.load( '/three.js/mesh/unreal-gizmo.glb', gltf => {
+			const loader = new GLTFLoader(THREE.DefaultLoadingManager);
+			loader.load('/three.js/mesh/unreal-gizmo.glb', gltf => {
 
 				const mesh = gltf.scene;//.children[0]
-				mesh.scale.set( 0.1, 0.1, 0.1 );
-				mesh.rotation.set( Math.PI / 2, Math.PI / 2, 0 );
-				this.lockNode( gltf.scene );
-				node.add( gltf.scene );
+				mesh.scale.set(0.1, 0.1, 0.1);
+				mesh.rotation.set(Math.PI / 2, Math.PI / 2, 0);
+				this.lockNode(gltf.scene);
+				node.add(gltf.scene);
 				resolve();
 
-			} );
+			});
 
-		} );
+		});
 
 	}
 
-	addModule( data ) {
+	addModule(data) {
 
 		const node = new THREE.Group();
 		node.name = data.parameters.title;
-		console.error( 'addMetaData', data );
+		console.error('addMetaData', data);
 		node.type = data.type;
 		node.uuid = data.parameters.uuid;
 		node.visible = data.parameters.active;
 
 		const transform = data.parameters.transform;
-		this.setTransform( node, transform );
+		this.setTransform(node, transform);
 
 		const userData = {};
 
-		const exclude = [ 'name', 'title', 'uuid', 'transform', 'active' ];
+		const exclude = ['name', 'title', 'uuid', 'transform', 'active'];
 
-		Object.keys( data.parameters ).forEach( key => {
+		Object.keys(data.parameters).forEach(key => {
 
-			if ( ! exclude.includes( key ) ) {
+			if (!exclude.includes(key)) {
 
-				userData[ key ] = data.parameters[ key ];
+				userData[key] = data.parameters[key];
 
 			}
 
-		} );
+		});
 
 		userData.draggable = false;
 		node.userData = userData;
 		return node;
 
 	}
-	async readMeta( root, data, resources, editor = null ) {
+	async readMeta(root, data, resources, editor = null) {
 
-		//alert(resources.size)
-		if ( data.children ) {
+		if (data.children) {
 
-			for ( let i = 0; i < data.children.entities.length; ++ i ) {
+			for (let i = 0; i < data.children.entities.length; ++i) {
 
-				if ( data.children.entities[ i ] != null ) {
+				if (data.children.entities[i] != null) {
 
 					try {
 
-						const node = await this.building( data.children.entities[ i ], resources );
-						if ( node != null ) {
+						const node = await this.building(data.children.entities[i], resources);
+						if (node != null) {
 
-							root.add( node );
-							if ( editor != null ) {
+							root.add(node);
+							if (editor != null) {
 
 								editor.signals.sceneGraphChanged.dispatch();
 
@@ -130,9 +175,9 @@ class MetaFactory extends Factory {
 
 						}
 
-					} catch ( error ) {
+					} catch (error) {
 
-						console.error( error );
+						console.error(error);
 
 					}
 
@@ -145,116 +190,154 @@ class MetaFactory extends Factory {
 	}
 
 
-	async loadVoxel( url ) {
+	async loadVoxel(url) {
 
-		url = convertToHttps( url );
-		return new Promise( ( resolve, reject ) => {
+		url = convertToHttps(url);
+		return new Promise((resolve, reject) => {
 
 			const loader = new VOXLoader();
 			loader.load(
 				url,
-				function ( chunks ) {
+				function (chunks) {
 
-					const chunk = chunks[ 0 ];
-					const mesh = new VOXMesh( chunk );
+					const chunk = chunks[0];
+					const mesh = new VOXMesh(chunk);
 
 					//mesh.scale.set(0.005, 0.005, 0.005)
-					resolve( mesh );
+					resolve(mesh);
 
 				}
 			);
 
-		}, function ( xhr ) {
+		}, function (xhr) {
 
-			console.log( ( xhr.loaded / xhr.total ) * 100 + '% loaded!' );
+			console.log((xhr.loaded / xhr.total) * 100 + '% loaded!');
 
-		}, function ( error ) {
+		}, function (error) {
 
-			reject( error );
-			alert( error );
-			console.error( 'An error happened' );
+			reject(error);
+			alert(error);
+			console.error('An error happened');
 
 		}
 		);
 
 	}
 
-	async loadPolygen( url ) {
+	// 添加设置模型透明度的辅助方法
+	setModelTransparency(object, alpha) {
+		object.traverse((child) => {
+			if (child.isMesh) {
+				if (child.material) {
+					if (Array.isArray(child.material)) {
+						for (let i = 0; i < child.material.length; i++) {
+							child.material[i] = this.cloneMaterialTransparency(child.material[i], alpha);
+						}
+					} else {
+						// 处理单个材质
+						child.material = this.cloneMaterialTransparency(child.material, alpha);
+					}
+				}
+			}
+		});
+	}
 
-		url = convertToHttps( url );
+	// 设置单个材质透明度的辅助方法
+	cloneMaterialTransparency(material, alpha) {
+		// 克隆材质以避免影响其他使用相同材质的对象
+		const clonedMaterial = material.clone();
+
+		// 设置透明度
+		clonedMaterial.transparent = true;
+		clonedMaterial.opacity = alpha;
+
+		// 如果是双面材质，确保透明度正确显示
+		if (clonedMaterial.side === THREE.DoubleSide) {
+			clonedMaterial.depthWrite = false;
+		}
+		return clonedMaterial;
+	}
+	async loadPolygen(url, alpha = 1) {
+
+		url = convertToHttps(url);
 		const self = this;
-		return new Promise( ( resolve, reject ) => {
+		return new Promise((resolve, reject) => {
 
-			const loader = new GLTFLoader( THREE.DefaultLoadingManager );
+			const loader = new GLTFLoader(THREE.DefaultLoadingManager);
 			const dracoLoader = new DRACOLoader();
 
-			dracoLoader.setDecoderPath( './draco/' );
+			dracoLoader.setDecoderPath('./draco/');
 			loader.setDRACOLoader(dracoLoader);
 
 			// 如果 KTX2Loader 未初始化，则进行初始化
-			if ( this.ktx2Loader === null ) {
+			if (this.ktx2Loader === null) {
 				this.ktx2Loader = new KTX2Loader();
-				this.ktx2Loader.setTranscoderPath( './basis/' );
-				if ( this.editor && this.editor.renderer ) {
-					this.ktx2Loader.detectSupport( this.editor.renderer );
+				this.ktx2Loader.setTranscoderPath('./basis/');
+				if (this.editor && this.editor.renderer) {
+					this.ktx2Loader.detectSupport(this.editor.renderer);
 				} else {
-					console.warn( 'KTX2Loader 初始化失败，因为没有可用的渲染器上下文' );
+					console.warn('KTX2Loader 初始化失败，因为没有可用的渲染器上下文');
 				}
 			}
 
 			// 如果 KTX2Loader 已初始化，则将其设置到 GLTFLoader
-			if ( this.ktx2Loader !== null ) {
-				loader.setKTX2Loader( this.ktx2Loader );
+			if (this.ktx2Loader !== null) {
+				loader.setKTX2Loader(this.ktx2Loader);
 			}
 
 			try {
 
 				loader.load(
 					url,
-					function ( gltf ) {
+					function (gltf) {
 
-						gltf.scene.children.forEach( item => {
+						gltf.scene.children.forEach(item => {
 
-							self.lockNode( item );
+							self.lockNode(item);
 
-						} );
+						});
 
+						if(alpha < 1.0){
+							// 设置模型半透明
+							self.setModelTransparency(gltf.scene, alpha);
+						}
 						// 保存模型动画
 						if (gltf.animations && gltf.animations.length > 0) {
 							gltf.scene.animations = gltf.animations;
 						}
 
-						resolve( gltf.scene );
+						resolve(gltf.scene);
+
 
 					},
-					function ( xhr ) {
+					function (xhr) {
 						//console.log((xhr.loaded / xhr.total) * 100 + '% loaded!')
 					},
-					function ( error ) {
+					function (error) {
 
-						resolve( null );
-						console.error( 'An error happened' );
+						resolve(null);
+						console.error('An error happened');
 
 					}
 				);
 
-			} catch ( error ) {
+			} catch (error) {
 
-				resolve( null );
-				console.error( error );
+				resolve(null);
+				console.error(error);
 
 			}
 
-		} );
+		});
 
 	}
-	async getPolygen( data, resources ) {
+	async getPolygen(data, resources) {
 
 
-		if ( resources.has( data.parameters.resource.toString() ) ) {
+		if (resources.has(data.parameters.resource.toString())) {
 
 
-			const resource = resources.get( data.parameters.resource.toString() );
+			const resource = resources.get(data.parameters.resource.toString());
 
 			console.log("polygen", resource.info);
 
@@ -269,7 +352,7 @@ class MetaFactory extends Factory {
 				console.error("解析动画信息失败", e);
 			}
 
-			const node = await this.loadPolygen( resource.file.url );
+			const node = await this.loadPolygen(resource.file.url);
 
 			// 将动画信息保存到模型中
 			if (node && animInfo) {
@@ -284,66 +367,113 @@ class MetaFactory extends Factory {
 
 	}
 
-	async getPlane( url, width, height ) {
+	async getPlane(url, width, height) {
 
-		url = convertToHttps( url );
-		return new Promise( resolve => {
+		url = convertToHttps(url);
+		return new Promise(resolve => {
 
-			const geometry = new THREE.PlaneGeometry( width, height );
+			const geometry = new THREE.PlaneGeometry(width, height);
 			const loader = new THREE.TextureLoader();
 
-			loader.load( url, texture => {
+			loader.load(url, texture => {
 				texture.premultiplyAlpha = false;
 
-				const material = new THREE.MeshBasicMaterial( {
+				const material = new THREE.MeshBasicMaterial({
 					color: 0xffffff,
 					side: THREE.DoubleSide,
 					map: texture,
 					transparent: true,
-				} );
-				resolve( new THREE.Mesh( geometry, material ) );
+				});
+				resolve(new THREE.Mesh(geometry, material));
 
-			}, function ( xhr ) {
+			}, function (xhr) {
 				//console.log((xhr.loaded / xhr.total) * 100 + '% loaded!')
-			}, function ( error ) {
+			}, function (error) {
 
-				console.error( error );
-				resolve( new THREE.Mesh( geometry ) );
+				console.error(error);
+				resolve(new THREE.Mesh(geometry));
 
-			} );
+			});
 
-		} );
+		});
 
 	}
 
-	async getPicture( data, resources ) {
+	async getPicture(data, resources) {
 
-		const resource = resources.get( data.parameters.resource.toString() );
-		const info = JSON.parse( resource.info );
+		const resource = resources.get(data.parameters.resource.toString());
+		const info = JSON.parse(resource.info);
 		const size = info.size;
 		const width = data.parameters.width;
-		const height = width * ( size.y / size.x );
-		const node = await this.getPlane( resource.image.url, width, height );
+		const height = width * (size.y / size.x);
+		const node = await this.getPlane(resource.image.url, width, height);
 
 		return node;
 
 	}
-	async getPhototype( data, resources ) {
+	async getPhototype(data) {
+		const entity = new THREE.Group();
+		entity.name = data.parameters.name;
+		const params = getUrlParams();
+
+		if (params.a1_api) {
+			const info = await getResourceFromUrl(params.a1_api + '/v1/phototype/info?type=' + data.parameters.data.type);
+
+			if (info && info.resource && info.resource.file && info.resource.file.url) {
+				let alpha =1;
+				if (info.data.alpha) {
+					alpha = info.data.alpha;
+				}
+				const node = await this.loadPolygen(info.resource.file.url, alpha);
+				node.name = "polygen";
+				this.setTransform(node, info.data.transform);
+				//让node这个节点在编辑器里面不显示
+				this.lockNode(node)
+				//node.userData.hidden = true;
+				entity.add(node);
+			}
+			/*
+			if (info && info.title) {
+			//在屏幕某个坐标上写一个固定大小的字，
+
+				const node =  this.createTextMesh(info.title);
+				entity.add(node);
+				this.setTransform(node, info.data.transform);
+			}*/
+
+		}
+		return entity;
+
+
+		/*
+			const params =  await getUrlParams();
+			if (params.a1_api) {
+
+				const back = await getResourceFromUrl(params.a1_api + '/v1/phototype/info?type=' + data.parameters.data.type);
+			//	alert(JSON.stringify(back.data))
+				if (back && back.resource && back.resource.file && back.resource.file.url) {
+					const node = await this.loadPolygen(back.resource.file.url);
+
+					this.setTransform(node, back.data.transform);
+					node.scale.set( 0.1, 1, 0.2 );
+
+					console.error("scale", node.scale);
+					console.error("phototype", node);
+					return node;
+				}
+			}
+			return null;
+	*/
+
+	}
+	async getEntity(data, resources) {
 
 		const entity = new THREE.Group();
 		entity.name = data.parameters.name;
-		console.error('getPhototype', data);
 		return entity;
 
 	}
-	async getEntity( data, resources ) {
-
-		const entity = new THREE.Group();
-		entity.name = data.parameters.name;
-		return entity;
-
-	}
-	async getText( data, resources ) {
+	async getText(data, resources) {
 		// 获取文本内容，如果不存在则使用默认文本
 		const text = data.parameters.text || 'Hello World';
 		console.error("text", data);
@@ -407,22 +537,22 @@ class MetaFactory extends Factory {
 
 		return plane;
 	}
-	async getVoxel( data, resources ) {
+	async getVoxel(data, resources) {
 
 
-		if ( resources.has( data.parameters.resource.toString() ) ) {
+		if (resources.has(data.parameters.resource.toString())) {
 
-			const resource = resources.get( data.parameters.resource.toString() );
-			return await this.loadVoxel( resource.file.url );
+			const resource = resources.get(data.parameters.resource.toString());
+			return await this.loadVoxel(resource.file.url);
 
 		}
 
 		return null;
 
 	}
-	async getSound( data, resources ) {
+	async getSound(data, resources) {
 
-		if ( resources.has( data.parameters.resource.toString() ) ) {
+		if (resources.has(data.parameters.resource.toString())) {
 
 			const entity = new THREE.Group();
 			entity.name = data.parameters.name;
@@ -433,34 +563,34 @@ class MetaFactory extends Factory {
 		return null;
 	}
 
-	async getEmpty( data, resources ) {
+	async getEmpty(data, resources) {
 
 		const entity = new THREE.Group();
 		entity.name = data.parameters.name;
 		return entity;
 
 	}
-	async getVideo( data, resources ) {
+	async getVideo(data, resources) {
 
-		if ( data.parameters.resource == undefined ) {
+		if (data.parameters.resource == undefined) {
 
 			return null;
 
 		}
 
-		const resource = resources.get( data.parameters.resource.toString() );
-		const info = JSON.parse( resource.info );
+		const resource = resources.get(data.parameters.resource.toString());
+		const info = JSON.parse(resource.info);
 		const size = info.size;
 		const width = data.parameters.width;
-		const height = width * ( size.y / size.x );
-		return await this.getPlane( resource.image.url, width, height );
+		const height = width * (size.y / size.x);
+		return await this.getPlane(resource.image.url, width, height);
 
 	}
 
-	async getParticle( data, resources ) {
+	async getParticle(data, resources) {
 		// 检查资源是否存在
-		if ( resources.has( data.parameters.resource.toString() ) ) {
-			const resource = resources.get( data.parameters.resource.toString() );
+		if (resources.has(data.parameters.resource.toString())) {
+			const resource = resources.get(data.parameters.resource.toString());
 
 			// 获取文件URL
 			let fileUrl = '';
@@ -516,7 +646,7 @@ class MetaFactory extends Factory {
 		return null;
 	}
 
-	async building( data, resources, visited = new Set() ) {
+	async building(data, resources, visited = new Set()) {
 
 		// 防止循环引用导致的堆栈溢出
 		if (data.parameters && data.parameters.uuid) {
@@ -526,80 +656,80 @@ class MetaFactory extends Factory {
 			}
 			visited.add(data.parameters.uuid);
 		}
-		console.log( 'building: ', data.parameters );
+		console.log('building: ', data.parameters);
 		let node = null;
-		switch ( data.type.toLowerCase() ) {
+		switch (data.type.toLowerCase()) {
 
 			case 'polygen':
-				node = await this.getPolygen( data, resources );//resource
+				node = await this.getPolygen(data, resources);//resource
 				break;
 			case 'picture':
-				node = await this.getPicture( data, resources );//resource
+				node = await this.getPicture(data, resources);//resource
 				break;
 			case 'video':
-				node = await this.getVideo( data, resources );//resource
+				node = await this.getVideo(data, resources);//resource
 				break;
 			case 'sound':
-				node = await this.getSound( data, resources );//resource
+				node = await this.getSound(data, resources);//resource
 				break;
 			case 'voxel':
-				node = await this.getVoxel( data, resources );//resource
+				node = await this.getVoxel(data, resources);//resource
 				break;
 			case 'particle':
-				node = await this.getParticle( data, resources );//resource
+				node = await this.getParticle(data, resources);//resource
 				break;
 			case 'text':
-				node = await this.getText( data, resources );
+				node = await this.getText(data, resources);
 				break;
 			case 'entity':
-				node = await this.getEntity( data, resources );
+				node = await this.getEntity(data, resources);
 				break;
 			case 'anchor':
-				node = await this.addAnchor( data );
+				node = await this.addAnchor(data);
 				break;
 			case 'phototype':
 
-				node = await this.getPhototype( data, resources );
+				node = await this.getPhototype(data);
 				break;
 
 		}
 
-		if ( node == null ) {
+		if (node == null) {
 
-			node = await this.getEmpty( data, resources );
+			node = await this.getEmpty(data, resources);
 
 		}
 
 		node.type = data.type;
 		node.name = data.parameters.name;
 		node.uuid = data.parameters.uuid;
-		this.setTransform( node, data.parameters.transform );
+		this.setTransform(node, data.parameters.transform);
 		node.visible = data.parameters.active;
 
 		const userData = { 'type': data.type };
-		const exclude = [ 'name', 'uuid', 'transform', 'active' ];
+		const exclude = ['name', 'uuid', 'transform', 'active'];
 
-		Object.keys( data.parameters ).forEach( key => {
+		Object.keys(data.parameters).forEach(key => {
 
-			if ( ! exclude.includes( key ) ) {
+			if (!exclude.includes(key)) {
 
-				userData[ key ] = data.parameters[ key ];
+				userData[key] = data.parameters[key];
 
 			}
 
-		} );
+		});
 
 		// 设置components和commands
 		node.components = data.children.components || [];
 		node.commands = data.children.commands || [];
 
 		node.userData = userData;
-		for ( let i = 0; i < data.children.entities.length; ++ i ) {
+		for (let i = 0; i < data.children.entities.length; ++i) {
 
-			const child = await this.building( data.children.entities[ i ], resources );
-			if ( child != null ) {
+			const child = await this.building(data.children.entities[i], resources);
+			if (child != null) {
 
-				node.add( child );
+				node.add(child);
 
 			}
 

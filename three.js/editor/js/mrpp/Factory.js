@@ -12,12 +12,13 @@ class Factory {
 
 	}
 	setTransform( node, transform ) {
-
+		//alert(JSON.stringify(transform));
 		const p = transform.position;
 		const s = transform.scale;
 		const r = transform.rotate;
 		node.position.set( p.x, p.y, p.z );
 		node.scale.set( s.x, s.y, s.z );
+
 		node.rotation.set(
 			THREE.Math.degToRad( r.x ),
 			THREE.Math.degToRad( r.y ),

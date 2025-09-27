@@ -83,7 +83,7 @@
 		};
 
 
-
+	
 		const editor = new Editor();
 
 		editor.type = 'meta';
@@ -146,7 +146,7 @@
 
 			function saveState() {
 
-				
+
 				if (editor.config.getKey('autosave') === false) {
 
 					return;
@@ -162,7 +162,7 @@
 					timeout = setTimeout(function () {
 
 						editor.storage.set(editor.toJSON());
-						
+
 						editor.signals.savingFinished.dispatch();
 
 					}, 100);
@@ -277,37 +277,35 @@
 
 				const data = params.data;
 				loader.load(data.data);
-
+			
 				// 如果消息中包含可用资源类型，在编辑器上存储它们
 				console.log("Received load message with data:", data);
 				if (data.availableResourceTypes) {
 					editor.availableResourceTypes = data.availableResourceTypes;
-					
+
 					// 直接触发一个自定义事件，通知菜单更新资源类型，避免递归
 					editor.signals.messageReceive.dispatch({
 						action: 'available-resource-types',
 						data: data.availableResourceTypes
 					});
 				}
-				
+
+
+				editor.data = {};
 				// 保存resources信息到编辑器对象中
 				if (data.data && data.data.resources) {
-					editor.resources = data.data.resources;
+					editor.data.resources = data.data.resources;
 				}
-
+				//editor.data.params = getUrlParams();
 				// 保存用户信息
 				if (data.user) {
-					editor.userId = data.user.id;
-					editor.userRoles = data.user.roles;
-					editor.userRole = data.user.role;
-					console.log("Set user role:", editor.userRole);
+					editor.data.user = data.user
+					console.error("Set user role:", editor.data.user.role);
 				}
 			} else if (params.action === 'user-info') {
 				// 保存用户信息
-				editor.userId = params.data.id;
-				editor.userRoles = params.data.roles;
-				editor.userRole = params.data.role;
-				console.log("Updated user role:", editor.userRole);
+				editor.data.user = params.data;
+				console.error("Updated user role:", editor.data.user.role);
 			}
 
 		});

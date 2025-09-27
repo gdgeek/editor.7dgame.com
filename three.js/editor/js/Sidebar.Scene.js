@@ -39,8 +39,8 @@ function SidebarScene(editor) {
 			let resourceExists = false;
 
 			// 检查资源是否在editor.resources或window.resources中存在
-			if (editor.resources && Array.isArray(editor.resources)) {
-				resourceExists = editor.resources.some(resource =>
+			if (editor.data.resources && Array.isArray(editor.data.resources)) {
+				resourceExists = editor.data.resources.some(resource =>
 					resource && resource.id === parseInt(resourceId)
 				);
 			}
