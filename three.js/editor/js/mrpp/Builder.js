@@ -36,7 +36,8 @@ class Builder {
 				ret = this.node( 'Voxel', data.name + ' [voxel]' );
 				break;
 			case 'picture':
-				ret = this.node( 'Picture', data.name + ' [picture]' );
+				ret = this.node('Picture', data.name + ' [picture]');
+				ret.parameters.sortingOrder = 0;
 				ret.parameters.width = 0.5;
 				break;
 			case 'polygen':
