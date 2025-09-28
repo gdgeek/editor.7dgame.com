@@ -221,7 +221,7 @@ function MenubarAdd( editor ) {
 		} );
 		options.add( option );
 
-
+/*
 		// Prefabs
 		option = new UIRow();
 		option.setClass( 'option' );
@@ -235,6 +235,7 @@ function MenubarAdd( editor ) {
 
 		} );
 		options.add( option );
+		*/
 
 	}
 
