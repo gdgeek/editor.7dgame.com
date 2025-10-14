@@ -259,7 +259,7 @@ class MovedComponent {
   renderer(container) {
     this.refresh(container);
     this.updateUI();
-    console.log('MovedComponent:',this.component.parameters);
+    //console.log('MovedComponent:',this.component.parameters);
   }
 }
 
