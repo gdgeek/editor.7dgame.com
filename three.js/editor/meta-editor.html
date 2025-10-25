@@ -273,6 +273,10 @@
 
 		editor.signals.messageReceive.add(async function (params) {
 
+			if(!editor.data)
+			{
+				editor.data = {};
+			}
 			if (params.action === 'load') {
 
 				const data = params.data;
@@ -291,7 +295,7 @@
 				}
 
 
-				editor.data = {};
+			//	editor.data = {};
 				// 保存resources信息到编辑器对象中
 				if (data.data && data.data.resources) {
 					editor.data.resources = data.data.resources;
@@ -303,6 +307,8 @@
 					console.error("Set user role:", editor.data.user.role);
 				}
 			} else if (params.action === 'user-info') {
+				
+			//	alert(editor.data)
 				// 保存用户信息
 				editor.data.user = params.data;
 				console.error("Updated user role:", editor.data.user.role);

@@ -508,7 +508,7 @@ function Strings( config ) {
 			'menubar/add/node': '节点',
 			'menubar/add/text': '文本',
 			'menubar/add/voxel': '体素',
-			'menubar/add/phototype': 'Phototype',
+		//	'menubar/add/phototype': 'Phototype',
 			'menubar/add/phototype': '原型',
 			'menubar/add/polygen': '模型',
 			'menubar/add/audio': '音频',

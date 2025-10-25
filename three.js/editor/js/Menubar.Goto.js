@@ -6,7 +6,17 @@ import { AddObjectCommand } from './commands/AddObjectCommand.js';
 import { MetaFactory } from './mrpp/MetaFactory.js';
 import { Builder } from './mrpp/Builder.js';
 import { DialogUtils } from './utils/DialogUtils.js';
-
+function disableElement(element) {
+	/*
+	element.classList.add('disabled');
+	element.style.pointerEvents = 'none';
+	element.style.opacity = '0.5';*/
+}
+function enableElement(element) {
+	element.classList.remove('disabled');
+	element.style.pointerEvents = 'auto';
+	element.style.opacity = '1';
+}
 function MenubarGoto( editor ) {
 
 
@@ -51,9 +61,8 @@ function MenubarGoto( editor ) {
 	scriptOption.setTextContent( strings.getKey( 'menubar/code/script' ) );
 
 	// 设置按钮初始状态为禁用
-	scriptOption.dom.classList.add('disabled');
-	scriptOption.dom.style.opacity = '0.5';
-	scriptOption.dom.style.pointerEvents = 'none';
+	disableElement( scriptOption.dom );
+
 
 	scriptOption.onClick( async function (event) {
 		// 如果还在加载中，则不允许前往脚本编辑器
@@ -93,15 +102,11 @@ function MenubarGoto( editor ) {
 
 	// 处理加载状态的变化
 	editor.signals.savingStarted.add(function () {
-		scriptOption.dom.classList.add('disabled');
-		scriptOption.dom.style.opacity = '0.5';
-		scriptOption.dom.style.pointerEvents = 'none';
+		disableElement( scriptOption.dom );
 	});
 
 	editor.signals.savingFinished.add(function () {
-		scriptOption.dom.classList.remove('disabled');
-		scriptOption.dom.style.opacity = '1';
-		scriptOption.dom.style.pointerEvents = 'auto';
+		enableElement( scriptOption.dom );
 	});
 
 	return container;
