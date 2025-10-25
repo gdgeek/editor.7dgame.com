@@ -480,7 +480,7 @@ function SidebarObject(editor) {
 	const objectResetRow = new UIRow();
 
 	// 重置位置按钮
-	const resetPositionButton = new UIButton("重置位置")
+	const resetPositionButton = new UIButton(strings.getKey("sidebar/object/resetPosition"))
 		.setWidth("80px")
 		.onClick(function () {
 			if (editor.selected !== null) {
@@ -488,12 +488,12 @@ function SidebarObject(editor) {
 				editor.execute(
 					new SetPositionCommand(editor, editor.selected, newPosition)
 				);
-				editor.showNotification("位置已重置");
+				editor.showNotification(strings.getKey("sidebar/object/position") + strings.getKey("sidebar/object/haveReset"));
 			}
 		});
 
 	// 重置旋转按钮
-	const resetRotationButton = new UIButton("重置旋转")
+	const resetRotationButton = new UIButton(strings.getKey("sidebar/object/resetRotation"))
 		.setWidth("80px")
 		.onClick(function () {
 			if (editor.selected !== null) {
@@ -501,18 +501,18 @@ function SidebarObject(editor) {
 				editor.execute(
 					new SetRotationCommand(editor, editor.selected, newRotation)
 				);
-				editor.showNotification("旋转已重置");
+				editor.showNotification(strings.getKey("sidebar/object/rotation") + strings.getKey("sidebar/object/haveReset"));
 			}
 		});
 
 	// 重置缩放按钮
-	const resetScaleButton = new UIButton("重置缩放")
+	const resetScaleButton = new UIButton(strings.getKey("sidebar/object/resetScale"))
 		.setWidth("80px")
 		.onClick(function () {
 			if (editor.selected !== null) {
 				const newScale = new THREE.Vector3(1, 1, 1);
 				editor.execute(new SetScaleCommand(editor, editor.selected, newScale));
-				editor.showNotification("缩放已重置");
+				editor.showNotification(strings.getKey("sidebar/object/scale") + strings.getKey("sidebar/object/haveReset"));
 			}
 		});
 
