@@ -53,7 +53,8 @@ class GestureCommand {
     const currentValue = this.gestureSelect ? this.gestureSelect.getValue() : '';
 
     const gestureOptions = {
-      'ok': strings.getKey('sidebar/command/gesture/ok') ,
+      'ok': strings.getKey('sidebar/command/gesture/ok'),
+      'fist': strings.getKey('sidebar/command/gesture/fist'),
     };
 
     this.gestureSelect.setOptions(gestureOptions);

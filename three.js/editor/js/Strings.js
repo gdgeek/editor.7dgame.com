@@ -237,6 +237,7 @@ function Strings( config ) {
 			'sidebar/command/voice/campusIntroOff': 'Disable Campus Introduction',
 			'sidebar/command/gesture/label': 'Gesture',
 			'sidebar/command/gesture/ok': 'OK',
+			'sidebar/command/gesture/fist': 'Fist',
 
 			'sidebar/entity': 'Point(Custom)',
 			'sidebar/entity/button': 'Edit',
@@ -742,6 +743,7 @@ function Strings( config ) {
 			'sidebar/command/voice/campusIntroOff': '关闭校区介绍',
 			'sidebar/command/gesture/label': '手势',
 			'sidebar/command/gesture/ok': 'OK',
+			'sidebar/command/gesture/fist': '握拳',
 
 
 			'sidebar/entity': '实体（自定义）',
@@ -1247,6 +1249,7 @@ function Strings( config ) {
 			'sidebar/command/voice/campusIntroOff': 'キャンパス紹介を停止',
 			'sidebar/command/gesture/label': 'ジェスチャー',
 			'sidebar/command/gesture/ok': 'OK',
+			'sidebar/command/gesture/fist': '握り拳',
 
 
 
