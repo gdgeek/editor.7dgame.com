@@ -72,6 +72,13 @@ class DialogUtils {
      * @returns {HTMLElement} - 返回创建的确认框元素
      */
     static showConfirm(message, onConfirm, onCancel, event, isError = false) {
+         // 获取多语言字符串
+        const editor = window.editor;
+        const strings = editor ? editor.strings : null;
+
+        // 使用多语言配置，如果没有则使用默认值
+        const confirmText = strings ? strings.getKey('dialog/confirm/confirm') : '确认';
+        const cancelText = strings ? strings.getKey('dialog/confirm/cancel') : '取消';
         // 创建确认通知元素
         const confirmNotification = document.createElement('div');
         confirmNotification.style.position = 'fixed';
@@ -169,7 +176,7 @@ class DialogUtils {
 
         // 创建取消按钮
         const cancelButton = document.createElement('button');
-        cancelButton.textContent = '取消';
+        cancelButton.textContent = cancelText;//'取消';
         cancelButton.style.padding = '4px 12px';
         cancelButton.style.border = '1px solid var(--popconfirm-btn-border, rgba(255,255,255,0.2))';
         cancelButton.style.borderRadius = '4px';
@@ -195,7 +202,7 @@ class DialogUtils {
 
         // 确认按钮
         const confirmButton = document.createElement('button');
-        confirmButton.textContent = '确认';
+        confirmButton.textContent = confirmText;//'确认';
         confirmButton.style.padding = '4px 12px';
         confirmButton.style.border = 'none';
         confirmButton.style.borderRadius = '4px';

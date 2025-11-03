@@ -117,7 +117,7 @@ class VoiceCommand {
     const command = new SetValueCommand(
       this.editor,
       this.component.parameters,
-      'voice',
+      'action',
       this.component.parameters.action
     );
 

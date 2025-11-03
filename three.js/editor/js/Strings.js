@@ -86,6 +86,7 @@ function Strings( config ) {
 			'menubar/command/select_object_first': 'Please select an object first',
 			'menubar/command/already_exists': 'This object already has a voice command, you cannot add another one',
 
+
 			'menubar/code': 'Code',
 			'menubar/code/script': 'Script Edit',
 
@@ -167,12 +168,22 @@ function Strings( config ) {
 			'sidebar/object/userdata': 'User data',
 			'sidebar/object/sortingOrder': 'Canvas Sorting Order',
 
+			'sidebar/components/multi_selection_summary': 'selected objects component summary',
+			'sidebar/components/object_name_with_index': 'Object {0}',
+			'sidebar/components/no_components': 'None',
+			'sidebar/components/notification/invalid_objects': 'The following object types do not support adding components: {0}',
+			'sidebar/components/notification/skip_invalid_objects': 'The following object types do not support adding components: {0}, these objects will be skipped',
+			'sidebar/components/notification/add_success': 'Added {1} component to {0} valid objects',
+			'sidebar/components/notification/mutually_exclusive': 'Only one mutually exclusive component can be selected: Click Trigger, Movable or Collision Trigger',
+
 			'sidebar/components': 'Components',
 			'sidebar/components/select': 'Select',
 			'sidebar/components/select/rotate': 'Rotate',
 			'sidebar/components/select/action': 'Click Action',
 			'sidebar/components/select/moved': 'Movable',
 			'sidebar/components/select/moved/magnetic': 'Magnetic',
+			'sidebar/components/select/moved/scalable': 'Scalable',
+
 			'sidebar/components/select/trigger': 'Collision Trigger',
 			'sidebar/components/select/button': 'New',
 			'sidebar/components/select/tooltip': 'Label',
@@ -180,9 +191,18 @@ function Strings( config ) {
 			'sidebar/components/tooltip/text': 'Text',
 			'sidebar/components/tooltip/length': 'Length',
 			'sidebar/components/tooltip/target': 'Target Position',
+
+			'sidebar/command/multi_selection_summary': 'selected objects command summary',
+			'sidebar/command/object_name_with_index': 'Object {0}',
+			'sidebar/command/no_commands': 'None',
+			'sidebar/command/notification/invalid_objects': 'The following object types do not support adding commands: {0}',
+			'sidebar/command/notification/skip_invalid_objects': 'The following object types do not support adding commands: {0}, these objects will be skipped',
+			'sidebar/command/notification/add_success': 'Added {1} command to {0} valid objects',
+
 			'sidebar/command': 'Command',
 			'sidebar/command/select': 'Select',
 			'sidebar/command/select/voice': 'Voice Command',
+			'sidebar/command/select/gesture': 'Gesture Command',
 			'sidebar/command/select/button': 'New',
 			'sidebar/command/remove': 'Remove',
 			'sidebar/command/remove/confirm': 'Are you sure you want to delete this command?',
@@ -215,6 +235,8 @@ function Strings( config ) {
 			'sidebar/command/voice/sandboxRotateOff': 'Disable Sandbox Rotation',
 			'sidebar/command/voice/campusIntroOn': 'Enable Campus Introduction',
 			'sidebar/command/voice/campusIntroOff': 'Disable Campus Introduction',
+			'sidebar/command/gesture/label': 'Gesture',
+			'sidebar/command/gesture/ok': 'OK',
 
 			'sidebar/entity': 'Point(Custom)',
 			'sidebar/entity/button': 'Edit',
@@ -476,7 +498,11 @@ function Strings( config ) {
 			'sidebar/media/volume': 'Volume',
 			'sidebar/media/speed': 'Speed',
 			'sidebar/media/loop': 'Loop',
-			'sidebar/media/muted': 'Muted'
+			'sidebar/media/muted': 'Muted',
+
+			'dialog/confirm/confirm': 'Confirm',
+			'dialog/confirm/cancel': 'Cancel',
+
 		},
 
 
@@ -648,12 +674,21 @@ function Strings( config ) {
 			'sidebar/object/userdata': '自定义数据',
 			'sidebar/object/sortingOrder': '图片渲染层级',
 
+			'sidebar/components/multi_selection_summary': '个选中对象组件摘要',
+			'sidebar/components/object_name_with_index': '对象 {0}',
+			'sidebar/components/no_components': '无',
+			'sidebar/components/notification/invalid_objects': '以下对象类型不支持添加组件: {0}',
+			'sidebar/components/notification/skip_invalid_objects': '以下对象类型不支持添加组件: {0}，将跳过这些对象',
+			'sidebar/components/notification/add_success': '已为{0}个有效对象添加{1}组件',
+			'sidebar/components/notification/mutually_exclusive': '只能选择一个互斥组件：点击触发、可移动或碰撞触发',
+
 			'sidebar/components': '组件',
 			'sidebar/components/select': '选择项',
 			'sidebar/components/select/rotate': '自旋转',
 			'sidebar/components/select/action': '点击触发',
 			'sidebar/components/select/moved': '可移动',
 			'sidebar/components/select/moved/magnetic': '磁力',
+			'sidebar/components/select/moved/scalable': '可缩放',
 			'sidebar/components/select/trigger': '碰撞触发',
 			'sidebar/components/select/button': '新建',
 			'sidebar/components/select/tooltip': '标签',
@@ -661,9 +696,18 @@ function Strings( config ) {
 			'sidebar/components/tooltip/text': '文本',
 			'sidebar/components/tooltip/length': '长度',
 			'sidebar/components/tooltip/target': '目标位置',
+
+			 'sidebar/command/multi_selection_summary': '个选中对象指令摘要',
+			'sidebar/command/object_name_with_index': '对象 {0}',
+			'sidebar/command/no_commands': '无',
+			'sidebar/command/notification/invalid_objects': '以下对象类型不支持添加指令: {0}',
+			'sidebar/command/notification/skip_invalid_objects': '以下对象类型不支持添加指令: {0}，将跳过这些对象',
+			'sidebar/command/notification/add_success': '已为{0}个有效对象添加{1}指令',
+
 			'sidebar/command': '指令',
 			'sidebar/command/select': '选择项',
 			'sidebar/command/select/voice': '语音指令',
+			'sidebar/command/select/gesture': '手势指令',
 			'sidebar/command/select/button': '新建',
 			'sidebar/command/remove': '删除',
 			'sidebar/command/remove/confirm': '确定要删除这个指令吗？',
@@ -696,6 +740,8 @@ function Strings( config ) {
 			'sidebar/command/voice/sandboxRotateOff': '关闭沙盘旋转',
 			'sidebar/command/voice/campusIntroOn': '打开校区介绍',
 			'sidebar/command/voice/campusIntroOff': '关闭校区介绍',
+			'sidebar/command/gesture/label': '手势',
+			'sidebar/command/gesture/ok': 'OK',
 
 
 			'sidebar/entity': '实体（自定义）',
@@ -960,7 +1006,10 @@ function Strings( config ) {
 			'sidebar/media/volume': '音量',
 			'sidebar/media/speed': '速度',
 			'sidebar/media/loop': '循环',
-			'sidebar/media/muted': '静音'
+			'sidebar/media/muted': '静音',
+
+			'dialog/confirm/confirm': '确认',
+			'dialog/confirm/cancel': '取消',
 		},
 
 		ja: {
@@ -1129,12 +1178,22 @@ function Strings( config ) {
 			'sidebar/object/userdata': 'ユーザーデータ',
 			'sidebar/object/sortingOrder': '画像のレンダリング順序',
 
+			'sidebar/components/multi_selection_summary': '個の選択オブジェクトコンポーネント概要',
+			'sidebar/components/object_name_with_index': 'オブジェクト {0}',
+			'sidebar/components/no_components': 'なし',
+			'sidebar/components/notification/invalid_objects': '以下のオブジェクトタイプはコンポーネントの追加をサポートしていません: {0}',
+			'sidebar/components/notification/skip_invalid_objects': '以下のオブジェクトタイプはコンポーネントの追加をサポートしていません: {0}、これらのオブジェクトはスキップされます',
+			'sidebar/components/notification/add_success': '{0}個の有効オブジェクトに{1}コンポーネントを追加しました',
+			'sidebar/components/notification/mutually_exclusive': '相互排他的なコンポーネントは1つのみ選択できます：クリックトリガー、移動可能、または衝突トリガー',
+
+
 			'sidebar/components': 'コンポーネント',
 			'sidebar/components/select': '選択項目',
 			'sidebar/components/select/rotate': '自動回転',
 			'sidebar/components/select/action': 'クリックトリガー',
 			'sidebar/components/select/moved': '移動可能',
 			'sidebar/components/select/moved/magnetic': '磁力',
+			'sidebar/components/select/moved/scalable': 'スケーラブル',
 			'sidebar/components/select/trigger': '衝突トリガー',
 			'sidebar/components/select/button': '新規作成',
 			'sidebar/components/select/tooltip': 'ラベル',
@@ -1142,9 +1201,18 @@ function Strings( config ) {
 			'sidebar/components/tooltip/text': 'テキスト',
 			'sidebar/components/tooltip/length': '長さ',
 			'sidebar/components/tooltip/target': 'ターゲット位置',
+
+			'sidebar/command/multi_selection_summary': '個の選択オブジェクトコマンド概要',
+			'sidebar/command/object_name_with_index': 'オブジェクト {0}',
+			'sidebar/command/no_commands': 'なし',
+			'sidebar/command/notification/invalid_objects': '以下のオブジェクトタイプはコマンドの追加をサポートしていません: {0}',
+			'sidebar/command/notification/skip_invalid_objects': '以下のオブジェクトタイプはコマンドの追加をサポートしていません: {0}、これらのオブジェクトはスキップされます',
+			'sidebar/command/notification/add_success': '{0}個の有効オブジェクトに{1}コマンドを追加しました',
+
 			'sidebar/command': 'コマンド',
 			'sidebar/command/select': '選択項目',
 			'sidebar/command/select/voice': '音声コマンド',
+			'sidebar/command/select/gesture': 'ジェスチャーコマンド',
 			'sidebar/command/select/button': '新規作成',
 			'sidebar/command/remove': '削除',
 			'sidebar/command/remove/confirm': 'このコマンドを削除しますか？',
@@ -1177,6 +1245,8 @@ function Strings( config ) {
 			'sidebar/command/voice/sandboxRotateOff': 'サンドボックスの回転を停止',
 			'sidebar/command/voice/campusIntroOn': 'キャンパス紹介を開始',
 			'sidebar/command/voice/campusIntroOff': 'キャンパス紹介を停止',
+			'sidebar/command/gesture/label': 'ジェスチャー',
+			'sidebar/command/gesture/ok': 'OK',
 
 
 
@@ -1441,7 +1511,10 @@ function Strings( config ) {
 			'sidebar/media/volume': '音量',
 			'sidebar/media/speed': '速度',
 			'sidebar/media/loop': 'ループ',
-			'sidebar/media/muted': 'ミュート'
+			'sidebar/media/muted': 'ミュート',
+
+			'dialog/confirm/confirm': '確認',
+			'dialog/confirm/cancel': 'キャンセル',
 		}
 	};
 
