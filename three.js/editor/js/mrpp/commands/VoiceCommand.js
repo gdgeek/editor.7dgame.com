@@ -16,6 +16,13 @@ class VoiceCommand {
         this.reloadOptions();
       }
     });
+
+    // 当全局命令变更时也刷新选项（保证全局唯一性生效）
+    if (this.editor.signals) {
+      if (this.editor.signals.commandAdded) this.editor.signals.commandAdded.add(() => { if (this.voiceSelect) this.reloadOptions(); });
+      if (this.editor.signals.commandRemoved) this.editor.signals.commandRemoved.add(() => { if (this.voiceSelect) this.reloadOptions(); });
+      if (this.editor.signals.commandChanged) this.editor.signals.commandChanged.add(() => { if (this.voiceSelect) this.reloadOptions(); });
+    }
   }
 
   static Create() {
@@ -50,6 +57,74 @@ class VoiceCommand {
 
       this.voiceSelect = new UISelect().setWidth('150px').setFontSize('12px');
       this.reloadOptions();
+
+      // 延迟默认选中逻辑：保持外观为空，但在用户展开下拉时，让小勾指向第一个可用项。
+      // 不在此处保存到组件参数，只有用户在下拉中显式选择才会触发保存（onChange -> update）。
+      try {
+        this._wasEmptyAction = !this.component.parameters.action;
+        this._autoDefaultApplied = false;
+
+        const applyTempDefault = () => {
+          try {
+            if (!this._wasEmptyAction) return; // 只有新建/空的情况下才应用
+            const options = this.voiceSelect.dom && this.voiceSelect.dom.options;
+            if (!options) return;
+            for (let k = 0; k < options.length; k++) {
+              const opt = options[k];
+              if (opt && !opt.disabled && opt.value) {
+                // 临时在 DOM 上设置 selectedIndex，使下拉展开时有小勾
+                this.voiceSelect.dom.selectedIndex = k;
+                this._autoDefaultApplied = true;
+                break;
+              }
+            }
+          } catch (e) {
+            console.warn('VoiceCommand: applyTempDefault failed', e);
+          }
+        };
+
+        const clearTempDefaultIfUnchanged = () => {
+          try {
+            // 如果原本为空且用户未实际改变组件参数（仍为空），则清除临时选中
+            if (this._wasEmptyAction && this._autoDefaultApplied && !this.component.parameters.action) {
+              this.voiceSelect.dom.value = '';
+              this.voiceSelect.dom.selectedIndex = -1;
+            }
+            this._autoDefaultApplied = false;
+          } catch (e) {
+            console.warn('VoiceCommand: clearTempDefaultIfUnchanged failed', e);
+          }
+        };
+
+        // 在用户按下鼠标或通过键盘聚焦打开下拉之前，应用临时默认
+        if (this.voiceSelect && this.voiceSelect.dom) {
+          this.voiceSelect.dom.addEventListener('mousedown', applyTempDefault);
+          this.voiceSelect.dom.addEventListener('focus', applyTempDefault);
+          // 用户实际在下拉中点击时，如果之前应用了临时默认且组件仍为空，则将该临时值持久化
+          this.voiceSelect.dom.addEventListener('click', (event) => {
+            try {
+              if (this._wasEmptyAction && this._autoDefaultApplied && !this.component.parameters.action) {
+                const val = this.voiceSelect.dom.value;
+                if (val) {
+                  const cmd = new SetValueCommand(this.editor, this.component.parameters, 'action', val);
+                  this.editor.execute(cmd);
+                  if (this.editor.signals && this.editor.signals.componentChanged) {
+                    this.editor.signals.componentChanged.dispatch(this.component);
+                  }
+                  this._wasEmptyAction = false;
+                  this._autoDefaultApplied = false;
+                }
+              }
+            } catch (e) {
+              console.warn('VoiceCommand: click persistence failed', e);
+            }
+          });
+          // 失去焦点时如果没有实际保存值则清除临时默认
+          this.voiceSelect.dom.addEventListener('blur', clearTempDefaultIfUnchanged);
+        }
+      } catch (e) {
+        console.warn('VoiceCommand: failed to attach delayed default handlers', e);
+      }
 
       row.add(voiceLabel);
       row.add(this.voiceSelect);
@@ -106,6 +181,46 @@ class VoiceCommand {
     // 如果当前值在新选项中存在，则保持选中状态
     if (currentValue && voiceOptions[currentValue]) {
       this.voiceSelect.setValue(currentValue);
+    }
+
+    // 全局检查：如果场景中已有某个 Voice action 被使用，则将对应选项设为不可用（除非它是当前正在编辑的值）
+    try {
+      const usedActions = new Set();
+
+      if (this.editor && this.editor.scene && typeof this.editor.scene.traverse === 'function') {
+        this.editor.scene.traverse(function(obj) {
+          if (!obj) return;
+          if (obj.commands && Array.isArray(obj.commands)) {
+            for (let i = 0; i < obj.commands.length; i++) {
+              const cmd = obj.commands[i];
+              if (!cmd) continue;
+              // 支持旧结构或 parameters 存在的情况
+              const action = (cmd.parameters && cmd.parameters.action) || cmd.action || '';
+              if (cmd.type && cmd.type.toLowerCase() === 'voice' && action) {
+                usedActions.add(action);
+              }
+            }
+          }
+        });
+      }
+
+      // 遍历 select 的 DOM options，将已使用的项禁用（但保留当前值可用以便编辑）
+      const options = this.voiceSelect.dom && this.voiceSelect.dom.options;
+      if (options) {
+        for (let i = 0; i < options.length; i++) {
+          const opt = options[i];
+          const optVal = opt.value;
+          if (optVal && usedActions.has(optVal) && optVal !== currentValue) {
+            opt.disabled = true;
+            opt.style.color = '#888';
+          } else {
+            opt.disabled = false;
+            opt.style.color = '';
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('VoiceCommand.reloadOptions: failed to compute global used actions', e);
     }
 
     this.voiceSelect.onChange(this.update.bind(this));
