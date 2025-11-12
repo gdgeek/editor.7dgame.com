@@ -61,11 +61,10 @@ class ComponentContainer {
 	renderer( container ) {
 
 		const strings = this.editor.strings;
-		if (this.component.type && this.component.type.toLowerCase() === 'tooltip') {
-			container.add( new UIText('Label') );
-		} else {
-			container.add( new UIText( this.component.type ) );
-		}
+		
+		//container.add( new UIText( this.component.type ) );
+		const localizedType = strings.getKey(`sidebar/components/select/${this.component.type.toLowerCase()}`) || this.component.type;
+		container.add(new UIText(localizedType));
 
 		if ( this.handler != undefined ) {
 
