@@ -148,6 +148,7 @@ class VoiceCommand {
     const userRole = this.editor.data.user.role || '';
     if (userRole !== 'user') {
       Object.assign(voiceOptions, {
+        //教育项目
         nextStep: strings.getKey('sidebar/command/voice/nextStep'),
         returnMain: strings.getKey('sidebar/command/voice/returnMain'),
         closeTooltip: strings.getKey('sidebar/command/voice/closeTooltip'),
@@ -171,7 +172,16 @@ class VoiceCommand {
         sandboxRotateOff: strings.getKey('sidebar/command/voice/sandboxRotateOff'),
         campusIntroOn: strings.getKey('sidebar/command/voice/campusIntroOn'),
         campusIntroOff: strings.getKey('sidebar/command/voice/campusIntroOff'),
-
+        //反欺凌项目
+        mockFace: '多搞笑',
+        almostCrying: '他快哭了',
+        stopBullying: '别再欺负他',
+        carefulHeard: '小心被听到',
+        stillResisting: '还想反抗',
+        goCheck: '去看看',
+        wishfulThinking: '想得美',
+        tooMuch: '太过分了',
+        ostracizing: '在搞孤立',
       });
     }
 
