@@ -8,13 +8,14 @@ import { Storage as _Storage } from './Storage.js';
 import { DialogUtils } from './utils/DialogUtils.js';
 
 const mapping = {
-	'zh-cn': 'zh',
+	'zh-cn': 'zh-cn',
 	'en': 'en',
-	'ja': 'ja'
+	'ja': 'ja',
+	'zh-tw': 'zh-tw',
+	'th': 'th'
 };
 const urlParams = new URLSearchParams( window.location.search );
 const lg = urlParams.get( 'language' );
-
 
 var _DEFAULT_CAMERA = new THREE.PerspectiveCamera( 50, 1, 0.01, 1000 );
 _DEFAULT_CAMERA.name = 'Camera';
