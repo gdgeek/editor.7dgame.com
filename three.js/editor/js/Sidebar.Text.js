@@ -114,11 +114,11 @@ function SidebarText(editor) {
 
 	// --- 字号设置 (Font Size) ---
 	const fontSizeRow = new UIRow();
-	const fontSizeNumber = new UINumber(24).setWidth('40px').setRange(5, 40).setPrecision(0);
+	const fontSizeNumber = new UINumber(24).setWidth('40px').setRange(8, 200).setPrecision(0);
 	
 	// 原生 Range Input
 	const fontSizeSlider = document.createElement('input');
-	Object.assign(fontSizeSlider, { type: 'range', min: '5', max: '40', step: '1', value: '24' });
+	Object.assign(fontSizeSlider, { type: 'range', min: '8', max: '200', step: '1', value: '24' });
 	fontSizeSlider.style.width = '120px';
 	fontSizeSlider.style.verticalAlign = 'middle';
 
@@ -135,7 +135,7 @@ function SidebarText(editor) {
 		updateVisuals();
 	});
 	fontSizeNumber.onChange(() => {
-		const val = clampInput(fontSizeNumber, 5, 40);
+		const val = clampInput(fontSizeNumber, 8, 200);
 		fontSizeSlider.value = val;
 		commitChange('size', val);
 	});

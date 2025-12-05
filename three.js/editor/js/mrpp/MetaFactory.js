@@ -585,64 +585,108 @@ class MetaFactory extends Factory {
 		return plane;
 	}
 
+	// 文本网格生成核心逻辑
+	// 辅助方法：绘制圆角矩形路径
+	roundRect(ctx, x, y, width, height, radius) {
+		ctx.beginPath();
+		ctx.moveTo(x + radius, y);
+		ctx.lineTo(x + width - radius, y);
+		ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+		ctx.lineTo(x + width, y + height - radius);
+		ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+		ctx.lineTo(x + radius, y + height);
+		ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+		ctx.lineTo(x, y + radius);
+		ctx.quadraticCurveTo(x, y, x + radius, y);
+		ctx.closePath();
+	}
+
 	createTextMesh(text, params = {}) {
-		// 参数解构与默认值
-		const width = Math.max(1, Math.round(params.rect?.x || 256));
-		const height = Math.max(1, Math.round(params.rect?.y || 64));
-		const fontSize = params.size || 24;
+		// 1. 基础参数 (逻辑像素)
+		const baseWidth = Math.max(1, params.rect?.x || 256);
+		const baseHeight = Math.max(1, params.rect?.y || 64);
+		const baseFontSize = params.size || 24;
+		
 		const color = params.color || '#ffffff';
 		const hAlign = params.hAlign || 'center';
 		const vAlign = params.vAlign || 'middle';
-		const PIXEL_SCALE = 0.005; // 统一的比例常量：1px = 5mm
+		
+		const PIXEL_SCALE = 0.005; // 物理单位转换: 1逻辑像素 = 0.005米
+
+		// 2. 高清渲染倍率 (解决文字模糊的关键)
+		// 放大 4 倍绘制，相当于 Retina 屏幕效果
+		const SCALE_FACTOR = 4; 
+
+		// 3. 计算实际 Canvas 尺寸 (物理像素)
+		const canvasWidth = Math.round(baseWidth * SCALE_FACTOR);
+		const canvasHeight = Math.round(baseHeight * SCALE_FACTOR);
+		const scaledFontSize = baseFontSize * SCALE_FACTOR;
+		const padding = 4 * SCALE_FACTOR; // 边距也放大
+
 		// 创建 Canvas
 		const canvas = document.createElement('canvas');
-		canvas.width = width;
-		canvas.height = height;
+		canvas.width = canvasWidth;
+		canvas.height = canvasHeight;
 		const ctx = canvas.getContext('2d');
 
-		// 1. 裁剪区域 & 清空
-		ctx.save();
-		ctx.clearRect(0, 0, width, height);
-		// ctx.rect(0, 0, width, height); // 可选：如果需要调试边框
-		// ctx.clip();
+		// 清空画布
+		ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-		// 2. 字体配置
-		ctx.font = `${fontSize}px 'Arial Unicode MS'`; 
+		// 绘制半透明灰色背景（带圆角）
+		const cornerRadius = 8 * SCALE_FACTOR; // 圆角半径随放大因子缩放
+		ctx.fillStyle = 'rgba(128, 128, 128, 0.5)';
+		this.roundRect(ctx, 0, 0, canvasWidth, canvasHeight, cornerRadius);
+		ctx.fill();
+
+		// 设置字体 (使用放大后的字号)
+		// 增加 'Arial' 作为备选，确保跨平台兼容
+		ctx.font = `${scaledFontSize}px 'Arial Unicode MS', Arial, sans-serif`; 
 		ctx.fillStyle = color;
 		ctx.textBaseline = 'middle'; 
 
-		// 3. 水平对齐计算
+		// 4. 水平对齐 (基于放大后的宽度计算)
 		let x = 0;
-		const padding = 4; // 边距防止切字
-
 		if (hAlign === 'left') {
 			ctx.textAlign = 'left';
 			x = padding;
 		} else if (hAlign === 'right') {
 			ctx.textAlign = 'right';
-			x = width - padding;
+			x = canvasWidth - padding;
 		} else {
 			ctx.textAlign = 'center';
-			x = width / 2;
+			x = canvasWidth / 2;
 		}
 
-		// 4. 文本处理 (换行)
-		const textStr = String(text || ''); // 防止 null
+		// 5. 文本自动换行处理 (Unity TMP 风格混合模式)
+		const textStr = String(text || '');
 		const paragraphs = textStr.split('\n');
 		const lines = [];
 
 		if (textStr) {
 			paragraphs.forEach(paragraph => {
+				if (paragraph.length === 0) {
+					lines.push('');
+					return;
+				}
+
 				let currentLine = '';
 				for (let i = 0; i < paragraph.length; i++) {
 					const char = paragraph[i];
 					const testLine = currentLine + char;
 					const metrics = ctx.measureText(testLine);
-					
-					// 简单换行逻辑：如果超出宽度且不是该行第一个字
-					if (metrics.width > (width - padding * 2) && i > 0) {
-						lines.push(currentLine);
-						currentLine = char;
+					const maxLineWidth = canvasWidth - (padding * 2);
+
+					if (metrics.width > maxLineWidth && i > 0) {
+						// 尝试按词换行
+						const lastSpaceIndex = currentLine.lastIndexOf(' ');
+						if (lastSpaceIndex > -1 && lastSpaceIndex < currentLine.length - 1) {
+							lines.push(currentLine.substring(0, lastSpaceIndex));
+							currentLine = currentLine.substring(lastSpaceIndex + 1) + char;
+						} else {
+							// 强制换行 (中文或长单词)
+							lines.push(currentLine);
+							currentLine = char;
+						}
 					} else {
 						currentLine = testLine;
 					}
@@ -651,51 +695,99 @@ class MetaFactory extends Factory {
 			});
 		}
 
-		// 5. 垂直对齐计算与绘制
-		const lineHeight = fontSize * 1;
+		// 6. 垂直对齐 (基于放大后的高度计算)
+		const lineHeight = scaledFontSize * 1.2; // 1.2倍行高更舒适
 		const totalTextHeight = lines.length * lineHeight;
+		const halfLine = lineHeight / 2; // 基线修正
 
 		let startY = 0;
-		// 基线偏移修正 (因为 textBaseline 是 middle)
-		const halfLine = lineHeight / 2;
 
 		if (vAlign === 'top') {
-			startY = padding + halfLine; 
+			startY = padding + halfLine;
 		} else if (vAlign === 'bottom') {
-			startY = height - totalTextHeight + halfLine - padding;
-			// 如果文字太多超出，保持底端对齐，顶部被切
+			startY = canvasHeight - totalTextHeight + halfLine - padding;
 		} else {
-			// middle
-			startY = (height - totalTextHeight) / 2 + halfLine;
+			// Middle
+			startY = (canvasHeight - totalTextHeight) / 2 + halfLine;
 		}
 
-		// 越界修正：如果文字超长，top 模式通常希望看到第一行
-		if (totalTextHeight > height && vAlign !== 'bottom') {
+		// 越界保护
+		if (totalTextHeight > canvasHeight && vAlign !== 'bottom') {
 			startY = padding + halfLine;
 		}
 
+		// 绘制文本
+		// 改为逐字符绘制：仅绘制完全位于文本内容区域（去掉 padding）的字符，
+		// 避免出现半个字符被裁切显示的问题。
+		const contentLeft = padding;
+		const contentRight = canvasWidth - padding;
+		const contentTop = padding;
+		const contentBottom = canvasHeight - padding;
+
+		// 每行逐字符绘制（测量位置并判断字符边界是否完全在内容区域内）
 		lines.forEach((line, index) => {
 			const y = startY + (index * lineHeight);
-			ctx.fillText(line, x, y);
+
+			// 预先测量整行宽度（缩减重复测量）
+			const lineMetrics = ctx.measureText(line);
+			const lineWidth = lineMetrics.width;
+
+			// 计算此行的起始 X（相对于画布左上角）
+			let lineXStart;
+			if (hAlign === 'left') {
+				lineXStart = contentLeft;
+			} else if (hAlign === 'right') {
+				lineXStart = contentRight - lineWidth;
+			} else {
+				lineXStart = (canvasWidth - lineWidth) / 2;
+			}
+
+			// 逐字符绘制
+			// 使用左对齐绘制单字符，手动计算字符位置
+			ctx.textAlign = 'left';
+			for (let i = 0; i < line.length; i++) {
+				const ch = line[i];
+				const substr = line.substring(0, i);
+				const offset = ctx.measureText(substr).width;
+				const chWidth = ctx.measureText(ch).width;
+
+				const chLeft = lineXStart + offset;
+				const chRight = chLeft + chWidth;
+				const chTop = y - (lineHeight / 2);
+				const chBottom = y + (lineHeight / 2);
+
+				// 仅当字符完全位于内容区域内时才绘制
+				if (chLeft >= contentLeft && chRight <= contentRight && chTop >= contentTop && chBottom <= contentBottom) {
+					ctx.fillText(ch, chLeft, y);
+				}
+			}
 		});
 
-		ctx.restore();
-
-		// 6. 生成 Texture 和 Mesh
+		// 7. 生成纹理
 		const texture = new THREE.CanvasTexture(canvas);
 		texture.encoding = THREE.sRGBEncoding;
-		texture.minFilter = THREE.LinearFilter; // 文本通常不需要 Mipmap，Linear 更清晰
-		// texture.magFilter = THREE.LinearFilter; 
+		
+		// 优化纹理设置
+		texture.minFilter = THREE.LinearMipmapLinearFilter; // 使用 Mipmap 防止远处闪烁
+		texture.magFilter = THREE.LinearFilter;
+		texture.generateMipmaps = true; 
+		
+		// 开启各向异性过滤 (Anisotropy)，让侧面观看更清晰
+		const maxAnisotropy = this.editor?.renderer?.capabilities?.getMaxAnisotropy() || 4;
+		texture.anisotropy = maxAnisotropy;
+		
 		texture.needsUpdate = true;
 
-		// 物理尺寸还原：像素 * 缩放比例 = 米
-		const geometry = new THREE.PlaneGeometry(width * PIXEL_SCALE, height * PIXEL_SCALE);
+		// 8. 创建几何体
+		// 【重要】：几何体尺寸使用 baseWidth * PIXEL_SCALE，保持物理尺寸不变
+		// 无论纹理多大，贴图都会自动缩放适配这个物理尺寸
+		const geometry = new THREE.PlaneGeometry(baseWidth * PIXEL_SCALE, baseHeight * PIXEL_SCALE);
 
 		const material = new THREE.MeshBasicMaterial({
 			map: texture,
 			transparent: true,
 			side: THREE.DoubleSide,
-			alphaTest: 0.05 // 剔除完全透明部分，解决排序问题
+			alphaTest: 0.01 // 降低 alphaTest 阈值，避免边缘锯齿
 		});
 
 		const mesh = new THREE.Mesh(geometry, material);
