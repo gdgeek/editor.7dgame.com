@@ -753,11 +753,20 @@ class MetaFactory extends Factory {
 
 				const chLeft = lineXStart + offset;
 				const chRight = chLeft + chWidth;
-				const chTop = y - (lineHeight / 2);
-				const chBottom = y + (lineHeight / 2);
 
-				// 仅当字符完全位于内容区域内时才绘制
-				if (chLeft >= contentLeft && chRight <= contentRight && chTop >= contentTop && chBottom <= contentBottom) {
+				// 使用 measureText 的 actualBoundingBoxAscent/Descent 来计算字符的精确上下边界
+				const chMetrics = ctx.measureText(ch);
+				// 回退值以防浏览器不支持这些属性
+				const ascent = chMetrics.actualBoundingBoxAscent || (scaledFontSize * 0.8);
+				const descent = chMetrics.actualBoundingBoxDescent || (scaledFontSize * 0.2);
+				const chTop = y - ascent;
+				const chBottom = y + descent;
+
+				// 放宽一点容差，避免微小测量误差导致整行被排除
+				const EPS = 0.5;
+
+				// 仅当字符完全位于内容区域内时才绘制（允许小容差）
+				if (chLeft + EPS >= contentLeft && chRight - EPS <= contentRight && chTop + EPS >= contentTop && chBottom - EPS <= contentBottom) {
 					ctx.fillText(ch, chLeft, y);
 				}
 			}
