@@ -101,6 +101,7 @@ class MetaFactory extends Factory {
 		this.ktx2Loader = null;
 
 
+
 	}
 	async addGizmo(node) {
 
@@ -524,69 +525,186 @@ class MetaFactory extends Factory {
 
 	}
 	async getText(data, resources) {
-		// 获取文本内容，如果不存在则使用默认文本
-		const text = data.parameters.text || 'Hello World';
-		console.error("text", data);
+		const rawParams = data.parameters || {};
+		const PIXEL_SCALE = 0.005; // 统一的比例常量：1px = 5mm
+		// 1. 默认值设置 (单位：米)
+		// 默认 1.28m x 0.32m (对应 256px x 64px)
+		const defaults = {
+			text: 'Text',
+			rect: { x: 1.28, y: 0.32 }, 
+			size: 24,
+			color: 'ffffff',
+			align: { horizontal: 'center', vertical: 'middle' }
+		};
 
-		// 使用createTextMesh方法创建文本网格
-		const plane = this.createTextMesh(text);
-		plane.name = data.parameters.name + '[text]';
+		// 2. 合并参数
+		const params = {
+			text: rawParams.text ?? defaults.text,
+			rectMeters: {
+				x: Number(rawParams.rect?.x ?? defaults.rect.x),
+				y: Number(rawParams.rect?.y ?? defaults.rect.y)
+			},
+			size: Number(rawParams.size ?? defaults.size),
+			color: '#' + (rawParams.color ?? defaults.color).replace('#', ''),
+			align: rawParams.align ?? defaults.align
+		};
 
-		// 确保userData中包含text属性
-		if (!plane.userData) plane.userData = {};
-		plane.userData.text = text;
+		// 3. 单位转换：米 -> 像素 (供 Canvas 绘图使用)
+		// 必须保证 rectPx 至少为 1px
+		const M_TO_PX = 1 / PIXEL_SCALE;
+		const rectPx = {
+			x: Math.max(1, params.rectMeters.x * M_TO_PX),
+			y: Math.max(1, params.rectMeters.y * M_TO_PX)
+		};
+
+		// 4. 创建 Mesh
+		// 注意：传递 hAlign/vAlign 方便内部解构
+		const meshParams = {
+			...params,
+			rect: rectPx,
+			hAlign: params.align.horizontal,
+			vAlign: params.align.vertical
+		};
+		
+		const plane = await this.createTextMesh(params.text, meshParams);
+
+		// 5. 设置对象属性
+		plane.name = (rawParams.name || 'Text') + '[text]';
+		plane.type = 'Text';
+
+		// 6. 回写 userData (保持使用米作为存储单位)
+		plane.userData = {
+			...rawParams,
+			text: params.text,
+			rect: params.rectMeters, // 存米
+			size: params.size,
+			color: params.color.replace('#', ''),
+			align: params.align
+		};
 
 		return plane;
 	}
 
-	// 创建文本网格的辅助方法
-	createTextMesh(text) {
-		// 创建一个动态画布来绘制文本
+	createTextMesh(text, params = {}) {
+		// 参数解构与默认值
+		const width = Math.max(1, Math.round(params.rect?.x || 256));
+		const height = Math.max(1, Math.round(params.rect?.y || 64));
+		const fontSize = params.size || 24;
+		const color = params.color || '#ffffff';
+		const hAlign = params.hAlign || 'center';
+		const vAlign = params.vAlign || 'middle';
+		const PIXEL_SCALE = 0.005; // 统一的比例常量：1px = 5mm
+		// 创建 Canvas
 		const canvas = document.createElement('canvas');
-		const context = canvas.getContext('2d');
-		const fontSize = 16; // 字体大小
+		canvas.width = width;
+		canvas.height = height;
+		const ctx = canvas.getContext('2d');
 
-		// 设置画布大小和字体
-		context.font = `${fontSize}px Arial`;
-		const textWidth = context.measureText(text).width;
+		// 1. 裁剪区域 & 清空
+		ctx.save();
+		ctx.clearRect(0, 0, width, height);
+		// ctx.rect(0, 0, width, height); // 可选：如果需要调试边框
+		// ctx.clip();
 
-		// 设置画布尺寸，给文本周围留出一些空间
-		canvas.width = textWidth + 10;
-		canvas.height = fontSize + 10;
+		// 2. 字体配置
+		ctx.font = `${fontSize}px 'Arial Unicode MS'`; 
+		ctx.fillStyle = color;
+		ctx.textBaseline = 'middle'; 
 
-		// 清除画布并设置背景色
-		context.fillStyle = '#8888ff';
-		context.fillRect(0, 0, canvas.width, canvas.height);
+		// 3. 水平对齐计算
+		let x = 0;
+		const padding = 4; // 边距防止切字
 
-		// 绘制文本
-		context.fillStyle = '#ffffff';
-		context.font = `${fontSize}px Arial`;
-		context.textAlign = 'center';
-		context.textBaseline = 'middle';
-		context.fillText(text, canvas.width / 2, canvas.height / 2);
+		if (hAlign === 'left') {
+			ctx.textAlign = 'left';
+			x = padding;
+		} else if (hAlign === 'right') {
+			ctx.textAlign = 'right';
+			x = width - padding;
+		} else {
+			ctx.textAlign = 'center';
+			x = width / 2;
+		}
 
-		// 创建纹理
+		// 4. 文本处理 (换行)
+		const textStr = String(text || ''); // 防止 null
+		const paragraphs = textStr.split('\n');
+		const lines = [];
+
+		if (textStr) {
+			paragraphs.forEach(paragraph => {
+				let currentLine = '';
+				for (let i = 0; i < paragraph.length; i++) {
+					const char = paragraph[i];
+					const testLine = currentLine + char;
+					const metrics = ctx.measureText(testLine);
+					
+					// 简单换行逻辑：如果超出宽度且不是该行第一个字
+					if (metrics.width > (width - padding * 2) && i > 0) {
+						lines.push(currentLine);
+						currentLine = char;
+					} else {
+						currentLine = testLine;
+					}
+				}
+				lines.push(currentLine);
+			});
+		}
+
+		// 5. 垂直对齐计算与绘制
+		const lineHeight = fontSize * 1;
+		const totalTextHeight = lines.length * lineHeight;
+
+		let startY = 0;
+		// 基线偏移修正 (因为 textBaseline 是 middle)
+		const halfLine = lineHeight / 2;
+
+		if (vAlign === 'top') {
+			startY = padding + halfLine; 
+		} else if (vAlign === 'bottom') {
+			startY = height - totalTextHeight + halfLine - padding;
+			// 如果文字太多超出，保持底端对齐，顶部被切
+		} else {
+			// middle
+			startY = (height - totalTextHeight) / 2 + halfLine;
+		}
+
+		// 越界修正：如果文字超长，top 模式通常希望看到第一行
+		if (totalTextHeight > height && vAlign !== 'bottom') {
+			startY = padding + halfLine;
+		}
+
+		lines.forEach((line, index) => {
+			const y = startY + (index * lineHeight);
+			ctx.fillText(line, x, y);
+		});
+
+		ctx.restore();
+
+		// 6. 生成 Texture 和 Mesh
 		const texture = new THREE.CanvasTexture(canvas);
+		texture.encoding = THREE.sRGBEncoding;
+		texture.minFilter = THREE.LinearFilter; // 文本通常不需要 Mipmap，Linear 更清晰
+		// texture.magFilter = THREE.LinearFilter; 
+		texture.needsUpdate = true;
 
-		// 创建平面几何体，比例与画布相同
-		const aspectRatio = canvas.width / canvas.height;
-		const geometry = new THREE.PlaneGeometry(0.5 * aspectRatio, 0.5);
+		// 物理尺寸还原：像素 * 缩放比例 = 米
+		const geometry = new THREE.PlaneGeometry(width * PIXEL_SCALE, height * PIXEL_SCALE);
 
-		// 创建材质
 		const material = new THREE.MeshBasicMaterial({
 			map: texture,
 			transparent: true,
-			side: THREE.DoubleSide
+			side: THREE.DoubleSide,
+			alphaTest: 0.05 // 剔除完全透明部分，解决排序问题
 		});
 
-		// 创建网格
-		const plane = new THREE.Mesh(geometry, material);
+		const mesh = new THREE.Mesh(geometry, material);
+		mesh.type = 'Text';
 
-		// 保存原始文本，以便后续更新
-		plane.userData._textContent = text;
-
-		return plane;
+		return mesh;
 	}
+
+
 	async getVoxel(data, resources) {
 
 
