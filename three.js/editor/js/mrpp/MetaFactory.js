@@ -534,7 +534,8 @@ class MetaFactory extends Factory {
 			rect: { x: 1.28, y: 0.32 }, 
 			size: 24,
 			color: '#ffffff',
-			align: { horizontal: 'center', vertical: 'middle' }
+			align: { horizontal: 'center', vertical: 'middle' },
+			background: { enable: true, color: '#808080', opacity: 0.3 }
 		};
 
 		// 2. 合并参数
@@ -549,7 +550,8 @@ class MetaFactory extends Factory {
 				const c = rawParams.color ?? defaults.color;
 				return c.startsWith('#') ? c : '#' + c;
 			})(),
-			align: rawParams.align ?? defaults.align
+			align: rawParams.align ?? defaults.align,
+			background: rawParams.background ?? defaults.background
 		};
 
 		// 3. 单位转换：米 -> 像素 (供 Canvas 绘图使用)
@@ -561,12 +563,14 @@ class MetaFactory extends Factory {
 		};
 
 		// 4. 创建 Mesh
-		// 注意：传递 hAlign/vAlign 方便内部解构
 		const meshParams = {
 			...params,
 			rect: rectPx,
 			hAlign: params.align.horizontal,
-			vAlign: params.align.vertical
+			vAlign: params.align.vertical,
+			backgroundEnable: params.background.enable ?? true,
+			backgroundColor: params.background.color ?? '#808080',
+			backgroundOpacity: params.background.opacity ?? 0.3
 		};
 		
 		const plane = await this.createTextMesh(params.text, meshParams);
@@ -582,7 +586,8 @@ class MetaFactory extends Factory {
 			rect: params.rectMeters, // 存米
 			size: params.size,
 			color: params.color, 
-			align: params.align
+			align: params.align,
+			background: params.background
 		};
 
 		return plane;
