@@ -533,7 +533,7 @@ class MetaFactory extends Factory {
 			text: 'Text',
 			rect: { x: 1.28, y: 0.32 }, 
 			size: 24,
-			color: 'ffffff',
+			color: '#ffffff',
 			align: { horizontal: 'center', vertical: 'middle' }
 		};
 
@@ -545,7 +545,10 @@ class MetaFactory extends Factory {
 				y: Number(rawParams.rect?.y ?? defaults.rect.y)
 			},
 			size: Number(rawParams.size ?? defaults.size),
-			color: '#' + (rawParams.color ?? defaults.color).replace('#', ''),
+			color: (() => {
+				const c = rawParams.color ?? defaults.color;
+				return c.startsWith('#') ? c : '#' + c;
+			})(),
 			align: rawParams.align ?? defaults.align
 		};
 
@@ -572,13 +575,13 @@ class MetaFactory extends Factory {
 		plane.name = (rawParams.name || 'Text') + '[text]';
 		plane.type = 'Text';
 
-		// 6. 回写 userData (保持使用米作为存储单位)
+		// 6. 回写 userData
 		plane.userData = {
 			...rawParams,
 			text: params.text,
 			rect: params.rectMeters, // 存米
 			size: params.size,
-			color: params.color.replace('#', ''),
+			color: params.color, 
 			align: params.align
 		};
 
@@ -610,6 +613,9 @@ class MetaFactory extends Factory {
 		const color = params.color || '#ffffff';
 		const hAlign = params.hAlign || 'center';
 		const vAlign = params.vAlign || 'middle';
+		const backgroundEnable = params.backgroundEnable !== undefined ? params.backgroundEnable : true;
+		const backgroundColor = params.backgroundColor || '#808080';
+		const backgroundOpacity = params.backgroundOpacity !== undefined ? params.backgroundOpacity : 0.3;
 		
 		const PIXEL_SCALE = 0.005; // 物理单位转换: 1逻辑像素 = 0.005米
 
@@ -632,11 +638,18 @@ class MetaFactory extends Factory {
 		// 清空画布
 		ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-		// 绘制半透明灰色背景（带圆角）
-		const cornerRadius = 8 * SCALE_FACTOR; // 圆角半径随放大因子缩放
-		ctx.fillStyle = 'rgba(128, 128, 128, 0.5)';
-		this.roundRect(ctx, 0, 0, canvasWidth, canvasHeight, cornerRadius);
-		ctx.fill();
+		// 绘制半透明背景（带圆角）- 仅在启用时绘制
+		if (backgroundEnable) {
+			const cornerRadius = 8 * SCALE_FACTOR; // 圆角半径随放大因子缩放
+			// 转换颜色格式（#RRGGBB -> rgba）
+			const bgColor = backgroundColor.startsWith('#') ? backgroundColor.substring(1) : backgroundColor;
+			const r = parseInt(bgColor.substring(0, 2), 16);
+			const g = parseInt(bgColor.substring(2, 4), 16);
+			const b = parseInt(bgColor.substring(4, 6), 16);
+			ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${backgroundOpacity})`;
+			this.roundRect(ctx, 0, 0, canvasWidth, canvasHeight, cornerRadius);
+			ctx.fill();
+		}
 
 		// 设置字体 (使用放大后的字号)
 		// 增加 'Arial' 作为备选，确保跨平台兼容

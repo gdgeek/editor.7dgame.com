@@ -175,6 +175,9 @@ function Strings( config ) {
 			'sidebar/text/fontSize': 'Font Size',
 			'sidebar/text/alignment': 'Alignment',
 			'sidebar/text/follow': 'Towards the user',
+			'sidebar/text/background': 'Background',
+			'sidebar/text/background/color': 'Background Color',
+			'sidebar/text/background/opacity': 'Background Opacity',
 
 
 			'sidebar/components/multi_selection_summary': 'selected objects component summary',
@@ -671,6 +674,9 @@ function Strings( config ) {
 			'sidebar/text/fontSize': '字号',
 			'sidebar/text/alignment': '对齐方式',
 			'sidebar/text/follow': '朝向用户',
+			'sidebar/text/background': '背景',
+			'sidebar/text/background/color': '背景颜色',
+			'sidebar/text/background/opacity': '背景不透明度',
 
 			'sidebar/components/multi_selection_summary': '个选中对象组件摘要',
 			'sidebar/components/object_name_with_index': '对象 {0}',
@@ -1167,6 +1173,10 @@ function Strings( config ) {
 			'sidebar/text/fontSize': 'フォントサイズ',
 			'sidebar/text/alignment': 'アライメント',
 			'sidebar/text/follow': 'ユーザーに向けて',
+			'sidebar/text/background': '背景',
+			'sidebar/text/background/color': '背景色',
+			'sidebar/text/background/opacity': '背景の不透明度',
+
 
 			'sidebar/components/multi_selection_summary': '個の選択オブジェクトコンポーネント概要',
 			'sidebar/components/object_name_with_index': 'オブジェクト {0}',
@@ -1665,6 +1675,10 @@ function Strings( config ) {
 			"sidebar/text/fontSize": "字號",
 			"sidebar/text/alignment": "對齊方式",
 			"sidebar/text/follow": "面向使用者",
+			'sidebar/text/background': '背景',
+			'sidebar/text/background/color': '背景顏色',
+			'sidebar/text/background/opacity': '背景不透明度',
+
 
 			"sidebar/components/multi_selection_summary": "個選中物件元件摘要",
 			"sidebar/components/object_name_with_index": "物件 {0}",
@@ -2161,6 +2175,10 @@ function Strings( config ) {
 			"sidebar/text/fontSize": "ขนาดตัวอักษร",
 			"sidebar/text/alignment": "การจัดตำแหน่ง",
 			"sidebar/text/follow": "หันเข้าหาผู้ใช้",
+			'sidebar/text/background': 'พื้นหลัง',
+			'sidebar/text/background/color': 'สีพื้นหลัง',
+			'sidebar/text/background/opacity': 'ความทึบแสงของพื้นหลัง',
+
 
 			"sidebar/components/multi_selection_summary": "สรุปคอมโพเนนต์วัตถุที่เลือก",
 			"sidebar/components/object_name_with_index": "วัตถุ {0}",

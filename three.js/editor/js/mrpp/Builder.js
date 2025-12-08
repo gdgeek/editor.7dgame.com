@@ -139,10 +139,15 @@ class Builder {
 		// rect stored in meters: 256px * 0.005m/px = 1.28m, 64px * 0.005 = 0.32m
 		ret.parameters.rect = { x: 1.28, y: 0.32 };
 		ret.parameters.size = 24;
-		ret.parameters.color = 'ffffff';
+		ret.parameters.color = '#ffffff'; 
 		ret.parameters.align = {
 			horizontal: 'center',
 			vertical: 'middle'
+		};
+		ret.parameters.background = {
+			enable: true,
+			color: '#808080', 
+			opacity: 0.5
 		};
 		ret.parameters.follow = false;
 		return ret;
