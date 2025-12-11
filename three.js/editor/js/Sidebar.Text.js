@@ -1,6 +1,6 @@
 import { UIPanel, UIRow, UITextArea, UIText, UIInput, UINumber, UIColor, UIButton } from './libs/ui.js';
 import { SetValueCommand } from './commands/SetValueCommand.js';
-import { MetaFactory } from './mrpp/MetaFactory.js';
+import { createTextMesh } from './utils/TextUtils.js';
 
 function SidebarText(editor) {
 	const strings = editor.strings;
@@ -336,7 +336,7 @@ function SidebarText(editor) {
 	container.updateTextObject = function (textObject, dataOverride) {
 		if (!textObject) return;
 		try {
-			const factory = new MetaFactory(editor);
+			
 			const userData = textObject.userData || {};
 
 			const finalData = {
@@ -364,26 +364,25 @@ function SidebarText(editor) {
 				backgroundOpacity: finalData.background.opacity
 			};
 
-			Promise.resolve(factory.createTextMesh(finalData.text, paramsForFactory)).then((newMesh) => {
-				if (!newMesh) return;
-				
-				if (textObject.geometry) textObject.geometry.dispose();
-				textObject.geometry = newMesh.geometry;
+			const newMesh = createTextMesh(finalData.text, paramsForFactory);
+			
+			if (!newMesh) return;
+			
+			if (textObject.geometry) textObject.geometry.dispose();
+			textObject.geometry = newMesh.geometry;
 
-				if (textObject.material) {
-					if (textObject.material.map) textObject.material.map.dispose();
-					textObject.material.dispose();
-				}
-				textObject.material = newMesh.material;
-				
-				editor.signals.sceneGraphChanged.dispatch(); 
-			});
+			if (textObject.material) {
+				if (textObject.material.map) textObject.material.map.dispose();
+				textObject.material.dispose();
+			}
+			textObject.material = newMesh.material;
+			
+			editor.signals.sceneGraphChanged.dispatch(); 
 
 		} catch (e) {
 			console.error('SidebarText.updateTextObject error:', e);
 		}
 	};
-
 	// ================= 状态同步逻辑 =================
 	function updateUIState(object) {
 		const data = object.userData || {};

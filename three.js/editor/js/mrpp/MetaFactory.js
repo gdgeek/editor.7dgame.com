@@ -6,6 +6,10 @@ import { VOXLoader, VOXMesh } from '../../../examples/jsm/loaders/VOXLoader.js';
 import { KTX2Loader } from '../../../examples/jsm/loaders/KTX2Loader.js';
 //import { Editor } from './js/Editor.js';
 import { Factory } from './Factory.js';
+
+import { createTextMesh } from '../utils/TextUtils.js';
+import { createMeshFromUrl,getResourceLayout } from '../utils/WebpUtils.js';
+
 const getResourceFromUrl = async (url) => {
 	return new Promise((resolve, reject) => {
 
@@ -368,100 +372,105 @@ class MetaFactory extends Factory {
 
 	}
 
-	async getPlane(url, width, height) {
-
-		url = convertToHttps(url);
-		return new Promise(resolve => {
-
-			const geometry = new THREE.PlaneGeometry(width, height);
-			const loader = new THREE.TextureLoader();
-
-			loader.load( url, texture => {
-				// 完整的纹理配置
- 				texture.premultiplyAlpha = false;
-				texture.encoding = THREE.sRGBEncoding;
-				texture.format = THREE.RGBAFormat; // 明确指定RGBA格式
-				texture.needsUpdate = true;
-
-				// 基于 URL 后缀判断是否可能有透明通道
-				const lowerUrl = (url || '').toLowerCase();
-				const isAlphaImage = lowerUrl.endsWith('.png') || lowerUrl.endsWith('.webp');
-
- 				const material = new THREE.MeshBasicMaterial( {
- 					color: 0xffffff,
- 					side: THREE.DoubleSide,
- 					map: texture,
-					transparent: isAlphaImage || true, // 允许透明（PNG会用到）
-					alphaTest: isAlphaImage ? 0.01 : 0.0,
-					depthWrite: false, // 透明材质通常不写入深度
-					opacity: 1.0,
-					blending: THREE.NormalBlending
- 				} );
-
-
-				const mesh = new THREE.Mesh( geometry, material );
-				if ( isAlphaImage ) {
-					material.depthTest = false;
-				} else {
-					material.depthTest = true;
-				}
-
-				resolve( mesh );
-
- 			}, function ( error ) {
-
-				console.error('Texture loading error:', error);
- 				resolve( new THREE.Mesh( geometry ) );
-
- 			} );
-
+	async getPlane(url, width, height, config = {}) {
+		const httpsUrl = convertToHttps(url);
+		
+		return await createMeshFromUrl(httpsUrl, { width, height }, {
+			name: 'Plane',
+			transparent: false, 
+			...config 
 		});
-
 	}
 
-	async getPicture( data, resources ) {
+	async getPicture(data, resources) {
+		const layout = getResourceLayout(data, resources);
+		if (!layout) return null;
+		const { resource, width, height } = layout;
 
- 		const resource = resources.get( data.parameters.resource.toString() );
+		// 逻辑：
+		// 1. 优先检查 原文件(file.url) 是否是透明格式。
+		//    如果是 -> 强制使用原文件 (解决旧数据转成jpg丢失透明度的问题)。
+		// 2. 如果原文件不是透明格式 -> 优先使用缩略图(image.url)，没有则用原文件。
+		const imageUrl = resource.image?.url;
+		const fileUrl = resource.file?.url;
 
-		if ( ! resource ) return null;
-		// 根据文件扩展名选择合适的 URL
-		const fileUrl = resource.file && resource.file.url ? resource.file.url : '';
-		const imageUrl = resource.image && resource.image.url ? resource.image.url : '';
+		const isAlphaRegex = /\.(png|webp)($|\?)/i;
 
-		const lowerFile = fileUrl.toLowerCase();
+		let chosenUrl = "";
+		let isAlpha = false;
 
-		let chosenUrl = imageUrl; // 默认使用缩略图
-
-		if (lowerFile.endsWith('.png') || lowerFile.endsWith('.webp')) {
-			// png 或 webp 使用源文件
+		if (fileUrl && isAlphaRegex.test(fileUrl)) {
+			// Case A: 原图是 PNG/WebP，必须用原图以保留透明通道
 			chosenUrl = fileUrl;
-		} else if (lowerFile.endsWith('.jpg') || lowerFile.endsWith('.jpeg')) {
-			// jpg/jpeg 使用缩略图
-			chosenUrl = imageUrl;
+			isAlpha = true;
 		} else {
-			// 其他格式（比如 gif、webp，但未在前面匹配），如果原始文件存在且是 png/webp 仍然使用源文件
-			if (lowerFile.endsWith('.png') || lowerFile.endsWith('.webp')) {
-				chosenUrl = fileUrl;
+			// Case B: 原图是不透明的 (jpg)，或者没有原图
+			// 优先用缩略图 (imageUrl)，如果缩略图本身是 png 也可以开启透明
+			chosenUrl = imageUrl || fileUrl;
+			if (chosenUrl && isAlphaRegex.test(chosenUrl)) {
+				isAlpha = true;
 			}
 		}
 
-		// 解析尺寸，防止 info 为空
-		let info = {};
-		try { info = JSON.parse( resource.info || '{}' ); } catch ( e ) { console.warn( 'parse resource.info failed', e ); }
-		const size = info.size || { x: 1, y: 1 };
-		const width = data.parameters.width || 0.5;
- 		const height = width * ( size.y / size.x );
+		if (!chosenUrl) return null;
 
+		const mesh = await this.getPlane(chosenUrl, width, height, {
+			name: data.parameters.name,
+			transparent: isAlpha, 
+			maxDimension: 1024,   
+			quality: 0.9
+		});
 
-		const node = await this.getPlane( chosenUrl, width, height );
 		if (data.parameters.sortingOrder !== undefined) {
-			node.renderOrder = 0-data.parameters.sortingOrder;
-			console.log('应用已有的 renderOrder:', node.renderOrder);
+			mesh.renderOrder = 0 - data.parameters.sortingOrder;
 		}
 
-
- 		return node;
+		return mesh;
 	}
+
+	async getVideo(data, resources) {
+		const layout = getResourceLayout(data, resources);
+		if (!layout) return null;
+		const { resource, width, height } = layout;
+		
+		// 逻辑：
+		// 1. 如果 image.url 存在且是图片格式 -> 说明是旧数据或已上传的封面，直接用，不加参数。
+		// 2. 否则 -> 说明 image.url 是视频路径或不存在，取 file.url，并拼接腾讯云截图参数。
+		const imageUrl = resource.image?.url;
+		const fileUrl = resource.file?.url;
+
+		let finalUrl = "";
+		let isVideoSource = false;
+
+		const isVideoRegex = /\.(mp4|mov|avi|webm)($|\?)/i;
+
+		if (imageUrl && !isVideoRegex.test(imageUrl)) {
+			// Case A: 以前上传的静态封面 (jpg/png)，直接用
+			finalUrl = imageUrl;
+		} else {
+			// Case B: 新数据 (mp4)，或者是视频源，需要云端截图
+			// 优先用 image.url (如果它是mp4)，否则用 file.url
+			const videoSource = imageUrl || fileUrl;
+			
+			if (videoSource) {
+				// 拼接参数
+				finalUrl = `${videoSource}?ci-process=snapshot&time=0&format=jpg`;
+				isVideoSource = true;
+			}
+		}
+
+		if (!finalUrl) return null;
+
+		const mesh = await this.getPlane(finalUrl, width, height, {
+			name: data.parameters.name,
+			transparent: false, 
+			maxDimension: 512,  
+			quality: 0.8
+		});
+		
+		return mesh;
+	}
+
 	async getPhototype(data) {
 		const entity = new THREE.Group();
 		entity.name = data.parameters.name;
@@ -526,9 +535,7 @@ class MetaFactory extends Factory {
 	}
 	async getText(data, resources) {
 		const rawParams = data.parameters || {};
-		const PIXEL_SCALE = 0.005; // 统一的比例常量：1px = 5mm
-		// 1. 默认值设置 (单位：米)
-		// 默认 1.28m x 0.32m (对应 256px x 64px)
+		const PIXEL_SCALE = 0.005; 
 		const defaults = {
 			text: 'Text',
 			rect: { x: 1.28, y: 0.32 }, 
@@ -538,7 +545,6 @@ class MetaFactory extends Factory {
 			background: { enable: true, color: '#808080', opacity: 0.3 }
 		};
 
-		// 2. 合并参数
 		const params = {
 			text: rawParams.text ?? defaults.text,
 			rectMeters: {
@@ -546,23 +552,17 @@ class MetaFactory extends Factory {
 				y: Number(rawParams.rect?.y ?? defaults.rect.y)
 			},
 			size: Number(rawParams.size ?? defaults.size),
-			color: (() => {
-				const c = rawParams.color ?? defaults.color;
-				return c.startsWith('#') ? c : '#' + c;
-			})(),
+			color: (rawParams.color ?? defaults.color).startsWith('#') ? (rawParams.color ?? defaults.color) : '#' + (rawParams.color ?? defaults.color),
 			align: rawParams.align ?? defaults.align,
 			background: rawParams.background ?? defaults.background
 		};
 
-		// 3. 单位转换：米 -> 像素 (供 Canvas 绘图使用)
-		// 必须保证 rectPx 至少为 1px
 		const M_TO_PX = 1 / PIXEL_SCALE;
 		const rectPx = {
 			x: Math.max(1, params.rectMeters.x * M_TO_PX),
 			y: Math.max(1, params.rectMeters.y * M_TO_PX)
 		};
 
-		// 4. 创建 Mesh
 		const meshParams = {
 			...params,
 			rect: rectPx,
@@ -573,17 +573,15 @@ class MetaFactory extends Factory {
 			backgroundOpacity: params.background.opacity ?? 0.3
 		};
 		
-		const plane = await this.createTextMesh(params.text, meshParams);
+		// 调用外部工具生成文本 Mesh
+		const plane = createTextMesh(params.text, meshParams);
 
-		// 5. 设置对象属性
 		plane.name = (rawParams.name || 'Text') + '[text]';
 		plane.type = 'Text';
-
-		// 6. 回写 userData
 		plane.userData = {
 			...rawParams,
 			text: params.text,
-			rect: params.rectMeters, // 存米
+			rect: params.rectMeters,
 			size: params.size,
 			color: params.color, 
 			align: params.align,
@@ -591,236 +589,6 @@ class MetaFactory extends Factory {
 		};
 
 		return plane;
-	}
-
-	// 文本网格生成核心逻辑
-	// 辅助方法：绘制圆角矩形路径
-	roundRect(ctx, x, y, width, height, radius) {
-		ctx.beginPath();
-		ctx.moveTo(x + radius, y);
-		ctx.lineTo(x + width - radius, y);
-		ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-		ctx.lineTo(x + width, y + height - radius);
-		ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-		ctx.lineTo(x + radius, y + height);
-		ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-		ctx.lineTo(x, y + radius);
-		ctx.quadraticCurveTo(x, y, x + radius, y);
-		ctx.closePath();
-	}
-
-	createTextMesh(text, params = {}) {
-		// 1. 基础参数 (逻辑像素)
-		const baseWidth = Math.max(1, params.rect?.x || 256);
-		const baseHeight = Math.max(1, params.rect?.y || 64);
-		const baseFontSize = params.size || 24;
-		
-		const color = params.color || '#ffffff';
-		const hAlign = params.hAlign || 'center';
-		const vAlign = params.vAlign || 'middle';
-		const backgroundEnable = params.backgroundEnable !== undefined ? params.backgroundEnable : true;
-		const backgroundColor = params.backgroundColor || '#808080';
-		const backgroundOpacity = params.backgroundOpacity !== undefined ? params.backgroundOpacity : 0.3;
-		
-		const PIXEL_SCALE = 0.005; // 物理单位转换: 1逻辑像素 = 0.005米
-
-		// 2. 高清渲染倍率 (解决文字模糊的关键)
-		// 放大 4 倍绘制，相当于 Retina 屏幕效果
-		const SCALE_FACTOR = 4; 
-
-		// 3. 计算实际 Canvas 尺寸 (物理像素)
-		const canvasWidth = Math.round(baseWidth * SCALE_FACTOR);
-		const canvasHeight = Math.round(baseHeight * SCALE_FACTOR);
-		const scaledFontSize = baseFontSize * SCALE_FACTOR;
-		const padding = 4 * SCALE_FACTOR; // 边距也放大
-
-		// 创建 Canvas
-		const canvas = document.createElement('canvas');
-		canvas.width = canvasWidth;
-		canvas.height = canvasHeight;
-		const ctx = canvas.getContext('2d');
-
-		// 清空画布
-		ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-
-		// 绘制半透明背景（带圆角）- 仅在启用时绘制
-		if (backgroundEnable) {
-			const cornerRadius = 8 * SCALE_FACTOR; // 圆角半径随放大因子缩放
-			// 转换颜色格式（#RRGGBB -> rgba）
-			const bgColor = backgroundColor.startsWith('#') ? backgroundColor.substring(1) : backgroundColor;
-			const r = parseInt(bgColor.substring(0, 2), 16);
-			const g = parseInt(bgColor.substring(2, 4), 16);
-			const b = parseInt(bgColor.substring(4, 6), 16);
-			ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${backgroundOpacity})`;
-			this.roundRect(ctx, 0, 0, canvasWidth, canvasHeight, cornerRadius);
-			ctx.fill();
-		}
-
-		// 设置字体 (使用放大后的字号)
-		// 增加 'Arial' 作为备选，确保跨平台兼容
-		ctx.font = `${scaledFontSize}px 'Arial Unicode MS', Arial, sans-serif`; 
-		ctx.fillStyle = color;
-		ctx.textBaseline = 'middle'; 
-
-		// 4. 水平对齐 (基于放大后的宽度计算)
-		let x = 0;
-		if (hAlign === 'left') {
-			ctx.textAlign = 'left';
-			x = padding;
-		} else if (hAlign === 'right') {
-			ctx.textAlign = 'right';
-			x = canvasWidth - padding;
-		} else {
-			ctx.textAlign = 'center';
-			x = canvasWidth / 2;
-		}
-
-		// 5. 文本自动换行处理 (Unity TMP 风格混合模式)
-		const textStr = String(text || '');
-		const paragraphs = textStr.split('\n');
-		const lines = [];
-
-		if (textStr) {
-			paragraphs.forEach(paragraph => {
-				if (paragraph.length === 0) {
-					lines.push('');
-					return;
-				}
-
-				let currentLine = '';
-				for (let i = 0; i < paragraph.length; i++) {
-					const char = paragraph[i];
-					const testLine = currentLine + char;
-					const metrics = ctx.measureText(testLine);
-					const maxLineWidth = canvasWidth - (padding * 2);
-
-					if (metrics.width > maxLineWidth && i > 0) {
-						// 尝试按词换行
-						const lastSpaceIndex = currentLine.lastIndexOf(' ');
-						if (lastSpaceIndex > -1 && lastSpaceIndex < currentLine.length - 1) {
-							lines.push(currentLine.substring(0, lastSpaceIndex));
-							currentLine = currentLine.substring(lastSpaceIndex + 1) + char;
-						} else {
-							// 强制换行 (中文或长单词)
-							lines.push(currentLine);
-							currentLine = char;
-						}
-					} else {
-						currentLine = testLine;
-					}
-				}
-				lines.push(currentLine);
-			});
-		}
-
-		// 6. 垂直对齐 (基于放大后的高度计算)
-		const lineHeight = scaledFontSize * 1.2; // 1.2倍行高更舒适
-		const totalTextHeight = lines.length * lineHeight;
-		const halfLine = lineHeight / 2; // 基线修正
-
-		let startY = 0;
-
-		if (vAlign === 'top') {
-			startY = padding + halfLine;
-		} else if (vAlign === 'bottom') {
-			startY = canvasHeight - totalTextHeight + halfLine - padding;
-		} else {
-			// Middle
-			startY = (canvasHeight - totalTextHeight) / 2 + halfLine;
-		}
-
-		// 越界保护
-		if (totalTextHeight > canvasHeight && vAlign !== 'bottom') {
-			startY = padding + halfLine;
-		}
-
-		// 绘制文本
-		// 改为逐字符绘制：仅绘制完全位于文本内容区域（去掉 padding）的字符，
-		// 避免出现半个字符被裁切显示的问题。
-		const contentLeft = padding;
-		const contentRight = canvasWidth - padding;
-		const contentTop = padding;
-		const contentBottom = canvasHeight - padding;
-
-		// 每行逐字符绘制（测量位置并判断字符边界是否完全在内容区域内）
-		lines.forEach((line, index) => {
-			const y = startY + (index * lineHeight);
-
-			// 预先测量整行宽度（缩减重复测量）
-			const lineMetrics = ctx.measureText(line);
-			const lineWidth = lineMetrics.width;
-
-			// 计算此行的起始 X（相对于画布左上角）
-			let lineXStart;
-			if (hAlign === 'left') {
-				lineXStart = contentLeft;
-			} else if (hAlign === 'right') {
-				lineXStart = contentRight - lineWidth;
-			} else {
-				lineXStart = (canvasWidth - lineWidth) / 2;
-			}
-
-			// 逐字符绘制
-			// 使用左对齐绘制单字符，手动计算字符位置
-			ctx.textAlign = 'left';
-			for (let i = 0; i < line.length; i++) {
-				const ch = line[i];
-				const substr = line.substring(0, i);
-				const offset = ctx.measureText(substr).width;
-				const chWidth = ctx.measureText(ch).width;
-
-				const chLeft = lineXStart + offset;
-				const chRight = chLeft + chWidth;
-
-				// 使用 measureText 的 actualBoundingBoxAscent/Descent 来计算字符的精确上下边界
-				const chMetrics = ctx.measureText(ch);
-				// 回退值以防浏览器不支持这些属性
-				const ascent = chMetrics.actualBoundingBoxAscent || (scaledFontSize * 0.8);
-				const descent = chMetrics.actualBoundingBoxDescent || (scaledFontSize * 0.2);
-				const chTop = y - ascent;
-				const chBottom = y + descent;
-
-				// 放宽一点容差，避免微小测量误差导致整行被排除
-				const EPS = 0.5;
-
-				// 仅当字符完全位于内容区域内时才绘制（允许小容差）
-				if (chLeft + EPS >= contentLeft && chRight - EPS <= contentRight && chTop + EPS >= contentTop && chBottom - EPS <= contentBottom) {
-					ctx.fillText(ch, chLeft, y);
-				}
-			}
-		});
-
-		// 7. 生成纹理
-		const texture = new THREE.CanvasTexture(canvas);
-		texture.encoding = THREE.sRGBEncoding;
-		
-		// 优化纹理设置
-		texture.minFilter = THREE.LinearMipmapLinearFilter; // 使用 Mipmap 防止远处闪烁
-		texture.magFilter = THREE.LinearFilter;
-		texture.generateMipmaps = true; 
-		
-		// 开启各向异性过滤 (Anisotropy)，让侧面观看更清晰
-		const maxAnisotropy = this.editor?.renderer?.capabilities?.getMaxAnisotropy() || 4;
-		texture.anisotropy = maxAnisotropy;
-		
-		texture.needsUpdate = true;
-
-		// 8. 创建几何体
-		// 【重要】：几何体尺寸使用 baseWidth * PIXEL_SCALE，保持物理尺寸不变
-		// 无论纹理多大，贴图都会自动缩放适配这个物理尺寸
-		const geometry = new THREE.PlaneGeometry(baseWidth * PIXEL_SCALE, baseHeight * PIXEL_SCALE);
-
-		const material = new THREE.MeshBasicMaterial({
-			map: texture,
-			transparent: true,
-			side: THREE.DoubleSide,
-			alphaTest: 0.01 // 降低 alphaTest 阈值，避免边缘锯齿
-		});
-
-		const mesh = new THREE.Mesh(geometry, material);
-		mesh.type = 'Text';
-
-		return mesh;
 	}
 
 
@@ -855,22 +623,6 @@ class MetaFactory extends Factory {
 		const entity = new THREE.Group();
 		entity.name = data.parameters.name;
 		return entity;
-
-	}
-	async getVideo(data, resources) {
-
-		if (data.parameters.resource == undefined) {
-
-			return null;
-
-		}
-
-		const resource = resources.get(data.parameters.resource.toString());
-		const info = JSON.parse(resource.info);
-		const size = info.size;
-		const width = data.parameters.width;
-		const height = width * (size.y / size.x);
-		return await this.getPlane(resource.image.url, width, height);
 
 	}
 
