@@ -30,7 +30,7 @@ export const ROLE_ABILITY = {
 	],
 	[ROLES.ADMIN]: [
 		// Admin 拥有 Manager 的所有权限 + 高级权限
-		...this[ROLES.MANAGER],
+		ABILITIES.UI_USERDATA,
 		ABILITIES.UI_ADVANCED,
 		ABILITIES.FEATURE_ADVANCED
 	],
