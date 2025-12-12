@@ -2,6 +2,7 @@ import { UIPanel, UINumber, UIBreak, UIText, UIButton, UIRow, UIInput, UICheckbo
 import { RemoveComponentCommand } from '../../commands/RemoveComponentCommand.js';
 import { SetComponentValueCommand } from '../../commands/SetComponentValueCommand.js';
 import { SetValueCommand } from '../../commands/SetValueCommand.js';
+import { ROLES } from '../../Access.js'; 
 
 class ActionComponent {
 
@@ -37,19 +38,29 @@ class ActionComponent {
       row.add(this.uuid);
       container.add(row)
     }
+    
     // Mode 勾选框
     {
       const row = new UIRow();
       row.add(new UIText(strings.getKey('sidebar/components/select/action/mode')).setWidth('90px'));
 
-      this.modeClick = new UICheckbox(true).onChange(() => this.updateMode());
-      row.add(this.modeClick);
+      // pinch 复选框：始终显示。特权用户可修改，非特权用户只读
+      this.modePinch = new UICheckbox(true);
+      if (this.editor.access.atLeast(ROLES.MANAGER)) {
+        this.modePinch.onChange(() => this.updateMode());
+      } else {
+        this.modePinch.setDisabled(true);
+      }
+      row.add(this.modePinch);
       row.add(new UIText(strings.getKey('sidebar/components/select/action/mode/pinch')).setWidth('50px'));
       row.setMarginRight('20px');
 
-      this.modeTouch = new UICheckbox(false).onChange(() => this.updateMode());
-      row.add(this.modeTouch);
-      row.add(new UIText(strings.getKey('sidebar/components/select/action/mode/touch')).setWidth('50px'));
+      // touch 复选框：只有特权用户可见并可编辑
+      if (this.editor.access.atLeast(ROLES.MANAGER)) {
+        this.modeTouch = new UICheckbox(false).onChange(() => this.updateMode());
+        row.add(this.modeTouch);
+        row.add(new UIText(strings.getKey('sidebar/components/select/action/mode/touch')).setWidth('50px'));
+      }
 
       container.add(row);
     }
@@ -58,7 +69,7 @@ class ActionComponent {
     {
       const row = new UIRow()
       this.action = new UIInput().setWidth('150px').setFontSize('12px').setDisabled(false)
-        .onChange(this.update.bind(this));
+        .onChange(this.updateAction.bind(this));
       row.add(new UIText(strings.getKey('sidebar/components/select/action/name')).setWidth('90px'));
       row.add(this.action);
       container.add(row)
@@ -68,8 +79,8 @@ class ActionComponent {
 
   updateMode() {
     const modeArray = [];
-    if (this.modeClick.getValue()) modeArray.push('pinch');
-    if (this.modeTouch.getValue()) modeArray.push('touch');
+    if (this.modePinch && this.modePinch.getValue()) modeArray.push('pinch');
+    if (this.modeTouch && this.modeTouch.getValue()) modeArray.push('touch');
 
     const command = new SetValueCommand(
       this.editor,
@@ -81,7 +92,7 @@ class ActionComponent {
     this.editor.signals.componentChanged.dispatch(this.component);
   }
 
-  update() {
+  updateAction() {
     const action = this.action.getValue();
     const command = new SetValueCommand(
       this.editor,
@@ -98,8 +109,8 @@ class ActionComponent {
     this.action.setValue(this.component.parameters.action);
 
     const modeArray = this.component.parameters.mode || [];
-    this.modeClick.setValue(modeArray.includes('pinch'));
-    this.modeTouch.setValue(modeArray.includes('touch'));
+    if (this.modePinch) this.modePinch.setValue(modeArray.includes('pinch'));
+    if (this.modeTouch) this.modeTouch.setValue(modeArray.includes('touch'));
   }
 
   renderer(container) {

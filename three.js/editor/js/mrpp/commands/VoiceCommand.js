@@ -2,6 +2,7 @@ import { UIPanel, UINumber, UIBreak, UIText, UIButton, UIRow, UIInput, UIHorizon
 import { RemoveComponentCommand } from '../../commands/RemoveComponentCommand.js';
 import { SetComponentValueCommand } from '../../commands/SetComponentValueCommand.js';
 import { SetValueCommand } from '../../commands/SetValueCommand.js';
+import { ROLES } from '../../Access.js'; 
 
 class VoiceCommand {
 
@@ -146,8 +147,7 @@ class VoiceCommand {
     };
 
     // user以上角色可选
-    const userRole = this.editor.data.user.role || '';
-    if (userRole !== 'user') {
+    if (this.editor.access.atLeast(ROLES.MANAGER)) {
       Object.assign(voiceOptions, {
         //教育项目
         nextStep: '下一步',

@@ -3,7 +3,7 @@ function Strings( config ) {
 	const language = config.getKey( 'language' );
 
 	const values = {
-		en: {
+		"en-us": {
 			'menubar/file': 'File',
 			'menubar/file/new': 'New',
 			'menubar/file/import': 'Import',
@@ -1000,7 +1000,7 @@ function Strings( config ) {
 			'dialog/confirm/cancel': '取消',
 		},
 
-		ja: {
+		"ja-jp": {
 			'menubar/file': 'ファイル',
 			'menubar/file/new': '新規作成',
 			'menubar/file/import': 'インポート',
@@ -2001,7 +2001,7 @@ function Strings( config ) {
 			"dialog/confirm/cancel": "取消"
 		},
 
-		th: {
+		"th-th": {
 			"menubar/file": "ไฟล์",
 			"menubar/file/new": "สร้างใหม่",
 			"menubar/file/import": "นำเข้า",
