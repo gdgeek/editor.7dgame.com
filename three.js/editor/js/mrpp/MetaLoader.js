@@ -163,7 +163,7 @@ function MetaLoader(editor) {
 			y: node.scale.y,
 			z: node.scale.z
 		};
-		console.error('entity.parameters', entity.parameters);
+		console.error('entity.parameters', entity);
 		//entity.parameters.transform.active = true
 		entity.parameters.active = node.visible;
 

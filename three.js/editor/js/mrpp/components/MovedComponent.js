@@ -47,7 +47,7 @@ class MovedComponent {
     }
 
     // 可缩放部分
-    /* {
+    {
       const row = new UIRow()
       const scalable = new UICheckbox().setValue(this.component.parameters.scalable)
         .onChange((item) => {
@@ -55,11 +55,11 @@ class MovedComponent {
           this.editor.execute(new SetValueCommand(this.editor, this.component.parameters, 'scalable', scalable.getValue()));
         });
       row.add(
-        new UIText('可缩放').setWidth('90px')
+        new UIText(strings.getKey('sidebar/components/select/moved/scalable')).setWidth('90px')
       )
       row.add(scalable)
       container.add(row)
-    } */
+    }
 
     // 磁力部分
     {

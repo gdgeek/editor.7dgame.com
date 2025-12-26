@@ -1,40 +1,37 @@
 import { UIPanel, UIBreak, UIText, UIButton, UIRow, UISelect, UIInput, UIHorizontalRule } from './libs/ui.js';
 
-
 import { AddComponentCommand } from './commands/AddComponentCommand.js';
 import { ComponentContainer } from './mrpp/ComponentContainer.js';
 
-function SidebarComponent( editor ) {
+function SidebarComponent(editor) {
 
 	const strings = editor.strings;
-
 	const signals = editor.signals;
 
 	const container = new UIPanel();
-	container.setDisplay( 'none' );
+	container.setDisplay('none');
 
 	const topContainer = new UIRow();
-	container.add( topContainer );
+	container.add(topContainer);
 
 	// 定义互斥组件类型
 	const mutuallyExclusiveTypes = ['Action', 'Moved', 'Trigger'];
 
 	// 添加组件选择容器
 	const addComponentContainer = new UIRow();
-	container.add( addComponentContainer );
+	container.add(addComponentContainer);
 
 	// 组件实例容器
 	const componentsContainer = new UIRow();
-	container.add( componentsContainer );
+	container.add(componentsContainer);
 
 	function update() {
-
 		topContainer.clear();
-		topContainer.setDisplay( 'none' );
+		topContainer.setDisplay('none');
 		componentsContainer.clear();
-		componentsContainer.setDisplay( 'none' );
+		componentsContainer.setDisplay('none');
 		addComponentContainer.clear();
-		addComponentContainer.setDisplay( 'none' );
+		addComponentContainer.setDisplay('none');
 
 		// 获取选中的对象
 		const selectedObjects = editor.getSelectedObjects();
@@ -47,24 +44,25 @@ function SidebarComponent( editor ) {
 			return;
 		}
 
-		// 只有当编辑器类型为meta且选中对象类型为mesh、polygen或voxel时才显示组件模块
+		// 只有当编辑器类型为meta时才显示组件模块
 		if (!(editor.type && editor.type.toLowerCase() === 'meta')) {
 			return;
 		}
 
 		// 检查所有选中对象的类型是否合法
-		const validObjectTypes = ['mesh', 'polygen', 'voxel', 'picture'];
-		let allValidType = true;
+		const validObjectTypes = ['polygen', 'voxel', 'picture'];
+		const invalidObjects = [];
 
 		for (let i = 0; i < selectedObjects.length; i++) {
-			const objectType = selectedObjects[i].type ? selectedObjects[i].type.toLowerCase() : '';
+			const object = selectedObjects[i];
+			const objectType = object.type ? object.type.toLowerCase() : '';
 			if (!validObjectTypes.includes(objectType)) {
-				allValidType = false;
-				break;
+				invalidObjects.push(object);
 			}
 		}
 
-		if (!allValidType) {
+		// 如果所有对象都是无效类型，则不显示组件面板
+		if (invalidObjects.length === selectedObjects.length) {
 			return;
 		}
 
@@ -78,34 +76,34 @@ function SidebarComponent( editor ) {
 			}
 		}
 
-		topContainer.setDisplay( 'block' );
-		componentsContainer.setDisplay( 'block' );
-		addComponentContainer.setDisplay( 'block' );
-		container.setDisplay( 'block' );
+		topContainer.setDisplay('block');
+		componentsContainer.setDisplay('block');
+		addComponentContainer.setDisplay('block');
+		container.setDisplay('block');
 
 		// 显示组件标题
-		topContainer.add( new UIText( strings.getKey( 'sidebar/components' ).toUpperCase() ) );
+		topContainer.add(new UIText(strings.getKey('sidebar/components').toUpperCase()));
 
 		// 添加新组件的界面
-		addComponentContainer.add( new UIBreak() );
+		addComponentContainer.add(new UIBreak());
 
-		const label = new UIText( strings.getKey( 'sidebar/components/select' ) ).setWidth( '90px' );
-		addComponentContainer.add( label );
+		const label = new UIText(strings.getKey('sidebar/components/select')).setWidth('90px');
+		addComponentContainer.add(label);
 
 		// 创建下拉框
-		const select = new UISelect().setWidth( '100px' );
-		select.setOptions( {
-			'Rotate': strings.getKey( 'sidebar/components/select/rotate' ),
-			'Action': strings.getKey( 'sidebar/components/select/action' ),
-			'Moved': strings.getKey( 'sidebar/components/select/moved' ),
+		const select = new UISelect().setWidth('100px');
+		select.setOptions({
+			'Rotate': strings.getKey('sidebar/components/select/rotate'),
+			'Action': strings.getKey('sidebar/components/select/action'),
+			'Moved': strings.getKey('sidebar/components/select/moved'),
 			'Trigger': strings.getKey('sidebar/components/select/trigger'),
 			'Tooltip': strings.getKey('sidebar/components/select/tooltip')
-		} );
-		select.setValue( 'Rotate' );
-		addComponentContainer.add( select );
+		});
+		select.setValue('Rotate');
+		addComponentContainer.add(select);
 
-		const newComponent = new UIButton( strings.getKey( 'sidebar/components/select/button' ) );
-		newComponent.onClick( function () {
+		const newComponent = new UIButton(strings.getKey('sidebar/components/select/button'));
+		newComponent.onClick(function() {
 			const selectedType = select.getValue();
 
 			// 获取当前选中的对象
@@ -113,13 +111,41 @@ function SidebarComponent( editor ) {
 
 			// 多选对象处理
 			if (selectedObjects.length > 1) {
+				// 首先验证对象类型
+				const validObjects = [];
+				const invalidTypeObjects = [];
+
+				for (let i = 0; i < selectedObjects.length; i++) {
+					const object = selectedObjects[i];
+					const objectType = object.type ? object.type.toLowerCase() : '';
+					if (['polygen', 'voxel', 'picture'].includes(objectType)) {
+						validObjects.push(object);
+					} else {
+						invalidTypeObjects.push(object.name || strings.getKey('sidebar/components/object_name_with_index').replace('{0}', i+1));
+					}
+				}
+
+				// 如果没有有效对象，显示错误并返回
+				if (validObjects.length === 0) {
+					if (invalidTypeObjects.length > 0) {
+						const invalidNames = invalidTypeObjects.length > 3
+							? invalidTypeObjects.slice(0, 3).join(', ') + `...等${invalidTypeObjects.length}个对象`
+							: invalidTypeObjects.join(', ');
+						editor.showNotification(
+							strings.getKey('sidebar/components/notification/invalid_objects').replace('{0}', invalidNames),
+							true
+						);
+					}
+					return;
+				}
+
 				// 检查互斥组件
 				if (mutuallyExclusiveTypes.includes(selectedType)) {
 					// 检查是否有对象已经存在互斥组件
 					let objectsWithExclusiveComponents = [];
 
-					for (let i = 0; i < selectedObjects.length; i++) {
-						const object = selectedObjects[i];
+					for (let i = 0; i < validObjects.length; i++) {
+						const object = validObjects[i];
 
 						// 确保对象有components属性
 						if (object.components === undefined) {
@@ -129,7 +155,7 @@ function SidebarComponent( editor ) {
 						for (let j = 0; j < object.components.length; j++) {
 							const compType = object.components[j].type;
 							if (mutuallyExclusiveTypes.includes(compType) && compType !== selectedType) {
-								objectsWithExclusiveComponents.push(object.name || `对象 ${i+1}`);
+								objectsWithExclusiveComponents.push(object.name || strings.getKey('sidebar/components/object_name_with_index').replace('{0}', i+1));
 								break;
 							}
 						}
@@ -142,53 +168,49 @@ function SidebarComponent( editor ) {
 							: objectsWithExclusiveComponents.join(', ');
 
 						editor.showNotification(
-							(strings.getKey('menubar/component/mutually_exclusive') || '只能选择一个互斥组件') +
+							(strings.getKey('sidebar/components/notification/mutually_exclusive') || '只能选择一个互斥组件') +
 							`\n以下对象已存在互斥组件: ${conflictNames}`,
 							true
 						);
 						return;
 					}
-
-					// 为所有选中对象添加组件
-					for (let i = 0; i < selectedObjects.length; i++) {
-						const object = selectedObjects[i];
-
-						// 确保对象有components属性
-						if (object.components === undefined) {
-							object.components = [];
-						}
-
-						const component = ComponentContainer.Create(selectedType, editor);
-						if (component !== undefined) {
-							const command = new AddComponentCommand(editor, object, component);
-							editor.execute(command);
-						}
-					}
-
-					const successMessage = strings.getKey('menubar/component/success').replace('{0}', select.getSelectedHtml());
-					editor.showNotification(`已为${selectedObjects.length}个选中对象添加${select.getSelectedHtml()}组件`, false);
-
-				} else {
-					// 非互斥组件，直接为所有选中对象添加
-					for (let i = 0; i < selectedObjects.length; i++) {
-						const object = selectedObjects[i];
-
-						// 确保对象有components属性
-						if (object.components === undefined) {
-							object.components = [];
-						}
-
-						const component = ComponentContainer.Create(selectedType, editor);
-						if (component !== undefined) {
-							const command = new AddComponentCommand(editor, object, component);
-							editor.execute(command);
-						}
-					}
-
-					const successMessage = strings.getKey('menubar/component/success').replace('{0}', select.getSelectedHtml());
-					editor.showNotification(`已为${selectedObjects.length}个选中对象添加${select.getSelectedHtml()}组件`, false);
 				}
 
+				// 首先为所有有效对象添加组件
+				for (let i = 0; i < validObjects.length; i++) {
+					const object = validObjects[i];
+					if (object.components === undefined) {
+						object.components = [];
+					}
+
+					const component = ComponentContainer.Create(selectedType, editor);
+					if (component !== undefined) {
+						const command = new AddComponentCommand(editor, object, component);
+						editor.execute(command);
+					}
+				}
+
+				// 显示成功消息
+				const componentName = select.getSelectedHtml();
+				editor.showNotification(
+					strings.getKey('sidebar/components/notification/add_success')
+						.replace('{0}', validObjects.length)
+						.replace('{1}', componentName),
+					false
+				);
+
+				// 如果有无效对象，延迟显示警告消息
+				if (invalidTypeObjects.length > 0) {
+					setTimeout(() => {
+						const invalidNames = invalidTypeObjects.length > 3
+							? invalidTypeObjects.slice(0, 3).join(', ') + `...等${invalidTypeObjects.length}个对象`
+							: invalidTypeObjects.join(', ');
+						editor.showNotification(
+							strings.getKey('sidebar/components/notification/skip_invalid_objects').replace('{0}', invalidNames),
+							true
+						);
+					}, 3000);
+				}
 			} else {
 				// 单选对象处理（原有逻辑）
 				// 检查互斥组件
@@ -209,7 +231,7 @@ function SidebarComponent( editor ) {
 					if (hasExclusiveComponent) {
 						// 已存在互斥组件，显示提示信息
 						editor.showNotification(
-							strings.getKey('menubar/component/mutually_exclusive') ||
+							strings.getKey('sidebar/components/notification/mutually_exclusive') ||
 							'只能选择一个互斥组件：点击触发、可移动或碰撞触发',
 							true
 						);
@@ -217,25 +239,20 @@ function SidebarComponent( editor ) {
 					}
 				}
 
-				const component = ComponentContainer.Create( selectedType, editor );
+				const component = ComponentContainer.Create(selectedType, editor);
 
-				if ( component !== undefined ) {
-					const command = new AddComponentCommand( editor, editor.selected, component );
-					editor.execute( command );
+				if (component !== undefined) {
+					const command = new AddComponentCommand(editor, editor.selected, component);
+					editor.execute(command);
 
 					const successMessage = strings.getKey('menubar/component/success').replace('{0}', select.getSelectedHtml());
 					editor.showNotification(successMessage, false);
 				}
 			}
-		} );
-		addComponentContainer.add( newComponent );
+		});
+		addComponentContainer.add(newComponent);
 
-		// 多选模式下，"选择项"下方增加分割线
-		if (isMultiSelect) {
-			// addComponentContainer.add(new UIHorizontalRule());
-		}
-
-		// 在多选模式下，更新可用的组件选项状态
+		// 在多选模式下，显示所有选中对象共有的组件
 		if (isMultiSelect) {
 			addComponentContainer.add(new UIHorizontalRule());
 			// 找出所有选中对象中的互斥组件类型
@@ -284,69 +301,37 @@ function SidebarComponent( editor ) {
 
 		// 在多选模式下，显示所有选中对象共有的组件
 		if (isMultiSelect) {
-			// 获取所有选中对象中共有的组件类型
-			const commonComponentTypes = new Map();
+			// 显示多选对象的组件摘要
+			const summaryTitle = new UIRow();
+			summaryTitle.add(new UIText(`${selectedObjects.length}${strings.getKey('sidebar/components/multi_selection_summary')}`));
+			componentsContainer.add(summaryTitle);
 
-			// 先统计每种组件类型在多少个对象中出现
+			// 对每个选中对象显示其名字和已添加的组件类型列表
 			for (let i = 0; i < selectedObjects.length; i++) {
 				const object = selectedObjects[i];
-				if (object.components) {
-					// 用于确保每个对象的每种组件类型只计数一次
-					const objectComponentTypes = new Set();
+				const types = (object.components && object.components.length > 0)
+					? object.components.map(c => c.type).join(', ')
+					: strings.getKey('sidebar/components/no_components');
 
-					for (let j = 0; j < object.components.length; j++) {
-						const component = object.components[j];
-						objectComponentTypes.add(component.type);
-					}
-
-					// 更新计数
-					objectComponentTypes.forEach(type => {
-						if (commonComponentTypes.has(type)) {
-							commonComponentTypes.set(type, commonComponentTypes.get(type) + 1);
-						} else {
-							commonComponentTypes.set(type, 1);
-						}
-					});
-				}
+				const row = new UIRow();
+				row.add(new UIText(`${object.name || strings.getKey('sidebar/components/object_name_with_index').replace('{0}', i+1)}: ${types}`));
+				componentsContainer.add(row);
 			}
 
-			// 查找所有对象共有的组件类型
-			const trulyCommonTypes = [];
-			commonComponentTypes.forEach((count, type) => {
-				if (count === selectedObjects.length) {
-					trulyCommonTypes.push(type);
-				}
-			});
-
-			// 如果存在共有组件类型，显示这些组件的UI
-			if (trulyCommonTypes.length > 0) {
-				const statsRow = new UIRow();
-				statsRow.add(new UIText('共有组件类型：' + trulyCommonTypes.join(', ')));
-				componentsContainer.add(statsRow);
-
-				const noteRow = new UIRow();
-				noteRow.add(new UIText('注意：组件实例是各对象独立的，无法一次编辑所有'));
-				componentsContainer.add(noteRow);
-				componentsContainer.add(new UIBreak());
-			} else {
-				const noteRow = new UIRow();
-				noteRow.add(new UIText('选中的对象没有共有的组件类型'));
-				componentsContainer.add(noteRow);
-				componentsContainer.add(new UIBreak());
-			}
+			componentsContainer.add(new UIBreak());
 		}
 		// 单选模式下显示该对象的所有组件
 		else if (object && object.components && object.components.length > 0) {
 			// 显示已有组件列表
-			componentsContainer.setDisplay( 'block' );
+			componentsContainer.setDisplay('block');
 
-			for ( let i = 0; i < object.components.length; i ++ ) {
-				( function ( object, component ) {
-					componentsContainer.add( new UIHorizontalRule() );
-					const cc = new ComponentContainer( editor, object, component );
-					cc.renderer( componentsContainer );
-					componentsContainer.add( new UIBreak() );
-				} )( object, object.components[ i ] );
+			for (let i = 0; i < object.components.length; i++) {
+				(function(object, component) {
+					componentsContainer.add(new UIHorizontalRule());
+					const cc = new ComponentContainer(editor, object, component);
+					cc.renderer(componentsContainer);
+					componentsContainer.add(new UIBreak());
+				})(object, object.components[i]);
 			}
 		}
 	}
@@ -393,26 +378,26 @@ function SidebarComponent( editor ) {
 	}
 
 	// signals
-	signals.objectSelected.add( function ( object ) {
-		if ( object !== null && editor.camera !== object ) {
+	signals.objectSelected.add(function(object) {
+		if (object !== null && editor.camera !== object) {
 			// 修改为与顶部菜单栏一致的显示逻辑
 			if (editor.type && editor.type.toLowerCase() === 'meta') {
 				const objectType = object.type ? object.type.toLowerCase() : '';
-				if (objectType === 'mesh' || objectType === 'polygen' || objectType === 'voxel' || objectType === 'picture') {
-					container.setDisplay( 'block' );
+				if (objectType === 'polygen' || objectType === 'voxel' || objectType === 'picture') {
+					container.setDisplay('block');
 					update();
 					return;
 				}
 			}
-			container.setDisplay( 'none' );
+			container.setDisplay('none');
 		} else {
-			container.setDisplay( 'none' );
+			container.setDisplay('none');
 		}
-	} );
+	});
 
-	signals.componentAdded.add( update );
-	signals.componentRemoved.add( update );
-	signals.componentChanged.add( update );
+	signals.componentAdded.add(update);
+	signals.componentRemoved.add(update);
+	signals.componentChanged.add(update);
 
 	return container;
 }

@@ -55,7 +55,7 @@ class TriggerComponent {
       this.action = new UIInput().setWidth('150px').setFontSize('12px').setDisabled(false)
         .onChange(this.update.bind(this));
       this.action.setValue(this.component.parameters.action);
-      row.add(new UIText("action").setWidth('90px'));
+      row.add(new UIText(strings.getKey('sidebar/components/select/action/name')).setWidth('90px'));
       row.add(this.action);
       container.add(row)
 
@@ -66,7 +66,6 @@ class TriggerComponent {
       this.select = new UISelect().setWidth('150px');
 
       const options = [];
-
       this.list.forEach(item => {
         options[item.uuid] = item.name
       })
@@ -75,7 +74,7 @@ class TriggerComponent {
       this.select.onChange(this.update.bind(this));/*.onChange(function () { // 下拉框选项改变时触发的事件
       console.log('Selected option:', select.getValue());
     });*/
-      row.add(new UIText("select").setWidth('90px'));
+      row.add(new UIText(strings.getKey('sidebar/components/select/trigger/target')).setWidth('90px'));
       row.add(this.select)
       container.add(row);
     }

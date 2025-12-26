@@ -11,6 +11,7 @@ import { SidebarMedia } from './Sidebar.Media.js'
 import { SidebarProject } from './Sidebar.Project.js'
 import { SidebarSettings } from './Sidebar.Settings.js'
 import { SidebarScreenshot } from './Sidebar.Screenshot.js'
+import { SidebarText } from './Sidebar.Text.js'
 
 function Sidebar(editor) {
 	const strings = editor.strings
@@ -23,6 +24,7 @@ function Sidebar(editor) {
 		new SidebarScene(editor),
 
 		new SidebarProperties(editor),
+		new SidebarText(editor),
 		new SidebarAnimation(editor),
 		// new SidebarMedia(editor)
 	)
