@@ -11,7 +11,7 @@ import {
 	UITextArea,
 	UIText,
 	UINumber,
-    UISelect,
+	UISelect,
 } from "./libs/ui.js";
 import { UIBoolean } from "./libs/ui.three.js";
 
@@ -1177,7 +1177,7 @@ function SidebarObject(editor) {
 	const objectSorting = new UISelect().onChange(update);
 
 	objectSorting.setOptions(
-  	Object.fromEntries([0, 1, 2].map(i => [i, String(i)]))
+		Object.fromEntries([0, 1, 2].map(i => [i, String(i)]))
 	);
 
 	objectSortingRow.add(new UIText(strings.getKey("sidebar/object/sortingOrder")).setWidth("90px"));
@@ -1239,7 +1239,17 @@ function SidebarObject(editor) {
 	objectTextRow.setDisplay("none"); // 默认隐藏，仅当是文本组件时显示
 
 	// user data
-
+const temp = new UIRow();
+temp.add(new UIText("asdf").setWidth("90px"));
+const panel = new UIPanel();
+const tempa = new UIRow();
+tempa.add(new UIText("eee").setWidth("90px"));
+panel.add(tempa);
+temp.add(panel);
+container.add(temp); // 占位，确保userdata在最后面
+const temp2 = new UIRow();
+temp2.add(new UIText("asdf").setWidth("90px"));
+container.add(temp2); // 占位，确保userdata在最后面
 	const objectUserDataRow = new UIRow();
 	const objectUserData = new UITextArea()
 		.setWidth("150px")
@@ -1256,9 +1266,8 @@ function SidebarObject(editor) {
 			objectUserData.dom.classList.add("fail");
 		}
 	});
-
 	objectUserDataRow.add(
-		new UIText(strings.getKey("sidebar/object/userdata")).setWidth("90px")
+		new UIText(strings.getKey("sidebar/object/userdata") + "a").setWidth("90px")
 	);
 	objectUserDataRow.add(objectUserData);
 	objectUserDataRow.readOnly = true;
@@ -1287,6 +1296,7 @@ function SidebarObject(editor) {
 	//
 
 	function update() {
+
 		const object = editor.selected;
 
 		if (object !== null) {
@@ -1590,29 +1600,29 @@ function SidebarObject(editor) {
 
 
 			if (isPictureType(object)) {
-			const selectedSorting = parseInt(objectSorting.getValue(), 10) || 0;
-			const currentSorting = (object.userData && object.userData.sortingOrder !== undefined) ?
-				Number(object.userData.sortingOrder) : 0;
+				const selectedSorting = parseInt(objectSorting.getValue(), 10) || 0;
+				const currentSorting = (object.userData && object.userData.sortingOrder !== undefined) ?
+					Number(object.userData.sortingOrder) : 0;
 
-			if (currentSorting !== selectedSorting) {
-				const userData = JSON.parse(JSON.stringify(object.userData || {}));
-				userData.sortingOrder = selectedSorting;
+				if (currentSorting !== selectedSorting) {
+					const userData = JSON.parse(JSON.stringify(object.userData || {}));
+					userData.sortingOrder = selectedSorting;
 
-				object.renderOrder = 0 - userData.sortingOrder;
+					object.renderOrder = 0 - userData.sortingOrder;
 
-				editor.execute(
-					new SetValueCommand(
-						editor,
-						object,
-						"userData",
-						userData
-					)
-				);
+					editor.execute(
+						new SetValueCommand(
+							editor,
+							object,
+							"userData",
+							userData
+						)
+					);
 
-			// 触发对象变化信号，确保渲染更新
-			editor.signals.objectChanged.dispatch(object);
-		}
-	}
+					// 触发对象变化信号，确保渲染更新
+					editor.signals.objectChanged.dispatch(object);
+				}
+			}
 
 			if (isMediaType(object)) {
 				if (object.userData.loop !== objectLoop.getValue()) {
@@ -1676,7 +1686,7 @@ function SidebarObject(editor) {
 		const isPictureObject = isPictureType(object);
 		objectSortingRow.setDisplay(isPictureObject ? "" : "none");
 
-		 // 新增：如果对象类型为 Module，则隐藏 visible 行
+		// 新增：如果对象类型为 Module，则隐藏 visible 行
 		if (object && object.type && typeof object.type === 'string' && object.type.toLowerCase() === 'module') {
 			objectVisibleRow.setDisplay('none');
 		} else {
@@ -1778,6 +1788,7 @@ function SidebarObject(editor) {
 	});
 
 	function updateUI(object) {
+
 		objectType.setValue(object.type);
 
 		objectUUID.setValue(object.uuid);
@@ -1877,15 +1888,21 @@ function SidebarObject(editor) {
 		objectVisible.setValue(object.visible);
 		objectFrustumCulled.setValue(object.frustumCulled);
 		objectRenderOrder.setValue(object.renderOrder);
-
+		//!!!!!
 		try {
+			//	alert(JSON.stringify(object.userData))
 			objectUserData.setValue(JSON.stringify(object.userData, null, "  "));
+			//在objectUserDataRow 后面增加一个新的按钮
+
+
 		} catch (error) {
 			console.log(error);
 		}
 
 		objectUserData.setBorderColor("transparent");
 		objectUserData.setBackgroundColor("");
+
+
 
 		if (object.type.toLowerCase() === "text") {
 			objectTextRow.setDisplay("");
