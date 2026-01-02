@@ -1,4 +1,4 @@
-import { UIBreak, UIText, UIRow, UICheckbox } from '../../libs/ui.js';
+import { UIBreak, UIText, UIRow, UICheckbox, UIInput } from '../../libs/ui.js';
 import { SetValueCommand } from '../../commands/SetValueCommand.js';
 import { ROLES } from '../../Access.js';
 

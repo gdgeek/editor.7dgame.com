@@ -204,7 +204,7 @@ class MetaFactory extends Factory {
 				(_xhr) => {
 					// 加载进度
 				},
-				(_error) => {
+				(error) => {
 					console.error('VOX加载失败:', url, error);
 					reject(error);
 				}

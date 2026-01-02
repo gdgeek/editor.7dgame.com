@@ -98,7 +98,7 @@ export function getResourceLayout(data, resources) {
 
 	// 安全解析 info，并提供默认值
 	let info = {};
-	try { info = JSON.parse(resource.info || '{}'); } catch (_e) { /* ignore parse errors */ }
+	try { info = JSON.parse(resource.info || '{}'); } catch { /* ignore parse errors */ }
 
 	// 解构并处理默认值，防止除以0
 	const { x = 1, y = 1 } = info.size || {};

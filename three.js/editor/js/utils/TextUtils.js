@@ -70,16 +70,12 @@ export function createTextMesh(text, params = {}) {
 	ctx.textBaseline = 'middle';
 
 	// 水平对齐计算
-	let x = 0;
 	if (hAlign === 'left') {
 		ctx.textAlign = 'left';
-		x = padding;
 	} else if (hAlign === 'right') {
 		ctx.textAlign = 'right';
-		x = canvasWidth - padding;
 	} else {
 		ctx.textAlign = 'center';
-		// x 坐标在下方绘制时计算
 	}
 
 	// 换行逻辑
