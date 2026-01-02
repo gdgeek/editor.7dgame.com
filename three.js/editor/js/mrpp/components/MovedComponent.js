@@ -51,7 +51,6 @@ class MovedComponent {
       const row = new UIRow()
       const scalable = new UICheckbox().setValue(this.component.parameters.scalable)
         .onChange((item) => {
-          console.error(item)
           this.editor.execute(new SetValueCommand(this.editor, this.component.parameters, 'scalable', scalable.getValue()));
         });
       row.add(

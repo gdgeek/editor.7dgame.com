@@ -116,7 +116,6 @@ class RotateComponent {
       )
 
       this.editor.execute(command)
-      console.error(this.component.parameters)
     }
 
   }

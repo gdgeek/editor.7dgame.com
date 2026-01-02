@@ -13,9 +13,7 @@ class TriggerComponent {
       if (types.includes(child.type) && child.uuid != object.uuid) {
         this.list.push(child)
       }
-
-    })
-    console.error(this.list)
+    });
     this.object = object;
     this.component = component;
 

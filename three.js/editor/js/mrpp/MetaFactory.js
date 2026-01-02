@@ -25,12 +25,9 @@ const getResourceFromUrl = async (url) => {
 			})
 			.then(data => {
 				resolve(data);
-				console.log('获取到的数据:', data);
-				// 在这里处理你的数据
 			})
 			.catch(error => {
 				reject(error);
-				console.error('请求出错:', error);
 			});
 	});
 }
@@ -62,9 +59,7 @@ const getUrlParams = () => {
 const isHttps = () => {
 
 	const protocol = window.location.protocol;
-	const isHttps = protocol === 'https:';
-	console.log(isHttps ? '这个网页是使用HTTPS' : '这个网页不是使用HTTPS');
-	return isHttps;
+	return protocol === 'https:';
 
 };
 
@@ -131,7 +126,6 @@ class MetaFactory extends Factory {
 
 		const node = new THREE.Group();
 		node.name = data.parameters.title;
-		console.error('addMetaData', data);
 		node.type = data.type;
 		node.uuid = data.parameters.uuid;
 		node.visible = data.parameters.active;
@@ -203,29 +197,21 @@ class MetaFactory extends Factory {
 			const loader = new VOXLoader();
 			loader.load(
 				url,
-				function (chunks) {
-
+				(chunks) => {
 					const chunk = chunks[0];
 					const mesh = new VOXMesh(chunk);
-
-					//mesh.scale.set(0.005, 0.005, 0.005)
 					resolve(mesh);
-
+				},
+				(xhr) => {
+					// 加载进度
+				},
+				(error) => {
+					console.error('VOX加载失败:', url, error);
+					reject(error);
 				}
 			);
 
-		}, function (xhr) {
-
-			console.log((xhr.loaded / xhr.total) * 100 + '% loaded!');
-
-		}, function (error) {
-
-			reject(error);
-			alert(error);
-			console.error('An error happened');
-
-		}
-		);
+		});
 
 	}
 
@@ -374,11 +360,11 @@ class MetaFactory extends Factory {
 
 	async getPlane(url, width, height, config = {}) {
 		const httpsUrl = convertToHttps(url);
-		
+
 		return await createMeshFromUrl(httpsUrl, { width, height }, {
 			name: 'Plane',
-			transparent: false, 
-			...config 
+			transparent: false,
+			...config
 		});
 	}
 
@@ -416,8 +402,8 @@ class MetaFactory extends Factory {
 
 		const mesh = await this.getPlane(chosenUrl, width, height, {
 			name: data.parameters.name,
-			transparent: isAlpha, 
-			maxDimension: 1024,   
+			transparent: isAlpha,
+			maxDimension: 1024,
 			quality: 0.9
 		});
 
@@ -432,7 +418,7 @@ class MetaFactory extends Factory {
 		const layout = getResourceLayout(data, resources);
 		if (!layout) return null;
 		const { resource, width, height } = layout;
-		
+
 		// 逻辑：
 		// 1. 如果 image.url 存在且是图片格式 -> 说明是旧数据或已上传的封面，直接用，不加参数。
 		// 2. 否则 -> 说明 image.url 是视频路径或不存在，取 file.url，并拼接腾讯云截图参数。
@@ -451,7 +437,7 @@ class MetaFactory extends Factory {
 			// Case B: 新数据 (mp4)，或者是视频源，需要云端截图
 			// 优先用 image.url (如果它是mp4)，否则用 file.url
 			const videoSource = imageUrl || fileUrl;
-			
+
 			if (videoSource) {
 				// 拼接参数
 				finalUrl = `${videoSource}?ci-process=snapshot&time=0&format=jpg`;
@@ -463,11 +449,11 @@ class MetaFactory extends Factory {
 
 		const mesh = await this.getPlane(finalUrl, width, height, {
 			name: data.parameters.name,
-			transparent: false, 
-			maxDimension: 512,  
+			transparent: false,
+			maxDimension: 512,
 			quality: 0.8
 		});
-		
+
 		return mesh;
 	}
 
@@ -535,10 +521,10 @@ class MetaFactory extends Factory {
 	}
 	async getText(data, resources) {
 		const rawParams = data.parameters || {};
-		const PIXEL_SCALE = 0.005; 
+		const PIXEL_SCALE = 0.005;
 		const defaults = {
 			text: 'Text',
-			rect: { x: 1.28, y: 0.32 }, 
+			rect: { x: 1.28, y: 0.32 },
 			size: 24,
 			color: '#ffffff',
 			align: { horizontal: 'center', vertical: 'middle' },
@@ -572,7 +558,7 @@ class MetaFactory extends Factory {
 			backgroundColor: params.background.color ?? '#808080',
 			backgroundOpacity: params.background.opacity ?? 0.3
 		};
-		
+
 		// 调用外部工具生成文本 Mesh
 		const plane = createTextMesh(params.text, meshParams);
 
@@ -583,7 +569,7 @@ class MetaFactory extends Factory {
 			text: params.text,
 			rect: params.rectMeters,
 			size: params.size,
-			color: params.color, 
+			color: params.color,
 			align: params.align,
 			background: params.background
 		};

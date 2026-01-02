@@ -8,12 +8,7 @@ function EditorLoader( editor ) {
 
 	this.load = function ( input ) {
 
-		console.error( input );
-
 		const data = JSON.parse( input.data );
-
-		console.error( data );
-		console.error( input.resources );
 
 		editor.clear();
 		creater
