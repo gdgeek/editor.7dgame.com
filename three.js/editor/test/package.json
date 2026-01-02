@@ -1,0 +1,19 @@
+{
+  "name": "editor-tests",
+  "version": "1.0.0",
+  "description": "Tests for MRPP Editor customizations",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui"
+  },
+  "devDependencies": {
+    "vitest": "^1.0.0",
+    "@vitest/coverage-v8": "^1.0.0",
+    "@vitest/ui": "^1.0.0",
+    "jsdom": "^23.0.0",
+    "three": "^0.140.0"
+  }
+}
