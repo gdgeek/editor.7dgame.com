@@ -30,7 +30,7 @@ const getResourceFromUrl = async (url) => {
 				reject(error);
 			});
 	});
-}
+};
 
 
 const getUrlParams = () => {
@@ -53,7 +53,7 @@ const getUrlParams = () => {
 	}
 
 	return params;
-}
+};
 
 // 检查当前页面是否使用 HTTPS
 const isHttps = () => {
@@ -98,7 +98,6 @@ class MetaFactory extends Factory {
 
 		this.editor = editor;
 		this.ktx2Loader = null;
-
 
 
 	}
@@ -202,10 +201,10 @@ class MetaFactory extends Factory {
 					const mesh = new VOXMesh(chunk);
 					resolve(mesh);
 				},
-				(xhr) => {
+				(_xhr) => {
 					// 加载进度
 				},
-				(error) => {
+				(_error) => {
 					console.error('VOX加载失败:', url, error);
 					reject(error);
 				}
@@ -301,10 +300,10 @@ class MetaFactory extends Factory {
 
 
 					},
-					function (xhr) {
+					function (_xhr) {
 						//console.log((xhr.loaded / xhr.total) * 100 + '% loaded!')
 					},
-					function (error) {
+					function (_error) {
 
 						resolve(null);
 						console.error('An error happened');
@@ -330,7 +329,8 @@ class MetaFactory extends Factory {
 
 			const resource = resources.get(data.parameters.resource.toString());
 
-			console.log("polygen", resource.info);
+			// Debug: polygen resource info
+			// console.warn("polygen", resource.info);
 
 			// 解析动画信息
 			let animInfo = null;
@@ -361,7 +361,7 @@ class MetaFactory extends Factory {
 	async getPlane(url, width, height, config = {}) {
 		const httpsUrl = convertToHttps(url);
 
-		return await createMeshFromUrl(httpsUrl, { width, height }, {
+		return createMeshFromUrl(httpsUrl, { width, height }, {
 			name: 'Plane',
 			transparent: false,
 			...config
@@ -441,7 +441,7 @@ class MetaFactory extends Factory {
 			if (videoSource) {
 				// 拼接参数
 				finalUrl = `${videoSource}?ci-process=snapshot&time=0&format=jpg`;
-				isVideoSource = true;
+				// isVideoSource = true; // 标记为视频源
 			}
 		}
 
@@ -474,7 +474,7 @@ class MetaFactory extends Factory {
 				node.name = "polygen";
 				this.setTransform(node, info.data.transform);
 				//让node这个节点在编辑器里面不显示
-				this.lockNode(node)
+				this.lockNode(node);
 				//node.userData.hidden = true;
 				entity.add(node);
 			}
@@ -631,7 +631,7 @@ class MetaFactory extends Factory {
 			// 根据扩展名选择不同的处理方式
 			if (['mp4', 'mov', 'avi'].includes(fileExt)) {
 				// 处理为视频
-				console.log('处理粒子特效为视频类型:', fileUrl);
+				// console.warn('处理粒子特效为视频类型:', fileUrl);
 				const info = JSON.parse(resource.info || '{}');
 				const size = info.size || { x: 1, y: 1 };
 				const width = data.parameters.width || 0.5;
@@ -640,7 +640,7 @@ class MetaFactory extends Factory {
 			}
 			else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
 				// 处理为图片
-				console.log('处理粒子特效为图片类型:', fileUrl);
+				// console.warn('处理粒子特效为图片类型:', fileUrl);
 				const info = JSON.parse(resource.info || '{}');
 				const size = info.size || { x: 1, y: 1 };
 				const width = data.parameters.width || 0.5;
@@ -649,7 +649,7 @@ class MetaFactory extends Factory {
 			}
 			else if (['mp3', 'wav'].includes(fileExt)) {
 				// 处理为音频
-				console.log('处理粒子特效为音频类型:', fileUrl);
+				// console.warn('处理粒子特效为音频类型:', fileUrl);
 				const entity = new THREE.Group();
 				entity.name = data.parameters.name;
 				entity.userData.resourceId = data.parameters.resource;
@@ -681,7 +681,8 @@ class MetaFactory extends Factory {
 			}
 			visited.add(data.parameters.uuid);
 		}
-		console.log('building: ', data.parameters);
+		// Debug: building entity
+		// console.warn('building: ', data.parameters);
 		let node = null;
 		switch (data.type.toLowerCase()) {
 

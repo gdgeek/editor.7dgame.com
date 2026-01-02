@@ -1,6 +1,4 @@
-import { UIPanel, UINumber, UIBreak, UIText, UIButton, UIRow, UIInput, UIHorizontalRule,UICheckbox } from '../../libs/ui.js';
-import { RemoveComponentCommand } from '../../commands/RemoveComponentCommand.js';
-import { SetComponentValueCommand } from '../../commands/SetComponentValueCommand.js';
+import { UINumber, UIBreak, UIText, UIRow, UICheckbox } from '../../libs/ui.js';
 import { SetValueCommand } from '../../commands/SetValueCommand.js';
 class RotateComponent {
 
@@ -20,13 +18,13 @@ class RotateComponent {
         isRotating: true,
 				action: 'rotate'
       }
-    }
+    };
     return component;
   }
   rotate(container) {
     const strings = this.editor.strings;
-		container.add(new UIBreak())
-    container.add(new UIBreak())
+		container.add(new UIBreak());
+    container.add(new UIBreak());
 
     const row = new UIRow();
     const label = new UIText(strings.getKey('sidebar/object/isRotating')).setWidth('90px');
@@ -46,32 +44,32 @@ class RotateComponent {
     row.add(label, checkbox);
     container.add(row);
 
-    this.objectRotationRow = new UIRow()
+    this.objectRotationRow = new UIRow();
     this.objectRotationX = new UINumber()
       .setStep(10)
       .setNudge(0.1)
       .setUnit('°')
       .setWidth('50px')
-      .onChange(this.update.bind(this))
+      .onChange(this.update.bind(this));
     this.objectRotationY = new UINumber()
       .setStep(10)
       .setNudge(0.1)
       .setUnit('°')
       .setWidth('50px')
-      .onChange(this.update.bind(this))
+      .onChange(this.update.bind(this));
     this.objectRotationZ = new UINumber()
       .setStep(10)
       .setNudge(0.1)
       .setUnit('°')
       .setWidth('50px')
-      .onChange(this.update.bind(this))
+      .onChange(this.update.bind(this));
 
     this.objectRotationRow.add(
       new UIText(strings.getKey('sidebar/object/rotation')).setWidth('90px')
-    )
-    this.objectRotationRow.add(this.objectRotationX, this.objectRotationY, this.objectRotationZ)
+    );
+    this.objectRotationRow.add(this.objectRotationX, this.objectRotationY, this.objectRotationZ);
 
-    container.add(this.objectRotationRow)
+    container.add(this.objectRotationRow);
   }
   update() {
 
@@ -79,12 +77,12 @@ class RotateComponent {
       this.objectRotationX.getValue(),
       this.objectRotationY.getValue(),
       this.objectRotationZ.getValue()
-    )
+    );
     const oldRotation = new THREE.Euler(
       this.component.parameters.speed.x,
       this.component.parameters.speed.y,
       this.component.parameters.speed.z
-    )
+    );
     if (
       new THREE.Vector3()
         .setFromEuler(oldRotation)
@@ -93,8 +91,8 @@ class RotateComponent {
       const self = this;
       const proxyHandler = {
         set(target, prop, value) {
-          if (prop == 'speed') {
-            target[prop] = { x: value.x, y: value.y, z: value.z }
+          if (prop === 'speed') {
+            target[prop] = { x: value.x, y: value.y, z: value.z };
 
           } else {
             target[prop] = value;
@@ -106,24 +104,24 @@ class RotateComponent {
           return true;
         },
       };
-      const proxy = new Proxy(this.component.parameters, proxyHandler)
+      const proxy = new Proxy(this.component.parameters, proxyHandler);
 
       const command = new SetValueCommand(
         this.editor,
         proxy,
         'speed',
         newRotation
-      )
+      );
 
-      this.editor.execute(command)
+      this.editor.execute(command);
     }
 
   }
   updateUI() {
 
-    this.objectRotationX.setValue(this.component.parameters.speed.x)
-    this.objectRotationY.setValue(this.component.parameters.speed.y)
-    this.objectRotationZ.setValue(this.component.parameters.speed.z)
+    this.objectRotationX.setValue(this.component.parameters.speed.x);
+    this.objectRotationY.setValue(this.component.parameters.speed.y);
+    this.objectRotationZ.setValue(this.component.parameters.speed.z);
 
   }
   renderer(container) {

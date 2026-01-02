@@ -1,4 +1,4 @@
-import { UIPanel, UINumber, UIBreak, UICheckbox, UIText, UIButton, UIRow, UIInput, UIHorizontalRule } from '../../libs/ui.js';
+import { UINumber, UIBreak, UICheckbox, UIText, UIRow, UIInput } from '../../libs/ui.js';
 
 import { SetValueCommand } from '../../commands/SetValueCommand.js';
 
@@ -48,16 +48,16 @@ class MovedComponent {
 
     // 可缩放部分
     {
-      const row = new UIRow()
+      const row = new UIRow();
       const scalable = new UICheckbox().setValue(this.component.parameters.scalable)
-        .onChange((item) => {
+        .onChange((_item) => {
           this.editor.execute(new SetValueCommand(this.editor, this.component.parameters, 'scalable', scalable.getValue()));
         });
       row.add(
         new UIText(strings.getKey('sidebar/components/select/moved/scalable')).setWidth('90px')
-      )
-      row.add(scalable)
-      container.add(row)
+      );
+      row.add(scalable);
+      container.add(row);
     }
 
     // 磁力部分

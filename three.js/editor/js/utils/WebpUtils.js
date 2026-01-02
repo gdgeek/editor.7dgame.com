@@ -17,9 +17,9 @@ async function createWebPMesh(source, size, config) {
 			if (w > h) { w = maxDimension; h = maxDimension / aspect; }
 			else       { h = maxDimension; w = maxDimension * aspect; }
 		}
-		
+
 		// 取整防止渲染伪影
-		w = Math.floor(w); 
+		w = Math.floor(w);
 		h = Math.floor(h);
 
 		// 2. 绘制 Canvas
@@ -75,7 +75,7 @@ export async function createMeshFromUrl(url, size, options = {}) {
 		const img = new Image();
 		img.crossOrigin = 'anonymous';
 		img.src = url;
-		
+
 		await new Promise((resolve, reject) => {
 			img.onload = resolve;
 			img.onerror = reject;
@@ -95,11 +95,11 @@ export function getResourceLayout(data, resources) {
 	if (!resId || !resources.has(resId)) return null;
 
 	const resource = resources.get(resId);
-	
+
 	// 安全解析 info，并提供默认值
 	let info = {};
-	try { info = JSON.parse(resource.info || '{}'); } catch (e) {}
-	
+	try { info = JSON.parse(resource.info || '{}'); } catch (_e) { /* ignore parse errors */ }
+
 	// 解构并处理默认值，防止除以0
 	const { x = 1, y = 1 } = info.size || {};
 	const safeX = x === 0 ? 1 : x;

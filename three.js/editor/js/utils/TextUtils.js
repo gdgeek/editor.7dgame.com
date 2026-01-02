@@ -26,18 +26,18 @@ export function createTextMesh(text, params = {}) {
 	const baseWidth = Math.max(1, params.rect?.x || 256);
 	const baseHeight = Math.max(1, params.rect?.y || 64);
 	const baseFontSize = params.size || 24;
-	
+
 	const color = params.color || '#ffffff';
 	const hAlign = params.hAlign || 'center';
 	const vAlign = params.vAlign || 'middle';
 	const backgroundEnable = params.backgroundEnable !== undefined ? params.backgroundEnable : true;
 	const backgroundColor = params.backgroundColor || '#808080';
 	const backgroundOpacity = params.backgroundOpacity !== undefined ? params.backgroundOpacity : 0.3;
-	
+
 	const PIXEL_SCALE = 0.005; // 物理单位转换
 
 	// 2. 高清渲染倍率
-	const SCALE_FACTOR = 4; 
+	const SCALE_FACTOR = 4;
 
 	// 3. Canvas 尺寸
 	const canvasWidth = Math.round(baseWidth * SCALE_FACTOR);
@@ -65,9 +65,9 @@ export function createTextMesh(text, params = {}) {
 	}
 
 	// 字体设置
-	ctx.font = `${scaledFontSize}px 'Arial Unicode MS', Arial, sans-serif`; 
+	ctx.font = `${scaledFontSize}px 'Arial Unicode MS', Arial, sans-serif`;
 	ctx.fillStyle = color;
-	ctx.textBaseline = 'middle'; 
+	ctx.textBaseline = 'middle';
 
 	// 水平对齐计算
 	let x = 0;
@@ -79,7 +79,7 @@ export function createTextMesh(text, params = {}) {
 		x = canvasWidth - padding;
 	} else {
 		ctx.textAlign = 'center';
-		x = canvasWidth / 2;
+		// x 坐标在下方绘制时计算
 	}
 
 	// 换行逻辑
@@ -152,7 +152,7 @@ export function createTextMesh(text, params = {}) {
 			const chWidth = ctx.measureText(ch).width;
 			const chLeft = lineXStart + offset;
 			const chRight = chLeft + chWidth;
-			
+
 			const chMetrics = ctx.measureText(ch);
 			const ascent = chMetrics.actualBoundingBoxAscent || (scaledFontSize * 0.8);
 			const descent = chMetrics.actualBoundingBoxDescent || (scaledFontSize * 0.2);
@@ -171,7 +171,7 @@ export function createTextMesh(text, params = {}) {
 	texture.encoding = THREE.sRGBEncoding;
 	texture.minFilter = THREE.LinearMipmapLinearFilter;
 	texture.magFilter = THREE.LinearFilter;
-	texture.generateMipmaps = true; 
+	texture.generateMipmaps = true;
 	texture.anisotropy = 4;
 	texture.needsUpdate = true;
 

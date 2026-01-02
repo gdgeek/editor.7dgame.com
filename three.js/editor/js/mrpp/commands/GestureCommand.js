@@ -1,4 +1,4 @@
-import { UIPanel, UINumber, UIBreak, UIText, UIButton, UIRow, UIInput, UIHorizontalRule, UISelect } from '../../libs/ui.js';
+import { UIBreak, UIText, UIRow, UIInput, UISelect } from '../../libs/ui.js';
 import { SetValueCommand } from '../../commands/SetValueCommand.js';
 
 class GestureCommand {
@@ -87,7 +87,7 @@ class GestureCommand {
         if (this.gestureSelect && this.gestureSelect.dom) {
           this.gestureSelect.dom.addEventListener('mousedown', applyTempDefault);
           this.gestureSelect.dom.addEventListener('focus', applyTempDefault);
-          this.gestureSelect.dom.addEventListener('click', (event) => {
+          this.gestureSelect.dom.addEventListener('click', (_event) => {
             try {
               if (this._wasEmptyAction && this._autoDefaultApplied && !this.component.parameters.action) {
                 const val = this.gestureSelect.dom.value;

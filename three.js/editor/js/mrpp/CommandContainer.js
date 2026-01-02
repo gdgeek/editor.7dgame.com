@@ -1,4 +1,4 @@
-import { UIPanel, UINumber, UIBreak, UIText, UIButton, UIRow, UIInput, UIHorizontalRule } from '../libs/ui.js';
+import { UIBreak, UIText, UIButton } from '../libs/ui.js';
 import { RemoveCommandCommand } from '../commands/RemoveCommandCommand.js';
 
 import { VoiceCommand } from './commands/VoiceCommand.js';
@@ -36,7 +36,7 @@ class CommandContainer {
 		const strings = this.editor.strings;
 		container.add(new UIText(this.command.type));
 
-		if (this.handler != undefined) {
+		if (this.handler !== undefined) {
 			this.handler.renderer(container);
 		}
 

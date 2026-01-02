@@ -1,8 +1,6 @@
-import { UIPanel, UINumber, UIBreak, UIText, UIButton, UIRow, UIInput, UIHorizontalRule, UISelect } from '../../libs/ui.js';
-import { RemoveComponentCommand } from '../../commands/RemoveComponentCommand.js';
-import { SetComponentValueCommand } from '../../commands/SetComponentValueCommand.js';
+import { UIBreak, UIText, UIRow, UIInput, UISelect } from '../../libs/ui.js';
 import { SetValueCommand } from '../../commands/SetValueCommand.js';
-import { ROLES } from '../../Access.js'; 
+import { ROLES } from '../../Access.js';
 
 class VoiceCommand {
 
@@ -102,7 +100,7 @@ class VoiceCommand {
           this.voiceSelect.dom.addEventListener('mousedown', applyTempDefault);
           this.voiceSelect.dom.addEventListener('focus', applyTempDefault);
           // 用户实际在下拉中点击时，如果之前应用了临时默认且组件仍为空，则将该临时值持久化
-          this.voiceSelect.dom.addEventListener('click', (event) => {
+          this.voiceSelect.dom.addEventListener('click', (_event) => {
             try {
               if (this._wasEmptyAction && this._autoDefaultApplied && !this.component.parameters.action) {
                 const val = this.voiceSelect.dom.value;

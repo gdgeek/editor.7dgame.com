@@ -1,8 +1,6 @@
-import { UIPanel, UINumber, UIBreak, UIText, UIButton, UIRow, UIInput, UICheckbox, UIHorizontalRule } from '../../libs/ui.js';
-import { RemoveComponentCommand } from '../../commands/RemoveComponentCommand.js';
-import { SetComponentValueCommand } from '../../commands/SetComponentValueCommand.js';
+import { UIBreak, UIText, UIRow, UICheckbox } from '../../libs/ui.js';
 import { SetValueCommand } from '../../commands/SetValueCommand.js';
-import { ROLES } from '../../Access.js'; 
+import { ROLES } from '../../Access.js';
 
 class ActionComponent {
 
@@ -21,24 +19,24 @@ class ActionComponent {
         parameter: '',
         mode: ['pinch']  // 新增 mode 参数, 默认包含 'pinch'
       }
-    }
+    };
     return component;
   }
 
   named(container) {
-    container.add(new UIBreak())
-    container.add(new UIBreak())
+    container.add(new UIBreak());
+    container.add(new UIBreak());
     const strings = this.editor.strings;
 
     // UUID
     {
-      const row = new UIRow()
+      const row = new UIRow();
       this.uuid = new UIInput().setWidth('150px').setFontSize('12px').setDisabled(true);
       row.add(new UIText(strings.getKey('sidebar/geometry/uuid')).setWidth('90px'));
       row.add(this.uuid);
-      container.add(row)
+      container.add(row);
     }
-    
+
     // Mode 勾选框
     {
       const row = new UIRow();
@@ -64,15 +62,15 @@ class ActionComponent {
 
       container.add(row);
     }
-    
+
     // Action 输入框
     {
-      const row = new UIRow()
+      const row = new UIRow();
       this.action = new UIInput().setWidth('150px').setFontSize('12px').setDisabled(false)
         .onChange(this.updateAction.bind(this));
       row.add(new UIText(strings.getKey('sidebar/components/select/action/name')).setWidth('90px'));
       row.add(this.action);
-      container.add(row)
+      container.add(row);
     }
 
   }

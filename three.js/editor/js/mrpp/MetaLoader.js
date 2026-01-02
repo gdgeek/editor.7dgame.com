@@ -23,17 +23,17 @@ function MetaLoader(editor) {
 	const self = this;
 
 	this.getMeta = async function () {
-		return await this.write(editor.scene);
+		return this.write(editor.scene);
 	};
 	this.isChanged = function (json) {
 		if (this.json === null) return false;
 		return this.json !== json;
-	}
+	};
 
 	this.changed = async function () {
 		const meta = await this.getMeta();
 		return this.isChanged(JSON.stringify({  meta, events: editor.scene.events }));
-	}
+	};
 
 	this.save = async function () {
 		if (this.isLoading) {
@@ -61,12 +61,12 @@ function MetaLoader(editor) {
 
 	this.getLoadingStatus = function() {
 		return this.isLoading;
-	}
+	};
 
 	this.initLoading = function() {
 		this.isLoading = true;
 		editor.signals.savingStarted.dispatch();
-	}
+	};
 
 	editor.signals.upload.add(function () {
 		self.save();
@@ -81,7 +81,7 @@ function MetaLoader(editor) {
 
 		if (obj1 == null || obj2 == null) {
 
-			console.log('One of the objects is null');
+			console.warn('One of the objects is null');
 			return;
 
 		}
@@ -103,17 +103,17 @@ function MetaLoader(editor) {
 
 				if (Math.abs(val1 - val2) > tolerance) {
 
-					console.log(`Difference found at "${key}":`);
-					console.log(`Object 1: ${val1}`);
-					console.log(`Object 2: ${val2}`);
+					console.warn(`Difference found at "${key}":`);
+					console.warn(`Object 1: ${val1}`);
+					console.warn(`Object 2: ${val2}`);
 
 				}
 
 			} else if (val1 !== val2) {
 
-				console.log(`Difference found at ${currentPath}:`);
-				console.log(`Object 1: ${val1}`);
-				console.log(`Object 2: ${val2}`);
+				console.warn(`Difference found at ${currentPath}:`);
+				console.warn(`Object 1: ${val1}`);
+				console.warn(`Object 2: ${val2}`);
 
 			}
 
@@ -125,7 +125,7 @@ function MetaLoader(editor) {
 			if (!keys1.includes(key)) {
 
 				const currentPath = path ? `${path}.${key}` : key;
-				console.log(`Key ${currentPath} present in Object 2 but not in Object 1`);
+				console.warn(`Key ${currentPath} present in Object 2 but not in Object 1`);
 
 			}
 
@@ -135,7 +135,7 @@ function MetaLoader(editor) {
 
 	this.writeEntity = function (node) {
 
-		if (node.userData.type == undefined) {
+		if (node.userData.type === undefined) {
 
 			return null;
 
@@ -166,7 +166,6 @@ function MetaLoader(editor) {
 		console.error('entity.parameters', entity);
 		//entity.parameters.transform.active = true
 		entity.parameters.active = node.visible;
-
 
 
 		entity.children = { 'entities': [], 'components': node.components, 'commands': node.commands };
@@ -200,7 +199,6 @@ function MetaLoader(editor) {
 			}
 
 		}
-
 
 
 		//console.error(entity)
@@ -287,7 +285,7 @@ function MetaLoader(editor) {
 
 			const data = meta.data;
 			const resources = new Map();
-			console.error(meta)
+			console.error(meta);
 			meta.resources.forEach(r => {
 				resources.set(r.id.toString(), r);
 
@@ -304,7 +302,7 @@ function MetaLoader(editor) {
 
 				const metaData = await this.write(root);
 				this.json = JSON.stringify({ meta: metaData, events: editor.scene.events });
-				console.log('All models loaded successfully');
+				// console.warn('All models loaded successfully');
 			}).catch(error => {
 				console.error('Error loading models:', error);
 				this.isLoading = false;

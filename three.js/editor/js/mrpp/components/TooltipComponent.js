@@ -1,4 +1,4 @@
-import { UIPanel, UISelect, UIBreak, UIText, UIRow, UITextArea, UINumber } from '../../libs/ui.js';
+import { UISelect, UIBreak, UIText, UIRow, UITextArea, UINumber } from '../../libs/ui.js';
 import { SetValueCommand } from '../../commands/SetValueCommand.js';
 import { Strings } from '../../Strings.js';
 
@@ -57,7 +57,7 @@ class TooltipComponent {
         };
     }
 
-		console.log("target", target);
+		// console.warn("target", target);
 
     return {
       type: 'Tooltip',
@@ -149,7 +149,7 @@ class TooltipComponent {
           z: center.z
         });
       } else {
-        console.log(`No valid target selected.`);
+        console.warn(`No valid target selected.`);
       }
     }
   }
