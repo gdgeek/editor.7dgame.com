@@ -1,7 +1,4 @@
 import * as THREE from 'three';
-import { GLTFLoader } from '../../../examples/jsm/loaders/GLTFLoader.js';
-import { DRACOLoader } from '../../../examples/jsm/loaders/DRACOLoader.js';
-import { VerseFactory } from './VerseFactory.js';
 import { MetaFactory } from './MetaFactory.js';
 
 function VerseLoader(editor) {
@@ -32,20 +29,20 @@ function VerseLoader(editor) {
 	});
 
 	this.getVerse = async function () {
-		return await this.write(editor.scene);
+		return this.write(editor.scene);
 	};
 	this.isChanged = function (json) {
 		if (this.json === null) return false;
 		return this.json !== json;
-	}
+	};
 	this.changed = async function () {
 		const verse = await this.getVerse();
 		return this.isChanged(JSON.stringify({ verse }));
-	}
+	};
 
 	this.getLoadingStatus = function() {
 		return this.isLoading;
-	}
+	};
 
 	this.save = async function () {
 		if (this.isLoading) {
@@ -64,7 +61,7 @@ function VerseLoader(editor) {
 			});
 			this.json = json;
 		} else {
-			console.log('No changes detected, sending save-verse-none');
+			// console.warn('No changes detected, sending save-verse-none');
 			editor.signals.messageSend.dispatch({
 				action: 'save-verse-none'
 			});
@@ -92,7 +89,7 @@ function VerseLoader(editor) {
 
 		if (obj1 == null || obj2 == null) {
 
-			console.log('One of the objects is null');
+			console.warn('One of the objects is null');
 			return;
 
 		}
@@ -114,17 +111,17 @@ function VerseLoader(editor) {
 
 				if (Math.abs(val1 - val2) > tolerance) {
 
-					console.log(`Difference found at: "${currentPath}":`);
-					console.log(`Object 1: ${val1}`);
-					console.log(`Object 2: ${val2}`);
+					console.warn(`Difference found at: "${currentPath}":`);
+					console.warn(`Object 1: ${val1}`);
+					console.warn(`Object 2: ${val2}`);
 
 				}
 
 			} else if (val1 !== val2) {
 
-				console.log(`Difference found at, ${currentPath}:`);
-				console.log(`Object 1: ${val1}`);
-				console.log(`Object 2: ${val2}`);
+				console.warn(`Difference found at, ${currentPath}:`);
+				console.warn(`Object 1: ${val1}`);
+				console.warn(`Object 2: ${val2}`);
 
 			}
 
@@ -136,7 +133,7 @@ function VerseLoader(editor) {
 			if (!keys1.includes(key)) {
 
 				const currentPath = path ? `${path}.${key}` : key;
-				console.log(`Key ${currentPath} present in Object 2 but not in Object 1`);
+				console.warn(`Key ${currentPath} present in Object 2 but not in Object 1`);
 
 			}
 
@@ -202,9 +199,9 @@ function VerseLoader(editor) {
 		root.children.forEach(node => {
 
 			const nd = this.writeData(node);
-			if (nd != null) {
+			if (nd !== null) {
 
-				if (node.type == 'Module') {
+				if (node.type === 'Module') {
 
 					modules.push(nd);
 
@@ -242,7 +239,7 @@ function VerseLoader(editor) {
 				root.add(node);
 				editor.signals.sceneGraphChanged.dispatch();
 
-				if (meta && meta.data && meta.custom != 0) {
+				if (meta && meta.data && meta.custom !== 0) {
 					await factory.readMeta(node, meta.data, resources);
 					editor.signals.sceneGraphChanged.dispatch();
 				}
@@ -339,7 +336,7 @@ function VerseLoader(editor) {
 			editor.signals.sceneGraphChanged.dispatch();
 		this.json = JSON.stringify({ verse: await this.write(root) });
 
-				console.log('All modules loaded successfully');
+				// console.warn('All modules loaded successfully');
 			}).catch(error => {
 				console.error('Error loading modules:', error);
 				this.isLoading = false;

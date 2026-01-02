@@ -1,3 +1,12 @@
+/* 自定义字体声明：Arial Unicode MS */
+@font-face {
+	font-family: 'Arial Unicode MS';
+	src: url('../fonts/arial-unicode-ms.otf') format('opentype');
+	font-weight: normal;
+	font-style: normal;
+	font-display: swap;
+}
+
 :root {
 	color-scheme: light dark;
 }

@@ -480,7 +480,7 @@ function SidebarObject(editor) {
 	const objectResetRow = new UIRow();
 
 	// 重置位置按钮
-	const resetPositionButton = new UIButton("重置位置")
+	const resetPositionButton = new UIButton(strings.getKey("sidebar/object/resetPosition"))
 		.setWidth("80px")
 		.onClick(function () {
 			if (editor.selected !== null) {
@@ -488,12 +488,12 @@ function SidebarObject(editor) {
 				editor.execute(
 					new SetPositionCommand(editor, editor.selected, newPosition)
 				);
-				editor.showNotification("位置已重置");
+				editor.showNotification(strings.getKey("sidebar/object/position") + strings.getKey("sidebar/object/haveReset"));
 			}
 		});
 
 	// 重置旋转按钮
-	const resetRotationButton = new UIButton("重置旋转")
+	const resetRotationButton = new UIButton(strings.getKey("sidebar/object/resetRotation"))
 		.setWidth("80px")
 		.onClick(function () {
 			if (editor.selected !== null) {
@@ -501,18 +501,18 @@ function SidebarObject(editor) {
 				editor.execute(
 					new SetRotationCommand(editor, editor.selected, newRotation)
 				);
-				editor.showNotification("旋转已重置");
+				editor.showNotification(strings.getKey("sidebar/object/rotation") + strings.getKey("sidebar/object/haveReset"));
 			}
 		});
 
 	// 重置缩放按钮
-	const resetScaleButton = new UIButton("重置缩放")
+	const resetScaleButton = new UIButton(strings.getKey("sidebar/object/resetScale"))
 		.setWidth("80px")
 		.onClick(function () {
 			if (editor.selected !== null) {
 				const newScale = new THREE.Vector3(1, 1, 1);
 				editor.execute(new SetScaleCommand(editor, editor.selected, newScale));
-				editor.showNotification("缩放已重置");
+				editor.showNotification(strings.getKey("sidebar/object/scale") + strings.getKey("sidebar/object/haveReset"));
 			}
 		});
 
@@ -1209,34 +1209,7 @@ function SidebarObject(editor) {
 
 	//container.add(objectRenderOrderRow)
 
-	// 文本组件的文本输入
-	const objectTextRow = new UIRow();
-	const objectText = new UIInput()
-		.setWidth("150px")
-		.setFontSize("12px")
-		.onChange(function () {
-			if (editor.selected && editor.selected.type === "Text") {
-				const newText = objectText.getValue();
-
-				const userData = JSON.parse(objectUserData.getValue());
-				userData.text = newText;
-
-				objectUserData.setValue(JSON.stringify(userData, null, "  "));
-
-				editor.execute(
-					new SetValueCommand(editor, editor.selected, "userData", userData)
-				);
-
-				updateTextObject(editor.selected, newText);
-			}
-		});
-
-	objectTextRow.add(
-		new UIText(strings.getKey("sidebar/object/text")).setWidth("90px")
-	);
-	objectTextRow.add(objectText);
-	container.add(objectTextRow);
-	objectTextRow.setDisplay("none"); // 默认隐藏，仅当是文本组件时显示
+	// 文本控件已拆分到独立的 Sidebar.Text 模块（只在 Text 节点可见）
 
 	// user data
 
@@ -1263,26 +1236,6 @@ function SidebarObject(editor) {
 	objectUserDataRow.add(objectUserData);
 	objectUserDataRow.readOnly = true;
 	container.add(objectUserDataRow);
-
-	function updateTextObject(textObject, newText) {
-		const oldGeometry = textObject.geometry;
-		const oldMaterial = textObject.material;
-
-		const factory = new MetaFactory(editor);
-		const newMesh = factory.createTextMesh(newText);
-
-		textObject.geometry.dispose(); // 释放旧几何体
-		textObject.geometry = newMesh.geometry;
-
-		if (oldMaterial.map) {
-			oldMaterial.map.dispose();
-		}
-		textObject.material = newMesh.material;
-
-		textObject.userData._textContent = newText;
-
-		editor.signals.objectChanged.dispatch(textObject);
-	}
 
 	//
 
@@ -1886,24 +1839,6 @@ function SidebarObject(editor) {
 
 		objectUserData.setBorderColor("transparent");
 		objectUserData.setBackgroundColor("");
-
-		if (object.type.toLowerCase() === "text") {
-			objectTextRow.setDisplay("");
-
-			let textContent = "";
-			if (object.userData) {
-				if (object.userData.text) {
-					textContent = object.userData.text;
-				} else if (object.userData._textContent) {
-					textContent = object.userData._textContent;
-					object.userData.text = textContent;
-					objectUserData.setValue(JSON.stringify(object.userData, null, "  "));
-				}
-			}
-			objectText.setValue(textContent);
-		} else {
-			objectTextRow.setDisplay("none");
-		}
 
 		updateTransformRows(object);
 

@@ -25,7 +25,7 @@ class ScreenshotUtils {
      * @param {HTMLElement} previewContainer - 预览容器元素 (可选，用于移动动画)
      * @returns {HTMLElement} - 返回截图动画容器元素
      */
-    static createAnimationElements(previewContainer = null) {
+    static createAnimationElements(_previewContainer = null) {
         // 已经存在则不重复创建
         if (document.getElementById('screenshot-animation-container')) {
             return document.getElementById('screenshot-animation-container');
@@ -115,7 +115,7 @@ class ScreenshotUtils {
 
         // 播放拍照音效
         ScreenshotUtils.captureSound.currentTime = 0;
-        ScreenshotUtils.captureSound.play().catch(error => console.log('音效播放失败:', error));
+        ScreenshotUtils.captureSound.play().catch(_error => { /* ignore audio play errors */ });
 
         // 播放闪光动画
         setTimeout(() => {

@@ -1,4 +1,4 @@
-import { UIPanel, UINumber, UIBreak, UIText, UIButton, UIRow, UIInput, UIHorizontalRule } from '../libs/ui.js';
+import { UIBreak, UIText, UIButton } from '../libs/ui.js';
 import { RemoveEventCommand } from '../commands/RemoveEventCommand.js';
 
 class EventContainer {

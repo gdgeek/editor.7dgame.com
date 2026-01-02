@@ -6,15 +6,17 @@ import { History as _History } from './History.js';
 import { Strings } from './Strings.js';
 import { Storage as _Storage } from './Storage.js';
 import { DialogUtils } from './utils/DialogUtils.js';
+import { Access } from './Access.js';
 
 const mapping = {
-	'zh-cn': 'zh',
-	'en': 'en',
-	'ja': 'ja'
+	'zh-CN': 'zh-cn',
+	'en-US': 'en-us',
+	'ja-JP': 'ja-jp',
+	'zh-TW': 'zh-tw',
+	'th-TH': 'th-th'
 };
 const urlParams = new URLSearchParams( window.location.search );
 const lg = urlParams.get( 'language' );
-
 
 var _DEFAULT_CAMERA = new THREE.PerspectiveCamera( 50, 1, 0.01, 1000 );
 _DEFAULT_CAMERA.name = 'Camera';
@@ -165,6 +167,8 @@ function Editor() {
 
 	this.type = '';
 	this.resources = []; // 保存场景中的资源信息
+
+	this.access = new Access(this);
 
 }
 

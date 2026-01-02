@@ -1,7 +1,8 @@
-import { UIPanel, UINumber, UIBreak, UIText, UIButton, UIRow, UIInput, UIHorizontalRule } from '../libs/ui.js';
+import { UIBreak, UIText, UIButton } from '../libs/ui.js';
 import { RemoveCommandCommand } from '../commands/RemoveCommandCommand.js';
 
 import { VoiceCommand } from './commands/VoiceCommand.js';
+import { GestureCommand } from './commands/GestureCommand.js';
 
 class CommandContainer {
 
@@ -9,6 +10,8 @@ class CommandContainer {
 		switch (type.toLowerCase()) {
 			case 'voice':
 				return VoiceCommand.Create();
+			case 'gesture':
+				return GestureCommand.Create();
 		}
 	}
 
@@ -21,6 +24,9 @@ class CommandContainer {
 			case 'voice':
 				this.handler = new VoiceCommand(editor, object, command);
 				break;
+			case 'gesture':
+				this.handler = new GestureCommand(editor, object, command);
+				break;
 			default:
 				console.error('CommandContainer: Unknown command type.');
 		}
@@ -30,7 +36,7 @@ class CommandContainer {
 		const strings = this.editor.strings;
 		container.add(new UIText(this.command.type));
 
-		if (this.handler != undefined) {
+		if (this.handler !== undefined) {
 			this.handler.renderer(container);
 		}
 

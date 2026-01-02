@@ -86,40 +86,23 @@ function SidebarCommand(editor) {
 			addCommandContainer.setDisplay('block');
 			addCommandContainer.add(new UIBreak());
 
-			const label = new UIText(strings.getKey('sidebar/command/select') || '选择项').setWidth('90px');
+			const label = new UIText(strings.getKey('sidebar/command/select')).setWidth('90px');
 			addCommandContainer.add(label);
 
 			// 创建下拉框
 			const select = new UISelect().setWidth('100px');
 			select.setOptions({
-				'Voice': strings.getKey('sidebar/command/select/voice') || '语音指令'
+				'Voice': strings.getKey('sidebar/command/select/voice'),
+				'Gesture': strings.getKey('sidebar/command/select/gesture'),
 			});
 			select.setValue('Voice');
 			addCommandContainer.add(select);
 
 			// 添加按钮
-			const newCommand = new UIButton(strings.getKey('sidebar/command/select/button') || '添加指令');
+			const newCommand = new UIButton(strings.getKey('sidebar/command/select/button'));
 			newCommand.onClick(function() {
-				// 检查是否已经有语音指令
-				let hasVoiceCommand = false;
-				if (object.commands) {
-					for (let i = 0; i < object.commands.length; i++) {
-						if (object.commands[i].type === 'Voice') {
-							hasVoiceCommand = true;
-							break;
-						}
-					}
-				}
-
-				// 如果已有语音指令，显示提示并不创建新的指令
-				if (hasVoiceCommand) {
-					const message = strings.getKey('menubar/command/already_exists') ||
-								   '此对象已添加语音指令，不能重复添加';
-					editor.showNotification(message, true);
-					return;
-				}
-
-				const command = CommandContainer.Create(select.getValue());
+				const chosenType = select.getValue();
+				const command = CommandContainer.Create(chosenType);
 
 				if (command !== undefined) {
 					const cmd = new AddCommandCommand(editor, object, command);
@@ -135,11 +118,8 @@ function SidebarCommand(editor) {
 				for (let i = 0; i < commands.length; i++) {
 					(function(object, command) {
 						commandsContainer.add(new UIHorizontalRule());
-
 						const cc = new CommandContainer(editor, object, command);
 						cc.renderer(commandsContainer);
-
-						// 将水平分隔线添加到容器中
 						commandsContainer.add(new UIBreak());
 					})(object, commands[i]);
 				}
@@ -151,136 +131,104 @@ function SidebarCommand(editor) {
 			addCommandContainer.setDisplay('block');
 			addCommandContainer.add(new UIBreak());
 
-			const label = new UIText(strings.getKey('sidebar/command/select') || '选择项').setWidth('90px');
+			const label = new UIText(strings.getKey('sidebar/command/select')).setWidth('90px');
 			addCommandContainer.add(label);
 
 			// 创建下拉框
 			const select = new UISelect().setWidth('100px');
 			select.setOptions({
-				'Voice': strings.getKey('sidebar/command/select/voice') || '语音指令'
+				'Voice': strings.getKey('sidebar/command/select/voice'),
+				'Gesture': strings.getKey('sidebar/command/select/gesture'),
 			});
 			select.setValue('Voice');
 			addCommandContainer.add(select);
 
 			// 添加按钮
-			const newCommand = new UIButton(strings.getKey('sidebar/command/select/button') || '添加指令');
+			const newCommand = new UIButton(strings.getKey('sidebar/command/select/button'));
 			newCommand.onClick(function() {
-				// 检查哪些对象已经有语音指令
-				const objectsWithVoiceCommand = [];
-				const objectsToAddCommand = [];
+				// 多选时按下拉选择的类型执行批量添加
+				const chosenType = select.getValue();
+				const validObjects = selectedObjects.filter(obj => obj.type && obj.type.toLowerCase() === 'entity');
+				const invalidObjects = selectedObjects.filter(obj => !obj.type || obj.type.toLowerCase() !== 'entity');
 
-				for (let i = 0; i < selectedObjects.length; i++) {
-					const object = selectedObjects[i];
-
-					// 检查是否已经有语音指令
-					let hasVoiceCommand = false;
-					for (let j = 0; j < object.commands.length; j++) {
-						if (object.commands[j].type === 'Voice') {
-							hasVoiceCommand = true;
-							break;
-						}
+				// 如果没有有效对象，显示错误并返回
+				if (validObjects.length === 0) {
+					if (invalidObjects.length > 0) {
+						const names = invalidObjects.map((obj, i) => obj.name || strings.getKey('sidebar/command/object_name_with_index').replace('{0}', i+1));
+						const displayNames = names.length > 3
+							? names.slice(0, 3).join(', ') + `...等${names.length}个对象`
+							: names.join(', ');
+						editor.showNotification(
+							strings.getKey('sidebar/command/notification/invalid_objects').replace('{0}', displayNames),
+							true
+						);
 					}
+					return;
+				}
 
-					if (hasVoiceCommand) {
-						objectsWithVoiceCommand.push(object.name || `对象 ${i+1}`);
-					} else {
-						objectsToAddCommand.push(object);
+				// 首先为所有有效对象添加指令
+				for (let i = 0; i < validObjects.length; i++) {
+					const object = validObjects[i];
+					if (object.commands === undefined) object.commands = [];
+					const command = CommandContainer.Create(chosenType);
+
+					if (command !== undefined) {
+						const cmd = new AddCommandCommand(editor, object, command);
+						editor.execute(cmd);
 					}
 				}
 
-				// 如果有对象已经有语音指令，显示提示
-				if (objectsWithVoiceCommand.length > 0) {
-					const conflictNames = objectsWithVoiceCommand.length > 3
-						? objectsWithVoiceCommand.slice(0, 3).join(', ') + `...等${objectsWithVoiceCommand.length}个对象`
-						: objectsWithVoiceCommand.join(', ');
+				// 显示成功消息
+				const commandName = strings.getKey('sidebar/command/select/' + chosenType.toLowerCase()) || chosenType;
+				editor.showNotification(
+					strings.getKey('sidebar/command/notification/add_success')
+						.replace('{0}', validObjects.length)
+						.replace('{1}', commandName),
+					false
+				);
 
-					editor.showNotification(
-						`以下对象已存在语音指令: ${conflictNames}，将跳过这些对象`,
-						true
-					);
-				}
-
-				// 为没有语音指令的对象添加
-				if (objectsToAddCommand.length > 0) {
-					for (let i = 0; i < objectsToAddCommand.length; i++) {
-						const object = objectsToAddCommand[i];
-						const command = CommandContainer.Create('Voice');
-
-						if (command !== undefined) {
-							const cmd = new AddCommandCommand(editor, object, command);
-							editor.execute(cmd);
-						}
-					}
-
-					editor.showNotification(
-						`已为${objectsToAddCommand.length}个对象添加语音指令`,
-						false
-					);
-				} else if (objectsToAddCommand.length === 0 && objectsWithVoiceCommand.length > 0) {
-					editor.showNotification('所有选中对象都已有语音指令', false);
+				// 如果有无效对象，延迟显示警告消息
+				if (invalidObjects.length > 0) {
+					setTimeout(() => {
+						const names = invalidObjects.map((obj, i) => obj.name || strings.getKey('sidebar/command/object_name_with_index').replace('{0}', i+1));
+						const displayNames = names.length > 3
+							? names.slice(0, 3).join(', ') + `...等${names.length}个对象`
+							: names.join(', ');
+						editor.showNotification(
+							strings.getKey('sidebar/command/notification/skip_invalid_objects').replace('{0}', displayNames),
+							true
+						);
+					}, 3000);
 				}
 			});
 			addCommandContainer.add(newCommand);
 
-			// 更新按钮启用状态
-			// 检查是否所有对象都已经有语音指令
-			let allHaveVoiceCommand = true;
-			let objectsWithVoiceCommand = 0;
+			// 显示多选对象的指令摘要
+			commandsContainer.add(new UIHorizontalRule());
 
+			const summaryTitle = new UIRow();
+			summaryTitle.add(new UIText(`${selectedObjects.length}${strings.getKey('sidebar/command/multi_selection_summary')}`));
+			commandsContainer.add(summaryTitle);
+
+			// 对每个选中对象显示其名字和已添加的指令类型列表
 			for (let i = 0; i < selectedObjects.length; i++) {
 				const object = selectedObjects[i];
-				let hasVoiceCommand = false;
+				const types = (object.commands && object.commands.length > 0)
+					? object.commands.map(c => c.type).join(', ')
+					: strings.getKey('sidebar/command/no_commands');
 
-				for (let j = 0; j < object.commands.length; j++) {
-					if (object.commands[j].type === 'Voice') {
-						hasVoiceCommand = true;
-						objectsWithVoiceCommand++;
-						break;
-					}
-				}
-
-				if (!hasVoiceCommand) {
-					allHaveVoiceCommand = false;
-				}
+				const row = new UIRow();
+				row.add(new UIText(`${object.name || strings.getKey('sidebar/command/object_name_with_index').replace('{0}', i+1)}: ${types}`));
+				commandsContainer.add(row);
 			}
 
-			// 如果所有对象都已有语音指令，禁用添加按钮
-			if (allHaveVoiceCommand) {
-				newCommand.setDisabled(true);
-				newCommand.dom.style.opacity = '0.5';
-				newCommand.dom.style.cursor = 'not-allowed';
-			}
-
-			// 显示多选对象的指令信息 - 与组件部分风格保持一致
-			if (objectsWithVoiceCommand > 0) {
-				commandsContainer.add(new UIHorizontalRule());
-
-				// 添加统计信息
-				const statsRow = new UIRow();
-				statsRow.add(new UIText(`${selectedObjects.length}个选中对象中，${objectsWithVoiceCommand}个对象有语音指令`));
-				commandsContainer.add(statsRow);
-
-				// 添加提示信息
-				const noteRow = new UIRow();
-				noteRow.add(new UIText('注意：指令实例是各对象独立的，无法一次编辑所有'));
-				commandsContainer.add(noteRow);
-				commandsContainer.add(new UIBreak());
-			} else {
-				commandsContainer.add(new UIHorizontalRule());
-
-				// 添加提示信息
-				const noteRow = new UIRow();
-				noteRow.add(new UIText('选中的对象中没有语音指令'));
-				commandsContainer.add(noteRow);
-				commandsContainer.add(new UIBreak());
-			}
+			commandsContainer.add(new UIBreak());
 		}
 	}
 
 	// signals
 	signals.objectSelected.add(function(object) {
 		if (object !== null && editor.camera !== object) {
-			// 修改为与组件部分一致的显示逻辑
 			if (editor.type && editor.type.toLowerCase() === 'meta') {
 				const objectType = object.type ? object.type.toLowerCase() : '';
 				if (objectType === 'mesh' || objectType === 'entity') {

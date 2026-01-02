@@ -270,9 +270,24 @@
 		editor.verseLoader = loader;
 		editor.signals.messageReceive.add(async function (params) {
 
+			if(!editor.data)
+			{
+				editor.data = {};
+			}
 			if (params.action == 'load') {
 				const data = params.data;
 				loader.load(data.data);
+				//console.log("Loaded verse data:", data);
+				// 保存用户信息
+				if (data.user) {
+					editor.data.user = data.user
+					console.error("Set user role:", editor.data.user.role);
+				}
+			} else if (params.action === 'user-info') {
+				
+				// 保存用户信息
+				editor.data.user = params.data;
+				console.error("Updated user role:", editor.data.user.role);
 			}
 
 		});
