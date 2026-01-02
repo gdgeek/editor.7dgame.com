@@ -1,7 +1,6 @@
 import { SceneCreater } from './SceneCreater.js';
 function EditorLoader( editor ) {
 
-	const _scope = this;
 	const creater = new SceneCreater( editor );
 
 	this.load = function ( input ) {
@@ -18,7 +17,7 @@ function EditorLoader( editor ) {
 			} )
 			.catch( error => {
 
-				alert( error );
+				console.error( 'EditorLoader error:', error );
 
 			} );
 

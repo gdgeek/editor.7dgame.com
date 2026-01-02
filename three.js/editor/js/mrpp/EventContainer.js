@@ -25,6 +25,7 @@ class EventContainer {
 		remove.setMarginLeft( '4px' );
 		remove.onClick( function () {
 
+			// eslint-disable-next-line no-restricted-globals
 			if ( confirm( 'Are you sure?' ) ) {
 
 				this.editor.execute( new RemoveEventCommand( this.editor, this.event, this.mode ) );
