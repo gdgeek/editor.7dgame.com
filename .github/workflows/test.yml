@@ -1,0 +1,43 @@
+name: Test
+
+on:
+  workflow_call:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: three.js/editor/test/package-lock.json
+
+      - name: Install test dependencies
+        working-directory: three.js/editor/test
+        run: npm ci || npm install
+
+      - name: Run ESLint
+        working-directory: three.js/editor/test
+        run: npm run lint
+
+      - name: Run tests
+        working-directory: three.js/editor/test
+        run: npm test
+
+      - name: Run tests with coverage
+        working-directory: three.js/editor/test
+        run: npm run test:coverage
+        continue-on-error: true
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: three.js/editor/test/coverage/
+          retention-days: 7
