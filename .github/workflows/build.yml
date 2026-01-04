@@ -16,7 +16,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   TENCENT_REGISTRY: hkccr.ccs.tencentyun.com
-  TENCENT_IMAGE_NAME: gdgeek/blockly
+  TENCENT_IMAGE_NAME: gdgeek/editor
 
 jobs:
   build:
