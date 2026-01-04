@@ -39,7 +39,7 @@ jobs:
             type=sha,prefix=
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Build and push
+      - name: Build and push to GHCR
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -48,3 +48,32 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # Tencent Cloud Container Registry
+      - name: Login to Tencent Cloud Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: hkccr.ccs.tencentyun.com
+          username: ${{ secrets.TENCENT_REGISTRY_USERNAME }}
+          password: ${{ secrets.TENCENT_REGISTRY_PASSWORD }}
+
+      - name: Extract Tencent metadata
+        id: tencent-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: hkccr.ccs.tencentyun.com/gdgeek/editor
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix=
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Push to Tencent Cloud Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.tencent-meta.outputs.tags }}
+          labels: ${{ steps.tencent-meta.outputs.labels }}
+          cache-from: type=gha
