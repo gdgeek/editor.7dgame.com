@@ -455,7 +455,7 @@ function SidebarScene(editor) {
 
 		const options = [];
 
-		options.push(buildOption(camera, false));
+		//options.push(buildOption(camera, false));
 		options.push(buildOption(scene, false));
 		(function addObjects(objects, pad) {
 

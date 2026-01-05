@@ -34,7 +34,8 @@ class CommandContainer {
 
 	renderer(container) {
 		const strings = this.editor.strings;
-		container.add(new UIText(this.command.type));
+		const localizedType = strings.getKey(`sidebar/command/select/${this.command.type.toLowerCase()}`) || this.command.type;
+		container.add(new UIText(localizedType));
 
 		if (this.handler !== undefined) {
 			this.handler.renderer(container);

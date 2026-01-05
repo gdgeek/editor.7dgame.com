@@ -113,8 +113,11 @@ function Strings( config ) {
 			'menubar/help/manual': 'Manual',
 
 			'sidebar/animations': 'Animations',
+			'sidebar/animations/preview': 'Animation Preview',
 			'sidebar/animations/play': 'Play',
+			'sidebar/animations/pause': 'Pause',
 			'sidebar/animations/stop': 'Stop',
+			'sidebar/animations/progress': 'Progress',
 			'sidebar/animations/timescale': 'Time Scale',
 			'sidebar/animations/select': 'Select',
 
@@ -127,6 +130,7 @@ function Strings( config ) {
 			'sidebar/properties/geometry': 'Geometry',
 			'sidebar/properties/material': 'Material',
 			'sidebar/properties/script': 'Script',
+			'sidebar/properties/multi_object': 'Multiple Objects',
 
 			'sidebar/object/type': 'Type',
 			'sidebar/object/new': 'New',
@@ -167,7 +171,7 @@ function Strings( config ) {
 			'sidebar/object/userdata': 'User data',
 			'sidebar/object/sortingOrder': 'Canvas Sorting Order',
 
-			'sidebar/text': 'Text Attributes',
+			'sidebar/text': 'Text',
 			'sidebar/text/content': 'Content',
 			'sidebar/text/rect': 'Text Box Size',
 			'sidebar/text/color': 'Text Color',
@@ -179,6 +183,12 @@ function Strings( config ) {
 			'sidebar/text/background/color': 'Background Color',
 			'sidebar/text/background/opacity': 'Background Opacity',
 
+			'sidebar/events': 'Signals',
+			'sidebar/events/inputs': 'Input Signals',
+			'sidebar/events/outputs': 'Output Signals',
+			'sidebar/events/add': 'Add',
+			'sidebar/events/remove': 'Remove',
+			'sidebar/events/remove/confirm': 'Are you sure you want to delete this signal?',
 
 			'sidebar/components/multi_selection_summary': 'selected objects component summary',
 			'sidebar/components/object_name_with_index': 'Object {0}',
@@ -189,8 +199,9 @@ function Strings( config ) {
 			'sidebar/components/notification/mutually_exclusive': 'Only one mutually exclusive component can be selected: Click Trigger, Movable or Collision Trigger',
 
 			'sidebar/components': 'Components',
+			'sidebar/components/new': 'New Component',
 			'sidebar/components/select': 'Select',
-			'sidebar/components/select/rotate': 'Rotate',
+			'sidebar/components/select/rotate': 'Self-Rotation',
 			'sidebar/components/select/action': 'Interactive Action',
 			'sidebar/components/select/action/mode': 'Interaction Mode',
 			'sidebar/components/select/action/mode/pinch': 'Pinch',
@@ -216,7 +227,9 @@ function Strings( config ) {
 			'sidebar/command/notification/skip_invalid_objects': 'The following object types do not support adding commands: {0}, these objects will be skipped',
 			'sidebar/command/notification/add_success': 'Added {1} command to {0} valid objects',
 
+			'sidebar/component': 'Component',
 			'sidebar/command': 'Command',
+			'sidebar/command/new': 'New Command',
 			'sidebar/command/select': 'Select',
 			'sidebar/command/select/voice': 'Voice Command',
 			'sidebar/command/select/gesture': 'Gesture Command',
@@ -613,8 +626,11 @@ function Strings( config ) {
 			'menubar/help/manual': '手册',
 
 			'sidebar/animations': '动画',
+			'sidebar/animations/preview': '动画预览',
 			'sidebar/animations/play': '播放',
-			'sidebar/animations/stop': '暂停',
+			'sidebar/animations/pause': '暂停',
+			'sidebar/animations/stop': '停止',
+			'sidebar/animations/progress': '进度',
 			'sidebar/animations/timescale': '时间缩放',
 			'sidebar/animations/select': '选择项',
 
@@ -627,6 +643,7 @@ function Strings( config ) {
 			'sidebar/properties/geometry': '几何组件',
 			'sidebar/properties/material': '材质组件',
 			'sidebar/properties/script': '脚本',
+			'sidebar/properties/multi_object': '多选对象',
 
 			'sidebar/object/type': '类型',
 			'sidebar/object/new': '更新',
@@ -667,7 +684,7 @@ function Strings( config ) {
 			'sidebar/object/userdata': '自定义数据',
 			'sidebar/object/sortingOrder': '图片渲染层级',
 
-			'sidebar/text': '文字属性',
+			'sidebar/text': '文本',
 			'sidebar/text/content': '内容',
 			'sidebar/text/rect': '文本框大小',
 			'sidebar/text/color': '文字颜色',
@@ -678,6 +695,13 @@ function Strings( config ) {
 			'sidebar/text/background/color': '背景颜色',
 			'sidebar/text/background/opacity': '背景不透明度',
 
+			'sidebar/events': '信号',
+			'sidebar/events/inputs': '输入信号',
+			'sidebar/events/outputs': '输出信号',
+			'sidebar/events/add': '添加',
+			'sidebar/events/remove': '删除',
+			'sidebar/events/remove/confirm': '确定要删除这个信号吗？',
+
 			'sidebar/components/multi_selection_summary': '个选中对象组件摘要',
 			'sidebar/components/object_name_with_index': '对象 {0}',
 			'sidebar/components/no_components': '无',
@@ -687,6 +711,7 @@ function Strings( config ) {
 			'sidebar/components/notification/mutually_exclusive': '只能选择一个互斥组件：点击触发、可移动或碰撞触发',
 
 			'sidebar/components': '组件',
+			'sidebar/components/new': '新建组件',
 			'sidebar/components/select': '选择项',
 			'sidebar/components/select/rotate': '自旋转',
 			'sidebar/components/select/action': '交互触发',
@@ -713,7 +738,9 @@ function Strings( config ) {
 			'sidebar/command/notification/skip_invalid_objects': '以下对象类型不支持添加指令: {0}，将跳过这些对象',
 			'sidebar/command/notification/add_success': '已为{0}个有效对象添加{1}指令',
 
+			'sidebar/component': '组件',
 			'sidebar/command': '指令',
+			'sidebar/command/new': '新建指令',
 			'sidebar/command/select': '选择项',
 			'sidebar/command/select/voice': '语音指令',
 			'sidebar/command/select/gesture': '手势指令',
@@ -1111,8 +1138,11 @@ function Strings( config ) {
 			'menubar/help/manual': 'マニュアル',
 
 			'sidebar/animations': 'アニメーション',
+			'sidebar/animations/preview': 'アニメーションプレビュー',
 			'sidebar/animations/play': '再生',
+			'sidebar/animations/pause': '一時停止',
 			'sidebar/animations/stop': '停止',
+			'sidebar/animations/progress': '進行状況',
 			'sidebar/animations/timescale': '時間スケール',
 			'sidebar/animations/select': '選択項目',
 
@@ -1125,6 +1155,7 @@ function Strings( config ) {
 			'sidebar/properties/geometry': 'ジオメトリコンポーネント',
 			'sidebar/properties/material': 'マテリアルコンポーネント',
 			'sidebar/properties/script': 'スクリプト',
+			'sidebar/properties/multi_object': '複数のオブジェクト',
 
 			'sidebar/object/type': 'タイプ',
 			'sidebar/object/new': '更新',
@@ -1165,7 +1196,14 @@ function Strings( config ) {
 			'sidebar/object/userdata': 'ユーザーデータ',
 			'sidebar/object/sortingOrder': '画像のレンダリング順序',
 
-			'sidebar/text': 'テキスト属性',
+			'sidebar/events': '信号',
+			'sidebar/events/inputs': '入力信号',
+			'sidebar/events/outputs': '出力信号',
+			'sidebar/events/add': '追加',
+			'sidebar/events/remove': '削除',
+			'sidebar/events/remove/confirm': 'この信号を削除してもよろしいですか？',
+
+			'sidebar/text': 'テキスト',
 			'sidebar/text/content': '内容',
 			'sidebar/text/rect': 'テキストボックスのサイズ',
 			'sidebar/text/color': 'テキストの色',
@@ -1188,6 +1226,7 @@ function Strings( config ) {
 
 
 			'sidebar/components': 'コンポーネント',
+			'sidebar/components/new': '新しいコンポーネント',
 			'sidebar/components/select': '選択項目',
 			'sidebar/components/select/rotate': '自動回転',
 			'sidebar/components/select/action': 'インタラクティブアクション',
@@ -1215,6 +1254,7 @@ function Strings( config ) {
 			'sidebar/command/notification/add_success': '{0}個の有効オブジェクトに{1}コマンドを追加しました',
 
 			'sidebar/command': 'コマンド',
+			'sidebar/command/new': '新しいコマンド',
 			'sidebar/command/select': '選択項目',
 			'sidebar/command/select/voice': '音声コマンド',
 			'sidebar/command/select/gesture': 'ジェスチャーコマンド',
@@ -1613,8 +1653,11 @@ function Strings( config ) {
 			"menubar/help/manual": "手冊",
 		
 			"sidebar/animations": "動畫",
+			"sidebar/animations/preview": "動畫預覽",
 			"sidebar/animations/play": "播放",
-			"sidebar/animations/stop": "暫停",
+			"sidebar/animations/pause": "暫停",
+			"sidebar/animations/stop": "停止",
+			"sidebar/animations/progress": "進度",
 			"sidebar/animations/timescale": "時間縮放",
 			"sidebar/animations/select": "選取項",
 		
@@ -1627,6 +1670,7 @@ function Strings( config ) {
 			"sidebar/properties/geometry": "幾何元件",
 			"sidebar/properties/material": "材質元件",
 			"sidebar/properties/script": "指令碼",
+			"sidebar/properties/multi_object": "多選物件",
 		
 			"sidebar/object/type": "類型",
 			"sidebar/object/new": "更新",
@@ -1667,7 +1711,14 @@ function Strings( config ) {
 			"sidebar/object/userdata": "自訂資料",
 			"sidebar/object/sortingOrder": "圖片渲染層級",
 		
-			"sidebar/text": "文字屬性",
+			"sidebar/events": "訊號",
+			"sidebar/events/inputs": "輸入訊號",
+			"sidebar/events/outputs": "輸出訊號",
+			"sidebar/events/add": "添加",
+			"sidebar/events/remove": "刪除",
+			"sidebar/events/remove/confirm": "確定要刪除這個訊號嗎？",
+		
+			"sidebar/text": "文字",
 			"sidebar/text/content": "內容",
 			"sidebar/text/rect": "文字框大小",
 			"sidebar/text/color": "文字顏色",
@@ -1689,6 +1740,7 @@ function Strings( config ) {
 			"sidebar/components/notification/mutually_exclusive": "只能選擇一個互斥元件：點選觸發、可移動或碰撞觸發",
 		
 			"sidebar/components": "元件",
+			"sidebar/components/new": "新增元件",
 			"sidebar/components/select": "選取項",
 			"sidebar/components/select/rotate": "自旋轉",
 			"sidebar/components/select/action": "互動觸發",
@@ -1716,6 +1768,7 @@ function Strings( config ) {
 			"sidebar/command/notification/add_success": "已為{0}個有效物件新增{1}指令",
 		
 			"sidebar/command": "指令",
+			"sidebar/command/new": "新增指令",
 			"sidebar/command/select": "選取項",
 			"sidebar/command/select/voice": "語音指令",
 			"sidebar/command/select/gesture": "手勢指令",
@@ -2113,8 +2166,11 @@ function Strings( config ) {
 			"menubar/help/manual": "คู่มือ",
 		
 			"sidebar/animations": "แอนิเมชัน",
+			"sidebar/animations/preview": "ตัวอย่างภาพเคลื่อนไหว",
 			"sidebar/animations/play": "เล่น",
+			"sidebar/animations/pause": "หยุดชั่วคราว",
 			"sidebar/animations/stop": "หยุด",
+			"sidebar/animations/progress": "ความคืบหน้า",
 			"sidebar/animations/timescale": "สเกลเวลา",
 			"sidebar/animations/select": "ตัวเลือก",
 		
@@ -2127,6 +2183,7 @@ function Strings( config ) {
 			"sidebar/properties/geometry": "คอมโพเนนต์เรขาคณิต",
 			"sidebar/properties/material": "คอมโพเนนต์วัสดุ",
 			"sidebar/properties/script": "สคริปต์",
+			"sidebar/properties/multi_object": "วัตถุหลายรายการ",
 		
 			"sidebar/object/type": "ประเภท",
 			"sidebar/object/new": "อัปเดต",
@@ -2167,7 +2224,14 @@ function Strings( config ) {
 			"sidebar/object/userdata": "ข้อมูลที่กำหนดเอง",
 			"sidebar/object/sortingOrder": "เลเวลการเรนเดอร์รูปภาพ",
 		
-			"sidebar/text": "คุณสมบัติข้อความ",
+			"sidebar/events": "สัญญาณ",
+			"sidebar/events/inputs": "สัญญาณอินพุต",
+			"sidebar/events/outputs": "สัญญาณเอาต์พุต",
+			"sidebar/events/add": "เพิ่ม",
+			"sidebar/events/remove": "ลบ",
+			"sidebar/events/remove/confirm": "คุณแน่ใจหรือไม่ว่าต้องการลบสัญญาณนี้?",
+		
+			"sidebar/text": "ข้อความ",
 			"sidebar/text/content": "เนื้อหา",
 			"sidebar/text/rect": "ขนาดกรอบข้อความ",
 			"sidebar/text/color": "สีข้อความ",
@@ -2189,6 +2253,7 @@ function Strings( config ) {
 			"sidebar/components/notification/mutually_exclusive": "เลือกได้เพียงคอมโพเนนต์ที่แยกจากกันหนึ่งอย่าง: การกระตุ้นโดยการแตะ, เคลื่อนย้ายได้, หรือการกระตุ้นโดยการชน",
 		
 			"sidebar/components": "คอมโพเนนต์",
+			"sidebar/components/new": "ส่วนประกอบใหม่",
 			"sidebar/components/select": "ตัวเลือก",
 			"sidebar/components/select/rotate": "หมุนเอง",
 			"sidebar/components/select/action": "การกระตุ้นเชิงโต้ตอบ",
@@ -2216,6 +2281,7 @@ function Strings( config ) {
 			"sidebar/command/notification/add_success": "ได้เพิ่มคำสั่ง {1} ให้วัตถุที่ถูกต้อง {0} รายการแล้ว",
 		
 			"sidebar/command": "คำสั่ง",
+			"sidebar/command/new": "ส่วนคำสั่งใหม่",
 			"sidebar/command/select": "ตัวเลือก",
 			"sidebar/command/select/voice": "คำสั่งเสียง",
 			"sidebar/command/select/gesture": "คำสั่งท่าทาง",

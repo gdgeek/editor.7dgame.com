@@ -48,7 +48,7 @@ function Toolbar(editor) {
 	local.onChange(function () {
 		signals.spaceChanged.dispatch(this.getValue() === true ? 'local' : 'world')
 	})
-	container.add(local)
+	//container.add(local)
 
 	//
 

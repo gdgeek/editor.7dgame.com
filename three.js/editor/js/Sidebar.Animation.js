@@ -1,218 +1,231 @@
-import { UIPanel, UIBreak, UIButton, UIDiv, UIText, UINumber, UIRow, UISelect } from './libs/ui.js';
+import { UIPanel, UIBreak, UIButton, UIDiv, UIText, UIRow, UISelect, UIInput } from './libs/ui.js';
 
-function SidebarAnimation( editor ) {
-
+function SidebarAnimation(editor) {
 	const strings = editor.strings;
 	const signals = editor.signals;
 	const mixer = editor.mixer;
 
-	// 存储每个对象的动画状态，使用对象UUID作为键
+	// SVG 图标
+	const ICON_PLAY = '<svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M8 5.14v14l11-7-11-7z"/></svg>';
+	const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+	const ICON_STOP = '<svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M6 6h12v12H6z"/></svg>';
+
 	const animationStates = new Map();
 
-	// 获取对象的动画状态，如果不存在则创建
 	function getAnimationState(object) {
 		if (!animationStates.has(object.uuid)) {
-			animationStates.set(object.uuid, {
-				currentAction: null,
-				isPlaying: false
-			});
+			animationStates.set(object.uuid, { currentAction: null, isPlaying: false });
 		}
 		return animationStates.get(object.uuid);
 	}
 
-	function getButtonText( action ) {
-		return action.isRunning()
-			? strings.getKey( 'sidebar/animations/stop' )
-			: strings.getKey( 'sidebar/animations/play' );
-	}
+	const container = new UIPanel();
+	container.setDisplay('none');
 
-	// 播放指定动画
-	function playAnimation(object, animation, playButton) {
-		const state = getAnimationState(object);
+	container.add(new UIText(strings.getKey('sidebar/animations/preview')).setTextTransform('uppercase'));
+	container.add(new UIBreak(), new UIBreak());
 
-		// 如果当前有动画正在播放，先停止
-		if (state.currentAction) {
-			state.currentAction.stop();
-		}
+	const animationsList = new UIDiv();
+	container.add(animationsList);
 
-		// 播放选中的动画
-		if (animation instanceof THREE.AnimationClip) {
-			// 处理标准Three.js动画
-			state.currentAction = mixer.clipAction(animation, object);
-		} else if (object.animations) {
-			// 查找匹配的动画对象
-			const clipAnimation = object.animations.find(a => a.name === animation.name);
-			if (clipAnimation) {
-				state.currentAction = mixer.clipAction(clipAnimation, object);
-			}
-		}
+	let updateRequestId = null;
 
-		if (state.currentAction) {
-			state.currentAction.play();
-			state.isPlaying = true;
-			if(playButton) {
-				playButton.setTextContent(strings.getKey('sidebar/animations/stop'));
-			}
-		}
-	}
-
-	// 停止当前动画
-	function stopAnimation(object, playButton) {
-		const state = getAnimationState(object);
-
-		if (state.currentAction) {
-			state.currentAction.stop();
-			state.currentAction = null;
-		}
-		state.isPlaying = false;
-		if(playButton) {
-			playButton.setTextContent(strings.getKey('sidebar/animations/play'));
-		}
-	}
-
-	// 创建动画控制面板
 	function createAnimationControls(object, animations) {
 		animationsList.clear();
-
-		// 获取或创建对象的动画状态
 		const state = getAnimationState(object);
 
-		// 创建动画选择下拉框和播放按钮在同一行
+		// --- 1. 动画选择 ---
 		const animSelectRow = new UIRow();
 		animSelectRow.add(new UIText(strings.getKey('sidebar/animations/select')).setWidth('90px'));
-
-		const animSelect = new UISelect().setWidth('100px');
-		let options = {};
-
-		// 添加动画选项
-		animations.forEach((animation) => {
-			options[animation.name] = animation.name;
-		});
-
+		const animSelect = new UISelect().setWidth('160px');
+		const options = {};
+		animations.forEach(anim => options[anim.name] = anim.name);
 		animSelect.setOptions(options);
-
-		// 默认选择第一个动画但不播放
-		if (animations.length > 0) {
-			animSelect.setValue(animations[0].name);
-		}
-
-		// 播放/停止按钮
-		const playButton = new UIButton(strings.getKey('sidebar/animations/play'));
-
-		// 如果该对象已经有正在播放的动画，更新按钮状态
-		if (state.isPlaying) {
-			playButton.setTextContent(strings.getKey('sidebar/animations/stop'));
-		}
-
-		// 下拉框选择事件
-		animSelect.onChange(function() {
-			const selectedAnim = animSelect.getValue();
-
-			// 查找选中的动画
-			const animation = animations.find(anim => {
-				if (anim instanceof THREE.AnimationClip) {
-					return anim.name === selectedAnim;
-				} else {
-					return anim.name === selectedAnim;
-				}
-			});
-
-			if (animation) {
-				// 无论当前状态如何，切换动画时都自动播放新动画
-				playAnimation(object, animation, playButton);
-			}
-		});
-
+		if (animations.length > 0) animSelect.setValue(animations[0].name);
 		animSelectRow.add(animSelect);
-
-		// 播放/停止按钮直接放在下拉框旁边
-		playButton.onClick(function() {
-			const selectedAnim = animSelect.getValue();
-
-			// 查找选中的动画
-			const animation = animations.find(anim => {
-				if (anim instanceof THREE.AnimationClip) {
-					return anim.name === selectedAnim;
-				} else {
-					return anim.name === selectedAnim;
-				}
-			});
-
-			if (animation) {
-				if (!state.isPlaying) {
-					// 播放选中的动画
-					playAnimation(object, animation, playButton);
-				} else {
-					// 停止当前动画
-					stopAnimation(object, playButton);
-				}
-			}
-		});
-
-		animSelectRow.add(playButton);
 		animationsList.add(animSelectRow);
 
-		// 显示动画面板
+		// --- 2. 播放控制 ---
+		const controlsRow = new UIRow();
+		controlsRow.add(new UIText('').setWidth('90px'));
+
+		const createIconButton = (html) => {
+			const btn = new UIButton();
+			btn.dom.innerHTML = html;
+			btn.dom.style.display = 'inline-flex';
+			btn.dom.style.alignItems = 'center';
+			btn.dom.style.justifyContent = 'center';
+			btn.setWidth('36px').setHeight('24px').setMarginRight('4px');
+			return btn;
+		};
+
+		const playBtn = createIconButton(ICON_PLAY);
+		const pauseBtn = createIconButton(ICON_PAUSE);
+		const stopBtn = createIconButton(ICON_STOP);
+
+		controlsRow.add(playBtn, pauseBtn, stopBtn);
+		animationsList.add(controlsRow);
+
+		// --- 3. 进度条 ---
+		const progressRow = new UIRow();
+		progressRow.add(new UIText(strings.getKey('sidebar/animations/progress')).setWidth('90px'));
+		
+		const progressBar = new UIInput().setWidth('160px');
+		progressBar.dom.type = 'range';
+		progressBar.dom.min = 0;
+		progressBar.dom.max = 1;
+		progressBar.dom.step = 0.001;
+		progressBar.dom.style.marginTop = '8px';
+		progressRow.add(progressBar);
+		animationsList.add(progressRow);
+
+		// --- 4. 时间显示 ---
+		const timeInfoRow = new UIDiv();
+		timeInfoRow.dom.style.paddingLeft = '90px';
+		timeInfoRow.dom.style.marginTop = '-4px';
+		
+		const timeDisplay = new UIText('0.00s / 0.00s').setFontSize('10px').setOpacity(0.5);
+		timeDisplay.dom.style.width = '160px';
+		timeDisplay.dom.style.textAlign = 'right';
+		
+		timeInfoRow.add(timeDisplay);
+		animationsList.add(timeInfoRow);
+
+		// --- 逻辑处理 ---
+
+		function getAction() {
+			const name = animSelect.getValue();
+			if (state.currentAction && state.currentAction.getClip().name === name) {
+				return state.currentAction;
+			}
+			if (state.currentAction) state.currentAction.stop();
+			const clip = animations.find(a => a.name === name);
+			if (!clip) return null;
+
+			const animationClip = (clip instanceof THREE.AnimationClip) ? clip : THREE.AnimationClip.parse(clip);
+			state.currentAction = mixer.clipAction(animationClip, object);
+			return state.currentAction;
+		}
+
+		// 判定阈值设为 0.03s
+		const EPSILON = 0.03;
+
+		function refreshUIStatus() {
+			const action = getAction();
+			if (!action) return;
+
+			const duration = action.getClip().duration;
+			
+			if (duration < EPSILON) {
+				// 判定为静态，但显示真实时长
+				playBtn.setDisabled(true);
+				pauseBtn.setDisabled(true);
+				progressBar.dom.disabled = true;
+				progressBar.dom.value = 1;
+				timeDisplay.setValue(`${duration.toFixed(2)}s / ${duration.toFixed(2)}s`);
+				state.isPlaying = false;
+				if (updateRequestId) cancelAnimationFrame(updateRequestId);
+			} else {
+				// 正常可播放状态
+				playBtn.setDisabled(false);
+				pauseBtn.setDisabled(false);
+				progressBar.dom.disabled = false;
+				const progress = action.time / duration;
+				progressBar.dom.value = isNaN(progress) ? 0 : progress;
+				timeDisplay.setValue(`${action.time.toFixed(2)}s / ${duration.toFixed(2)}s`);
+			}
+		}
+
+		function updateUI() {
+			const action = getAction();
+			if (action && action.getClip().duration >= EPSILON && state.isPlaying) {
+				const duration = action.getClip().duration;
+				progressBar.dom.value = action.time / duration;
+				timeDisplay.setValue(`${action.time.toFixed(2)}s / ${duration.toFixed(2)}s`);
+				updateRequestId = requestAnimationFrame(updateUI);
+			} else {
+				state.isPlaying = false;
+				cancelAnimationFrame(updateRequestId);
+			}
+		}
+
+		playBtn.onClick(() => {
+			const action = getAction();
+			if (action && action.getClip().duration >= EPSILON) {
+				action.paused = false;
+				action.play();
+				state.isPlaying = true;
+				if (updateRequestId) cancelAnimationFrame(updateRequestId);
+				updateUI();
+			}
+		});
+
+		pauseBtn.onClick(() => {
+			const action = getAction();
+			if (action) {
+				action.paused = true;
+				state.isPlaying = false;
+				cancelAnimationFrame(updateRequestId);
+			}
+		});
+
+		stopBtn.onClick(() => {
+			const action = getAction();
+			if (action) {
+				action.stop();
+				state.isPlaying = false;
+				cancelAnimationFrame(updateRequestId);
+				refreshUIStatus();
+			}
+		});
+
+		progressBar.dom.addEventListener('input', () => {
+			const action = getAction();
+			if (action && action.getClip().duration >= EPSILON) {
+				const duration = action.getClip().duration;
+				if (!state.isPlaying) {
+					action.play();
+					action.paused = true;
+				}
+				action.time = progressBar.dom.value * duration;
+				mixer.update(0);
+				timeDisplay.setValue(`${action.time.toFixed(2)}s / ${duration.toFixed(2)}s`);
+			}
+		});
+
+		animSelect.onChange(() => {
+			state.isPlaying = false;
+			cancelAnimationFrame(updateRequestId);
+			refreshUIStatus();
+		});
+
+		refreshUIStatus();
 		container.setDisplay('');
 	}
 
-	signals.objectSelected.add(function(object) {
-		if (object !== null) {
-			// 检查对象本身的animations数组
-			if (object.animations && object.animations.length > 0) {
-				createAnimationControls(object, object.animations);
-			}
-			// 检查MRPP自定义动画信息
-			else if (object.userData && object.userData.animations && object.userData.animations.length > 0) {
-				createAnimationControls(object, object.userData.animations);
-			}
-			else {
-				container.setDisplay('none');
-			}
+	signals.objectSelected.add(function (object) {
+		if (updateRequestId) cancelAnimationFrame(updateRequestId);
+		if (object && ((object.animations && object.animations.length > 0) || 
+			(object.userData && object.userData.animations && object.userData.animations.length > 0))) {
+			createAnimationControls(object, object.animations || object.userData.animations);
 		} else {
 			container.setDisplay('none');
 		}
 	});
 
-	signals.objectRemoved.add(function(object) {
-		if (object !== null) {
-			// 移除动画状态
-			if (animationStates.has(object.uuid)) {
-				const state = animationStates.get(object.uuid);
-				if (state.currentAction) {
-					state.currentAction.stop();
+	return {
+		container,
+		update: function (object) {
+			if (object) {
+				const anims = object.animations || (object.userData ? object.userData.animations : null);
+				if (anims && anims.length > 0) {
+					createAnimationControls(object, anims);
+					return;
 				}
-				animationStates.delete(object.uuid);
 			}
-
-			if (object.animations && object.animations.length > 0) {
-				mixer.uncacheRoot(object);
-			}
+			container.setDisplay('none');
 		}
-	});
-
-	const container = new UIPanel();
-	container.setDisplay('none');
-
-	container.add(new UIText(strings.getKey('sidebar/animations')).setTextTransform('uppercase'));
-	container.add(new UIBreak());
-	container.add(new UIBreak());
-
-	const animationsList = new UIDiv();
-	container.add(animationsList);
-
-	const mixerTimeScaleRow = new UIRow();
-	const mixerTimeScaleNumber = new UINumber(1.0).setWidth('60px').setRange(-10, 10);
-	mixerTimeScaleNumber.onChange(function() {
-		mixer.timeScale = mixerTimeScaleNumber.getValue();
-	});
-
-	mixerTimeScaleRow.add(new UIText(strings.getKey('sidebar/animations/timescale')).setWidth('90px'));
-	mixerTimeScaleRow.add(mixerTimeScaleNumber);
-
-	container.add(mixerTimeScaleRow);
-
-	return container;
+	};
 }
 
 export { SidebarAnimation };
