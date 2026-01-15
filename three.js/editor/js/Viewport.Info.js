@@ -30,8 +30,8 @@ function ViewportInfo( editor ) {
 	container.add( verticesText, new UIBreak() );
 	container.add( new UIText( strings.getKey( 'viewport/info/triangles' ) ).setTextTransform( 'lowercase' ) );
 	container.add( trianglesText, new UIBreak() );
-	container.add( new UIText( strings.getKey( 'viewport/info/frametime' ) ).setTextTransform( 'lowercase' ) );
-	container.add( frametimeText, new UIBreak() );
+	// container.add( new UIText( strings.getKey( 'viewport/info/frametime' ) ).setTextTransform( 'lowercase' ) );
+	// container.add( frametimeText, new UIBreak() );
 
 	// --- 信号监听 ---
 
@@ -47,38 +47,53 @@ function ViewportInfo( editor ) {
 
 		const scene = editor.scene;
 		const selected = editor.selected; // 获取当前选中的对象
+		const selectedObjects = editor.selectedObjects || []; // 多选对象数组
 
 		let objects = 0, vertices = 0, triangles = 0;
 
 		// 核心逻辑：决定遍历的根节点
-		if ( selected ) {
+		if ( selectedObjects.length > 1 ) {
 			
-			// 情况 A：显示选中对象的信息
+			// 情况 A：多选状态，显示所有选中对象的信息总和
+			scopeText.setValue( '[ Selected ]' );
+			for ( let i = 0; i < selectedObjects.length; i++ ) {
+				selectedObjects[ i ].traverse( function ( object ) {
+					if ( object !== scene ) countStats( object );
+				} );
+			}
+			
+			objectsText.setValue( objects.toLocaleString() );
+
+		} else if ( selected && selected !== scene ) {
+			
+			// 情况 B：单选状态（非Scene），显示选中对象的信息
 			scopeText.setValue( '[ Selected ]' );
 			selected.traverse( function ( object ) {
-				countStats( object );
+				if ( object !== scene ) countStats( object );
 			} );
 			
-			// 对于选中统计，objects 就是选中的树节点总数
 			objectsText.setValue( objects.toLocaleString() );
 
 		} else {
 			
-			// 情况 B：无选择，显示全场景总和
+			// 情况 C：无选择或选中Scene，显示全场景总和
 			scopeText.setValue( '[ Total ]' );
 			scene.traverse( function ( object ) {
-				countStats( object );
+				if ( object !== scene ) countStats( object );
 			} );
 			
-			// 排除场景根节点本身
-			objectsText.setValue( Math.max( 0, objects - 1 ).toLocaleString() );
+			objectsText.setValue( objects.toLocaleString() );
 		}
 
 		// 通用统计函数
 		function countStats( object ) {
 			
-			objects ++;
+			// 统计对象数（跳过 userData.hidden=true 的节点）
+			if ( !object.userData || object.userData.hidden !== true ) {
+				objects ++;
+			}
 
+			// 顶点和三角数统计不跳过任何节点
 			if ( object.isMesh ) {
 
 				const geometry = object.geometry;
@@ -109,11 +124,11 @@ function ViewportInfo( editor ) {
 
 	// --- 帧率监听 ---
 
-	signals.sceneRendered.add( updateFrametime );
+	// signals.sceneRendered.add( updateFrametime );
 
-	function updateFrametime( frametime ) {
-		frametimeText.setValue( Number( frametime ).toFixed( 2 ) + ' ms' );
-	}
+	// function updateFrametime( frametime ) {
+	// 	frametimeText.setValue( Number( frametime ).toFixed( 2 ) + ' ms' );
+	// }
 
 	// 初始化执行
 	update();

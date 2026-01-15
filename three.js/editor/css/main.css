@@ -196,11 +196,16 @@ textarea, input { outline: none; } /* osx */
 #outliner .type:after {
 	content: '●';
 }
-
+/* 隐藏后面可能出现的额外标记 (预防性清理) */
+#outliner .Geometry,
+#outliner .Material,
+#outliner .Script {
+	display: none !important;
+}
 /* */
 
 #outliner .Scene {
-	color: #8888dd;
+	color: #807b7b;
 }
 
 #outliner .Camera {
@@ -241,6 +246,39 @@ textarea, input { outline: none; } /* osx */
 
 #outliner .Material {
 	color: #eeaaee;
+}
+
+/* 自定义类型 */
+#outliner .Module {
+	color: #555555;
+}
+
+#outliner .Entity {
+	color: #d0d0d0;
+}
+
+#outliner .Text {
+	color: #5b74a5;
+}
+
+#outliner .Polygen {
+	color: #74a55b;
+}
+
+#outliner .Picture {
+	color: #5b8ca5;
+}
+
+#outliner .Video {
+	color: #a55ba5;
+}
+
+#outliner .Audio {
+	color: #5ba55b;
+}
+
+#outliner .Prototype {
+	color: #a5995b;
 }
 
 /* */

@@ -92,7 +92,7 @@ function MenubarEdit(editor) {
 
 		editor.execute(new SetPositionCommand(editor, object, newPosition))
 	})
-	options.add(option)
+	//options.add(option)
 
 	// Clone
 

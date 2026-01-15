@@ -484,7 +484,7 @@ class UIOutliner extends UIDiv {
 			event.dataTransfer.setData( 'text', 'foo' );
 
 			// 检查当前拖动的元素是否在选中集合中
-			const draggedId = parseInt(currentDrag.value);
+			const draggedId = parseInt(this.value);
 			if (scope.selectedValues.indexOf(draggedId) === -1) {
 				// 如果拖动的不是选中集合中的元素，清除当前选择并选中该元素
 				scope.clearSelection();

@@ -85,10 +85,10 @@ function SidebarProperties( editor ) {
 						//模型、体素、图片类型显示组件面板
 						const componentValidTypes = ['polygen', 'voxel', 'picture'];
 						//节点类型显示指令面板
-						const commandValidTypes = ['entity'];
+						const commandValidTypes = ['entity','point'];
 
 						if (componentValidTypes.includes(objectType)) {
-							container.addTab('component', strings.getKey('sidebar/component'), componentPanel.container);
+							container.addTab('component', strings.getKey('sidebar/components'), componentPanel.container);
 							componentPanel.update();
 						}
 						if (commandValidTypes.includes(objectType)) {
@@ -107,6 +107,11 @@ function SidebarProperties( editor ) {
 					container.select('object');
 				}
 			}
+		} else {
+			// 取消选中时，显示默认的object面板
+			container.clear();
+			container.addTab('object', strings.getKey('sidebar/properties/object'), objectPanel);
+			container.select('object');
 		}
 	});
 

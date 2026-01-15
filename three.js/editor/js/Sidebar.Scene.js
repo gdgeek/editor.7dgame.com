@@ -25,6 +25,12 @@ function SidebarScene(editor) {
 
 	const nodeStates = new WeakMap();
 
+	function hasVisibleChildren(object) {
+
+		return object.children.some(child => !(child.userData && child.userData.hidden === true));
+
+	}
+
 	function buildOption(object, draggable) {
 
 		const option = document.createElement('div');
@@ -99,7 +105,7 @@ function SidebarScene(editor) {
 			const opener = document.createElement('span');
 			opener.classList.add('opener');
 
-			if (object.children.length > 0) {
+			if (object.children.length > 0 && (object.isScene || hasVisibleChildren(object))) {
 
 				opener.classList.add(state ? 'open' : 'closed');
 
@@ -157,9 +163,19 @@ function SidebarScene(editor) {
 		if (object.isScene) return 'Scene';
 		if (object.isCamera) return 'Camera';
 		if (object.isLight) return 'Light';
-		if (object.isMesh) return 'Mesh';
-		if (object.isLine) return 'Line';
-		if (object.isPoints) return 'Points';
+		// if (object.isMesh) return 'Mesh';
+		// if (object.isLine) return 'Line';
+		// if (object.isPoints) return 'Points';
+		//const type = object.userData && object.userData.type ? object.userData.type.toLowerCase() : '';
+		const type = object.type.toLowerCase();
+		if (type === 'module') return 'Module';
+		if(type ==='entity') return 'Point'
+    	if (type === 'text') return 'Text';
+		if(type ==='polygen') return 'Polygen'
+    	if (type === 'picture') return 'Picture';
+    	if (type === 'video') return 'Video';
+    	if (type === 'sound') return 'Audio';
+    	if (type === 'prototype') return 'Prototype';
 
 		return 'Object3D_4';
 
@@ -167,25 +183,27 @@ function SidebarScene(editor) {
 
 	function buildHTML(object) {
 
+		// 只保留前面的类型指示器圆点
 		let html = `<span class="type ${getObjectType(
 			object
 		)}"></span> ${escapeHTML(object.name)}`;
 
-		if (object.isMesh) {
+		// --- 隐藏关于 Mesh 的 Geometry 和 Material 的额外圆点代码 ---
+		// if (object.isMesh) {
+		// 	const geometry = object.geometry;
+		// 	const material = object.material;
 
-			const geometry = object.geometry;
-			const material = object.material;
+		// 	html += ` <span class="type Geometry"></span> ${escapeHTML(
+		// 		geometry.name
+		// 	)}`;
+		// 	html += ` <span class="type Material"></span> ${escapeHTML(
+		// 		getMaterialName(material)
+		// 	)}`;
 
-			html += ` <span class="type Geometry"></span> ${escapeHTML(
-				geometry.name
-			)}`;
-			html += ` <span class="type Material"></span> ${escapeHTML(
-				getMaterialName(material)
-			)}`;
+		// }
 
-		}
-
-		html += getScript(object.uuid);
+		// --- 隐藏关于 Script 的额外圆点代码 ---
+		// html += getScript(object.uuid);
 
 		return html;
 

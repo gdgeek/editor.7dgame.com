@@ -34,7 +34,7 @@ function Strings( config ) {
 
 
 			'menubar/add': 'Add',
-			'menubar/add/node': 'Node',
+			'menubar/add/point': 'Empty Point',
 			'menubar/add/text': 'Text',
 			'menubar/add/voxel': 'Voxel',
 			'menubar/add/phototype': 'Phototype',
@@ -544,7 +544,7 @@ function Strings( config ) {
 			'menubar/edit/fixcolormaps': '修复颜色贴图',
 
 			'menubar/add': '添加',
-			'menubar/add/node': '节点',
+			'menubar/add/point': '空节点',
 			'menubar/add/text': '文本',
 			'menubar/add/voxel': '体素',
 		//	'menubar/add/phototype': 'Phototype',
@@ -1057,7 +1057,7 @@ function Strings( config ) {
 			'menubar/edit/fixcolormaps': 'カラーマップを修正',
 
 			'menubar/add': '追加',
-			'menubar/add/node': 'ノード',
+			'menubar/add/point': '空のノード',
 			'menubar/add/text': 'テキスト',
 			'menubar/add/voxel': 'ボクセル',
 			'menubar/add/phototype': 'Phototype',
@@ -1571,7 +1571,7 @@ function Strings( config ) {
 			"menubar/edit/fixcolormaps": "修復顏色貼圖",
 		
 			"menubar/add": "新增",
-			"menubar/add/node": "節點",
+			"menubar/add/point": "空節點",
 			"menubar/add/text": "文字",
 			"menubar/add/voxel": "體素",
 			"menubar/add/phototype": "原型",
@@ -2084,7 +2084,7 @@ function Strings( config ) {
 			"menubar/edit/fixcolormaps": "ซ่อมแผนที่สี",
 		
 			"menubar/add": "เพิ่ม",
-			"menubar/add/node": "โหนด",
+			"menubar/add/point": "โหนดว่าง",
 			"menubar/add/text": "ข้อความ",
 			"menubar/add/voxel": "ว็อกเซล",
 			"menubar/add/phototype": "ต้นแบบ",
