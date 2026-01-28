@@ -27,7 +27,7 @@ class RotateComponent {
     container.add(new UIBreak());
 
     const row = new UIRow();
-    const label = new UIText(strings.getKey('sidebar/object/isRotating')).setWidth('90px');
+    const label = new UIText(strings.getKey('sidebar/components/rotate/rotateOnLaunch')).setWidth('90px');
     const checkbox = new UICheckbox(this.component.parameters.isRotating);
 
     checkbox.onChange(() => {
@@ -65,7 +65,7 @@ class RotateComponent {
       .onChange(this.update.bind(this));
 
     this.objectRotationRow.add(
-      new UIText(strings.getKey('sidebar/object/rotation')).setWidth('90px')
+      new UIText(strings.getKey('sidebar/components/rotate/speed')).setWidth('90px')
     );
     this.objectRotationRow.add(this.objectRotationX, this.objectRotationY, this.objectRotationZ);
 
