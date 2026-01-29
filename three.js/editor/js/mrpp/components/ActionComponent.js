@@ -40,7 +40,7 @@ class ActionComponent {
     // Mode 勾选框
     {
       const row = new UIRow();
-      row.add(new UIText(strings.getKey('sidebar/components/select/action/mode')).setWidth('90px'));
+      row.add(new UIText(strings.getKey('sidebar/components/action/mode')).setWidth('90px'));
 
       // pinch 复选框：始终显示。特权用户可修改，非特权用户只读
       this.modePinch = new UICheckbox(true);
@@ -50,14 +50,14 @@ class ActionComponent {
         this.modePinch.setDisabled(true);
       }
       row.add(this.modePinch);
-      row.add(new UIText(strings.getKey('sidebar/components/select/action/mode/pinch')).setWidth('50px'));
+      row.add(new UIText(strings.getKey('sidebar/components/action/mode/pinch')).setWidth('50px'));
       row.setMarginRight('20px');
 
       // touch 复选框：只有特权用户可见并可编辑
       if (this.editor.access.atLeast(ROLES.MANAGER)) {
         this.modeTouch = new UICheckbox(false).onChange(() => this.updateMode());
         row.add(this.modeTouch);
-        row.add(new UIText(strings.getKey('sidebar/components/select/action/mode/touch')).setWidth('50px'));
+        row.add(new UIText(strings.getKey('sidebar/components/action/mode/touch')).setWidth('50px'));
       }
 
       container.add(row);
@@ -68,7 +68,7 @@ class ActionComponent {
       const row = new UIRow();
       this.action = new UIInput().setWidth('150px').setFontSize('12px').setDisabled(false)
         .onChange(this.updateAction.bind(this));
-      row.add(new UIText(strings.getKey('sidebar/components/select/action/name')).setWidth('90px'));
+      row.add(new UIText(strings.getKey('sidebar/components/action/name')).setWidth('90px'));
       row.add(this.action);
       container.add(row);
     }

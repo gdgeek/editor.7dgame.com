@@ -54,7 +54,7 @@ class MovedComponent {
           this.editor.execute(new SetValueCommand(this.editor, this.component.parameters, 'scalable', scalable.getValue()));
         });
       row.add(
-        new UIText(strings.getKey('sidebar/components/select/moved/scalable')).setWidth('90px')
+        new UIText(strings.getKey('sidebar/components/moved/scalable')).setWidth('90px')
       );
       row.add(scalable);
       container.add(row);
@@ -122,7 +122,7 @@ class MovedComponent {
     const strings = this.editor.strings;
 
     // 添加磁力标签
-    container.add(new UIText(strings.getKey('sidebar/components/select/moved/magnetic')).setWidth('90px'));
+    container.add(new UIText(strings.getKey('sidebar/components/moved/magnetic')).setWidth('90px'));
 
     // 磁力复选框
     const magnetic = new UICheckbox()

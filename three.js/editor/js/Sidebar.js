@@ -24,15 +24,14 @@ function Sidebar(editor) {
 		new SidebarScene(editor),
 
 		new SidebarProperties(editor),
-		new SidebarText(editor),
-		new SidebarAnimation(editor),
+		// new SidebarText(editor),
+		// new SidebarAnimation(editor),
 		// new SidebarMedia(editor)
 	)
 
 	if (editor.type.toLowerCase() == 'meta') {
-		scene.add(new SidebarComponent(editor))
-		scene.add(new SidebarEvents(editor))
-		scene.add(new SidebarCommand(editor))
+		// container.addTab('component', strings.getKey('sidebar/component'), new SidebarComponent(editor))
+		// container.addTab('command', strings.getKey('sidebar/command'), new SidebarCommand(editor))
 	} else if (editor.type.toLowerCase() == 'verse') {
 		scene.add(new SidebarMeta(editor))
 	}

@@ -1,6 +1,6 @@
-function Strings( config ) {
+function Strings(config) {
 
-	const language = config.getKey( 'language' );
+	const language = config.getKey('language');
 
 	const values = {
 		"en-us": {
@@ -34,7 +34,7 @@ function Strings( config ) {
 
 
 			'menubar/add': 'Add',
-			'menubar/add/node': 'Node',
+			'menubar/add/point': 'Empty Point',
 			'menubar/add/text': 'Text',
 			'menubar/add/voxel': 'Voxel',
 			'menubar/add/phototype': 'Phototype',
@@ -113,8 +113,11 @@ function Strings( config ) {
 			'menubar/help/manual': 'Manual',
 
 			'sidebar/animations': 'Animations',
+			'sidebar/animations/preview': 'Animation Preview',
 			'sidebar/animations/play': 'Play',
+			'sidebar/animations/pause': 'Pause',
 			'sidebar/animations/stop': 'Stop',
+			'sidebar/animations/progress': 'Progress',
 			'sidebar/animations/timescale': 'Time Scale',
 			'sidebar/animations/select': 'Select',
 
@@ -127,6 +130,7 @@ function Strings( config ) {
 			'sidebar/properties/geometry': 'Geometry',
 			'sidebar/properties/material': 'Material',
 			'sidebar/properties/script': 'Script',
+			'sidebar/properties/multi_object': 'Multiple Objects',
 
 			'sidebar/object/type': 'Type',
 			'sidebar/object/new': 'New',
@@ -167,7 +171,7 @@ function Strings( config ) {
 			'sidebar/object/userdata': 'User data',
 			'sidebar/object/sortingOrder': 'Canvas Sorting Order',
 
-			'sidebar/text': 'Text Attributes',
+			'sidebar/text': 'Text',
 			'sidebar/text/content': 'Content',
 			'sidebar/text/rect': 'Text Box Size',
 			'sidebar/text/color': 'Text Color',
@@ -179,6 +183,12 @@ function Strings( config ) {
 			'sidebar/text/background/color': 'Background Color',
 			'sidebar/text/background/opacity': 'Background Opacity',
 
+			'sidebar/events': 'Signals',
+			'sidebar/events/inputs': 'Input Signals',
+			'sidebar/events/outputs': 'Output Signals',
+			'sidebar/events/add': 'Add',
+			'sidebar/events/remove': 'Remove',
+			'sidebar/events/remove/confirm': 'Are you sure you want to delete this signal?',
 
 			'sidebar/components/multi_selection_summary': 'selected objects component summary',
 			'sidebar/components/object_name_with_index': 'Object {0}',
@@ -189,22 +199,31 @@ function Strings( config ) {
 			'sidebar/components/notification/mutually_exclusive': 'Only one mutually exclusive component can be selected: Click Trigger, Movable or Collision Trigger',
 
 			'sidebar/components': 'Components',
+			'sidebar/components/new': 'New Component',
 			'sidebar/components/select': 'Select',
-			'sidebar/components/select/rotate': 'Rotate',
-			'sidebar/components/select/action': 'Interactive Action',
-			'sidebar/components/select/action/mode': 'Interaction Mode',
-			'sidebar/components/select/action/mode/pinch': 'Pinch',
-			'sidebar/components/select/action/mode/touch': 'Touch',
-			'sidebar/components/select/action/name': 'Action Name',
-			'sidebar/components/select/moved': 'Movable',
-			'sidebar/components/select/moved/magnetic': 'Magnetic',
-			'sidebar/components/select/moved/scalable': 'Scalable',
-			'sidebar/components/select/trigger': 'Collision Trigger',
-			'sidebar/components/select/trigger/target': 'Collision objects',
-
 			'sidebar/components/select/button': 'New',
-			'sidebar/components/select/tooltip': 'Label',
 			'sidebar/components/remove/confirm': 'Are you sure you want to delete this component?',
+
+			'sidebar/components/select/rotate': 'Self-Rotation',
+			'sidebar/components/rotate/rotateOnLaunch': 'Rotate on Launch',
+			'sidebar/components/rotate/speed': 'Rotation Speed',
+			'sidebar/components/rotate/preview': 'Preview (5s)',
+			'sidebar/components/rotate/stop': 'Stop',
+
+			'sidebar/components/select/action': 'Interactive Action',
+			'sidebar/components/action/mode': 'Interaction Mode',
+			'sidebar/components/action/mode/pinch': 'Pinch',
+			'sidebar/components/action/mode/touch': 'Touch',
+			'sidebar/components/action/name': 'Action Name',
+
+			'sidebar/components/select/moved': 'Movable',
+			'sidebar/components/moved/magnetic': 'Magnetic',
+			'sidebar/components/moved/scalable': 'Scalable',
+
+			'sidebar/components/select/trigger': 'Collision Trigger',
+			'sidebar/components/trigger/target': 'Collision objects',
+
+			'sidebar/components/select/tooltip': 'Label',
 			'sidebar/components/tooltip/text': 'Text',
 			'sidebar/components/tooltip/length': 'Length',
 			'sidebar/components/tooltip/target': 'Target Position',
@@ -216,7 +235,9 @@ function Strings( config ) {
 			'sidebar/command/notification/skip_invalid_objects': 'The following object types do not support adding commands: {0}, these objects will be skipped',
 			'sidebar/command/notification/add_success': 'Added {1} command to {0} valid objects',
 
+			'sidebar/component': 'Component',
 			'sidebar/command': 'Command',
+			'sidebar/command/new': 'New Command',
 			'sidebar/command/select': 'Select',
 			'sidebar/command/select/voice': 'Voice Command',
 			'sidebar/command/select/gesture': 'Gesture Command',
@@ -531,10 +552,10 @@ function Strings( config ) {
 			'menubar/edit/fixcolormaps': '修复颜色贴图',
 
 			'menubar/add': '添加',
-			'menubar/add/node': '节点',
+			'menubar/add/point': '空节点',
 			'menubar/add/text': '文本',
 			'menubar/add/voxel': '体素',
-		//	'menubar/add/phototype': 'Phototype',
+			//	'menubar/add/phototype': 'Phototype',
 			'menubar/add/phototype': '原型',
 			'menubar/add/polygen': '模型',
 			'menubar/add/audio': '音频',
@@ -613,8 +634,11 @@ function Strings( config ) {
 			'menubar/help/manual': '手册',
 
 			'sidebar/animations': '动画',
+			'sidebar/animations/preview': '动画预览',
 			'sidebar/animations/play': '播放',
-			'sidebar/animations/stop': '暂停',
+			'sidebar/animations/pause': '暂停',
+			'sidebar/animations/stop': '停止',
+			'sidebar/animations/progress': '进度',
 			'sidebar/animations/timescale': '时间缩放',
 			'sidebar/animations/select': '选择项',
 
@@ -627,6 +651,7 @@ function Strings( config ) {
 			'sidebar/properties/geometry': '几何组件',
 			'sidebar/properties/material': '材质组件',
 			'sidebar/properties/script': '脚本',
+			'sidebar/properties/multi_object': '多选对象',
 
 			'sidebar/object/type': '类型',
 			'sidebar/object/new': '更新',
@@ -667,7 +692,7 @@ function Strings( config ) {
 			'sidebar/object/userdata': '自定义数据',
 			'sidebar/object/sortingOrder': '图片渲染层级',
 
-			'sidebar/text': '文字属性',
+			'sidebar/text': '文本',
 			'sidebar/text/content': '内容',
 			'sidebar/text/rect': '文本框大小',
 			'sidebar/text/color': '文字颜色',
@@ -678,6 +703,13 @@ function Strings( config ) {
 			'sidebar/text/background/color': '背景颜色',
 			'sidebar/text/background/opacity': '背景不透明度',
 
+			'sidebar/events': '信号',
+			'sidebar/events/inputs': '输入信号',
+			'sidebar/events/outputs': '输出信号',
+			'sidebar/events/add': '添加',
+			'sidebar/events/remove': '删除',
+			'sidebar/events/remove/confirm': '确定要删除这个信号吗？',
+
 			'sidebar/components/multi_selection_summary': '个选中对象组件摘要',
 			'sidebar/components/object_name_with_index': '对象 {0}',
 			'sidebar/components/no_components': '无',
@@ -687,21 +719,31 @@ function Strings( config ) {
 			'sidebar/components/notification/mutually_exclusive': '只能选择一个互斥组件：点击触发、可移动或碰撞触发',
 
 			'sidebar/components': '组件',
+			'sidebar/components/new': '新建组件',
 			'sidebar/components/select': '选择项',
-			'sidebar/components/select/rotate': '自旋转',
-			'sidebar/components/select/action': '交互触发',
-			'sidebar/components/select/action/mode': '交互模式',
-			'sidebar/components/select/action/mode/pinch': '捏合',
-			'sidebar/components/select/action/mode/touch': '触摸',
-			'sidebar/components/select/action/name': '动作名称',
-			'sidebar/components/select/moved': '可移动',
-			'sidebar/components/select/moved/magnetic': '磁力',
-			'sidebar/components/select/moved/scalable': '可缩放',
-			'sidebar/components/select/trigger': '碰撞触发',
-			'sidebar/components/select/trigger/target': '碰撞对象',
 			'sidebar/components/select/button': '新建',
-			'sidebar/components/select/tooltip': '标签',
 			'sidebar/components/remove/confirm': '确定要删除这个组件吗？',
+
+			'sidebar/components/select/rotate': '自旋转',
+			'sidebar/components/rotate/rotateOnLaunch': '启动时旋转',
+			'sidebar/components/rotate/speed': '旋转速度',
+			'sidebar/components/rotate/preview': '预览 (5s)',
+			'sidebar/components/rotate/stop': '停止',
+
+			'sidebar/components/select/action': '交互触发',
+			'sidebar/components/action/mode': '交互模式',
+			'sidebar/components/action/mode/pinch': '捏合',
+			'sidebar/components/action/mode/touch': '触摸',
+			'sidebar/components/action/name': '动作名称',
+
+			'sidebar/components/select/moved': '可移动',
+			'sidebar/components/moved/magnetic': '磁力',
+			'sidebar/components/moved/scalable': '可缩放',
+
+			'sidebar/components/select/trigger': '碰撞触发',
+			'sidebar/components/trigger/target': '碰撞对象',
+
+			'sidebar/components/select/tooltip': '标签',
 			'sidebar/components/tooltip/text': '文本',
 			'sidebar/components/tooltip/length': '长度',
 			'sidebar/components/tooltip/target': '目标位置',
@@ -713,7 +755,9 @@ function Strings( config ) {
 			'sidebar/command/notification/skip_invalid_objects': '以下对象类型不支持添加指令: {0}，将跳过这些对象',
 			'sidebar/command/notification/add_success': '已为{0}个有效对象添加{1}指令',
 
+			'sidebar/component': '组件',
 			'sidebar/command': '指令',
+			'sidebar/command/new': '新建指令',
 			'sidebar/command/select': '选择项',
 			'sidebar/command/select/voice': '语音指令',
 			'sidebar/command/select/gesture': '手势指令',
@@ -1030,7 +1074,7 @@ function Strings( config ) {
 			'menubar/edit/fixcolormaps': 'カラーマップを修正',
 
 			'menubar/add': '追加',
-			'menubar/add/node': 'ノード',
+			'menubar/add/point': '空のノード',
 			'menubar/add/text': 'テキスト',
 			'menubar/add/voxel': 'ボクセル',
 			'menubar/add/phototype': 'Phototype',
@@ -1111,8 +1155,11 @@ function Strings( config ) {
 			'menubar/help/manual': 'マニュアル',
 
 			'sidebar/animations': 'アニメーション',
+			'sidebar/animations/preview': 'アニメーションプレビュー',
 			'sidebar/animations/play': '再生',
+			'sidebar/animations/pause': '一時停止',
 			'sidebar/animations/stop': '停止',
+			'sidebar/animations/progress': '進行状況',
 			'sidebar/animations/timescale': '時間スケール',
 			'sidebar/animations/select': '選択項目',
 
@@ -1125,6 +1172,7 @@ function Strings( config ) {
 			'sidebar/properties/geometry': 'ジオメトリコンポーネント',
 			'sidebar/properties/material': 'マテリアルコンポーネント',
 			'sidebar/properties/script': 'スクリプト',
+			'sidebar/properties/multi_object': '複数のオブジェクト',
 
 			'sidebar/object/type': 'タイプ',
 			'sidebar/object/new': '更新',
@@ -1165,7 +1213,14 @@ function Strings( config ) {
 			'sidebar/object/userdata': 'ユーザーデータ',
 			'sidebar/object/sortingOrder': '画像のレンダリング順序',
 
-			'sidebar/text': 'テキスト属性',
+			'sidebar/events': '信号',
+			'sidebar/events/inputs': '入力信号',
+			'sidebar/events/outputs': '出力信号',
+			'sidebar/events/add': '追加',
+			'sidebar/events/remove': '削除',
+			'sidebar/events/remove/confirm': 'この信号を削除してもよろしいですか？',
+
+			'sidebar/text': 'テキスト',
 			'sidebar/text/content': '内容',
 			'sidebar/text/rect': 'テキストボックスのサイズ',
 			'sidebar/text/color': 'テキストの色',
@@ -1188,21 +1243,31 @@ function Strings( config ) {
 
 
 			'sidebar/components': 'コンポーネント',
+			'sidebar/components/new': '新しいコンポーネント',
 			'sidebar/components/select': '選択項目',
-			'sidebar/components/select/rotate': '自動回転',
-			'sidebar/components/select/action': 'インタラクティブアクション',
-			'sidebar/components/select/action/mode': 'インタラクションモード',
-			'sidebar/components/select/action/mode/pinch': 'ピンチ',
-			'sidebar/components/select/action/mode/touch': 'タッチ',
-			'sidebar/components/select/action/name': 'アクション名',
-			'sidebar/components/select/moved': '移動可能',
-			'sidebar/components/select/moved/magnetic': '磁力',
-			'sidebar/components/select/moved/scalable': 'スケーラブル',
-			'sidebar/components/select/trigger': '衝突トリガー',
-			'sidebar/components/select/trigger/target': '衝突オブジェクト',
-			'sidebar/components/select/button': '新規作成',
-			'sidebar/components/select/tooltip': 'ラベル',
 			'sidebar/components/remove/confirm': 'このコンポーネントを削除しますか？',
+
+			'sidebar/components/select/button': '新規作成',
+			'sidebar/components/select/rotate': '自動回転',
+			'sidebar/components/rotate/rotateOnLaunch': '起動時に回転',
+			'sidebar/components/rotate/speed': '回転速度',
+			'sidebar/components/rotate/preview': 'プレビュー (5s)',
+			'sidebar/components/rotate/stop': '停止',
+
+			'sidebar/components/select/action': 'インタラクティブアクション',
+			'sidebar/components/action/mode': 'インタラクションモード',
+			'sidebar/components/action/mode/pinch': 'ピンチ',
+			'sidebar/components/action/mode/touch': 'タッチ',
+			'sidebar/components/action/name': 'アクション名',
+
+			'sidebar/components/select/moved': '移動可能',
+			'sidebar/components/moved/magnetic': '磁力',
+			'sidebar/components/moved/scalable': 'スケーラブル',
+
+			'sidebar/components/select/trigger': '衝突トリガー',
+			'sidebar/components/trigger/target': '衝突オブジェクト',
+
+			'sidebar/components/select/tooltip': 'ラベル',
 			'sidebar/components/tooltip/text': 'テキスト',
 			'sidebar/components/tooltip/length': '長さ',
 			'sidebar/components/tooltip/target': 'ターゲット位置',
@@ -1215,6 +1280,7 @@ function Strings( config ) {
 			'sidebar/command/notification/add_success': '{0}個の有効オブジェクトに{1}コマンドを追加しました',
 
 			'sidebar/command': 'コマンド',
+			'sidebar/command/new': '新しいコマンド',
 			'sidebar/command/select': '選択項目',
 			'sidebar/command/select/voice': '音声コマンド',
 			'sidebar/command/select/gesture': 'ジェスチャーコマンド',
@@ -1520,7 +1586,7 @@ function Strings( config ) {
 			"menubar/file/export/stl_binary": "匯出STL(二進位)",
 			"menubar/file/export/usdz": "匯出USDZ",
 			"menubar/file/publish": "發佈",
-		
+
 			"menubar/edit": "編輯",
 			"menubar/edit/undo": "復原 (Ctrl+Z)",
 			"menubar/edit/redo": "重做 (Ctrl+Shift+Z)",
@@ -1529,9 +1595,9 @@ function Strings( config ) {
 			"menubar/edit/clone": "複製",
 			"menubar/edit/delete": "刪除 (Del)",
 			"menubar/edit/fixcolormaps": "修復顏色貼圖",
-		
+
 			"menubar/add": "新增",
-			"menubar/add/node": "節點",
+			"menubar/add/point": "空節點",
 			"menubar/add/text": "文字",
 			"menubar/add/voxel": "體素",
 			"menubar/add/phototype": "原型",
@@ -1566,68 +1632,72 @@ function Strings( config ) {
 			"menubar/add/ambientlight": "環境光",
 			"menubar/add/perspectivecamera": "透視攝影機",
 			"menubar/add/orthographiccamera": "正交攝影機",
-		
+
 			"menubar/replace": "取代",
 			"menubar/replace/polygen": "模型",
 			"menubar/replace/voxel": "體素",
 			"menubar/replace/picture": "圖片",
 			"menubar/replace/noselection": "請先選取一個物件",
 			"menubar/replace/success": "取代成功",
-		
+
 			"menubar/component": "元件",
 			"menubar/component/list": "檢視元件",
 			"menubar/component/confirm": "確定要為當前物件新增「{0}」元件嗎？",
 			"menubar/component/success": "已成功新增「{0}」元件",
 			"menubar/component/select_object_first": "請先選取一個物件",
-		
+
 			"menubar/command": "指令",
 			"menubar/command/list": "檢視指令",
 			"menubar/command/confirm": "確定要為當前物件新增「{0}」指令嗎？",
 			"menubar/command/success": "已成功新增「{0}」指令",
 			"menubar/command/select_object_first": "請先選取一個物件",
 			"menubar/command/already_exists": "此物件已新增語音指令，不能重複新增",
-		
+
 			"menubar/code": "指令碼",
 			"menubar/code/script": "指令碼編輯",
-		
+
 			"menubar/status/autosave": "自動儲存",
-		
+
 			"menubar/play": "啟動",
 			"menubar/play/stop": "暫停",
 			"menubar/play/play": "啟動",
-		
+
 			"menubar/examples": "範例",
 			"menubar/examples/Arkanoid": "打磚塊",
 			"menubar/examples/Camera": "攝影機",
 			"menubar/examples/Particles": "粒子",
 			"menubar/examples/Pong": "乒乓球",
 			"menubar/examples/Shaders": "著色器",
-		
+
 			"menubar/view": "檢視",
 			"menubar/view/fullscreen": "全螢幕",
-		
+
 			"menubar/help": "說明",
 			"menubar/help/source_code": "原始碼",
 			"menubar/help/icons": "圖示元件包",
 			"menubar/help/about": "關於",
 			"menubar/help/manual": "手冊",
-		
+
 			"sidebar/animations": "動畫",
+			"sidebar/animations/preview": "動畫預覽",
 			"sidebar/animations/play": "播放",
-			"sidebar/animations/stop": "暫停",
+			"sidebar/animations/pause": "暫停",
+			"sidebar/animations/stop": "停止",
+			"sidebar/animations/progress": "進度",
 			"sidebar/animations/timescale": "時間縮放",
 			"sidebar/animations/select": "選取項",
-		
+
 			"sidebar/scene": "場景",
 			"sidebar/scene/background": "背景",
 			"sidebar/scene/environment": "環境",
 			"sidebar/scene/fog": "霧",
-		
+
 			"sidebar/properties/object": "屬性",
 			"sidebar/properties/geometry": "幾何元件",
 			"sidebar/properties/material": "材質元件",
 			"sidebar/properties/script": "指令碼",
-		
+			"sidebar/properties/multi_object": "多選物件",
+
 			"sidebar/object/type": "類型",
 			"sidebar/object/new": "更新",
 			"sidebar/object/uuid": "識別碼",
@@ -1666,8 +1736,15 @@ function Strings( config ) {
 			"sidebar/object/renderorder": "渲染次序",
 			"sidebar/object/userdata": "自訂資料",
 			"sidebar/object/sortingOrder": "圖片渲染層級",
-		
-			"sidebar/text": "文字屬性",
+
+			"sidebar/events": "訊號",
+			"sidebar/events/inputs": "輸入訊號",
+			"sidebar/events/outputs": "輸出訊號",
+			"sidebar/events/add": "添加",
+			"sidebar/events/remove": "刪除",
+			"sidebar/events/remove/confirm": "確定要刪除這個訊號嗎？",
+
+			"sidebar/text": "文字",
 			"sidebar/text/content": "內容",
 			"sidebar/text/rect": "文字框大小",
 			"sidebar/text/color": "文字顏色",
@@ -1687,35 +1764,46 @@ function Strings( config ) {
 			"sidebar/components/notification/skip_invalid_objects": "以下物件類型不支援新增元件: {0}，將跳過這些物件",
 			"sidebar/components/notification/add_success": "已為{0}個有效物件新增{1}元件",
 			"sidebar/components/notification/mutually_exclusive": "只能選擇一個互斥元件：點選觸發、可移動或碰撞觸發",
-		
+
 			"sidebar/components": "元件",
+			"sidebar/components/new": "新增元件",
 			"sidebar/components/select": "選取項",
-			"sidebar/components/select/rotate": "自旋轉",
-			"sidebar/components/select/action": "互動觸發",
-			"sidebar/components/select/action/mode": "互動模式",
-			"sidebar/components/select/action/mode/pinch": "捏合",
-			"sidebar/components/select/action/mode/touch": "觸控",
-			"sidebar/components/select/action/name": "動作名稱",
-			"sidebar/components/select/moved": "可移動",
-			"sidebar/components/select/moved/magnetic": "磁力",
-			"sidebar/components/select/moved/scalable": "可縮放",
-			"sidebar/components/select/trigger": "碰撞觸發",
-			"sidebar/components/select/trigger/target": "碰撞物件",
 			"sidebar/components/select/button": "新建",
-			"sidebar/components/select/tooltip": "標籤",
 			"sidebar/components/remove/confirm": "確定要刪除這個元件嗎？",
+
+			"sidebar/components/select/rotate": "自旋轉",
+			"sidebar/components/rotate/rotateOnLaunch": "啟動時旋轉",
+			"sidebar/components/rotate/speed": "旋轉速度",
+			"sidebar/components/rotate/preview": "預覽 (5s)",
+			"sidebar/components/rotate/stop": "停止",
+
+			"sidebar/components/select/action": "互動觸發",
+			"sidebar/components/action/mode": "互動模式",
+			"sidebar/components/action/mode/pinch": "捏合",
+			"sidebar/components/action/mode/touch": "觸控",
+			"sidebar/components/action/name": "動作名稱",
+
+			"sidebar/components/select/moved": "可移動",
+			"sidebar/components/moved/magnetic": "磁力",
+			"sidebar/components/moved/scalable": "可縮放",
+
+			"sidebar/components/select/trigger": "碰撞觸發",
+			"sidebar/components/trigger/target": "碰撞物件",
+
+			"sidebar/components/select/tooltip": "標籤",
 			"sidebar/components/tooltip/text": "文字",
 			"sidebar/components/tooltip/length": "長度",
 			"sidebar/components/tooltip/target": "目標位置",
-		
+
 			"sidebar/command/multi_selection_summary": "個選中物件指令摘要",
 			"sidebar/command/object_name_with_index": "物件 {0}",
 			"sidebar/command/no_commands": "無",
 			"sidebar/command/notification/invalid_objects": "以下物件類型不支援新增指令: {0}",
 			"sidebar/command/notification/skip_invalid_objects": "以下物件類型不支援新增指令: {0}，將跳過這些物件",
 			"sidebar/command/notification/add_success": "已為{0}個有效物件新增{1}指令",
-		
+
 			"sidebar/command": "指令",
+			"sidebar/command/new": "新增指令",
 			"sidebar/command/select": "選取項",
 			"sidebar/command/select/voice": "語音指令",
 			"sidebar/command/select/gesture": "手勢指令",
@@ -1732,46 +1820,46 @@ function Strings( config ) {
 			"sidebar/command/gesture/label": "手勢",
 			"sidebar/command/gesture/ok": "OK",
 			"sidebar/command/gesture/fist": "握拳",
-		
+
 			"sidebar/entity": "實體（自訂）",
 			"sidebar/entity/button": "編輯",
-		
+
 			"sidebar/confirm/scene/modified": "場景已發生修改，是否儲存？",
-		
+
 			"sidebar/geometry/type": "類型",
 			"sidebar/geometry/new": "更新",
 			"sidebar/geometry/uuid": "識別碼",
 			"sidebar/geometry/name": "名稱",
 			"sidebar/geometry/bounds": "邊界",
 			"sidebar/geometry/show_vertex_normals": "顯示頂點法線",
-		
+
 			"sidebar/geometry/box_geometry/width": "寬度",
 			"sidebar/geometry/box_geometry/height": "高度",
 			"sidebar/geometry/box_geometry/depth": "深度",
 			"sidebar/geometry/box_geometry/widthseg": "寬度分段",
 			"sidebar/geometry/box_geometry/heightseg": "高度分段",
 			"sidebar/geometry/box_geometry/depthseg": "深度分段",
-		
+
 			"sidebar/geometry/buffer_geometry/attributes": "屬性",
 			"sidebar/geometry/buffer_geometry/index": "索引",
-		
+
 			"sidebar/geometry/capsule_geometry/radius": "半徑",
 			"sidebar/geometry/capsule_geometry/length": "長度",
 			"sidebar/geometry/capsule_geometry/capseg": "膠囊分段",
 			"sidebar/geometry/capsule_geometry/radialseg": "半徑分段",
-		
+
 			"sidebar/geometry/circle_geometry/radius": "半徑",
 			"sidebar/geometry/circle_geometry/segments": "分段",
 			"sidebar/geometry/circle_geometry/thetastart": "弧度起點",
 			"sidebar/geometry/circle_geometry/thetalength": "弧度長度",
-		
+
 			"sidebar/geometry/cylinder_geometry/radiustop": "頂部半徑",
 			"sidebar/geometry/cylinder_geometry/radiusbottom": "底部半徑",
 			"sidebar/geometry/cylinder_geometry/height": "高度",
 			"sidebar/geometry/cylinder_geometry/radialsegments": "徑向分段",
 			"sidebar/geometry/cylinder_geometry/heightsegments": "高度分段",
 			"sidebar/geometry/cylinder_geometry/openended": "開端",
-		
+
 			"sidebar/geometry/extrude_geometry/curveSegments": "曲線段",
 			"sidebar/geometry/extrude_geometry/steps": "細分點數",
 			"sidebar/geometry/extrude_geometry/depth": "深度",
@@ -1781,39 +1869,39 @@ function Strings( config ) {
 			"sidebar/geometry/extrude_geometry/bevelOffset": "斜角偏移量",
 			"sidebar/geometry/extrude_geometry/bevelSegments": "斜角分段",
 			"sidebar/geometry/extrude_geometry/shape": "轉換圖形",
-		
+
 			"sidebar/geometry/dodecahedron_geometry/radius": "半徑",
 			"sidebar/geometry/dodecahedron_geometry/detail": "面片分段",
-		
+
 			"sidebar/geometry/icosahedron_geometry/radius": "半徑",
 			"sidebar/geometry/icosahedron_geometry/detail": "面片分段",
-		
+
 			"sidebar/geometry/octahedron_geometry/radius": "半徑",
 			"sidebar/geometry/octahedron_geometry/detail": "面片分段",
-		
+
 			"sidebar/geometry/tetrahedron_geometry/radius": "半徑",
 			"sidebar/geometry/tetrahedron_geometry/detail": "面片分段",
-		
+
 			"sidebar/geometry/lathe_geometry/segments": "分段",
 			"sidebar/geometry/lathe_geometry/phistart": "經度起點",
 			"sidebar/geometry/lathe_geometry/philength": "經度長度",
 			"sidebar/geometry/lathe_geometry/points": "點",
-		
+
 			"sidebar/geometry/plane_geometry/width": "寬度",
 			"sidebar/geometry/plane_geometry/height": "長度",
 			"sidebar/geometry/plane_geometry/widthsegments": "寬度分段",
 			"sidebar/geometry/plane_geometry/heightsegments": "長度分段",
-		
+
 			"sidebar/geometry/ring_geometry/innerRadius": "內半徑",
 			"sidebar/geometry/ring_geometry/outerRadius": "外半徑",
 			"sidebar/geometry/ring_geometry/thetaSegments": "弧度分段",
 			"sidebar/geometry/ring_geometry/phiSegments": "經度分段",
 			"sidebar/geometry/ring_geometry/thetastart": "弧度起點",
 			"sidebar/geometry/ring_geometry/thetalength": "弧度長度",
-		
+
 			"sidebar/geometry/shape_geometry/curveSegments": "曲線段",
 			"sidebar/geometry/shape_geometry/extrude": "拉伸",
-		
+
 			"sidebar/geometry/sphere_geometry/radius": "半徑",
 			"sidebar/geometry/sphere_geometry/widthsegments": "寬度分段",
 			"sidebar/geometry/sphere_geometry/heightsegments": "長度分段",
@@ -1821,20 +1909,20 @@ function Strings( config ) {
 			"sidebar/geometry/sphere_geometry/philength": "經度長度",
 			"sidebar/geometry/sphere_geometry/thetastart": "緯度起點",
 			"sidebar/geometry/sphere_geometry/thetalength": "緯度長度",
-		
+
 			"sidebar/geometry/torus_geometry/radius": "半徑",
 			"sidebar/geometry/torus_geometry/tube": "管厚",
 			"sidebar/geometry/torus_geometry/radialsegments": "半徑分段",
 			"sidebar/geometry/torus_geometry/tubularsegments": "管厚分段",
 			"sidebar/geometry/torus_geometry/arc": "弧度",
-		
+
 			"sidebar/geometry/torusKnot_geometry/radius": "半徑",
 			"sidebar/geometry/torusKnot_geometry/tube": "管厚",
 			"sidebar/geometry/torusKnot_geometry/tubularsegments": "管厚分段",
 			"sidebar/geometry/torusKnot_geometry/radialsegments": "半徑分段",
 			"sidebar/geometry/torusKnot_geometry/p": "管長弧度",
 			"sidebar/geometry/torusKnot_geometry/q": "扭曲弧度",
-		
+
 			"sidebar/geometry/tube_geometry/path": "路徑",
 			"sidebar/geometry/tube_geometry/radius": "半徑",
 			"sidebar/geometry/tube_geometry/tube": "管厚",
@@ -1843,7 +1931,7 @@ function Strings( config ) {
 			"sidebar/geometry/tube_geometry/closed": "閉合",
 			"sidebar/geometry/tube_geometry/curvetype": "曲線類型",
 			"sidebar/geometry/tube_geometry/tension": "張力",
-		
+
 			"sidebar/material/new": "更新",
 			"sidebar/material/copy": "複製",
 			"sidebar/material/paste": "貼上",
@@ -1897,12 +1985,12 @@ function Strings( config ) {
 			"sidebar/material/depthwrite": "深度緩衝",
 			"sidebar/material/wireframe": "線框",
 			"sidebar/material/userdata": "自訂資料",
-		
+
 			"sidebar/script": "指令碼",
 			"sidebar/script/new": "新建",
 			"sidebar/script/edit": "編輯",
 			"sidebar/script/remove": "刪除",
-		
+
 			"sidebar/project": "專案",
 			"sidebar/project/title": "標題",
 			"sidebar/project/editable": "可編輯性",
@@ -1914,15 +2002,15 @@ function Strings( config ) {
 			"sidebar/project/toneMapping": "色調映射",
 			"sidebar/project/materials": "材質",
 			"sidebar/project/Assign": "應用",
-		
+
 			"sidebar/project/video": "視訊",
 			"sidebar/project/resolution": "解析度",
 			"sidebar/project/duration": "時長",
 			"sidebar/project/render": "渲染",
-		
+
 			"sidebar/settings": "設定",
 			"sidebar/settings/language": "語言",
-		
+
 			"sidebar/settings/shortcuts": "快速鍵",
 			"sidebar/settings/shortcuts/translate": "移動",
 			"sidebar/settings/shortcuts/rotate": "旋轉",
@@ -1930,19 +2018,19 @@ function Strings( config ) {
 			"sidebar/settings/shortcuts/undo": "復原",
 			"sidebar/settings/shortcuts/focus": "聚焦",
 			"sidebar/settings/shortcuts/save": "儲存",
-		
+
 			"sidebar/settings/viewport": "視窗",
 			"sidebar/settings/viewport/grid": "網格",
 			"sidebar/settings/viewport/helpers": "輔助",
-		
+
 			"sidebar/history": "歷史記錄",
 			"sidebar/history/persistent": "本機儲存",
-		
+
 			"toolbar/translate": "移動",
 			"toolbar/rotate": "旋轉",
 			"toolbar/scale": "縮放",
 			"toolbar/local": "區域性",
-		
+
 			"viewport/info/objects": "物件",
 			"viewport/info/vertices": "頂點",
 			"viewport/info/triangles": "三角形",
@@ -1964,7 +2052,7 @@ function Strings( config ) {
 			"sidebar/screenshot/uploadAsCover": "上傳作為封面",
 			"sidebar/screenshot/upload": "上傳作為封面",
 			"sidebar/screenshot/cancel": "取消",
-		
+
 			"menubar/screenshot": "截圖",
 			"menubar/screenshot/capture": "擷取快照",
 			"menubar/screenshot/confirm_upload": "截圖成功！是否上傳為封面？",
@@ -1977,17 +2065,17 @@ function Strings( config ) {
 			"menubar/screenshot/downloaded": "圖片已下載: ",
 			"menubar/screenshot/upload": "上傳作為封面",
 			"menubar/screenshot/cancel": "取消",
-		
+
 			"menubar/component/confirm": "你想將「{0}」元件新增到當前物件嗎？",
 			"menubar/component/success": "成功新增「{0}」元件",
 			"menubar/component/select_object_first": "請先選取一個物件",
-		
+
 			"menubar/command/confirm": "你想將「{0}」指令新增到當前物件嗎？",
 			"menubar/command/success": "成功新增「{0}」指令",
 			"menubar/command/select_object_first": "請先選取一個物件",
 			"menubar/command/already_exists": "此物件已新增語音指令，不能重複新增",
 			"menubar/component/mutually_exclusive": "只能選擇一個互斥元件：點選觸發、可移動或碰撞觸發",
-		
+
 			"sidebar/media": "媒體控制",
 			"sidebar/media/play": "播放",
 			"sidebar/media/pause": "暫停",
@@ -1996,7 +2084,7 @@ function Strings( config ) {
 			"sidebar/media/speed": "速度",
 			"sidebar/media/loop": "循環",
 			"sidebar/media/muted": "靜音",
-		
+
 			"dialog/confirm/confirm": "確認",
 			"dialog/confirm/cancel": "取消"
 		},
@@ -2020,7 +2108,7 @@ function Strings( config ) {
 			"menubar/file/export/stl_binary": "ส่งออก STL (ไบนารี)",
 			"menubar/file/export/usdz": "ส่งออก USDZ",
 			"menubar/file/publish": "เผยแพร่",
-		
+
 			"menubar/edit": "แก้ไข",
 			"menubar/edit/undo": "ยกเลิก (Ctrl+Z)",
 			"menubar/edit/redo": "ทำซ้ำ (Ctrl+Shift+Z)",
@@ -2029,9 +2117,9 @@ function Strings( config ) {
 			"menubar/edit/clone": "คัดลอก",
 			"menubar/edit/delete": "ลบ (Del)",
 			"menubar/edit/fixcolormaps": "ซ่อมแผนที่สี",
-		
+
 			"menubar/add": "เพิ่ม",
-			"menubar/add/node": "โหนด",
+			"menubar/add/point": "โหนดว่าง",
 			"menubar/add/text": "ข้อความ",
 			"menubar/add/voxel": "ว็อกเซล",
 			"menubar/add/phototype": "ต้นแบบ",
@@ -2066,68 +2154,72 @@ function Strings( config ) {
 			"menubar/add/ambientlight": "แสงแวดล้อม",
 			"menubar/add/perspectivecamera": "กล้องมุมมอง",
 			"menubar/add/orthographiccamera": "กล้องออโธกราฟิก",
-		
+
 			"menubar/replace": "แทนที่",
 			"menubar/replace/polygen": "โมเดล",
 			"menubar/replace/voxel": "ว็อกเซล",
 			"menubar/replace/picture": "รูปภาพ",
 			"menubar/replace/noselection": "กรุณาเลือกวัตถุก่อน",
 			"menubar/replace/success": "แทนที่สำเร็จ",
-		
+
 			"menubar/component": "คอมโพเนนต์",
 			"menubar/component/list": "ดูคอมโพเนนต์",
 			"menubar/component/confirm": "ยืนยันที่จะเพิ่มคอมโพเนนต์ \"{0}\" ให้วัตถุปัจจุบันหรือไม่?",
 			"menubar/component/success": "เพิ่มคอมโพเนนต์ \"{0}\" สำเร็จแล้ว",
 			"menubar/component/select_object_first": "กรุณาเลือกวัตถุก่อน",
-		
+
 			"menubar/command": "คำสั่ง",
 			"menubar/command/list": "ดูคำสั่ง",
 			"menubar/command/confirm": "ยืนยันที่จะเพิ่มคำสั่ง \"{0}\" ให้วัตถุปัจจุบันหรือไม่?",
 			"menubar/command/success": "เพิ่มคำสั่ง \"{0}\" สำเร็จแล้ว",
 			"menubar/command/select_object_first": "กรุณาเลือกวัตถุก่อน",
 			"menubar/command/already_exists": "วัตถุนี้มีคำสั่งเสียงอยู่แล้ว ไม่สามารถเพิ่มซ้ำได้",
-		
+
 			"menubar/code": "สคริปต์",
 			"menubar/code/script": "แก้ไขสคริปต์",
-		
+
 			"menubar/status/autosave": "บันทึกอัตโนมัติ",
-		
+
 			"menubar/play": "เริ่ม",
 			"menubar/play/stop": "หยุดชั่วคราว",
 			"menubar/play/play": "เริ่ม",
-		
+
 			"menubar/examples": "ตัวอย่าง",
 			"menubar/examples/Arkanoid": "ตีอิฐ",
 			"menubar/examples/Camera": "กล้อง",
 			"menubar/examples/Particles": "อนุภาค",
 			"menubar/examples/Pong": "ปิงปอง",
 			"menubar/examples/Shaders": "เชดเดอร์",
-		
+
 			"menubar/view": "มุมมอง",
 			"menubar/view/fullscreen": "เต็มหน้าจอ",
-		
+
 			"menubar/help": "ช่วยเหลือ",
 			"menubar/help/source_code": "ซอร์สโค้ด",
 			"menubar/help/icons": "ชุดไอคอนคอมโพเนนต์",
 			"menubar/help/about": "เกี่ยวกับ",
 			"menubar/help/manual": "คู่มือ",
-		
+
 			"sidebar/animations": "แอนิเมชัน",
+			"sidebar/animations/preview": "ตัวอย่างภาพเคลื่อนไหว",
 			"sidebar/animations/play": "เล่น",
+			"sidebar/animations/pause": "หยุดชั่วคราว",
 			"sidebar/animations/stop": "หยุด",
+			"sidebar/animations/progress": "ความคืบหน้า",
 			"sidebar/animations/timescale": "สเกลเวลา",
 			"sidebar/animations/select": "ตัวเลือก",
-		
+
 			"sidebar/scene": "ฉาก",
 			"sidebar/scene/background": "พื้นหลัง",
 			"sidebar/scene/environment": "สิ่งแวดล้อม",
 			"sidebar/scene/fog": "หมอก",
-		
+
 			"sidebar/properties/object": "คุณสมบัติ",
 			"sidebar/properties/geometry": "คอมโพเนนต์เรขาคณิต",
 			"sidebar/properties/material": "คอมโพเนนต์วัสดุ",
 			"sidebar/properties/script": "สคริปต์",
-		
+			"sidebar/properties/multi_object": "วัตถุหลายรายการ",
+
 			"sidebar/object/type": "ประเภท",
 			"sidebar/object/new": "อัปเดต",
 			"sidebar/object/uuid": "รหัสประจำตัว",
@@ -2166,8 +2258,15 @@ function Strings( config ) {
 			"sidebar/object/renderorder": "ลำดับการเรนเดอร์",
 			"sidebar/object/userdata": "ข้อมูลที่กำหนดเอง",
 			"sidebar/object/sortingOrder": "เลเวลการเรนเดอร์รูปภาพ",
-		
-			"sidebar/text": "คุณสมบัติข้อความ",
+
+			"sidebar/events": "สัญญาณ",
+			"sidebar/events/inputs": "สัญญาณอินพุต",
+			"sidebar/events/outputs": "สัญญาณเอาต์พุต",
+			"sidebar/events/add": "เพิ่ม",
+			"sidebar/events/remove": "ลบ",
+			"sidebar/events/remove/confirm": "คุณแน่ใจหรือไม่ว่าต้องการลบสัญญาณนี้?",
+
+			"sidebar/text": "ข้อความ",
 			"sidebar/text/content": "เนื้อหา",
 			"sidebar/text/rect": "ขนาดกรอบข้อความ",
 			"sidebar/text/color": "สีข้อความ",
@@ -2187,35 +2286,46 @@ function Strings( config ) {
 			"sidebar/components/notification/skip_invalid_objects": "วัตถุประเภทต่อไปนี้ไม่รองรับการเพิ่มคอมโพเนนต์: {0} จะข้ามวัตถุเหล่านี้",
 			"sidebar/components/notification/add_success": "ได้เพิ่มคอมโพเนนต์ {1} ให้วัตถุที่ถูกต้อง {0} รายการแล้ว",
 			"sidebar/components/notification/mutually_exclusive": "เลือกได้เพียงคอมโพเนนต์ที่แยกจากกันหนึ่งอย่าง: การกระตุ้นโดยการแตะ, เคลื่อนย้ายได้, หรือการกระตุ้นโดยการชน",
-		
+
 			"sidebar/components": "คอมโพเนนต์",
+			"sidebar/components/new": "ส่วนประกอบใหม่",
 			"sidebar/components/select": "ตัวเลือก",
-			"sidebar/components/select/rotate": "หมุนเอง",
-			"sidebar/components/select/action": "การกระตุ้นเชิงโต้ตอบ",
-			"sidebar/components/select/action/mode": "โหมดการโต้ตอบ",
-			"sidebar/components/select/action/mode/pinch": "บีบ",
-			"sidebar/components/select/action/mode/touch": "สัมผัส",
-			"sidebar/components/select/action/name": "ชื่อการกระทำ",
-			"sidebar/components/select/moved": "เคลื่อนย้ายได้",
-			"sidebar/components/select/moved/magnetic": "แม่เหล็ก",
-			"sidebar/components/select/moved/scalable": "ปรับสเกลได้",
-			"sidebar/components/select/trigger": "การกระตุ้นโดยการชน",
-			"sidebar/components/select/trigger/target": "วัตถุชน",
 			"sidebar/components/select/button": "สร้างใหม่",
-			"sidebar/components/select/tooltip": "ป้ายกำกับ",
 			"sidebar/components/remove/confirm": "ยืนยันที่จะลบคอมโพเนนต์นี้หรือไม่?",
+
+			"sidebar/components/select/rotate": "หมุนเอง",
+			"sidebar/components/rotate/rotateOnLaunch": "หมุนเมื่อเปิดใช้งาน",
+			"sidebar/components/rotate/speed": "ความเร็วในการหมุน",
+			"sidebar/components/rotate/preview": "ดูตัวอย่าง (5s)",
+			"sidebar/components/rotate/stop": "หยุด",
+
+			"sidebar/components/select/action": "การกระตุ้นเชิงโต้ตอบ",
+			"sidebar/components/action/mode": "โหมดการโต้ตอบ",
+			"sidebar/components/action/mode/pinch": "บีบ",
+			"sidebar/components/action/mode/touch": "สัมผัส",
+			"sidebar/components/action/name": "ชื่อการกระทำ",
+
+			"sidebar/components/select/moved": "เคลื่อนย้ายได้",
+			"sidebar/components/moved/magnetic": "แม่เหล็ก",
+			"sidebar/components/moved/scalable": "ปรับสเกลได้",
+
+			"sidebar/components/select/trigger": "การกระตุ้นโดยการชน",
+			"sidebar/components/trigger/target": "วัตถุชน",
+
+			"sidebar/components/select/tooltip": "ป้ายกำกับ",
 			"sidebar/components/tooltip/text": "ข้อความ",
 			"sidebar/components/tooltip/length": "ความยาว",
 			"sidebar/components/tooltip/target": "ตำแหน่งเป้าหมาย",
-		
+
 			"sidebar/command/multi_selection_summary": "สรุปคำสั่งวัตถุที่เลือก",
 			"sidebar/command/object_name_with_index": "วัตถุ {0}",
 			"sidebar/command/no_commands": "ไม่มี",
 			"sidebar/command/notification/invalid_objects": "วัตถุประเภทต่อไปนี้ไม่รองรับการเพิ่มคำสั่ง: {0}",
 			"sidebar/command/notification/skip_invalid_objects": "วัตถุประเภทต่อไปนี้ไม่รองรับการเพิ่มคำสั่ง: {0} จะข้ามวัตถุเหล่านี้",
 			"sidebar/command/notification/add_success": "ได้เพิ่มคำสั่ง {1} ให้วัตถุที่ถูกต้อง {0} รายการแล้ว",
-		
+
 			"sidebar/command": "คำสั่ง",
+			"sidebar/command/new": "ส่วนคำสั่งใหม่",
 			"sidebar/command/select": "ตัวเลือก",
 			"sidebar/command/select/voice": "คำสั่งเสียง",
 			"sidebar/command/select/gesture": "คำสั่งท่าทาง",
@@ -2232,46 +2342,46 @@ function Strings( config ) {
 			"sidebar/command/gesture/label": "ท่าทาง",
 			"sidebar/command/gesture/ok": "ตกลง",
 			"sidebar/command/gesture/fist": "กำมือ",
-		
+
 			"sidebar/entity": "เอนทิตี (กำหนดเอง)",
 			"sidebar/entity/button": "แก้ไข",
-		
+
 			"sidebar/confirm/scene/modified": "ฉากมีการแก้ไข คุณต้องการบันทึกหรือไม่?",
-		
+
 			"sidebar/geometry/type": "ประเภท",
 			"sidebar/geometry/new": "อัปเดต",
 			"sidebar/geometry/uuid": "รหัสประจำตัว",
 			"sidebar/geometry/name": "ชื่อ",
 			"sidebar/geometry/bounds": "ขอบเขต",
 			"sidebar/geometry/show_vertex_normals": "แสดงเส้นปกติจุดยอด",
-		
+
 			"sidebar/geometry/box_geometry/width": "ความกว้าง",
 			"sidebar/geometry/box_geometry/height": "ความสูง",
 			"sidebar/geometry/box_geometry/depth": "ความลึก",
 			"sidebar/geometry/box_geometry/widthseg": "เซกเมนต์ความกว้าง",
 			"sidebar/geometry/box_geometry/heightseg": "เซกเมนต์ความสูง",
 			"sidebar/geometry/box_geometry/depthseg": "เซกเมนต์ความลึก",
-		
+
 			"sidebar/geometry/buffer_geometry/attributes": "แอตทริบิวต์",
 			"sidebar/geometry/buffer_geometry/index": "ดัชนี",
-		
+
 			"sidebar/geometry/capsule_geometry/radius": "รัศมี",
 			"sidebar/geometry/capsule_geometry/length": "ความยาว",
 			"sidebar/geometry/capsule_geometry/capseg": "เซกเมนต์แคปซูล",
 			"sidebar/geometry/capsule_geometry/radialseg": "เซกเมนต์รัศมี",
-		
+
 			"sidebar/geometry/circle_geometry/radius": "รัศมี",
 			"sidebar/geometry/circle_geometry/segments": "เซกเมนต์",
 			"sidebar/geometry/circle_geometry/thetastart": "จุดเริ่มต้นเรเดียน",
 			"sidebar/geometry/circle_geometry/thetalength": "ความยาวเรเดียน",
-		
+
 			"sidebar/geometry/cylinder_geometry/radiustop": "รัศมีด้านบน",
 			"sidebar/geometry/cylinder_geometry/radiusbottom": "รัศมีด้านล่าง",
 			"sidebar/geometry/cylinder_geometry/height": "ความสูง",
 			"sidebar/geometry/cylinder_geometry/radialsegments": "เซกเมนต์รัศมี",
 			"sidebar/geometry/cylinder_geometry/heightsegments": "เซกเมนต์ความสูง",
 			"sidebar/geometry/cylinder_geometry/openended": "ปลายเปิด",
-		
+
 			"sidebar/geometry/extrude_geometry/curveSegments": "เซกเมนต์เส้นโค้ง",
 			"sidebar/geometry/extrude_geometry/steps": "จำนวนจุดย่อย",
 			"sidebar/geometry/extrude_geometry/depth": "ความลึก",
@@ -2281,39 +2391,39 @@ function Strings( config ) {
 			"sidebar/geometry/extrude_geometry/bevelOffset": "ออฟเซ็ตมุมเอียง",
 			"sidebar/geometry/extrude_geometry/bevelSegments": "เซกเมนต์มุมเอียง",
 			"sidebar/geometry/extrude_geometry/shape": "แปลงรูปทรง",
-		
+
 			"sidebar/geometry/dodecahedron_geometry/radius": "รัศมี",
 			"sidebar/geometry/dodecahedron_geometry/detail": "เซกเมนต์หน้า",
-		
+
 			"sidebar/geometry/icosahedron_geometry/radius": "รัศมี",
 			"sidebar/geometry/icosahedron_geometry/detail": "เซกเมนต์หน้า",
-		
+
 			"sidebar/geometry/octahedron_geometry/radius": "รัศมี",
 			"sidebar/geometry/octahedron_geometry/detail": "เซกเมนต์หน้า",
-		
+
 			"sidebar/geometry/tetrahedron_geometry/radius": "รัศมี",
 			"sidebar/geometry/tetrahedron_geometry/detail": "เซกเมนต์หน้า",
-		
+
 			"sidebar/geometry/lathe_geometry/segments": "เซกเมนต์",
 			"sidebar/geometry/lathe_geometry/phistart": "จุดเริ่มต้นลองจิจูด",
 			"sidebar/geometry/lathe_geometry/philength": "ความยาวลองจิจูด",
 			"sidebar/geometry/lathe_geometry/points": "จุด",
-		
+
 			"sidebar/geometry/plane_geometry/width": "ความกว้าง",
 			"sidebar/geometry/plane_geometry/height": "ความยาว",
 			"sidebar/geometry/plane_geometry/widthsegments": "เซกเมนต์ความกว้าง",
 			"sidebar/geometry/plane_geometry/heightsegments": "เซกเมนต์ความยาว",
-		
+
 			"sidebar/geometry/ring_geometry/innerRadius": "รัศมีใน",
 			"sidebar/geometry/ring_geometry/outerRadius": "รัศมีนอก",
 			"sidebar/geometry/ring_geometry/thetaSegments": "เซกเมนต์เรเดียน",
 			"sidebar/geometry/ring_geometry/phiSegments": "เซกเมนต์ลองจิจูด",
 			"sidebar/geometry/ring_geometry/thetastart": "จุดเริ่มต้นเรเดียน",
 			"sidebar/geometry/ring_geometry/thetalength": "ความยาวเรเดียน",
-		
+
 			"sidebar/geometry/shape_geometry/curveSegments": "เซกเมนต์เส้นโค้ง",
 			"sidebar/geometry/shape_geometry/extrude": "ยึด",
-		
+
 			"sidebar/geometry/sphere_geometry/radius": "รัศมี",
 			"sidebar/geometry/sphere_geometry/widthsegments": "เซกเมนต์ความกว้าง",
 			"sidebar/geometry/sphere_geometry/heightsegments": "เซกเมนต์ความยาว",
@@ -2321,20 +2431,20 @@ function Strings( config ) {
 			"sidebar/geometry/sphere_geometry/philength": "ความยาวลองจิจูด",
 			"sidebar/geometry/sphere_geometry/thetastart": "จุดเริ่มต้นละติจูด",
 			"sidebar/geometry/sphere_geometry/thetalength": "ความยาวละติจูด",
-		
+
 			"sidebar/geometry/torus_geometry/radius": "รัศมี",
 			"sidebar/geometry/torus_geometry/tube": "ความหนาท่อ",
 			"sidebar/geometry/torus_geometry/radialsegments": "เซกเมนต์รัศมี",
 			"sidebar/geometry/torus_geometry/tubularsegments": "เซกเมนต์ความหนาท่อ",
 			"sidebar/geometry/torus_geometry/arc": "เรเดียน",
-		
+
 			"sidebar/geometry/torusKnot_geometry/radius": "รัศมี",
 			"sidebar/geometry/torusKnot_geometry/tube": "ความหนาท่อ",
 			"sidebar/geometry/torusKnot_geometry/tubularsegments": "เซกเมนต์ความหนาท่อ",
 			"sidebar/geometry/torusKnot_geometry/radialsegments": "เซกเมนต์รัศมี",
 			"sidebar/geometry/torusKnot_geometry/p": "เรเดียนความยาวท่อ",
 			"sidebar/geometry/torusKnot_geometry/q": "เรเดียนบิด",
-		
+
 			"sidebar/geometry/tube_geometry/path": "เส้นทาง",
 			"sidebar/geometry/tube_geometry/radius": "รัศมี",
 			"sidebar/geometry/tube_geometry/tube": "ความหนาท่อ",
@@ -2343,7 +2453,7 @@ function Strings( config ) {
 			"sidebar/geometry/tube_geometry/closed": "ปิด",
 			"sidebar/geometry/tube_geometry/curvetype": "ประเภทเส้นโค้ง",
 			"sidebar/geometry/tube_geometry/tension": "แรงตึง",
-		
+
 			"sidebar/material/new": "อัปเดต",
 			"sidebar/material/copy": "คัดลอก",
 			"sidebar/material/paste": "วาง",
@@ -2397,12 +2507,12 @@ function Strings( config ) {
 			"sidebar/material/depthwrite": "บัฟเฟอร์ความลึก",
 			"sidebar/material/wireframe": "โครงลวด",
 			"sidebar/material/userdata": "ข้อมูลที่กำหนดเอง",
-		
+
 			"sidebar/script": "สคริปต์",
 			"sidebar/script/new": "สร้างใหม่",
 			"sidebar/script/edit": "แก้ไข",
 			"sidebar/script/remove": "ลบ",
-		
+
 			"sidebar/project": "โครงการ",
 			"sidebar/project/title": "หัวข้อ",
 			"sidebar/project/editable": "ความสามารถในการแก้ไข",
@@ -2414,15 +2524,15 @@ function Strings( config ) {
 			"sidebar/project/toneMapping": "การแมปโทน",
 			"sidebar/project/materials": "วัสดุ",
 			"sidebar/project/Assign": "นำไปใช้",
-		
+
 			"sidebar/project/video": "วิดีโอ",
 			"sidebar/project/resolution": "ความละเอียด",
 			"sidebar/project/duration": "ระยะเวลา",
 			"sidebar/project/render": "เรนเดอร์",
-		
+
 			"sidebar/settings": "การตั้งค่า",
 			"sidebar/settings/language": "ภาษา",
-		
+
 			"sidebar/settings/shortcuts": "คีย์ลัด",
 			"sidebar/settings/shortcuts/translate": "เคลื่อนย้าย",
 			"sidebar/settings/shortcuts/rotate": "หมุน",
@@ -2430,19 +2540,19 @@ function Strings( config ) {
 			"sidebar/settings/shortcuts/undo": "ยกเลิก",
 			"sidebar/settings/shortcuts/focus": "โฟกัส",
 			"sidebar/settings/shortcuts/save": "บันทึก",
-		
+
 			"sidebar/settings/viewport": "วิวพอร์ต",
 			"sidebar/settings/viewport/grid": "กริด",
 			"sidebar/settings/viewport/helpers": "ตัวช่วย",
-		
+
 			"sidebar/history": "ประวัติ",
 			"sidebar/history/persistent": "ที่เก็บข้อมูลท้องถิ่น",
-		
+
 			"toolbar/translate": "เคลื่อนย้าย",
 			"toolbar/rotate": "หมุน",
 			"toolbar/scale": "ปรับสเกล",
 			"toolbar/local": "ท้องถิ่น",
-		
+
 			"viewport/info/objects": "วัตถุ",
 			"viewport/info/vertices": "จุดยอด",
 			"viewport/info/triangles": "สามเหลี่ยม",
@@ -2464,7 +2574,7 @@ function Strings( config ) {
 			"sidebar/screenshot/uploadAsCover": "อัปโหลดเป็นหน้าปก",
 			"sidebar/screenshot/upload": "อัปโหลดเป็นหน้าปก",
 			"sidebar/screenshot/cancel": "ยกเลิก",
-		
+
 			"menubar/screenshot": "ภาพหน้าจอ",
 			"menubar/screenshot/capture": "จับภาพ",
 			"menubar/screenshot/confirm_upload": "จับภาพสำเร็จ! ต้องการอัปโหลดเป็นหน้าปกหรือไม่?",
@@ -2477,17 +2587,17 @@ function Strings( config ) {
 			"menubar/screenshot/downloaded": "ดาวน์โหลดรูปภาพแล้ว: ",
 			"menubar/screenshot/upload": "อัปโหลดเป็นหน้าปก",
 			"menubar/screenshot/cancel": "ยกเลิก",
-		
+
 			"menubar/component/confirm": "คุณต้องการเพิ่มคอมโพเนนต์ \"{0}\" ให้วัตถุปัจจุบันหรือไม่?",
 			"menubar/component/success": "เพิ่มคอมโพเนนต์ \"{0}\" สำเร็จแล้ว",
 			"menubar/component/select_object_first": "กรุณาเลือกวัตถุก่อน",
-		
+
 			"menubar/command/confirm": "คุณต้องการเพิ่มคำสั่ง \"{0}\" ให้วัตถุปัจจุบันหรือไม่?",
 			"menubar/command/success": "เพิ่มคำสั่ง \"{0}\" สำเร็จแล้ว",
 			"menubar/command/select_object_first": "กรุณาเลือกวัตถุก่อน",
 			"menubar/command/already_exists": "วัตถุนี้มีคำสั่งเสียงอยู่แล้ว ไม่สามารถเพิ่มซ้ำได้",
 			"menubar/component/mutually_exclusive": "เลือกได้เพียงคอมโพเนนต์ที่แยกจากกันหนึ่งอย่าง: การกระตุ้นโดยการแตะ, เคลื่อนย้ายได้, หรือการกระตุ้นโดยการชน",
-		
+
 			"sidebar/media": "ควบคุมสื่อ",
 			"sidebar/media/play": "เล่น",
 			"sidebar/media/pause": "หยุดชั่วคราว",
@@ -2496,15 +2606,15 @@ function Strings( config ) {
 			"sidebar/media/speed": "ความเร็ว",
 			"sidebar/media/loop": "วนซ้ำ",
 			"sidebar/media/muted": "ปิดเสียง",
-		
+
 			"dialog/confirm/confirm": "ยืนยัน",
 			"dialog/confirm/cancel": "ยกเลิก"
 		},
 	};
 
 	return {
-		getKey: function ( key ) {
-			return values[ language ][ key ] || '???';
+		getKey: function (key) {
+			return values[language][key] || '???';
 
 		}
 	};

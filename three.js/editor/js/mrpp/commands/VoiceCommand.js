@@ -137,11 +137,16 @@ class VoiceCommand {
 
     // 普通用户user可选
     const voiceOptions = {
-      scaleUp: strings.getKey('sidebar/command/voice/scaleUp'),
-      scaleDown: strings.getKey('sidebar/command/voice/scaleDown'),
-      decompose: strings.getKey('sidebar/command/voice/decompose'),
-      reset: strings.getKey('sidebar/command/voice/reset'),
-      goBack: strings.getKey('sidebar/command/voice/goBack'),
+      // scaleUp: strings.getKey('sidebar/command/voice/scaleUp'),
+      // scaleDown: strings.getKey('sidebar/command/voice/scaleDown'),
+      // decompose: strings.getKey('sidebar/command/voice/decompose'),
+      // reset: strings.getKey('sidebar/command/voice/reset'),
+      // goBack: strings.getKey('sidebar/command/voice/goBack'),
+      scaleUp: '放大',
+      scaleDown: '缩小',
+      decompose: '分解',
+      reset: '还原',
+      goBack: '返回',
     };
 
     // user以上角色可选

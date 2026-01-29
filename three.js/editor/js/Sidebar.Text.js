@@ -9,8 +9,8 @@ function SidebarText(editor) {
 	const container = new UIPanel();
 	container.setDisplay('none');
 
-	container.add(new UIText(strings.getKey('sidebar/text')).setTextTransform('uppercase'));
-	container.add(new UIRow());
+	// container.add(new UIText(strings.getKey('sidebar/text')).setTextTransform('uppercase'));
+	// container.add(new UIRow());
 
 	// --- 常量定义 ---
 	const PIXEL_SCALE_M = 0.005; 
@@ -445,7 +445,7 @@ function SidebarText(editor) {
 		}
 	});
 
-	return container;
+	return { container, update: () => updateUIState(editor.selected) };
 }
 
 export { SidebarText };

@@ -22,6 +22,7 @@ import { SetRotationCommand } from "./commands/SetRotationCommand.js";
 import { SetScaleCommand } from "./commands/SetScaleCommand.js";
 import { SetColorCommand } from "./commands/SetColorCommand.js";
 import { MetaFactory } from "./mrpp/MetaFactory.js";
+import { ABILITIES } from "./Access.js";
 
 function SidebarObject(editor) {
 	const strings = editor.strings;
@@ -1634,6 +1635,15 @@ function SidebarObject(editor) {
 			objectVisibleRow.setDisplay('none');
 		} else {
 			objectVisibleRow.setDisplay('');
+		}
+
+		// 检查 userData/type 权限
+		if (editor.access.can(ABILITIES.UI_ADVANCED)) {
+			objectTypeRow.setDisplay('');
+			objectUserDataRow.setDisplay('');
+		} else {
+			objectTypeRow.setDisplay('none');
+			objectUserDataRow.setDisplay('none');
 		}
 
 		if (object.isLight) {

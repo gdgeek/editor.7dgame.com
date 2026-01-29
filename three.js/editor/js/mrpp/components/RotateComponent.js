@@ -1,4 +1,4 @@
-import { UINumber, UIBreak, UIText, UIRow, UICheckbox } from '../../libs/ui.js';
+import { UINumber, UIBreak, UIText, UIRow, UICheckbox, UIButton } from '../../libs/ui.js';
 import { SetValueCommand } from '../../commands/SetValueCommand.js';
 class RotateComponent {
 
@@ -16,18 +16,18 @@ class RotateComponent {
         uuid: THREE.MathUtils.generateUUID(),
         speed: { x: 0, y: 0, z: 0 },
         isRotating: true,
-				action: 'rotate'
+        action: 'rotate'
       }
     };
     return component;
   }
   rotate(container) {
     const strings = this.editor.strings;
-		container.add(new UIBreak());
+    container.add(new UIBreak());
     container.add(new UIBreak());
 
     const row = new UIRow();
-    const label = new UIText(strings.getKey('sidebar/object/isRotating')).setWidth('90px');
+    const label = new UIText(strings.getKey('sidebar/components/rotate/rotateOnLaunch')).setWidth('90px');
     const checkbox = new UICheckbox(this.component.parameters.isRotating);
 
     checkbox.onChange(() => {
@@ -46,18 +46,21 @@ class RotateComponent {
 
     this.objectRotationRow = new UIRow();
     this.objectRotationX = new UINumber()
+      .setPrecision(2)
       .setStep(10)
       .setNudge(0.1)
       .setUnit('°')
       .setWidth('50px')
       .onChange(this.update.bind(this));
     this.objectRotationY = new UINumber()
+      .setPrecision(2)
       .setStep(10)
       .setNudge(0.1)
       .setUnit('°')
       .setWidth('50px')
       .onChange(this.update.bind(this));
     this.objectRotationZ = new UINumber()
+      .setPrecision(2)
       .setStep(10)
       .setNudge(0.1)
       .setUnit('°')
@@ -65,11 +68,48 @@ class RotateComponent {
       .onChange(this.update.bind(this));
 
     this.objectRotationRow.add(
-      new UIText(strings.getKey('sidebar/object/rotation')).setWidth('90px')
+      new UIText(strings.getKey('sidebar/components/rotate/speed')).setWidth('90px')
     );
-    this.objectRotationRow.add(this.objectRotationX, this.objectRotationY, this.objectRotationZ);
+    this.objectRotationRow.add(new UIText('X').setWidth('15px').setColor('#EA5555'), this.objectRotationX, new UIText('Y').setWidth('15px').setColor('#8AC651'), this.objectRotationY, new UIText('Z').setWidth('15px').setColor('#5588EA'), this.objectRotationZ);
 
     container.add(this.objectRotationRow);
+
+
+    const isPreviewing = this.object.userData.previewRotate && this.object.userData.previewRotate.active;
+    const buttonText = isPreviewing ? strings.getKey('sidebar/components/rotate/stop') : strings.getKey('sidebar/components/rotate/preview');
+
+    const buttonRow = new UIRow();
+    const previewButton = new UIButton(buttonText).onClick(() => {
+      if (!this.object.userData.previewRotate) {
+        // Start Preview
+        this.object.userData.previewRotate = {
+          active: true,
+          startTime: performance.now(),
+          originalRotation: this.object.rotation.clone()
+        };
+        // Force UI update to change button text to 'Stop'
+        this.editor.signals.componentChanged.dispatch(this.component);
+      } else {
+        // Stop Preview Manually
+        const state = this.object.userData.previewRotate;
+        this.object.rotation.copy(state.originalRotation);
+        delete this.object.userData.previewRotate;
+
+        this.editor.signals.objectChanged.dispatch(this.object);
+        // Force UI update to change button text back to 'Preview'
+        this.editor.signals.componentChanged.dispatch(this.component);
+      }
+    }).setWidth('100%');
+
+    if (isPreviewing) {
+      previewButton.setBackgroundColor('#FC6666');
+      previewButton.setColor('#fff');
+    } else {
+      previewButton.setBackgroundColor('');
+      previewButton.setColor('');
+    }
+    buttonRow.add(previewButton);
+    container.add(buttonRow);
   }
   update() {
 

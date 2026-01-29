@@ -76,7 +76,7 @@ function SidebarCommand(editor) {
 		container.setDisplay('block');
 
 		// 显示指令标题
-		topContainer.add(new UIText(strings.getKey('sidebar/command').toUpperCase()));
+		topContainer.add(new UIText(strings.getKey('sidebar/command/new').toUpperCase()));
 
 		// 单选对象模式
 		if (!isMultiSelect && object) {
@@ -84,13 +84,13 @@ function SidebarCommand(editor) {
 
 			// 添加"添加指令"的UI部分 - 与组件部分风格保持一致
 			addCommandContainer.setDisplay('block');
-			addCommandContainer.add(new UIBreak());
+			//addCommandContainer.add(new UIBreak());
 
 			const label = new UIText(strings.getKey('sidebar/command/select')).setWidth('90px');
 			addCommandContainer.add(label);
 
 			// 创建下拉框
-			const select = new UISelect().setWidth('100px');
+			const select = new UISelect().setWidth('130px');
 			select.setOptions({
 				'Voice': strings.getKey('sidebar/command/select/voice'),
 				'Gesture': strings.getKey('sidebar/command/select/gesture'),
@@ -226,28 +226,11 @@ function SidebarCommand(editor) {
 		}
 	}
 
-	// signals
-	signals.objectSelected.add(function(object) {
-		if (object !== null && editor.camera !== object) {
-			if (editor.type && editor.type.toLowerCase() === 'meta') {
-				const objectType = object.type ? object.type.toLowerCase() : '';
-				if (objectType === 'mesh' || objectType === 'entity') {
-					container.setDisplay('block');
-					update();
-					return;
-				}
-			}
-			container.setDisplay('none');
-		} else {
-			container.setDisplay('none');
-		}
-	});
-
 	signals.commandAdded.add(update);
 	signals.commandRemoved.add(update);
 	signals.commandChanged.add(update);
 
-	return container;
+	return { container, update };
 }
 
 export { SidebarCommand };

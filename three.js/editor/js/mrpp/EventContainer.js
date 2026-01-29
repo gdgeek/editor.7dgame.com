@@ -1,42 +1,53 @@
-import { UIBreak, UIText, UIButton } from '../libs/ui.js';
+import { UIText, UIButton, UIRow } from '../libs/ui.js'; // 引入 UIRow 辅助布局
 import { RemoveEventCommand } from '../commands/RemoveEventCommand.js';
 
 class EventContainer {
 
 
-	constructor( editor, event, mode ) {
-
+	constructor(editor, event, mode) {
 		this.editor = editor;
 		this.event = event;
 		this.mode = mode;
-
 	}
 
-	renderer( container ) {
-
+	renderer(container) {
 		const strings = this.editor.strings;
-		container.add( new UIText( this.event.title ) );
-		//container.setDisplay('block');
-		//container.add(new UIText(this.event.title));
-		//container.setDisplay('block');
 
+		container.dom.style.display = 'flex';
+		container.dom.style.alignItems = 'center';
+		container.dom.style.justifyContent = 'space-between';
+		container.dom.style.boxSizing = 'border-box'; // 确保 padding 不撑开宽度
 
-		const remove = new UIButton( strings.getKey( 'sidebar/script/remove' ) );
-		remove.setMarginLeft( '4px' );
-		remove.onClick( function () {
+		const titleText = new UIText(this.event.title || '');
+		titleText.dom.style.color = '#8a8a8a';
+		titleText.dom.style.flex = '1'; // 让文字占据剩余空间
+		titleText.dom.style.textOverflow = 'ellipsis';
+		titleText.dom.style.overflow = 'hidden';
+		titleText.dom.style.whiteSpace = 'nowrap';
+		titleText.dom.style.fontSize = '12px';
+		titleText.dom.style.lineHeight = '1';
+		container.add(titleText);
 
-			// eslint-disable-next-line no-restricted-globals
-			if ( confirm( 'Are you sure?' ) ) {
+		const remove = new UIButton(strings.getKey('sidebar/script/remove'));
+		remove.setMarginLeft('4px');
+		remove.dom.style.fontSize = '10px';
+		remove.dom.style.padding = '2px 4px';
+		remove.dom.style.flexShrink = '0'; // 防止按钮被压缩
 
-				this.editor.execute( new RemoveEventCommand( this.editor, this.event, this.mode ) );
+		remove.onClick(function (event) {
+			this.editor.showConfirmation(strings.getKey('sidebar/events/remove/confirm'),
+				function () {
+					this.editor.execute(new RemoveEventCommand(this.editor, this.event, this.mode));
+				}.bind(this),
+				null,
+				event,
+				true
+			);
+		}.bind(this));
 
-			}
-
-		}.bind( this ) );
-		container.add( remove );
-		container.add( new UIBreak() );
+		container.add(remove);
+		container.add(new UIBreak());
 
 	}
-
 }
 export { EventContainer };

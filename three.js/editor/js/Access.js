@@ -11,7 +11,6 @@ export const ROLES = {
  
 // 权限定义
 export const ABILITIES = {
-    UI_USERDATA: 'ui.userdata', // 自定义数据面板
 	UI_ADVANCED: 'ui.advanced', // 高级面板
 	FEATURE_ADVANCED: 'feature.advanced', // 高级功能
 };
@@ -26,11 +25,11 @@ export const ROLE_ABILITY = {
 	],
 	[ROLES.MANAGER]: [
 		// Manager 权限
-		ABILITIES.UI_USERDATA,
+		ABILITIES.UI_ADVANCED,
+		ABILITIES.FEATURE_ADVANCED
 	],
 	[ROLES.ADMIN]: [
 		// Admin 拥有 Manager 的所有权限 + 高级权限
-		ABILITIES.UI_USERDATA,
 		ABILITIES.UI_ADVANCED,
 		ABILITIES.FEATURE_ADVANCED
 	],

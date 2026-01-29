@@ -82,16 +82,16 @@ function SidebarComponent(editor) {
 		container.setDisplay('block');
 
 		// 显示组件标题
-		topContainer.add(new UIText(strings.getKey('sidebar/components').toUpperCase()));
+		topContainer.add(new UIText(strings.getKey('sidebar/components/new').toUpperCase()));
 
 		// 添加新组件的界面
-		addComponentContainer.add(new UIBreak());
+		//addComponentContainer.add(new UIBreak());
 
 		const label = new UIText(strings.getKey('sidebar/components/select')).setWidth('90px');
 		addComponentContainer.add(label);
 
 		// 创建下拉框
-		const select = new UISelect().setWidth('100px');
+		const select = new UISelect().setWidth('130px');
 		select.setOptions({
 			'Rotate': strings.getKey('sidebar/components/select/rotate'),
 			'Action': strings.getKey('sidebar/components/select/action'),
@@ -377,29 +377,11 @@ function SidebarComponent(editor) {
 		}
 	}
 
-	// signals
-	signals.objectSelected.add(function(object) {
-		if (object !== null && editor.camera !== object) {
-			// 修改为与顶部菜单栏一致的显示逻辑
-			if (editor.type && editor.type.toLowerCase() === 'meta') {
-				const objectType = object.type ? object.type.toLowerCase() : '';
-				if (objectType === 'polygen' || objectType === 'voxel' || objectType === 'picture') {
-					container.setDisplay('block');
-					update();
-					return;
-				}
-			}
-			container.setDisplay('none');
-		} else {
-			container.setDisplay('none');
-		}
-	});
-
 	signals.componentAdded.add(update);
 	signals.componentRemoved.add(update);
 	signals.componentChanged.add(update);
 
-	return container;
+	return { container, update };
 }
 
 export { SidebarComponent };

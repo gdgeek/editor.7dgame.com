@@ -23,8 +23,8 @@ function Menubar( editor ) {
 	container.add( new MenubarEdit( editor ) );
 	container.add( new MenubarAdd( editor ) );
 	container.add( new MenubarReplace( editor ) );
-	container.add( new MenubarComponent( editor ) );
-	container.add( new MenubarCommand( editor ) );
+	//container.add( new MenubarComponent( editor ) );
+	//container.add( new MenubarCommand( editor ) );
 	container.add( new MenubarScreenshot( editor ) );
 	container.add( new MenubarGoto( editor ) );
 	// container.add(new MenubarPlay(editor))
