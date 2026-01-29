@@ -15,6 +15,7 @@ import { SetRotationCommand } from './commands/SetRotationCommand.js';
 import { SetScaleCommand } from './commands/SetScaleCommand.js';
 import { SetValueCommand } from './commands/SetValueCommand.js';
 import { MultiTransformCommand } from './commands/MultiTransformCommand.js';
+import { MultiCmdsCommand } from './commands/MultiCmdsCommand.js';
 
 function SidebarMultipleObjects(editor) {
 	const strings = editor.strings;
@@ -27,7 +28,7 @@ function SidebarMultipleObjects(editor) {
 
 	// 多选标题
 	const multipleObjectsTitleRow = new UIRow();
-	const multipleObjectsTitle = new UIText('多选对象');
+	const multipleObjectsTitle = new UIText(strings.getKey('sidebar/properties/multi_object'));
 	multipleObjectsTitle.dom.style.fontWeight = 'bold';
 	multipleObjectsTitleRow.add(multipleObjectsTitle);
 	container.add(multipleObjectsTitleRow);
@@ -35,13 +36,13 @@ function SidebarMultipleObjects(editor) {
 	// 多选对象计数
 	const multipleObjectsCountRow = new UIRow();
 	const multipleObjectsCount = new UIText('');
-	multipleObjectsCountRow.add(new UIText('选中数量').setWidth('90px'));
+	multipleObjectsCountRow.add(new UIText(strings.getKey('sidebar/multi_objects/selection_count')).setWidth('90px'));
 	multipleObjectsCountRow.add(multipleObjectsCount);
 	container.add(multipleObjectsCountRow);
 
 	// 多选对象名称列表标题
 	const multipleObjectsNameRow = new UIRow();
-	multipleObjectsNameRow.add(new UIText('名称').setWidth('90px'));
+	multipleObjectsNameRow.add(new UIText(strings.getKey('sidebar/object/name')).setWidth('90px'));
 	container.add(multipleObjectsNameRow);
 
 	// 创建名称列表容器 - 纵向排列
@@ -181,7 +182,7 @@ function SidebarMultipleObjects(editor) {
 	// 全局鼠标抬起事件，确保捕获在输入框外释放鼠标的情况
 	document.addEventListener('mouseup', onDragEnd);
 
-	multipleObjectsPositionRow.add(new UIText('位置').setWidth('90px'));
+	multipleObjectsPositionRow.add(new UIText(strings.getKey('sidebar/object/position')).setWidth('90px'));
 	multipleObjectsPositionRow.add(multipleObjectsPositionX, multipleObjectsPositionY, multipleObjectsPositionZ);
 
 	// 添加位置复制粘贴按钮
@@ -201,7 +202,7 @@ function SidebarMultipleObjects(editor) {
 				z: position.z
 			}));
 
-			editor.showNotification('位置数据已复制');
+			editor.showNotification(strings.getKey('sidebar/multi_objects/copy_position_success'));
 		});
 
 	// 添加复制图标
@@ -212,7 +213,7 @@ function SidebarMultipleObjects(editor) {
 	positionCopyIcon.style.display = 'block';
 	positionCopyIcon.style.margin = '0 auto';
 	positionCopyButton.dom.appendChild(positionCopyIcon);
-	positionCopyButton.dom.title = '复制位置';
+	positionCopyButton.dom.title = strings.getKey('sidebar/multi_objects/copy_position');
 
 	const positionPasteButton = new UIButton('')
 		.setWidth('24px')
@@ -225,7 +226,7 @@ function SidebarMultipleObjects(editor) {
 					multipleObjectsPositionY.setValue(position.y);
 					multipleObjectsPositionZ.setValue(position.z);
 					updatePosition();
-					editor.showNotification('位置数据已粘贴');
+					editor.showNotification(strings.getKey('sidebar/multi_objects/paste_position_success'));
 				} catch (e) {
 					console.error('无法粘贴位置数据', e);
 				}
@@ -240,7 +241,7 @@ function SidebarMultipleObjects(editor) {
 	positionPasteIcon.style.display = 'block';
 	positionPasteIcon.style.margin = '0 auto';
 	positionPasteButton.dom.appendChild(positionPasteIcon);
-	positionPasteButton.dom.title = '粘贴位置';
+	positionPasteButton.dom.title = strings.getKey('sidebar/multi_objects/paste_position');
 
 	// 默认隐藏复制粘贴按钮
 	positionCopyButton.dom.style.display = 'none';
@@ -284,7 +285,7 @@ function SidebarMultipleObjects(editor) {
 	multipleObjectsRotationZ.dom.addEventListener('mousedown', onDragStart);
 	multipleObjectsRotationZ.dom.addEventListener('mouseup', onDragEnd);
 
-	multipleObjectsRotationRow.add(new UIText('旋转').setWidth('90px'));
+	multipleObjectsRotationRow.add(new UIText(strings.getKey('sidebar/object/rotation')).setWidth('90px'));
 	multipleObjectsRotationRow.add(multipleObjectsRotationX, multipleObjectsRotationY, multipleObjectsRotationZ);
 
 	// 添加旋转复制粘贴按钮
@@ -304,7 +305,7 @@ function SidebarMultipleObjects(editor) {
 				z: rotation.z
 			}));
 
-			editor.showNotification('旋转数据已复制');
+			editor.showNotification(strings.getKey('sidebar/multi_objects/copy_rotation_success'));
 		});
 
 	// 添加复制图标
@@ -315,7 +316,7 @@ function SidebarMultipleObjects(editor) {
 	rotationCopyIcon.style.display = 'block';
 	rotationCopyIcon.style.margin = '0 auto';
 	rotationCopyButton.dom.appendChild(rotationCopyIcon);
-	rotationCopyButton.dom.title = '复制旋转';
+	rotationCopyButton.dom.title = strings.getKey('sidebar/multi_objects/copy_rotation');
 
 	const rotationPasteButton = new UIButton('')
 		.setWidth('24px')
@@ -328,7 +329,7 @@ function SidebarMultipleObjects(editor) {
 					multipleObjectsRotationY.setValue(rotation.y);
 					multipleObjectsRotationZ.setValue(rotation.z);
 					updateRotation();
-					editor.showNotification('旋转数据已粘贴');
+					editor.showNotification(strings.getKey('sidebar/multi_objects/paste_rotation_success'));
 				} catch (e) {
 					console.error('无法粘贴旋转数据', e);
 				}
@@ -343,7 +344,7 @@ function SidebarMultipleObjects(editor) {
 	rotationPasteIcon.style.display = 'block';
 	rotationPasteIcon.style.margin = '0 auto';
 	rotationPasteButton.dom.appendChild(rotationPasteIcon);
-	rotationPasteButton.dom.title = '粘贴旋转';
+	rotationPasteButton.dom.title = strings.getKey('sidebar/multi_objects/paste_rotation');
 
 	// 默认隐藏复制粘贴按钮
 	rotationCopyButton.dom.style.display = 'none';
@@ -390,7 +391,7 @@ function SidebarMultipleObjects(editor) {
 	multipleObjectsScaleZ.dom.addEventListener('mousedown', onDragStart);
 	multipleObjectsScaleZ.dom.addEventListener('mouseup', onDragEnd);
 
-	multipleObjectsScaleRow.add(new UIText('缩放').setWidth('90px'));
+	multipleObjectsScaleRow.add(new UIText(strings.getKey('sidebar/object/scale')).setWidth('90px'));
 	multipleObjectsScaleRow.add(multipleObjectsScaleX, multipleObjectsScaleY, multipleObjectsScaleZ);
 
 	// 添加缩放复制粘贴按钮
@@ -410,7 +411,7 @@ function SidebarMultipleObjects(editor) {
 				z: scale.z
 			}));
 
-			editor.showNotification('缩放数据已复制');
+			editor.showNotification(strings.getKey('sidebar/multi_objects/copy_scale_success'));
 		});
 
 	// 添加复制图标
@@ -421,7 +422,7 @@ function SidebarMultipleObjects(editor) {
 	scaleCopyIcon.style.display = 'block';
 	scaleCopyIcon.style.margin = '0 auto';
 	scaleCopyButton.dom.appendChild(scaleCopyIcon);
-	scaleCopyButton.dom.title = '复制缩放';
+	scaleCopyButton.dom.title = strings.getKey('sidebar/multi_objects/copy_scale');
 
 	const scalePasteButton = new UIButton('')
 		.setWidth('24px')
@@ -434,7 +435,7 @@ function SidebarMultipleObjects(editor) {
 					multipleObjectsScaleY.setValue(scale.y);
 					multipleObjectsScaleZ.setValue(scale.z);
 					updateScale();
-					editor.showNotification('缩放数据已粘贴');
+					editor.showNotification(strings.getKey('sidebar/multi_objects/paste_scale_success'));
 				} catch (e) {
 					console.error('无法粘贴缩放数据', e);
 				}
@@ -449,7 +450,7 @@ function SidebarMultipleObjects(editor) {
 	scalePasteIcon.style.display = 'block';
 	scalePasteIcon.style.margin = '0 auto';
 	scalePasteButton.dom.appendChild(scalePasteIcon);
-	scalePasteButton.dom.title = '粘贴缩放';
+	scalePasteButton.dom.title = strings.getKey('sidebar/multi_objects/paste_scale');
 
 	// 默认隐藏复制粘贴按钮
 	scaleCopyButton.dom.style.display = 'none';
@@ -474,70 +475,42 @@ function SidebarMultipleObjects(editor) {
 	const multipleObjectsActionsRow = new UIRow();
 
 	// 归零位置按钮
-	const resetPositionButton = new UIButton('重置位置')
+	const resetPositionButton = new UIButton(strings.getKey('sidebar/object/resetPosition'))
 		.setWidth('80px')
 		.onClick(function () {
-			// 保存当前选中的对象列表
-			// const selectedObjects = editor.getSelectedObjects();
-
-			// const multiSelectGroup = editor.multiSelectGroup;
-			// if (multiSelectGroup && multiSelectGroup.userData.savedPosition) {
-			//     const savedPos = multiSelectGroup.userData.savedPosition;
-			//     multipleObjectsPositionX.setValue(savedPos.x);
-			//     multipleObjectsPositionY.setValue(savedPos.y);
-			//     multipleObjectsPositionZ.setValue(savedPos.z);
-			//     updatePosition();
-			//     editor.showNotification('已恢复到上次保存的位置');
-			// } else {
-			//     // 如果没有保存过位置，提示用户
-			//     editor.showNotification('未找到已保存的位置');
-			// }
-			// 设置位置为(0,0,0)
-			multipleObjectsPositionX.setValue(0);
-			multipleObjectsPositionY.setValue(0);
-			multipleObjectsPositionZ.setValue(0);
-			updatePosition();
-			editor.showNotification('位置已重置');
-
-			// 触发多选对象变换更新信号，确保包围盒更新
-			const multiSelectGroup = editor.multiSelectGroup;
-			if (multiSelectGroup) {
-				editor.signals.multipleObjectsTransformChanged.dispatch(multiSelectGroup);
-			}
+			const selectedObjects = editor.getSelectedObjects();
+			const cmds = selectedObjects.map(obj => {
+				return new SetPositionCommand(editor, obj, new THREE.Vector3(0, 0, 0));
+			});
+			const cmd = new MultiCmdsCommand(editor, cmds, 'Reset Position', '重置位置');
+			editor.execute(cmd);
+			editor.showNotification(strings.getKey('sidebar/multi_objects/reset_position_success'));
 		});
 
 	// 重置旋转按钮
-	const resetRotationButton = new UIButton('重置旋转')
+	const resetRotationButton = new UIButton(strings.getKey('sidebar/object/resetRotation'))
 		.setWidth('80px')
 		.onClick(function () {
-			multipleObjectsRotationX.setValue(0);
-			multipleObjectsRotationY.setValue(0);
-			multipleObjectsRotationZ.setValue(0);
-			updateRotation();
-			editor.showNotification('旋转已重置');
-
-			// 触发多选对象变换更新信号，确保包围盒更新
-			const multiSelectGroup = editor.multiSelectGroup;
-			if (multiSelectGroup) {
-				editor.signals.multipleObjectsTransformChanged.dispatch(multiSelectGroup);
-			}
+			const selectedObjects = editor.getSelectedObjects();
+			const cmds = selectedObjects.map(obj => {
+				return new SetRotationCommand(editor, obj, new THREE.Euler(0, 0, 0));
+			});
+			const cmd = new MultiCmdsCommand(editor, cmds, 'Reset Rotation', '重置旋转');
+			editor.execute(cmd);
+			editor.showNotification(strings.getKey('sidebar/multi_objects/reset_rotation_success'));
 		});
 
 	// 重置缩放按钮
-	const resetScaleButton = new UIButton('重置缩放')
+	const resetScaleButton = new UIButton(strings.getKey('sidebar/object/resetScale'))
 		.setWidth('80px')
 		.onClick(function () {
-			multipleObjectsScaleX.setValue(1);
-			multipleObjectsScaleY.setValue(1);
-			multipleObjectsScaleZ.setValue(1);
-			updateScale();
-			editor.showNotification('缩放已重置');
-
-			// 触发多选对象变换更新信号，确保包围盒更新
-			const multiSelectGroup = editor.multiSelectGroup;
-			if (multiSelectGroup) {
-				editor.signals.multipleObjectsTransformChanged.dispatch(multiSelectGroup);
-			}
+			const selectedObjects = editor.getSelectedObjects();
+			const cmds = selectedObjects.map(obj => {
+				return new SetScaleCommand(editor, obj, new THREE.Vector3(1, 1, 1));
+			});
+			const cmd = new MultiCmdsCommand(editor, cmds, 'Reset Scale', '重置缩放');
+			editor.execute(cmd);
+			editor.showNotification(strings.getKey('sidebar/multi_objects/reset_scale_success'));
 		});
 
 	multipleObjectsActionsRow.add(resetPositionButton);
@@ -551,7 +524,7 @@ function SidebarMultipleObjects(editor) {
 	const multipleObjectsVisible = new UICheckbox().onChange(updateVisibility);
 
 	multipleObjectsVisibleRow.add(
-		new UIText('可见性').setWidth('90px')
+		new UIText(strings.getKey('sidebar/object/visible')).setWidth('90px')
 	);
 	multipleObjectsVisibleRow.add(multipleObjectsVisible);
 
@@ -599,10 +572,10 @@ function SidebarMultipleObjects(editor) {
 				}
 			}));
 
-			editor.showNotification('全部变换数据已复制');
+			editor.showNotification(strings.getKey('sidebar/multi_objects/copy_transform_success'));
 		});
 
-	transformCopyButton.dom.title = '复制全部数据';
+	transformCopyButton.dom.title = strings.getKey('sidebar/multi_objects/copy_transform');
 
 	// 添加复制图标
 	const transformCopyIcon = document.createElement('img');
@@ -644,14 +617,14 @@ function SidebarMultipleObjects(editor) {
 						updateScale();
 					}
 
-					editor.showNotification('全部变换数据已粘贴');
+					editor.showNotification(strings.getKey('sidebar/multi_objects/paste_transform_success'));
 				} catch (e) {
 					console.error('无法粘贴变换数据', e);
 				}
 			}
 		});
 
-	transformPasteButton.dom.title = '粘贴全部数据';
+	transformPasteButton.dom.title = strings.getKey('sidebar/multi_objects/paste_transform');
 
 	// 添加粘贴图标
 	const transformPasteIcon = document.createElement('img');
@@ -940,24 +913,26 @@ function SidebarMultipleObjects(editor) {
 	// 更新函数
 	function updatePosition() {
 		const objects = editor.getSelectedObjects();
-		const newX = multipleObjectsPositionX.getValue();
-		const newY = multipleObjectsPositionY.getValue();
-		const newZ = multipleObjectsPositionZ.getValue();
-
-		// 更新临时组的位置
 		const multiSelectGroup = editor.multiSelectGroup;
-		if (multiSelectGroup) {
-			// 设置临时组位置
-			multiSelectGroup.position.set(newX, newY, newZ);
 
-			// 触发临时组的位置变更事件
-			if (multiSelectGroup.userData.onPositionChange) {
-				multiSelectGroup.userData.onPositionChange();
-			}
+		if (!multiSelectGroup) return; // Should exist if we are here?
 
-			// 触发scene变化信号
-			editor.signals.sceneGraphChanged.dispatch();
+		const valX = multipleObjectsPositionX.getValue();
+		const valY = multipleObjectsPositionY.getValue();
+		const valZ = multipleObjectsPositionZ.getValue();
+
+		// Update group position only for valid inputs
+		if (valX !== null) multiSelectGroup.position.x = valX;
+		if (valY !== null) multiSelectGroup.position.y = valY;
+		if (valZ !== null) multiSelectGroup.position.z = valZ;
+
+		// 触发临时组的位置变更事件
+		if (multiSelectGroup.userData.onPositionChange) {
+			multiSelectGroup.userData.onPositionChange();
 		}
+
+		// 触发scene变化信号
+		editor.signals.sceneGraphChanged.dispatch();
 
 		// 更新每个选中对象的位置
 		for (let i = 0; i < objects.length; i++) {
@@ -975,6 +950,8 @@ function SidebarMultipleObjects(editor) {
 		// 只有在不是拖动状态下才创建和执行命令
 		// 如果是拖动状态，会在onDragEnd中统一创建一个命令
 		if (!isDragging) {
+			// MultiTransformCommand captures current state as 'new state'.
+			// Since we already modified objects above, this captures the change.
 			const multiCommand = new MultiTransformCommand(editor, objects, 'MultiPositionCommand', '多对象位置变换');
 			multiCommand.updateNewState(); // 更新变换后的状态
 			editor.execute(multiCommand);
@@ -988,24 +965,29 @@ function SidebarMultipleObjects(editor) {
 
 	function updateRotation() {
 		const objects = editor.getSelectedObjects();
-		const newX = multipleObjectsRotationX.getValue() * THREE.MathUtils.DEG2RAD;
-		const newY = multipleObjectsRotationY.getValue() * THREE.MathUtils.DEG2RAD;
-		const newZ = multipleObjectsRotationZ.getValue() * THREE.MathUtils.DEG2RAD;
+		const multiSelectGroup = editor.multiSelectGroup;
+
+		if (!multiSelectGroup) return;
+
+		const valX = multipleObjectsRotationX.getValue();
+		const valY = multipleObjectsRotationY.getValue();
+		const valZ = multipleObjectsRotationZ.getValue();
+
+		// Use input value if valid, otherwise keep existing group value
+		const newX = (valX !== null ? valX : multiSelectGroup.rotation.x * THREE.MathUtils.RAD2DEG) * THREE.MathUtils.DEG2RAD;
+		const newY = (valY !== null ? valY : multiSelectGroup.rotation.y * THREE.MathUtils.RAD2DEG) * THREE.MathUtils.DEG2RAD;
+		const newZ = (valZ !== null ? valZ : multiSelectGroup.rotation.z * THREE.MathUtils.RAD2DEG) * THREE.MathUtils.DEG2RAD;
 
 		// 更新临时组的旋转
-		const multiSelectGroup = editor.multiSelectGroup;
-		if (multiSelectGroup) {
-			// 设置临时组旋转
-			multiSelectGroup.rotation.set(newX, newY, newZ);
+		multiSelectGroup.rotation.set(newX, newY, newZ);
 
-			// 触发临时组的旋转变更事件
-			if (multiSelectGroup.userData.onRotationChange) {
-				multiSelectGroup.userData.onRotationChange();
-			}
-
-			// 触发scene变化信号
-			editor.signals.sceneGraphChanged.dispatch();
+		// 触发临时组的旋转变更事件
+		if (multiSelectGroup.userData.onRotationChange) {
+			multiSelectGroup.userData.onRotationChange();
 		}
+
+		// 触发scene变化信号
+		editor.signals.sceneGraphChanged.dispatch();
 
 		// 更新选中对象的旋转
 		for (let i = 0; i < objects.length; i++) {
@@ -1034,24 +1016,28 @@ function SidebarMultipleObjects(editor) {
 
 	function updateScale() {
 		const objects = editor.getSelectedObjects();
-		const newX = multipleObjectsScaleX.getValue();
-		const newY = multipleObjectsScaleY.getValue();
-		const newZ = multipleObjectsScaleZ.getValue();
+		const multiSelectGroup = editor.multiSelectGroup;
+
+		if (!multiSelectGroup) return;
+
+		const valX = multipleObjectsScaleX.getValue();
+		const valY = multipleObjectsScaleY.getValue();
+		const valZ = multipleObjectsScaleZ.getValue();
+
+		const newX = valX !== null ? valX : multiSelectGroup.scale.x;
+		const newY = valY !== null ? valY : multiSelectGroup.scale.y;
+		const newZ = valZ !== null ? valZ : multiSelectGroup.scale.z;
 
 		// 更新临时组的缩放
-		const multiSelectGroup = editor.multiSelectGroup;
-		if (multiSelectGroup) {
-			// 设置临时组缩放
-			multiSelectGroup.scale.set(newX, newY, newZ);
+		multiSelectGroup.scale.set(newX, newY, newZ);
 
-			// 触发临时组的缩放变更事件
-			if (multiSelectGroup.userData.onScaleChange) {
-				multiSelectGroup.userData.onScaleChange();
-			}
-
-			// 触发scene变化信号
-			editor.signals.sceneGraphChanged.dispatch();
+		// 触发临时组的缩放变更事件
+		if (multiSelectGroup.userData.onScaleChange) {
+			multiSelectGroup.userData.onScaleChange();
 		}
+
+		// 触发scene变化信号
+		editor.signals.sceneGraphChanged.dispatch();
 
 		// 更新选中对象的缩放
 		for (let i = 0; i < objects.length; i++) {
@@ -1222,46 +1208,103 @@ function SidebarMultipleObjects(editor) {
 			nameTextElements.push(nameText);
 		}
 
-		// 使用临时组的位置
-		const multiSelectGroup = editor.multiSelectGroup;
-		if (multiSelectGroup) {
-			multipleObjectsPositionX.setValue(multiSelectGroup.position.x);
-			multipleObjectsPositionY.setValue(multiSelectGroup.position.y);
-			multipleObjectsPositionZ.setValue(multiSelectGroup.position.z);
-
-			// 使用度数显示旋转
-			multipleObjectsRotationX.setValue(multiSelectGroup.rotation.x * THREE.MathUtils.RAD2DEG);
-			multipleObjectsRotationY.setValue(multiSelectGroup.rotation.y * THREE.MathUtils.RAD2DEG);
-			multipleObjectsRotationZ.setValue(multiSelectGroup.rotation.z * THREE.MathUtils.RAD2DEG);
-
-			multipleObjectsScaleX.setValue(multiSelectGroup.scale.x);
-			multipleObjectsScaleY.setValue(multiSelectGroup.scale.y);
-			multipleObjectsScaleZ.setValue(multiSelectGroup.scale.z);
-
-			// 如果还没有保存过初始位置，则保存当前位置作为初始位置
-			if (!multiSelectGroup.userData.savedPosition) {
-				multiSelectGroup.userData.savedPosition = {
-					x: multiSelectGroup.position.x,
-					y: multiSelectGroup.position.y,
-					z: multiSelectGroup.position.z
-				};
+		// 检查属性一致性函数
+		function checkConsistency(prop, axis) {
+			const firstVal = objects[0][prop][axis];
+			const tolerance = 0.0001;
+			for (let i = 1; i < objects.length; i++) {
+				if (Math.abs(objects[i][prop][axis] - firstVal) > tolerance) {
+					return null;
+				}
 			}
+			return firstVal;
+		}
+
+		// 位置
+		const posX = checkConsistency('position', 'x');
+		const posY = checkConsistency('position', 'y');
+		const posZ = checkConsistency('position', 'z');
+
+		if (posX !== null) {
+			multipleObjectsPositionX.setValue(posX);
+			multipleObjectsPositionX.dom.placeholder = '';
 		} else {
-			// 如果没有临时组，使用第一个对象的变换
-			const firstObject = objects[0];
+			multipleObjectsPositionX.setValue(null);
+			multipleObjectsPositionX.dom.placeholder = '-';
+		}
 
-			multipleObjectsPositionX.setValue(firstObject.position.x);
-			multipleObjectsPositionY.setValue(firstObject.position.y);
-			multipleObjectsPositionZ.setValue(firstObject.position.z);
+		if (posY !== null) {
+			multipleObjectsPositionY.setValue(posY);
+			multipleObjectsPositionY.dom.placeholder = '';
+		} else {
+			multipleObjectsPositionY.setValue(null);
+			multipleObjectsPositionY.dom.placeholder = '-';
+		}
 
-			// 使用度数显示旋转
-			multipleObjectsRotationX.setValue(firstObject.rotation.x * THREE.MathUtils.RAD2DEG);
-			multipleObjectsRotationY.setValue(firstObject.rotation.y * THREE.MathUtils.RAD2DEG);
-			multipleObjectsRotationZ.setValue(firstObject.rotation.z * THREE.MathUtils.RAD2DEG);
+		if (posZ !== null) {
+			multipleObjectsPositionZ.setValue(posZ);
+			multipleObjectsPositionZ.dom.placeholder = '';
+		} else {
+			multipleObjectsPositionZ.setValue(null);
+			multipleObjectsPositionZ.dom.placeholder = '-';
+		}
 
-			multipleObjectsScaleX.setValue(firstObject.scale.x);
-			multipleObjectsScaleY.setValue(firstObject.scale.y);
-			multipleObjectsScaleZ.setValue(firstObject.scale.z);
+		// 旋转 (Euler)
+		const rotX = checkConsistency('rotation', 'x');
+		const rotY = checkConsistency('rotation', 'y');
+		const rotZ = checkConsistency('rotation', 'z');
+
+		if (rotX !== null) {
+			multipleObjectsRotationX.setValue(rotX * THREE.MathUtils.RAD2DEG);
+			multipleObjectsRotationX.dom.placeholder = '';
+		} else {
+			multipleObjectsRotationX.setValue(null);
+			multipleObjectsRotationX.dom.placeholder = '-';
+		}
+
+		if (rotY !== null) {
+			multipleObjectsRotationY.setValue(rotY * THREE.MathUtils.RAD2DEG);
+			multipleObjectsRotationY.dom.placeholder = '';
+		} else {
+			multipleObjectsRotationY.setValue(null);
+			multipleObjectsRotationY.dom.placeholder = '-';
+		}
+
+		if (rotZ !== null) {
+			multipleObjectsRotationZ.setValue(rotZ * THREE.MathUtils.RAD2DEG);
+			multipleObjectsRotationZ.dom.placeholder = '';
+		} else {
+			multipleObjectsRotationZ.setValue(null);
+			multipleObjectsRotationZ.dom.placeholder = '-';
+		}
+
+		// 缩放
+		const scaleX = checkConsistency('scale', 'x');
+		const scaleY = checkConsistency('scale', 'y');
+		const scaleZ = checkConsistency('scale', 'z');
+
+		if (scaleX !== null) {
+			multipleObjectsScaleX.setValue(scaleX);
+			multipleObjectsScaleX.dom.placeholder = '';
+		} else {
+			multipleObjectsScaleX.setValue(null);
+			multipleObjectsScaleX.dom.placeholder = '-';
+		}
+
+		if (scaleY !== null) {
+			multipleObjectsScaleY.setValue(scaleY);
+			multipleObjectsScaleY.dom.placeholder = '';
+		} else {
+			multipleObjectsScaleY.setValue(null);
+			multipleObjectsScaleY.dom.placeholder = '-';
+		}
+
+		if (scaleZ !== null) {
+			multipleObjectsScaleZ.setValue(scaleZ);
+			multipleObjectsScaleZ.dom.placeholder = '';
+		} else {
+			multipleObjectsScaleZ.setValue(null);
+			multipleObjectsScaleZ.dom.placeholder = '-';
 		}
 
 		// 检查可见性

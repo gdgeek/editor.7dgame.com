@@ -719,7 +719,7 @@ class UINumber extends UIElement {
 
 	setValue(value) {
 
-		if (value !== undefined) {
+		if (value !== undefined && value !== null && !isNaN(value)) {
 
 			value = parseFloat(value);
 
@@ -730,6 +730,11 @@ class UINumber extends UIElement {
 			this.dom.value = value.toFixed(this.precision);
 
 			if (this.unit !== '') this.dom.value += ' ' + this.unit;
+
+		} else {
+
+			this.value = null;
+			this.dom.value = '';
 
 		}
 
