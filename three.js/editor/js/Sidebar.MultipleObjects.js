@@ -182,14 +182,12 @@ function SidebarMultipleObjects(editor) {
 	document.addEventListener('mouseup', onDragEnd);
 
 	multipleObjectsPositionRow.add(new UIText('位置').setWidth('90px'));
-	multipleObjectsPositionRow.add(multipleObjectsPositionX, 'X');
-	multipleObjectsPositionRow.add(multipleObjectsPositionY, 'Y');
-	multipleObjectsPositionRow.add(multipleObjectsPositionZ, 'Z');
+	multipleObjectsPositionRow.add(multipleObjectsPositionX, multipleObjectsPositionY, multipleObjectsPositionZ);
 
 	// 添加位置复制粘贴按钮
 	const positionCopyButton = new UIButton('')
 		.setWidth('24px')
-		.onClick(function() {
+		.onClick(function () {
 			const position = new THREE.Vector3(
 				multipleObjectsPositionX.getValue(),
 				multipleObjectsPositionY.getValue(),
@@ -218,7 +216,7 @@ function SidebarMultipleObjects(editor) {
 
 	const positionPasteButton = new UIButton('')
 		.setWidth('24px')
-		.onClick(function() {
+		.onClick(function () {
 			const positionData = localStorage.getItem('multipleObjectsPosition');
 			if (positionData) {
 				try {
@@ -249,11 +247,11 @@ function SidebarMultipleObjects(editor) {
 	positionPasteButton.dom.style.display = 'none';
 
 	// 添加鼠标悬停事件
-	multipleObjectsPositionRow.dom.addEventListener('mouseenter', function() {
+	multipleObjectsPositionRow.dom.addEventListener('mouseenter', function () {
 		positionCopyButton.dom.style.display = '';
 		positionPasteButton.dom.style.display = '';
 	});
-	multipleObjectsPositionRow.dom.addEventListener('mouseleave', function() {
+	multipleObjectsPositionRow.dom.addEventListener('mouseleave', function () {
 		positionCopyButton.dom.style.display = 'none';
 		positionPasteButton.dom.style.display = 'none';
 	});
@@ -287,14 +285,12 @@ function SidebarMultipleObjects(editor) {
 	multipleObjectsRotationZ.dom.addEventListener('mouseup', onDragEnd);
 
 	multipleObjectsRotationRow.add(new UIText('旋转').setWidth('90px'));
-	multipleObjectsRotationRow.add(multipleObjectsRotationX, 'X');
-	multipleObjectsRotationRow.add(multipleObjectsRotationY, 'Y');
-	multipleObjectsRotationRow.add(multipleObjectsRotationZ, 'Z');
+	multipleObjectsRotationRow.add(multipleObjectsRotationX, multipleObjectsRotationY, multipleObjectsRotationZ);
 
 	// 添加旋转复制粘贴按钮
 	const rotationCopyButton = new UIButton('')
 		.setWidth('24px')
-		.onClick(function() {
+		.onClick(function () {
 			const rotation = new THREE.Vector3(
 				multipleObjectsRotationX.getValue(),
 				multipleObjectsRotationY.getValue(),
@@ -323,7 +319,7 @@ function SidebarMultipleObjects(editor) {
 
 	const rotationPasteButton = new UIButton('')
 		.setWidth('24px')
-		.onClick(function() {
+		.onClick(function () {
 			const rotationData = localStorage.getItem('multipleObjectsRotation');
 			if (rotationData) {
 				try {
@@ -354,11 +350,11 @@ function SidebarMultipleObjects(editor) {
 	rotationPasteButton.dom.style.display = 'none';
 
 	// 添加鼠标悬停事件
-	multipleObjectsRotationRow.dom.addEventListener('mouseenter', function() {
+	multipleObjectsRotationRow.dom.addEventListener('mouseenter', function () {
 		rotationCopyButton.dom.style.display = '';
 		rotationPasteButton.dom.style.display = '';
 	});
-	multipleObjectsRotationRow.dom.addEventListener('mouseleave', function() {
+	multipleObjectsRotationRow.dom.addEventListener('mouseleave', function () {
 		rotationCopyButton.dom.style.display = 'none';
 		rotationPasteButton.dom.style.display = 'none';
 	});
@@ -395,14 +391,12 @@ function SidebarMultipleObjects(editor) {
 	multipleObjectsScaleZ.dom.addEventListener('mouseup', onDragEnd);
 
 	multipleObjectsScaleRow.add(new UIText('缩放').setWidth('90px'));
-	multipleObjectsScaleRow.add(multipleObjectsScaleX, 'X');
-	multipleObjectsScaleRow.add(multipleObjectsScaleY, 'Y');
-	multipleObjectsScaleRow.add(multipleObjectsScaleZ, 'Z');
+	multipleObjectsScaleRow.add(multipleObjectsScaleX, multipleObjectsScaleY, multipleObjectsScaleZ);
 
 	// 添加缩放复制粘贴按钮
 	const scaleCopyButton = new UIButton('')
 		.setWidth('24px')
-		.onClick(function() {
+		.onClick(function () {
 			const scale = new THREE.Vector3(
 				multipleObjectsScaleX.getValue(),
 				multipleObjectsScaleY.getValue(),
@@ -431,7 +425,7 @@ function SidebarMultipleObjects(editor) {
 
 	const scalePasteButton = new UIButton('')
 		.setWidth('24px')
-		.onClick(function() {
+		.onClick(function () {
 			const scaleData = localStorage.getItem('multipleObjectsScale');
 			if (scaleData) {
 				try {
@@ -462,11 +456,11 @@ function SidebarMultipleObjects(editor) {
 	scalePasteButton.dom.style.display = 'none';
 
 	// 添加鼠标悬停事件
-	multipleObjectsScaleRow.dom.addEventListener('mouseenter', function() {
+	multipleObjectsScaleRow.dom.addEventListener('mouseenter', function () {
 		scaleCopyButton.dom.style.display = '';
 		scalePasteButton.dom.style.display = '';
 	});
-	multipleObjectsScaleRow.dom.addEventListener('mouseleave', function() {
+	multipleObjectsScaleRow.dom.addEventListener('mouseleave', function () {
 		scaleCopyButton.dom.style.display = 'none';
 		scalePasteButton.dom.style.display = 'none';
 	});
@@ -482,22 +476,22 @@ function SidebarMultipleObjects(editor) {
 	// 归零位置按钮
 	const resetPositionButton = new UIButton('重置位置')
 		.setWidth('80px')
-		.onClick(function() {
+		.onClick(function () {
 			// 保存当前选中的对象列表
 			// const selectedObjects = editor.getSelectedObjects();
 
 			// const multiSelectGroup = editor.multiSelectGroup;
-            // if (multiSelectGroup && multiSelectGroup.userData.savedPosition) {
-            //     const savedPos = multiSelectGroup.userData.savedPosition;
-            //     multipleObjectsPositionX.setValue(savedPos.x);
-            //     multipleObjectsPositionY.setValue(savedPos.y);
-            //     multipleObjectsPositionZ.setValue(savedPos.z);
-            //     updatePosition();
-            //     editor.showNotification('已恢复到上次保存的位置');
-            // } else {
-            //     // 如果没有保存过位置，提示用户
-            //     editor.showNotification('未找到已保存的位置');
-            // }
+			// if (multiSelectGroup && multiSelectGroup.userData.savedPosition) {
+			//     const savedPos = multiSelectGroup.userData.savedPosition;
+			//     multipleObjectsPositionX.setValue(savedPos.x);
+			//     multipleObjectsPositionY.setValue(savedPos.y);
+			//     multipleObjectsPositionZ.setValue(savedPos.z);
+			//     updatePosition();
+			//     editor.showNotification('已恢复到上次保存的位置');
+			// } else {
+			//     // 如果没有保存过位置，提示用户
+			//     editor.showNotification('未找到已保存的位置');
+			// }
 			// 设置位置为(0,0,0)
 			multipleObjectsPositionX.setValue(0);
 			multipleObjectsPositionY.setValue(0);
@@ -515,7 +509,7 @@ function SidebarMultipleObjects(editor) {
 	// 重置旋转按钮
 	const resetRotationButton = new UIButton('重置旋转')
 		.setWidth('80px')
-		.onClick(function() {
+		.onClick(function () {
 			multipleObjectsRotationX.setValue(0);
 			multipleObjectsRotationY.setValue(0);
 			multipleObjectsRotationZ.setValue(0);
@@ -532,7 +526,7 @@ function SidebarMultipleObjects(editor) {
 	// 重置缩放按钮
 	const resetScaleButton = new UIButton('重置缩放')
 		.setWidth('80px')
-		.onClick(function() {
+		.onClick(function () {
 			multipleObjectsScaleX.setValue(1);
 			multipleObjectsScaleY.setValue(1);
 			multipleObjectsScaleZ.setValue(1);
@@ -569,7 +563,7 @@ function SidebarMultipleObjects(editor) {
 	// 全部变换数据复制按钮
 	const transformCopyButton = new UIButton('')
 		.setWidth('24px')
-		.onClick(function() {
+		.onClick(function () {
 			const positionData = new THREE.Vector3(
 				multipleObjectsPositionX.getValue(),
 				multipleObjectsPositionY.getValue(),
@@ -623,7 +617,7 @@ function SidebarMultipleObjects(editor) {
 	const transformPasteButton = new UIButton('')
 		.setMarginLeft('2px')
 		.setWidth('24px')
-		.onClick(function() {
+		.onClick(function () {
 			const transformData = localStorage.getItem('multipleObjectsTransform');
 			if (transformData) {
 				try {
@@ -677,7 +671,7 @@ function SidebarMultipleObjects(editor) {
 	container.add(transformActionsRow);
 
 	// 创建变换组边框div
-	const createTransformBorder = function() {
+	const createTransformBorder = function () {
 		// 移除旧的边框（如果存在）
 		const oldBorder = container.dom.querySelector('.transform-border');
 		if (oldBorder) {
@@ -702,7 +696,7 @@ function SidebarMultipleObjects(editor) {
 	let transformBorder = createTransformBorder();
 
 	// 更新边框位置和大小
-	const updateBorderPosition = function() {
+	const updateBorderPosition = function () {
 		if (!multipleObjectsPositionRow.dom || !multipleObjectsScaleRow.dom) return;
 
 		// 计算数据区域的位置（标签宽度是90px）
@@ -751,7 +745,7 @@ function SidebarMultipleObjects(editor) {
 	let spacerRow = null;
 
 	// 创建或获取间隙行
-	const getSpacerRow = function() {
+	const getSpacerRow = function () {
 		if (!spacerRow) {
 			spacerRow = new UIPanel();
 			spacerRow.setDisplay('none');
@@ -764,7 +758,7 @@ function SidebarMultipleObjects(editor) {
 	};
 
 	// 显示变换操作和边框
-	const showTransformActions = function() {
+	const showTransformActions = function () {
 		transformActionsRow.setDisplay('');
 		transformBorder.style.display = 'block';
 		updateBorderPosition();
@@ -774,7 +768,7 @@ function SidebarMultipleObjects(editor) {
 	};
 
 	// 隐藏变换操作和边框
-	const hideTransformActions = function() {
+	const hideTransformActions = function () {
 		transformActionsRow.setDisplay('none');
 		transformBorder.style.display = 'none';
 
@@ -788,7 +782,7 @@ function SidebarMultipleObjects(editor) {
 	const eventListeners = [];
 
 	// 移除所有事件监听器
-	const removeAllEventListeners = function() {
+	const removeAllEventListeners = function () {
 		for (const listener of eventListeners) {
 			listener.element.removeEventListener(listener.type, listener.callback);
 		}
@@ -796,7 +790,7 @@ function SidebarMultipleObjects(editor) {
 	};
 
 	// 添加事件监听器并保存引用
-	const addEventListenerWithRef = function(element, type, callback) {
+	const addEventListenerWithRef = function (element, type, callback) {
 		element.addEventListener(type, callback);
 		eventListeners.push({
 			element: element,
@@ -806,7 +800,7 @@ function SidebarMultipleObjects(editor) {
 	};
 
 	// 创建一个透明的悬停区域覆盖三个变换行的数据区域
-	const createHoverArea = function() {
+	const createHoverArea = function () {
 		// 移除旧的悬停区域（如果存在）
 		const oldHoverArea = container.dom.querySelector('.transform-hover-area');
 		if (oldHoverArea) {
@@ -833,7 +827,7 @@ function SidebarMultipleObjects(editor) {
 		let hideTimeout = null;
 
 		// 安全地显示变换操作和边框
-		const safeShowTransformActions = function() {
+		const safeShowTransformActions = function () {
 			// 清除任何正在等待的隐藏定时器
 			if (hideTimeout) {
 				clearTimeout(hideTimeout);
@@ -845,14 +839,14 @@ function SidebarMultipleObjects(editor) {
 		};
 
 		// 安全地隐藏变换操作和边框，带延迟
-		const safeHideTransformActions = function() {
+		const safeHideTransformActions = function () {
 			// 清除任何正在等待的隐藏定时器
 			if (hideTimeout) {
 				clearTimeout(hideTimeout);
 			}
 
 			// 设置一个短暂的延迟，给鼠标时间移动到按钮上
-			hideTimeout = setTimeout(function() {
+			hideTimeout = setTimeout(function () {
 				if (!isMouseInRelevantArea) {
 					hideTransformActions();
 				}
@@ -861,7 +855,7 @@ function SidebarMultipleObjects(editor) {
 		};
 
 		// 检查鼠标是否在按钮区域
-		const isInButtonArea = function(event) {
+		const isInButtonArea = function (event) {
 			const rect = transformActionsRow.dom.getBoundingClientRect();
 			return (
 				event.clientX >= rect.left &&
@@ -885,7 +879,7 @@ function SidebarMultipleObjects(editor) {
 		container.dom.appendChild(transformAreaOverlay);
 
 		// 全局鼠标移动事件
-		const handleGlobalMouseMove = function(event) {
+		const handleGlobalMouseMove = function (event) {
 			// 计算鼠标是否在变换数据区域内
 			const overlayRect = transformAreaOverlay.getBoundingClientRect();
 			const inOverlayArea = (
@@ -899,9 +893,9 @@ function SidebarMultipleObjects(editor) {
 
 			// 更新状态
 			isMouseInRelevantArea = inOverlayArea || inButtonArea ||
-								transformActionsRow.dom.contains(event.target) ||
-								transformCopyButton.dom.contains(event.target) ||
-								transformPasteButton.dom.contains(event.target);
+				transformActionsRow.dom.contains(event.target) ||
+				transformCopyButton.dom.contains(event.target) ||
+				transformPasteButton.dom.contains(event.target);
 
 			// 根据鼠标位置决定显示或隐藏
 			if (isMouseInRelevantArea) {
@@ -915,27 +909,27 @@ function SidebarMultipleObjects(editor) {
 		addEventListenerWithRef(document, 'mousemove', handleGlobalMouseMove);
 
 		// 为复制粘贴按钮添加单独的鼠标事件
-		addEventListenerWithRef(transformCopyButton.dom, 'mouseenter', function() {
+		addEventListenerWithRef(transformCopyButton.dom, 'mouseenter', function () {
 			isMouseInRelevantArea = true;
 			safeShowTransformActions();
 		});
 
-		addEventListenerWithRef(transformPasteButton.dom, 'mouseenter', function() {
+		addEventListenerWithRef(transformPasteButton.dom, 'mouseenter', function () {
 			isMouseInRelevantArea = true;
 			safeShowTransformActions();
 		});
 
 		// 为按钮行添加事件
-		addEventListenerWithRef(transformActionsRow.dom, 'mouseenter', function() {
+		addEventListenerWithRef(transformActionsRow.dom, 'mouseenter', function () {
 			isMouseInRelevantArea = true;
 			safeShowTransformActions();
 		});
 
 		// 在document上添加全局点击事件，用于处理点击按钮后的状态
-		addEventListenerWithRef(document, 'click', function(event) {
+		addEventListenerWithRef(document, 'click', function (event) {
 			if (transformCopyButton.dom.contains(event.target) || transformPasteButton.dom.contains(event.target)) {
 				// 如果点击的是复制或粘贴按钮，保持显示一小段时间后隐藏
-				setTimeout(function() {
+				setTimeout(function () {
 					isMouseInRelevantArea = false;
 					hideTransformActions();
 				}, 200);
@@ -1283,7 +1277,7 @@ function SidebarMultipleObjects(editor) {
 	}
 
 	// 事件监听
-	signals.objectSelected.add(function(object) {
+	signals.objectSelected.add(function (object) {
 		if (object !== null) {
 			const selectedObjects = editor.getSelectedObjects();
 
@@ -1293,7 +1287,7 @@ function SidebarMultipleObjects(editor) {
 				updateUI(selectedObjects);
 
 				// 延迟执行以确保DOM已更新
-				setTimeout(function() {
+				setTimeout(function () {
 					createHoverArea();
 					transformBorder = createTransformBorder();
 				}, 100);
@@ -1305,7 +1299,7 @@ function SidebarMultipleObjects(editor) {
 		}
 	});
 
-	signals.objectChanged.add(function(object) {
+	signals.objectChanged.add(function (object) {
 		const selectedObjects = editor.getSelectedObjects();
 
 		// 只有在多选模式下才更新UI
@@ -1317,7 +1311,7 @@ function SidebarMultipleObjects(editor) {
 	});
 
 	// 监听保存信号，当场景保存时更新当前多选对象的初始位置
-	signals.upload.add(function() {
+	signals.upload.add(function () {
 		const multiSelectGroup = editor.multiSelectGroup;
 		if (multiSelectGroup) {
 			// 保存当前位置到userData中
@@ -1331,7 +1325,7 @@ function SidebarMultipleObjects(editor) {
 		}
 	});
 
-	signals.refreshSidebarObject3D.add(function(object) {
+	signals.refreshSidebarObject3D.add(function (object) {
 		const selectedObjects = editor.getSelectedObjects();
 
 		// 只有在多选模式下才更新UI
@@ -1343,7 +1337,7 @@ function SidebarMultipleObjects(editor) {
 	});
 
 	// 监听多选对象变换变化信号
-	signals.multipleObjectsTransformChanged.add(function(object) {
+	signals.multipleObjectsTransformChanged.add(function (object) {
 		if (object === editor.multiSelectGroup) {
 			// 更新多选面板UI，但不触发更新命令
 			updateUIWithoutCommand(editor.getSelectedObjects());
