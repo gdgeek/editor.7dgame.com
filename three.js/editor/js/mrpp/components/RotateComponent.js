@@ -75,25 +75,26 @@ class RotateComponent {
     container.add(this.objectRotationRow);
 
 
-    const isPreviewing = this.object.userData.previewRotate && this.object.userData.previewRotate.active;
+    const isPreviewing = this.object.previewRotate && this.object.previewRotate.active;
     const buttonText = isPreviewing ? strings.getKey('sidebar/components/rotate/stop') : strings.getKey('sidebar/components/rotate/preview');
 
     const buttonRow = new UIRow();
     const previewButton = new UIButton(buttonText).onClick(() => {
-      if (!this.object.userData.previewRotate) {
+      if (!this.object.previewRotate) {
         // Start Preview
-        this.object.userData.previewRotate = {
+        this.object.previewRotate = {
           active: true,
           startTime: performance.now(),
           originalRotation: this.object.rotation.clone()
         };
+        this.object.rotation.reorder('ZXY');
         // Force UI update to change button text to 'Stop'
         this.editor.signals.componentChanged.dispatch(this.component);
       } else {
         // Stop Preview Manually
-        const state = this.object.userData.previewRotate;
+        const state = this.object.previewRotate;
         this.object.rotation.copy(state.originalRotation);
-        delete this.object.userData.previewRotate;
+        delete this.object.previewRotate;
 
         this.editor.signals.objectChanged.dispatch(this.object);
         // Force UI update to change button text back to 'Preview'

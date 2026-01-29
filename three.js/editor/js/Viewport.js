@@ -1160,14 +1160,14 @@ function Viewport(editor) {
 		// Live preview of Rotate component
 		const time = performance.now();
 		editor.scene.traverse(function (object) {
-			if (object.userData.previewRotate && object.userData.previewRotate.active) {
-				const state = object.userData.previewRotate;
+			if (object.previewRotate && object.previewRotate.active) {
+				const state = object.previewRotate;
 				const elapsed = time - state.startTime;
 
-				if (elapsed >= 5000) {
+				if (elapsed >= 8000) {
 					// Stop and Reset
 					object.rotation.copy(state.originalRotation);
-					delete object.userData.previewRotate;
+					delete object.previewRotate;
 
 					// Find the Rotate component to dispatch update for UI refresh
 					if (object.components) {
@@ -1185,9 +1185,21 @@ function Viewport(editor) {
 						const component = object.components[i];
 						if (component.type === 'Rotate') { // Ignore isRotating flag for preview button
 							const speed = component.parameters.speed;
-							if (speed.x !== 0) object.rotation.x += THREE.MathUtils.degToRad(speed.x) * delta;
-							if (speed.y !== 0) object.rotation.y += THREE.MathUtils.degToRad(speed.y) * delta;
-							if (speed.z !== 0) object.rotation.z += THREE.MathUtils.degToRad(speed.z) * delta;
+							// 1. 将 Unity 的角度速度转换为 Three.js 的弧度
+							// 因为 Unity(LHS) 的正旋转 = Three.js(RHS) 的负旋转，所以全部取负
+							const x = THREE.MathUtils.degToRad(speed.x) * delta;
+							const y = THREE.MathUtils.degToRad(-speed.y) * delta;
+							const z = THREE.MathUtils.degToRad(-speed.z) * delta;
+
+							// 2. 按照 Unity 的 ZXY 顺序创建增量欧拉角
+							const deltaEuler = new THREE.Euler(x, y, z, 'ZXY');
+
+							// 3. 将增量转换为四元数
+							const incrementalQuaternion = new THREE.Quaternion().setFromEuler(deltaEuler);
+
+							// 4. 模拟 Unity 的 transform.Rotate (Local Space)
+							// 在 Three.js 中，物体的当前四元数乘以增量四元数即为局部空间旋转
+							object.quaternion.multiply(incrementalQuaternion);
 							needsUpdate = true;
 						}
 					}
