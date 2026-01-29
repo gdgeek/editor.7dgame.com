@@ -207,7 +207,7 @@ function Strings(config) {
 			'sidebar/components/select/rotate': 'Self-Rotation',
 			'sidebar/components/rotate/rotateOnLaunch': 'Rotate on Launch',
 			'sidebar/components/rotate/speed': 'Rotation Speed',
-			'sidebar/components/rotate/preview': 'Preview (5s)',
+			'sidebar/components/rotate/preview': 'Preview (8s)',
 			'sidebar/components/rotate/stop': 'Stop',
 
 			'sidebar/components/select/action': 'Interactive Action',
@@ -727,7 +727,7 @@ function Strings(config) {
 			'sidebar/components/select/rotate': '自旋转',
 			'sidebar/components/rotate/rotateOnLaunch': '启动时旋转',
 			'sidebar/components/rotate/speed': '旋转速度',
-			'sidebar/components/rotate/preview': '预览 (5s)',
+			'sidebar/components/rotate/preview': '预览 (8s)',
 			'sidebar/components/rotate/stop': '停止',
 
 			'sidebar/components/select/action': '交互触发',
@@ -1251,7 +1251,7 @@ function Strings(config) {
 			'sidebar/components/select/rotate': '自動回転',
 			'sidebar/components/rotate/rotateOnLaunch': '起動時に回転',
 			'sidebar/components/rotate/speed': '回転速度',
-			'sidebar/components/rotate/preview': 'プレビュー (5s)',
+			'sidebar/components/rotate/preview': 'プレビュー (8s)',
 			'sidebar/components/rotate/stop': '停止',
 
 			'sidebar/components/select/action': 'インタラクティブアクション',
@@ -1774,7 +1774,7 @@ function Strings(config) {
 			"sidebar/components/select/rotate": "自旋轉",
 			"sidebar/components/rotate/rotateOnLaunch": "啟動時旋轉",
 			"sidebar/components/rotate/speed": "旋轉速度",
-			"sidebar/components/rotate/preview": "預覽 (5s)",
+			"sidebar/components/rotate/preview": "預覽 (8s)",
 			"sidebar/components/rotate/stop": "停止",
 
 			"sidebar/components/select/action": "互動觸發",
@@ -2296,7 +2296,7 @@ function Strings(config) {
 			"sidebar/components/select/rotate": "หมุนเอง",
 			"sidebar/components/rotate/rotateOnLaunch": "หมุนเมื่อเปิดใช้งาน",
 			"sidebar/components/rotate/speed": "ความเร็วในการหมุน",
-			"sidebar/components/rotate/preview": "ดูตัวอย่าง (5s)",
+			"sidebar/components/rotate/preview": "ดูตัวอย่าง (8s)",
 			"sidebar/components/rotate/stop": "หยุด",
 
 			"sidebar/components/select/action": "การกระตุ้นเชิงโต้ตอบ",
