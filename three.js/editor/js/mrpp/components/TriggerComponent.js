@@ -1,13 +1,14 @@
 import { UISelect, UIBreak, UIText, UIRow, UIInput } from '../../libs/ui.js';
 
 import { SetValueCommand } from '../../commands/SetValueCommand.js';
+import { MultiCmdsCommand } from '../../commands/MultiCmdsCommand.js';
 class TriggerComponent {
 
   constructor(editor, object, component) {
 
     this.editor = editor;
     const node = editor.scene;
-    const types = ['Voxel', 'Polygen'];
+    const types = ['Voxel', 'Polygen', 'Picture'];
     this.list = [];
     node.traverse((child) => {
       if (types.includes(child.type) && child.uuid !== object.uuid) {
@@ -79,18 +80,41 @@ class TriggerComponent {
 
   }
   update() {
-    this.editor.execute(new SetValueCommand(this.editor, this.component.parameters, 'target', this.select.getValue()));
+    const commands = [];
 
+    // Target update logic
+    const newTargetUuid = this.select.getValue();
+    const oldTargetUuid = this.component.parameters.target;
 
-    this.editor.execute(new SetValueCommand(
-      this.editor,
-      this.component.parameters,
-      'action',
-      this.action.getValue()
-    ));
+    if (newTargetUuid !== oldTargetUuid) {
+      commands.push(new SetValueCommand(this.editor, this.component.parameters, 'target', newTargetUuid));
 
-    self.editor.signals.componentChanged.dispatch(this.component);
+      if (oldTargetUuid) {
+        const oldObject = this.editor.objectByUuid(oldTargetUuid);
+        if (oldObject && oldObject.userData) {
+          commands.push(new SetValueCommand(this.editor, oldObject.userData, 'isCollider', false));
+        }
+      }
 
+      if (newTargetUuid) {
+        const newObject = this.editor.objectByUuid(newTargetUuid);
+        if (newObject && newObject.userData) {
+          commands.push(new SetValueCommand(this.editor, newObject.userData, 'isCollider', true));
+        }
+      }
+    }
+
+    // Action update logic
+    const newAction = this.action.getValue();
+    if (newAction !== this.component.parameters.action) {
+      commands.push(new SetValueCommand(this.editor, this.component.parameters, 'action', newAction));
+    }
+
+    if (commands.length > 0) {
+      this.editor.execute(new MultiCmdsCommand(this.editor, commands));
+    }
+
+    this.editor.signals.componentChanged.dispatch(this.component);
 
   }
   renderer(container) {

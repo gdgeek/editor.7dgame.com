@@ -4,7 +4,7 @@ class Builder {
 
 	constructor() {
 	}
-	node( type, name ) {
+	node(type, name) {
 
 		return {
 			type: type,
@@ -25,24 +25,27 @@ class Builder {
 		};
 
 	}
-	resource( data ) {
+	resource(data) {
 
 		let ret = null;
-		switch ( data.type.toLowerCase() ) {
+		switch (data.type.toLowerCase()) {
 
 			case 'voxel':
-				ret = this.node( 'Voxel', data.name + ' [voxel]' );
+				ret = this.node('Voxel', data.name + ' [voxel]');
+				ret.parameters.isCollider = false;
 				break;
 			case 'picture':
 				ret = this.node('Picture', data.name + ' [picture]');
 				ret.parameters.sortingOrder = 0;
 				ret.parameters.width = 0.5;
+				ret.parameters.isCollider = false;
 				break;
 			case 'polygen':
-				ret = this.node( 'Polygen', data.name + ' [polygen]' );
+				ret = this.node('Polygen', data.name + ' [polygen]');
+				ret.parameters.isCollider = false;
 				break;
 			case 'audio':
-				ret = this.node( 'Sound', data.name + ' [sound]' );
+				ret = this.node('Sound', data.name + ' [sound]');
 				ret.parameters.loop = false;
 				ret.parameters.volume = 1;
 				ret.parameters.rate = 1;
@@ -50,7 +53,7 @@ class Builder {
 				ret.parameters.src = data.src;
 				break;
 			case 'video':
-				ret = this.node( 'Video', data.name + ' [video]' );
+				ret = this.node('Video', data.name + ' [video]');
 				ret.parameters.width = 0.5;
 				ret.parameters.loop = false;
 				ret.parameters.muted = false;
@@ -61,7 +64,7 @@ class Builder {
 				ret.parameters.src = data.src;
 				break;
 			case 'particle':
-				ret = this.node( 'Particle', data.name + ' [particle]' );
+				ret = this.node('Particle', data.name + ' [particle]');
 				ret.parameters.width = 0.5;
 				if (data.src) {
 					ret.parameters.src = data.src;
@@ -84,7 +87,7 @@ class Builder {
 				break;
 		}
 
-		if ( ret != null ) {
+		if (ret != null) {
 
 			ret.parameters.resource = data.id;
 
@@ -93,7 +96,7 @@ class Builder {
 		return ret;
 
 	}
-	module( meta_id, title = 'Module' ) {
+	module(meta_id, title = 'Module') {
 
 		return {
 			type: 'Module',
@@ -112,7 +115,7 @@ class Builder {
 		};
 
 	}
-	anchor( title = 'Anchor' ) {
+	anchor(title = 'Anchor') {
 
 		return {
 			type: 'Anchor',
@@ -130,9 +133,9 @@ class Builder {
 		};
 
 	}
-	text( content = 'Hello World' ) {
+	text(content = 'Hello World') {
 
-		const ret = this.node( 'Text', 'Text' );
+		const ret = this.node('Text', 'Text');
 		ret.parameters.text = content;
 		// rect stored in meters: 256px * 0.005m/px = 1.28m, 64px * 0.005 = 0.32m
 		ret.parameters.rect = { x: 1.28, y: 0.32 };
@@ -151,15 +154,15 @@ class Builder {
 		return ret;
 
 	}
-	phototype( data ) {
-		const ret = this.node( 'Phototype', data.title +' [phototype]' );
+	phototype(data) {
+		const ret = this.node('Phototype', data.title + ' [phototype]');
 		ret.parameters.data = data.data || {};
 		ret.parameters.phototype = data.phototype || {};
 		return ret;
 	}
 	entity() {
 
-		const ret = this.node( 'Entity', 'Point' );
+		const ret = this.node('Entity', 'Point');
 		return ret;
 
 	}
