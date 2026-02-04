@@ -251,7 +251,7 @@ class MetaFactory extends Factory {
 
 		url = convertToHttps(url);
 		const self = this;
-		return new Promise((resolve, reject) => {
+		return new Promise((resolve, _reject) => {
 
 			const loader = new GLTFLoader(THREE.DefaultLoadingManager);
 			const dracoLoader = new DRACOLoader();
@@ -426,7 +426,6 @@ class MetaFactory extends Factory {
 		const fileUrl = resource.file?.url;
 
 		let finalUrl = "";
-		let isVideoSource = false;
 
 		const isVideoRegex = /\.(mp4|mov|avi|webm)($|\?)/i;
 
@@ -512,14 +511,14 @@ class MetaFactory extends Factory {
 	*/
 
 	}
-	async getEntity(data, resources) {
+	async getEntity(data, _resources) {
 
 		const entity = new THREE.Group();
 		entity.name = data.parameters.name;
 		return entity;
 
 	}
-	async getText(data, resources) {
+	async getText(data, _resources) {
 		const rawParams = data.parameters || {};
 		const PIXEL_SCALE = 0.005;
 		const defaults = {
@@ -584,7 +583,7 @@ class MetaFactory extends Factory {
 		if (resources.has(data.parameters.resource.toString())) {
 
 			const resource = resources.get(data.parameters.resource.toString());
-			return await this.loadVoxel(resource.file.url);
+			return this.loadVoxel(resource.file.url);
 
 		}
 
@@ -604,7 +603,7 @@ class MetaFactory extends Factory {
 		return null;
 	}
 
-	async getEmpty(data, resources) {
+	async getEmpty(data, _resources) {
 
 		const entity = new THREE.Group();
 		entity.name = data.parameters.name;
@@ -636,7 +635,7 @@ class MetaFactory extends Factory {
 				const size = info.size || { x: 1, y: 1 };
 				const width = data.parameters.width || 0.5;
 				const height = width * (size.y / size.x);
-				return await this.getPlane(resource.image ? resource.image.url : fileUrl, width, height);
+				return this.getPlane(resource.image ? resource.image.url : fileUrl, width, height);
 			}
 			else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
 				// 处理为图片
@@ -645,7 +644,7 @@ class MetaFactory extends Factory {
 				const size = info.size || { x: 1, y: 1 };
 				const width = data.parameters.width || 0.5;
 				const height = width * (size.y / size.x);
-				return await this.getPlane(fileUrl, width, height);
+				return this.getPlane(fileUrl, width, height);
 			}
 			else if (['mp3', 'wav'].includes(fileExt)) {
 				// 处理为音频
@@ -659,7 +658,7 @@ class MetaFactory extends Factory {
 			}
 			else {
 				// 默认处理
-				console.log('处理粒子特效为默认类型:', fileUrl);
+				console.warn('处理粒子特效为默认类型:', fileUrl);
 				const entity = new THREE.Group();
 				entity.name = data.parameters.name;
 				entity.userData.resourceId = data.parameters.resource;

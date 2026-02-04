@@ -1,0 +1,27 @@
+name: Deploy via Portainer
+
+on:
+  workflow_call:
+    secrets:
+      PORTAINER_WEBHOOK_URL:
+        required: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Trigger Portainer webhook
+        run: |
+          if [ -n "${{ secrets.PORTAINER_WEBHOOK_URL }}" ]; then
+            echo "Triggering Portainer deployment..."
+            curl -X POST "${{ secrets.PORTAINER_WEBHOOK_URL }}" \
+              --fail \
+              --silent \
+              --show-error \
+              --max-time 30
+            echo "Deployment triggered successfully!"
+          else
+            echo "Warning: PORTAINER_WEBHOOK_URL is not set, skipping deployment"
+          fi

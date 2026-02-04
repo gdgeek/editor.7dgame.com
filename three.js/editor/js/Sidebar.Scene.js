@@ -78,12 +78,12 @@ function SidebarScene(editor) {
 				deleteButton.title = '删除';
 
 				// 确保删除按钮不会覆盖整个选项的悬停提示
-				deleteButton.addEventListener('mouseover', function(event) {
+				deleteButton.addEventListener('mouseover', function (event) {
 					event.stopPropagation();
 				});
 
 				// 阻止事件冒泡，让删除按钮可点击
-				deleteButton.addEventListener('click', function(event) {
+				deleteButton.addEventListener('click', function (event) {
 					event.stopPropagation();
 					event.preventDefault();
 
@@ -169,13 +169,13 @@ function SidebarScene(editor) {
 		//const type = object.userData && object.userData.type ? object.userData.type.toLowerCase() : '';
 		const type = object.type.toLowerCase();
 		if (type === 'module') return 'Module';
-		if(type ==='entity') return 'Point'
-    	if (type === 'text') return 'Text';
-		if(type ==='polygen') return 'Polygen'
-    	if (type === 'picture') return 'Picture';
-    	if (type === 'video') return 'Video';
-    	if (type === 'sound') return 'Audio';
-    	if (type === 'prototype') return 'Prototype';
+		if (type === 'entity') return 'Point'
+		if (type === 'text') return 'Text';
+		if (type === 'polygen') return 'Polygen'
+		if (type === 'picture') return 'Picture';
+		if (type === 'video') return 'Video';
+		if (type === 'sound') return 'Audio';
+		if (type === 'prototype') return 'Prototype';
 
 		return 'Object3D_4';
 
@@ -228,25 +228,35 @@ function SidebarScene(editor) {
 	outliner.onChange(function () {
 		ignoreObjectSelectedSignal = true;
 
-		// 获取所有选中的值，如果有多个就是多选
 		const selectedValues = outliner.getValues();
+		const mainValue = outliner.getValue();
+		const mainId = mainValue ? parseInt(mainValue) : null;
 
-		if (selectedValues.length > 1) {
-			// 多选模式：处理最后一个选中的对象
-			const lastSelectedId = parseInt(outliner.getValue());
-			const lastSelectedObject = editor.scene.getObjectById(lastSelectedId);
+		// 暂时禁用信号以避免多次触发
+		const originalActive = editor.signals.objectSelected.active;
+		editor.signals.objectSelected.active = false;
 
-			// 以多选模式选择最后一个对象（这将保留之前的选择）
-			if (lastSelectedObject) {
-				editor.select(lastSelectedObject, true);
+		// 清除当前选择
+		editor.deselect();
+
+		// 添加所有选中项（除了主选中项）
+		for (const val of selectedValues) {
+			const id = parseInt(val);
+			if (id !== mainId) {
+				const obj = editor.scene.getObjectById(id);
+				if (obj) editor.select(obj, true);
 			}
-		} else if (selectedValues.length === 1) {
-			// 单选模式
-			editor.select(editor.scene.getObjectById(parseInt(outliner.getValue())));
-		} else {
-			// 没有选择任何对象
-			editor.clearSelection();
 		}
+
+		// 最后添加主选中项，确保它成为editor.selected
+		if (mainId) {
+			const obj = editor.scene.getObjectById(mainId);
+			if (obj) editor.select(obj, true);
+		}
+
+		// 恢复信号并发送最终选择
+		editor.signals.objectSelected.active = originalActive;
+		editor.signals.objectSelected.dispatch(editor.selected);
 
 		ignoreObjectSelectedSignal = false;
 	});
@@ -633,7 +643,7 @@ function SidebarScene(editor) {
 	signals.sceneGraphChanged.add(refreshUI);
 
 	// 监听资源变化，触发UI刷新
-	signals.messageReceive.add(function(params) {
+	signals.messageReceive.add(function (params) {
 		if (params.action === 'load-resource' || params.action === 'replace-resource') {
 			refreshUI();
 		}
