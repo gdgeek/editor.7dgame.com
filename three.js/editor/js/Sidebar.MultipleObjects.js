@@ -16,6 +16,9 @@ import { SetScaleCommand } from './commands/SetScaleCommand.js';
 import { SetValueCommand } from './commands/SetValueCommand.js';
 import { MultiTransformCommand } from './commands/MultiTransformCommand.js';
 import { MultiCmdsCommand } from './commands/MultiCmdsCommand.js';
+import { AddObjectCommand } from './commands/AddObjectCommand.js';
+import { RemoveObjectCommand } from './commands/RemoveObjectCommand.js';
+import * as SkeletonUtils from '../../examples/jsm/utils/SkeletonUtils.js';
 
 function SidebarMultipleObjects(editor) {
 	const strings = editor.strings;
@@ -58,6 +61,116 @@ function SidebarMultipleObjects(editor) {
 
 	// 存储名称文本UI元素的数组
 	const nameTextElements = [];
+
+	// 拷贝和删除全部按钮行 - 放在名称列表下方
+	const cloneDeleteActionsRow = new UIRow();
+
+	// 检查对象或其子对象是否包含 SkinnedMesh
+	function hasSkinnedMesh(object) {
+		let found = false;
+		object.traverse((child) => {
+			if (child.isSkinnedMesh) {
+				found = true;
+			}
+		});
+		return found;
+	}
+
+	// 深度克隆对象，正确处理 SkinnedMesh 和骨骼
+	function cloneObject(source) {
+		if (hasSkinnedMesh(source)) {
+			return SkeletonUtils.clone(source);
+		}
+		return source.clone();
+	}
+
+	// 拷贝全部按钮
+	const cloneAllButton = new UIButton(strings.getKey('sidebar/multi_objects/clone_all'))
+		.setWidth('80px')
+		.onClick(function () {
+			const selectedObjects = editor.getSelectedObjects();
+			if (selectedObjects.length === 0) return;
+
+			const objectsToCopy = [...selectedObjects];
+			const clonedObjects = [];
+
+			for (let i = 0; i < objectsToCopy.length; i++) {
+				let object = objectsToCopy[i];
+				if (object === null || object.parent === null) continue;
+
+				const clonedObject = cloneObject(object);
+
+				// 保持原始type
+				if (object.type) {
+					clonedObject.type = object.type;
+				}
+
+				// 复制animations数组
+				if (object.animations && object.animations.length > 0) {
+					clonedObject.animations = object.animations.map(clip => clip.clone());
+				}
+
+				// 复制components并重新生成UUID
+				if (object.components) {
+					clonedObject.components = JSON.parse(JSON.stringify(object.components));
+					clonedObject.components.forEach(component => {
+						if (component.parameters && component.parameters.uuid) {
+							component.parameters.uuid = THREE.MathUtils.generateUUID();
+						}
+					});
+				}
+
+				// 复制commands并重新生成UUID
+				if (object.commands) {
+					clonedObject.commands = JSON.parse(JSON.stringify(object.commands));
+					clonedObject.commands.forEach(command => {
+						if (command.parameters && command.parameters.uuid) {
+							command.parameters.uuid = THREE.MathUtils.generateUUID();
+						}
+					});
+				}
+
+				const parent = object.parent;
+				const cmd = new AddObjectCommand(editor, clonedObject);
+				cmd.execute = function () {
+					editor.addObject(clonedObject, parent);
+					clonedObjects.push(clonedObject);
+
+					if (clonedObjects.length === objectsToCopy.length) {
+						editor.clearSelection();
+						editor.select(clonedObjects[0]);
+						for (let j = 1; j < clonedObjects.length; j++) {
+							editor.select(clonedObjects[j], true);
+						}
+					}
+				};
+				editor.execute(cmd);
+			}
+
+			editor.showNotification(strings.getKey('sidebar/multi_objects/clone_success'));
+		});
+
+	// 删除全部按钮
+	const deleteAllButton = new UIButton(strings.getKey('sidebar/multi_objects/delete_all'))
+		.setWidth('80px')
+		.onClick(function () {
+			const selectedObjects = editor.getSelectedObjects();
+			if (selectedObjects.length === 0) return;
+
+			const objectsToDelete = [...selectedObjects];
+			for (let i = objectsToDelete.length - 1; i >= 0; i--) {
+				const object = objectsToDelete[i];
+				if (object !== null && object.parent !== null) {
+					editor.execute(new RemoveObjectCommand(editor, object));
+				}
+			}
+
+			editor.showNotification(strings.getKey('sidebar/multi_objects/delete_success'));
+		});
+
+	cloneDeleteActionsRow.add(cloneAllButton);
+	cloneDeleteActionsRow.add(deleteAllButton);
+	container.add(cloneDeleteActionsRow);
 
 	// 分割线
 	const separator = new UIPanel();
@@ -162,14 +275,19 @@ function SidebarMultipleObjects(editor) {
 		.setPrecision(3)
 		.setWidth('40px')
 		.onChange(updatePosition);
+	multipleObjectsPositionX.dom.classList.add('axis-x'); // X轴 - 红色
+
 	const multipleObjectsPositionY = new UINumber()
 		.setPrecision(3)
 		.setWidth('40px')
 		.onChange(updatePosition);
+	multipleObjectsPositionY.dom.classList.add('axis-y'); // Y轴 - 绿色
+
 	const multipleObjectsPositionZ = new UINumber()
 		.setPrecision(3)
 		.setWidth('40px')
 		.onChange(updatePosition);
+	multipleObjectsPositionZ.dom.classList.add('axis-z'); // Z轴 - 蓝色
 
 	// 添加拖动事件监听
 	multipleObjectsPositionX.dom.addEventListener('mousedown', onDragStart);
@@ -268,14 +386,19 @@ function SidebarMultipleObjects(editor) {
 		.setPrecision(3)
 		.setWidth('40px')
 		.onChange(updateRotation);
+	multipleObjectsRotationX.dom.classList.add('axis-x'); // X轴 - 红色
+
 	const multipleObjectsRotationY = new UINumber()
 		.setPrecision(3)
 		.setWidth('40px')
 		.onChange(updateRotation);
+	multipleObjectsRotationY.dom.classList.add('axis-y'); // Y轴 - 绿色
+
 	const multipleObjectsRotationZ = new UINumber()
 		.setPrecision(3)
 		.setWidth('40px')
 		.onChange(updateRotation);
+	multipleObjectsRotationZ.dom.classList.add('axis-z'); // Z轴 - 蓝色
 
 	// 添加拖动事件监听
 	multipleObjectsRotationX.dom.addEventListener('mousedown', onDragStart);
@@ -372,16 +495,21 @@ function SidebarMultipleObjects(editor) {
 		.setWidth('40px')
 		.setValue(1)
 		.onChange(updateScale);
+	multipleObjectsScaleX.dom.classList.add('axis-x'); // X轴 - 红色
+
 	const multipleObjectsScaleY = new UINumber()
 		.setPrecision(3)
 		.setWidth('40px')
 		.setValue(1)
 		.onChange(updateScale);
+	multipleObjectsScaleY.dom.classList.add('axis-y'); // Y轴 - 绿色
+
 	const multipleObjectsScaleZ = new UINumber()
 		.setPrecision(3)
 		.setWidth('40px')
 		.setValue(1)
 		.onChange(updateScale);
+	multipleObjectsScaleZ.dom.classList.add('axis-z'); // Z轴 - 蓝色
 
 	// 添加拖动事件监听
 	multipleObjectsScaleX.dom.addEventListener('mousedown', onDragStart);
