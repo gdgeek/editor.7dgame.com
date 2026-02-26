@@ -69,6 +69,22 @@ function SidebarObject(editor) {
 		});
 	};
 
+	// 统一按钮框内图标样式：按钮框尺寸不变，仅放大图标并居中
+	const styleIconButton = function (button) {
+		button.dom.style.display = "inline-flex";
+		button.dom.style.alignItems = "center";
+		button.dom.style.justifyContent = "center";
+		button.dom.style.padding = "0";
+	};
+
+	const styleActionIcon = function (icon) {
+		icon.style.width = "13px";
+		icon.style.height = "13px";
+		icon.style.display = "block";
+		icon.style.margin = "0 auto";
+	};
+
+
 	// Actions
 
 	/*
@@ -209,14 +225,12 @@ function SidebarObject(editor) {
 		});
 
 	positionCopyButton.dom.title = "复制";
+	styleIconButton(positionCopyButton);
 
 	// 添加复制图标
 	const positionCopyIcon = document.createElement("img");
 	positionCopyIcon.src = "images/copy.png";
-	positionCopyIcon.style.width = "12px";
-	positionCopyIcon.style.height = "12px";
-	positionCopyIcon.style.display = "block";
-	positionCopyIcon.style.margin = "0 auto";
+	styleActionIcon(positionCopyIcon);
 	positionCopyButton.dom.appendChild(positionCopyIcon);
 
 	const positionPasteButton = new UIButton("")
@@ -242,14 +256,12 @@ function SidebarObject(editor) {
 		});
 
 	positionPasteButton.dom.title = "粘贴";
+	styleIconButton(positionPasteButton);
 
 	// 添加粘贴图标
 	const positionPasteIcon = document.createElement("img");
 	positionPasteIcon.src = "images/paste.png";
-	positionPasteIcon.style.width = "12px";
-	positionPasteIcon.style.height = "12px";
-	positionPasteIcon.style.display = "block";
-	positionPasteIcon.style.margin = "0 auto";
+	styleActionIcon(positionPasteIcon);
 	positionPasteButton.dom.appendChild(positionPasteIcon);
 
 	// 默认隐藏复制粘贴按钮
@@ -258,8 +270,8 @@ function SidebarObject(editor) {
 
 	// 添加鼠标悬停事件
 	objectPositionRow.dom.addEventListener("mouseenter", function () {
-		positionCopyButton.dom.style.display = "";
-		positionPasteButton.dom.style.display = "";
+		positionCopyButton.dom.style.display = "inline-flex";
+		positionPasteButton.dom.style.display = "inline-flex";
 	});
 	objectPositionRow.dom.addEventListener("mouseleave", function () {
 		positionCopyButton.dom.style.display = "none";
@@ -316,14 +328,12 @@ function SidebarObject(editor) {
 		});
 
 	rotationCopyButton.dom.title = "复制";
+	styleIconButton(rotationCopyButton);
 
 	// 添加复制图标
 	const rotationCopyIcon = document.createElement("img");
 	rotationCopyIcon.src = "images/copy.png";
-	rotationCopyIcon.style.width = "12px";
-	rotationCopyIcon.style.height = "12px";
-	rotationCopyIcon.style.display = "block";
-	rotationCopyIcon.style.margin = "0 auto";
+	styleActionIcon(rotationCopyIcon);
 	rotationCopyButton.dom.appendChild(rotationCopyIcon);
 
 	const rotationPasteButton = new UIButton("")
@@ -349,14 +359,12 @@ function SidebarObject(editor) {
 		});
 
 	rotationPasteButton.dom.title = "粘贴";
+	styleIconButton(rotationPasteButton);
 
 	// 添加粘贴图标
 	const rotationPasteIcon = document.createElement("img");
 	rotationPasteIcon.src = "images/paste.png";
-	rotationPasteIcon.style.width = "12px";
-	rotationPasteIcon.style.height = "12px";
-	rotationPasteIcon.style.display = "block";
-	rotationPasteIcon.style.margin = "0 auto";
+	styleActionIcon(rotationPasteIcon);
 	rotationPasteButton.dom.appendChild(rotationPasteIcon);
 
 	// 默认隐藏复制粘贴按钮
@@ -365,8 +373,8 @@ function SidebarObject(editor) {
 
 	// 添加鼠标悬停事件
 	objectRotationRow.dom.addEventListener("mouseenter", function () {
-		rotationCopyButton.dom.style.display = "";
-		rotationPasteButton.dom.style.display = "";
+		rotationCopyButton.dom.style.display = "inline-flex";
+		rotationPasteButton.dom.style.display = "inline-flex";
 	});
 	objectRotationRow.dom.addEventListener("mouseleave", function () {
 		rotationCopyButton.dom.style.display = "none";
@@ -417,14 +425,12 @@ function SidebarObject(editor) {
 		});
 
 	scaleCopyButton.dom.title = "复制";
+	styleIconButton(scaleCopyButton);
 
 	// 添加复制图标
 	const scaleCopyIcon = document.createElement("img");
 	scaleCopyIcon.src = "images/copy.png";
-	scaleCopyIcon.style.width = "12px";
-	scaleCopyIcon.style.height = "12px";
-	scaleCopyIcon.style.display = "block";
-	scaleCopyIcon.style.margin = "0 auto";
+	styleActionIcon(scaleCopyIcon);
 	scaleCopyButton.dom.appendChild(scaleCopyIcon);
 
 	const scalePasteButton = new UIButton("")
@@ -445,14 +451,12 @@ function SidebarObject(editor) {
 		});
 
 	scalePasteButton.dom.title = "粘贴";
+	styleIconButton(scalePasteButton);
 
 	// 添加粘贴图标
 	const scalePasteIcon = document.createElement("img");
 	scalePasteIcon.src = "images/paste.png";
-	scalePasteIcon.style.width = "12px";
-	scalePasteIcon.style.height = "12px";
-	scalePasteIcon.style.display = "block";
-	scalePasteIcon.style.margin = "0 auto";
+	styleActionIcon(scalePasteIcon);
 	scalePasteButton.dom.appendChild(scalePasteIcon);
 
 	// 默认隐藏复制粘贴按钮
@@ -461,8 +465,8 @@ function SidebarObject(editor) {
 
 	// 添加鼠标悬停事件
 	objectScaleRow.dom.addEventListener("mouseenter", function () {
-		scaleCopyButton.dom.style.display = "";
-		scalePasteButton.dom.style.display = "";
+		scaleCopyButton.dom.style.display = "inline-flex";
+		scalePasteButton.dom.style.display = "inline-flex";
 	});
 	objectScaleRow.dom.addEventListener("mouseleave", function () {
 		scaleCopyButton.dom.style.display = "none";
@@ -474,6 +478,7 @@ function SidebarObject(editor) {
 	);
 	objectScaleRow.add(objectScaleX, objectScaleY, objectScaleZ);
 	objectScaleRow.add(scaleCopyButton, scalePasteButton);
+	objectScaleRow.setMarginBottom("8px");
 
 	container.add(objectScaleRow);
 
@@ -557,14 +562,12 @@ function SidebarObject(editor) {
 		});
 
 	transformCopyButton.dom.title = "复制全部数据";
+	styleIconButton(transformCopyButton);
 
 	// 添加复制图标
 	const transformCopyIcon = document.createElement("img");
 	transformCopyIcon.src = "images/copy.png";
-	transformCopyIcon.style.width = "12px";
-	transformCopyIcon.style.height = "12px";
-	transformCopyIcon.style.display = "block";
-	transformCopyIcon.style.margin = "0 auto";
+	styleActionIcon(transformCopyIcon);
 	transformCopyButton.dom.appendChild(transformCopyIcon);
 
 	// 全部变换数据粘贴按钮
@@ -605,14 +608,12 @@ function SidebarObject(editor) {
 		});
 
 	transformPasteButton.dom.title = "粘贴全部数据";
+	styleIconButton(transformPasteButton);
 
 	// 添加粘贴图标
 	const transformPasteIcon = document.createElement("img");
 	transformPasteIcon.src = "images/paste.png";
-	transformPasteIcon.style.width = "12px";
-	transformPasteIcon.style.height = "12px";
-	transformPasteIcon.style.display = "block";
-	transformPasteIcon.style.margin = "0 auto";
+	styleActionIcon(transformPasteIcon);
 	transformPasteButton.dom.appendChild(transformPasteIcon);
 
 	transformActionsRow.add(transformCopyButton);
@@ -703,6 +704,7 @@ function SidebarObject(editor) {
 			spacerRow.dom.style.border = "none";
 			spacerRow.dom.style.marginTop = "0";
 			spacerRow.dom.style.marginBottom = "0";
+			spacerRow.dom.style.height = "14px";
 
 			// 将间隙行插入到适当位置（在objectResetRow前）
 			if (container.dom.contains(objectResetRow.dom)) {

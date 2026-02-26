@@ -107,6 +107,7 @@ function Editor() {
 		windowResize: new Signal(),
 
 		showGridChanged: new Signal(),
+		showGroundChanged: new Signal(),
 		showHelpersChanged: new Signal(),
 		refreshSidebarObject3D: new Signal(),
 		historyChanged: new Signal(),

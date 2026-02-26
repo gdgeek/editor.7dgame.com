@@ -460,7 +460,7 @@ class UIOutliner extends UIDiv {
 				}
 			} else {
 				// 单选或Ctrl/Command多选
-				scope.setValue(this.value, multiSelect);
+			scope.setValue(this.value, multiSelect);
 			}
 
 			const changeEvent = new CustomEvent('change', {
@@ -484,7 +484,7 @@ class UIOutliner extends UIDiv {
 			event.dataTransfer.setData( 'text', 'foo' );
 
 			// 检查当前拖动的元素是否在选中集合中
-			const draggedId = parseInt(this.value);
+			const draggedId = String(this.value);
 			if (scope.selectedValues.indexOf(draggedId) === -1) {
 				// 如果拖动的不是选中集合中的元素，清除当前选择并选中该元素
 				scope.clearSelection();
@@ -656,10 +656,12 @@ class UIOutliner extends UIDiv {
 
 	// 将项目添加到多选
 	addToSelection(value, index) {
+		const normalizedValue = String(value);
+
 		if (index === undefined) {
 			// 如果没有提供索引，查找它
 			for (let i = 0; i < this.options.length; i++) {
-				if (this.options[i].value === value) {
+				if (String(this.options[i].value) === normalizedValue) {
 					index = i;
 					break;
 				}
@@ -671,7 +673,7 @@ class UIOutliner extends UIDiv {
 
 			if (this.selectedIndices.indexOf(index) === -1) {
 				this.selectedIndices.push(index);
-				this.selectedValues.push(value);
+				this.selectedValues.push(normalizedValue);
 				element.classList.add('active');
 
 				// 如果是多选状态，添加多选样式类
@@ -686,11 +688,13 @@ class UIOutliner extends UIDiv {
 
 			// 更新主选中索引
 			this.selectedIndex = index;
-			this.selectedValue = value;
+			this.selectedValue = normalizedValue;
 		}
 	}
 
 	setValue(value, multiSelect) {
+		const normalizedValue = value !== null && value !== undefined ? String(value) : value;
+
 		if (!multiSelect) {
 			// 单选模式 - 清除所有现有选择
 			this.clearSelection();
@@ -702,17 +706,17 @@ class UIOutliner extends UIDiv {
 		for (let i = 0; i < this.options.length; i++) {
 			const element = this.options[i];
 
-			if (element.value === value) {
+			if (String(element.value) === normalizedValue) {
 				foundIndex = i;
 
 				// 在多选模式下，切换选择状态
 				if (multiSelect) {
-					const existingIndex = this.selectedValues.indexOf(value);
+					const existingIndex = this.selectedValues.indexOf(normalizedValue);
 
 					if (existingIndex === -1) {
 						// 添加到选择
 						this.selectedIndices.push(i);
-						this.selectedValues.push(value);
+						this.selectedValues.push(normalizedValue);
 						element.classList.add('active');
 					} else {
 						// 从选择中移除
@@ -725,7 +729,7 @@ class UIOutliner extends UIDiv {
 					// 单选模式
 					element.classList.add('active');
 					this.selectedIndices = [i];
-					this.selectedValues = [value];
+					this.selectedValues = [normalizedValue];
 
 					// 滚动到视图
 					const y = element.offsetTop - this.dom.offsetTop;
@@ -741,7 +745,7 @@ class UIOutliner extends UIDiv {
 
 				// 更新主选中索引和值
 				this.selectedIndex = i;
-				this.selectedValue = value;
+				this.selectedValue = normalizedValue;
 			} else if (!multiSelect) {
 				// 在单选模式下移除其他项的活动状态
 				element.classList.remove('active');

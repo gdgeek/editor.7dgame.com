@@ -29,6 +29,20 @@ function SidebarMultipleObjects(editor) {
 	container.setPaddingTop('20px');
 	container.setDisplay('none');
 
+	const styleIconButton = function (button) {
+		button.dom.style.display = 'inline-flex';
+		button.dom.style.alignItems = 'center';
+		button.dom.style.justifyContent = 'center';
+		button.dom.style.padding = '0';
+	};
+
+	const styleActionIcon = function (icon) {
+		icon.style.width = '13px';
+		icon.style.height = '13px';
+		icon.style.display = 'block';
+		icon.style.margin = '0 auto';
+	};
+
 	// 多选标题
 	const multipleObjectsTitleRow = new UIRow();
 	const multipleObjectsTitle = new UIText(strings.getKey('sidebar/properties/multi_object'));
@@ -323,13 +337,12 @@ function SidebarMultipleObjects(editor) {
 			editor.showNotification(strings.getKey('sidebar/multi_objects/copy_position_success'));
 		});
 
+	styleIconButton(positionCopyButton);
+
 	// 添加复制图标
 	const positionCopyIcon = document.createElement('img');
 	positionCopyIcon.src = 'images/copy.png';
-	positionCopyIcon.style.width = '12px';
-	positionCopyIcon.style.height = '12px';
-	positionCopyIcon.style.display = 'block';
-	positionCopyIcon.style.margin = '0 auto';
+	styleActionIcon(positionCopyIcon);
 	positionCopyButton.dom.appendChild(positionCopyIcon);
 	positionCopyButton.dom.title = strings.getKey('sidebar/multi_objects/copy_position');
 
@@ -351,13 +364,12 @@ function SidebarMultipleObjects(editor) {
 			}
 		});
 
+	styleIconButton(positionPasteButton);
+
 	// 添加粘贴图标
 	const positionPasteIcon = document.createElement('img');
 	positionPasteIcon.src = 'images/paste.png';
-	positionPasteIcon.style.width = '12px';
-	positionPasteIcon.style.height = '12px';
-	positionPasteIcon.style.display = 'block';
-	positionPasteIcon.style.margin = '0 auto';
+	styleActionIcon(positionPasteIcon);
 	positionPasteButton.dom.appendChild(positionPasteIcon);
 	positionPasteButton.dom.title = strings.getKey('sidebar/multi_objects/paste_position');
 
@@ -367,8 +379,8 @@ function SidebarMultipleObjects(editor) {
 
 	// 添加鼠标悬停事件
 	multipleObjectsPositionRow.dom.addEventListener('mouseenter', function () {
-		positionCopyButton.dom.style.display = '';
-		positionPasteButton.dom.style.display = '';
+		positionCopyButton.dom.style.display = 'inline-flex';
+		positionPasteButton.dom.style.display = 'inline-flex';
 	});
 	multipleObjectsPositionRow.dom.addEventListener('mouseleave', function () {
 		positionCopyButton.dom.style.display = 'none';
@@ -431,13 +443,12 @@ function SidebarMultipleObjects(editor) {
 			editor.showNotification(strings.getKey('sidebar/multi_objects/copy_rotation_success'));
 		});
 
+	styleIconButton(rotationCopyButton);
+
 	// 添加复制图标
 	const rotationCopyIcon = document.createElement('img');
 	rotationCopyIcon.src = 'images/copy.png';
-	rotationCopyIcon.style.width = '12px';
-	rotationCopyIcon.style.height = '12px';
-	rotationCopyIcon.style.display = 'block';
-	rotationCopyIcon.style.margin = '0 auto';
+	styleActionIcon(rotationCopyIcon);
 	rotationCopyButton.dom.appendChild(rotationCopyIcon);
 	rotationCopyButton.dom.title = strings.getKey('sidebar/multi_objects/copy_rotation');
 
@@ -459,13 +470,12 @@ function SidebarMultipleObjects(editor) {
 			}
 		});
 
+	styleIconButton(rotationPasteButton);
+
 	// 添加粘贴图标
 	const rotationPasteIcon = document.createElement('img');
 	rotationPasteIcon.src = 'images/paste.png';
-	rotationPasteIcon.style.width = '12px';
-	rotationPasteIcon.style.height = '12px';
-	rotationPasteIcon.style.display = 'block';
-	rotationPasteIcon.style.margin = '0 auto';
+	styleActionIcon(rotationPasteIcon);
 	rotationPasteButton.dom.appendChild(rotationPasteIcon);
 	rotationPasteButton.dom.title = strings.getKey('sidebar/multi_objects/paste_rotation');
 
@@ -475,8 +485,8 @@ function SidebarMultipleObjects(editor) {
 
 	// 添加鼠标悬停事件
 	multipleObjectsRotationRow.dom.addEventListener('mouseenter', function () {
-		rotationCopyButton.dom.style.display = '';
-		rotationPasteButton.dom.style.display = '';
+		rotationCopyButton.dom.style.display = 'inline-flex';
+		rotationPasteButton.dom.style.display = 'inline-flex';
 	});
 	multipleObjectsRotationRow.dom.addEventListener('mouseleave', function () {
 		rotationCopyButton.dom.style.display = 'none';
@@ -542,13 +552,12 @@ function SidebarMultipleObjects(editor) {
 			editor.showNotification(strings.getKey('sidebar/multi_objects/copy_scale_success'));
 		});
 
+	styleIconButton(scaleCopyButton);
+
 	// 添加复制图标
 	const scaleCopyIcon = document.createElement('img');
 	scaleCopyIcon.src = 'images/copy.png';
-	scaleCopyIcon.style.width = '12px';
-	scaleCopyIcon.style.height = '12px';
-	scaleCopyIcon.style.display = 'block';
-	scaleCopyIcon.style.margin = '0 auto';
+	styleActionIcon(scaleCopyIcon);
 	scaleCopyButton.dom.appendChild(scaleCopyIcon);
 	scaleCopyButton.dom.title = strings.getKey('sidebar/multi_objects/copy_scale');
 
@@ -570,13 +579,12 @@ function SidebarMultipleObjects(editor) {
 			}
 		});
 
+	styleIconButton(scalePasteButton);
+
 	// 添加粘贴图标
 	const scalePasteIcon = document.createElement('img');
 	scalePasteIcon.src = 'images/paste.png';
-	scalePasteIcon.style.width = '12px';
-	scalePasteIcon.style.height = '12px';
-	scalePasteIcon.style.display = 'block';
-	scalePasteIcon.style.margin = '0 auto';
+	styleActionIcon(scalePasteIcon);
 	scalePasteButton.dom.appendChild(scalePasteIcon);
 	scalePasteButton.dom.title = strings.getKey('sidebar/multi_objects/paste_scale');
 
@@ -586,8 +594,8 @@ function SidebarMultipleObjects(editor) {
 
 	// 添加鼠标悬停事件
 	multipleObjectsScaleRow.dom.addEventListener('mouseenter', function () {
-		scaleCopyButton.dom.style.display = '';
-		scalePasteButton.dom.style.display = '';
+		scaleCopyButton.dom.style.display = 'inline-flex';
+		scalePasteButton.dom.style.display = 'inline-flex';
 	});
 	multipleObjectsScaleRow.dom.addEventListener('mouseleave', function () {
 		scaleCopyButton.dom.style.display = 'none';
@@ -596,6 +604,7 @@ function SidebarMultipleObjects(editor) {
 
 	multipleObjectsScaleRow.add(scaleCopyButton);
 	multipleObjectsScaleRow.add(scalePasteButton);
+	multipleObjectsScaleRow.setMarginBottom('8px');
 
 	container.add(multipleObjectsScaleRow);
 
@@ -704,14 +713,12 @@ function SidebarMultipleObjects(editor) {
 		});
 
 	transformCopyButton.dom.title = strings.getKey('sidebar/multi_objects/copy_transform');
+	styleIconButton(transformCopyButton);
 
 	// 添加复制图标
 	const transformCopyIcon = document.createElement('img');
 	transformCopyIcon.src = 'images/copy.png';
-	transformCopyIcon.style.width = '12px';
-	transformCopyIcon.style.height = '12px';
-	transformCopyIcon.style.display = 'block';
-	transformCopyIcon.style.margin = '0 auto';
+	styleActionIcon(transformCopyIcon);
 	transformCopyButton.dom.appendChild(transformCopyIcon);
 
 	// 全部变换数据粘贴按钮
@@ -753,14 +760,12 @@ function SidebarMultipleObjects(editor) {
 		});
 
 	transformPasteButton.dom.title = strings.getKey('sidebar/multi_objects/paste_transform');
+	styleIconButton(transformPasteButton);
 
 	// 添加粘贴图标
 	const transformPasteIcon = document.createElement('img');
 	transformPasteIcon.src = 'images/paste.png';
-	transformPasteIcon.style.width = '12px';
-	transformPasteIcon.style.height = '12px';
-	transformPasteIcon.style.display = 'block';
-	transformPasteIcon.style.margin = '0 auto';
+	styleActionIcon(transformPasteIcon);
 	transformPasteButton.dom.appendChild(transformPasteIcon);
 
 	transformActionsRow.add(transformCopyButton);
@@ -853,6 +858,7 @@ function SidebarMultipleObjects(editor) {
 			spacerRow.dom.style.border = 'none';
 			spacerRow.dom.style.marginTop = '0';
 			spacerRow.dom.style.marginBottom = '0';
+			spacerRow.dom.style.height = '14px';
 			container.dom.insertBefore(spacerRow.dom, multipleObjectsActionsRow.dom);
 		}
 		return spacerRow;

@@ -84,6 +84,15 @@ function MenubarAdd( editor ) {
 				}
 			}
 		}
+
+		const loadResourceBatch = async function (items) {
+			if (!Array.isArray(items) || items.length === 0) return;
+
+			for (const item of items) {
+				if (!item) continue;
+				await loadResource(item);
+			}
+		}
 		const loadPhototype = async function (data) {
 			//alert(JSON.stringify(data));
 
@@ -96,7 +105,20 @@ function MenubarAdd( editor ) {
 		editor.signals.messageReceive.add( async function ( params ) {
 			switch (params.action) {
 				case 'load-resource':
-					loadResource( params.data );
+					if (Array.isArray(params.data)) {
+						await loadResourceBatch(params.data);
+					} else if (params.data && Array.isArray(params.data.resources)) {
+						await loadResourceBatch(params.data.resources);
+					} else if (params.data) {
+						await loadResource(params.data);
+					}
+					break;
+				case 'load-resources':
+					if (params.data && Array.isArray(params.data.resources)) {
+						await loadResourceBatch(params.data.resources);
+					} else if (Array.isArray(params.data)) {
+						await loadResourceBatch(params.data);
+					}
 					break;
 				case 'available-resource-types':
 					updateResourceMenuItems( params.data );

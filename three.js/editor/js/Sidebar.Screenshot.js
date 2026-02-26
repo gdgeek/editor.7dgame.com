@@ -1,15 +1,19 @@
 import * as THREE from 'three';
-import { UIPanel, UIRow, UIButton, UIInput, UISelect, UIText } from './libs/ui.js';
+import { UIPanel, UIRow, UIButton, UIInput, UISelect, UIText, UIColor } from './libs/ui.js';
 import { UIBoolean } from './libs/ui.three.js';
 import { ScreenshotUtils } from './utils/ScreenshotUtils.js';
+
+const LIGHT_CLEAR_COLOR = 0x1b1f24;
+const DARK_CLEAR_COLOR = 0x1b1f24;
+const LIGHT_GRID_COLORS = [0x4f535a, 0x5a5f67];
+const DARK_GRID_COLORS = [0x4f535a, 0x5a5f67];
+const AXIS_X_COLOR = 0xd75f66;
+const AXIS_Z_COLOR = 0x5abf77;
 
 function SidebarScreenshot(editor) {
     const strings = editor.strings;
     const signals = editor.signals;
     const config = editor.config;
-
-    // 页面刷新时重置背景色配置为original
-    editor.config.setKey('screenshot/background', 'original');
 
     const container = new UIPanel();
     container.setBorderTop('0');
@@ -18,8 +22,48 @@ function SidebarScreenshot(editor) {
     // 标题
     const title = new UIPanel();
     title.setClass('title');
-    title.setTextContent(strings.getKey('sidebar/screenshot'));
+    title.setTextContent(strings.getKey('sidebar/scene/background'));
     container.add(title);
+
+    // 场景背景/网格设置（放在顶部）
+    const sceneSettingsPanel = new UIPanel();
+    container.add(sceneSettingsPanel);
+
+    const sceneBackgroundRow = new UIRow();
+    sceneBackgroundRow.setClass('row');
+    sceneBackgroundRow.setMarginBottom('10px');
+
+    const sceneBackgroundLabel = new UIText(strings.getKey('sidebar/scene/background')).setWidth('90px');
+    sceneBackgroundRow.add(sceneBackgroundLabel);
+
+    const sceneBackgroundColor = new UIColor().setWidth('150px');
+    sceneBackgroundRow.add(sceneBackgroundColor);
+
+    sceneSettingsPanel.add(sceneBackgroundRow);
+
+    const sceneGridRow = new UIRow();
+    sceneGridRow.setClass('row');
+    sceneGridRow.setMarginBottom('8px');
+
+    const sceneGridLabel = new UIText(strings.getKey('sidebar/settings/viewport/grid')).setWidth('90px');
+    sceneGridRow.add(sceneGridLabel);
+
+    const sceneShowGrid = new UIBoolean(true);
+    sceneGridRow.add(sceneShowGrid);
+
+    sceneSettingsPanel.add(sceneGridRow);
+
+    const sceneGroundRow = new UIRow();
+    sceneGroundRow.setClass('row');
+    sceneGroundRow.setMarginBottom('12px');
+
+    const sceneGroundLabel = new UIText(strings.getKey('sidebar/settings/viewport/ground')).setWidth('90px');
+    sceneGroundRow.add(sceneGroundLabel);
+
+    const sceneShowGround = new UIBoolean(true);
+    sceneGroundRow.add(sceneShowGround);
+
+    sceneSettingsPanel.add(sceneGroundRow);
 
     // 截图设置面板
     const settingsPanel = new UIPanel();
@@ -40,34 +84,10 @@ function SidebarScreenshot(editor) {
         '1280x720': '1280 × 720 (HD)',
         '3840x2160': '3840 × 2160 (4K)'
     });
-    resolutionSelect.setValue('current');
+    resolutionSelect.setValue(config.getKey('screenshot/resolution') || 'current');
     resolutionRow.add(resolutionSelect);
 
     settingsPanel.add(resolutionRow);
-
-    // 背景色设置
-    const backgroundRow = new UIRow();
-    backgroundRow.setClass('row');
-    backgroundRow.setMarginBottom('10px');
-
-    const backgroundLabel = new UIText(strings.getKey('sidebar/screenshot/background')).setWidth('90px');
-    backgroundRow.add(backgroundLabel);
-
-    const backgroundSelect = new UISelect().setWidth('150px');
-    backgroundSelect.setOptions({
-        'original': strings.getKey('sidebar/screenshot/background/original'),
-        'white': strings.getKey('sidebar/screenshot/background/white'),
-        'light': strings.getKey('sidebar/screenshot/background/light'),
-        'dark': strings.getKey('sidebar/screenshot/background/dark'),
-    });
-
-    // 从配置中读取背景色设置，如果没有则默认为original
-    const savedBackground = editor.config.getKey('screenshot/background') || 'original';
-    backgroundSelect.setValue(savedBackground);
-
-    backgroundRow.add(backgroundSelect);
-
-    settingsPanel.add(backgroundRow);
 
     // 文件名设置
     const filenameRow = new UIRow();
@@ -77,7 +97,7 @@ function SidebarScreenshot(editor) {
     const filenameLabel = new UIText(strings.getKey('sidebar/screenshot/filename')).setWidth('90px');
     filenameRow.add(filenameLabel);
 
-    const filenameInput = new UIInput().setWidth('150px').setValue('screenshot');
+    const filenameInput = new UIInput().setWidth('150px').setValue(config.getKey('screenshot/filename') || 'screenshot');
     filenameRow.add(filenameInput);
 
     settingsPanel.add(filenameRow);
@@ -95,22 +115,10 @@ function SidebarScreenshot(editor) {
         'png': 'PNG',
         'jpg': 'JPG'
     });
-    formatSelect.setValue('png');
+    formatSelect.setValue(config.getKey('screenshot/format') || 'png');
     formatRow.add(formatSelect);
 
     settingsPanel.add(formatRow);
-
-    // 显示网格线设置
-    const showGridRow = new UIRow();
-    showGridRow.setClass('row');
-    showGridRow.setMarginBottom('10px');
-
-    const showGridLabel = new UIText(strings.getKey('sidebar/settings/viewport/grid')).setWidth('90px');
-    showGridRow.add(showGridLabel);
-
-    const showGrid = new UIBoolean(false);
-    showGridRow.add(showGrid);
-    settingsPanel.add(showGridRow);
 
     // 截图按钮
     const buttonRow = new UIRow();
@@ -176,34 +184,98 @@ function SidebarScreenshot(editor) {
     uploadAsCoverButton.setDisplay('none'); // 初始隐藏
     previewPanel.add(uploadAsCoverButton);
 
+    function getCurrentDefaultClearColor() {
+        if (window.matchMedia) {
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            return mediaQuery.matches ? DARK_CLEAR_COLOR : LIGHT_CLEAR_COLOR;
+        }
+
+        return LIGHT_CLEAR_COLOR;
+    }
+
+    function getCurrentGridColors() {
+        if (window.matchMedia) {
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            return mediaQuery.matches ? DARK_GRID_COLORS : LIGHT_GRID_COLORS;
+        }
+
+        return LIGHT_GRID_COLORS;
+    }
+
+    function readSceneBackgroundColor() {
+        if (editor.scene.background && editor.scene.background.isColor) {
+            return `#${editor.scene.background.getHexString()}`;
+        }
+
+        return `#${getCurrentDefaultClearColor().toString(16).padStart(6, '0')}`;
+    }
+
+    function applySceneBackgroundColor() {
+        signals.sceneBackgroundChanged.dispatch(
+            'Color',
+            sceneBackgroundColor.getHexValue(),
+            null,
+            null
+        );
+
+        config.setKey('scene/backgroundColor', sceneBackgroundColor.getHexValue());
+    }
+
+    function applySceneGridVisible() {
+        signals.showGridChanged.dispatch(sceneShowGrid.getValue());
+        config.setKey('scene/showGrid', sceneShowGrid.getValue());
+    }
+
+    function applySceneGroundVisible() {
+        signals.showGroundChanged.dispatch(sceneShowGround.getValue());
+        config.setKey('scene/showGround', sceneShowGround.getValue());
+    }
+
+    // 初始化场景背景配置
+    const savedSceneBackgroundColor = config.getKey('scene/backgroundColor');
+    const migratedBackgroundColor = (savedSceneBackgroundColor === 0xf8fafc) ? LIGHT_CLEAR_COLOR : savedSceneBackgroundColor;
+    if (migratedBackgroundColor !== undefined) {
+        sceneBackgroundColor.setHexValue(migratedBackgroundColor);
+    } else {
+        sceneBackgroundColor.setValue(readSceneBackgroundColor());
+    }
+
+    // 初始化网格开关
+    const savedSceneShowGrid = config.getKey('scene/showGrid');
+    sceneShowGrid.setValue(savedSceneShowGrid !== undefined ? savedSceneShowGrid : true);
+    const savedSceneShowGround = config.getKey('scene/showGround');
+    sceneShowGround.setValue(savedSceneShowGround !== undefined ? savedSceneShowGround : true);
+
+    // 启动时仅在无背景时套用主题色；已有纹理背景时保留原场景设置
+    if (migratedBackgroundColor !== undefined || editor.scene.background === null || editor.scene.background.isColor) {
+        applySceneBackgroundColor();
+    }
+    applySceneGridVisible();
+    applySceneGroundVisible();
+
     // 事件处理
     resolutionSelect.onChange(function() {
-        // 更新配置
-        editor.config.setKey('screenshot/resolution', resolutionSelect.getValue());
+        config.setKey('screenshot/resolution', resolutionSelect.getValue());
     });
 
-    // 背景色设置事件
-    backgroundSelect.onChange(function() {
-        const newBackground = backgroundSelect.getValue();
-        editor.config.setKey('screenshot/background', newBackground);
-
-        // 发送背景色变更信号
-        editor.signals.screenshotBackgroundChanged.dispatch(newBackground);
+    sceneBackgroundColor.onInput(function () {
+        applySceneBackgroundColor();
     });
 
-    // 文件名设置事件
+    sceneShowGrid.onChange(function() {
+        applySceneGridVisible();
+    });
+
+    sceneShowGround.onChange(function() {
+        applySceneGroundVisible();
+    });
+
     filenameInput.onChange(function() {
-        editor.config.setKey('screenshot/filename', filenameInput.getValue());
+        config.setKey('screenshot/filename', filenameInput.getValue());
     });
 
-    // 文件格式设置事件
     formatSelect.onChange(function() {
-        editor.config.setKey('screenshot/format', formatSelect.getValue());
-    });
-
-    // 显示网格线设置事件
-    showGrid.onChange(function() {
-        editor.config.setKey('screenshot/showGrid', showGrid.getValue());
+        config.setKey('screenshot/format', formatSelect.getValue());
     });
 
     captureButton.onClick(function() {
@@ -296,65 +368,37 @@ function SidebarScreenshot(editor) {
             tempRenderer.outputEncoding = THREE.sRGBEncoding; // 默认使用sRGB编码
 
             // 物理正确光照
-            const physicallyCorrectLights = editor.config.getKey('project/renderer/physicallyCorrectLights');
+            const physicallyCorrectLights = config.getKey('project/renderer/physicallyCorrectLights');
             if (physicallyCorrectLights !== undefined) {
                 tempRenderer.physicallyCorrectLights = physicallyCorrectLights;
             }
 
             // 阴影
-            const shadows = editor.config.getKey('project/renderer/shadows');
+            const shadows = config.getKey('project/renderer/shadows');
             if (shadows !== undefined) {
                 tempRenderer.shadowMap.enabled = shadows;
             }
 
             // 阴影类型
-            const shadowType = editor.config.getKey('project/renderer/shadowType');
+            const shadowType = config.getKey('project/renderer/shadowType');
             if (shadowType !== undefined) {
                 tempRenderer.shadowMap.type = shadowType;
             }
 
             // 色调映射
-            const toneMapping = editor.config.getKey('project/renderer/toneMapping');
+            const toneMapping = config.getKey('project/renderer/toneMapping');
             if (toneMapping !== undefined) {
                 tempRenderer.toneMapping = toneMapping;
             }
 
             // 色调映射曝光
-            const toneMappingExposure = editor.config.getKey('project/renderer/toneMappingExposure');
+            const toneMappingExposure = config.getKey('project/renderer/toneMappingExposure');
             if (toneMappingExposure !== undefined) {
                 tempRenderer.toneMappingExposure = toneMappingExposure;
             }
 
-            // 获取当前背景色
-            // 检查是否有媒体查询以确定背景色
-            let bgColor = 0xaaaaaa; // 默认背景色
-            if (window.matchMedia) {
-                const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-                bgColor = mediaQuery.matches ? 0x333333 : 0xaaaaaa;
-            }
-
-            // 获取用户设置的背景色选项
-            const backgroundOption = backgroundSelect.getValue();
-
-            // 设置背景色
-            if (backgroundOption === 'white') {
-                // 设置为白色背景
-                tempRenderer.setClearColor(0xffffff, 1);
-            } else if (backgroundOption === 'light') {
-                // 设置为浅色背景
-                tempRenderer.setClearColor(0xeeffff, 1);
-            } else if (backgroundOption === 'dark') {
-                // 设置为深色背景
-                tempRenderer.setClearColor(0x333333, 1);
-            } else {
-                // 使用默认背景色
-                tempRenderer.setClearColor(bgColor, 1);
-
-                // 如果场景有背景色或背景纹理，应用它
-                if (scene.background) {
-                    // 如果场景已经设置了背景，临时渲染器会自动使用它
-                    tempRenderer.setClearColor(scene.background, 1);
-                }
+            if (scene.background === null) {
+                tempRenderer.setClearColor(getCurrentDefaultClearColor(), 1);
             }
 
             // 更新相机宽高比
@@ -362,29 +406,53 @@ function SidebarScreenshot(editor) {
             camera.aspect = width / height;
             camera.updateProjectionMatrix();
 
-            // 获取用户设置的网格线显示状态
-            const shouldShowGrid = showGrid.getValue();
-
             // 渲染主场景
             tempRenderer.render(scene, camera);
 
-            // 如果需要渲染网格线，创建并添加到场景中
-            if (shouldShowGrid) {
-                // 创建一个与编辑器中相同的网格线
+            // 按当前场景网格/地面开关渲染辅助
+            if (sceneShowGrid.getValue() || sceneShowGround.getValue()) {
                 const grid = new THREE.Group();
+                const gridColors = getCurrentGridColors();
 
-                const grid1 = new THREE.GridHelper(30, 30, 0x888888);
-                grid1.material.color.setHex(0x888888);
-                grid1.material.vertexColors = false;
-                grid.add(grid1);
+                if (sceneShowGrid.getValue()) {
+                    const grid1 = createGridWithoutCenter(30, 30, gridColors[0], 0);
+                    grid.add(grid1);
 
-                const grid2 = new THREE.GridHelper(30, 6, 0x222222);
-                grid2.material.color.setHex(0x222222);
-                grid2.material.depthFunc = THREE.AlwaysDepth;
-                grid2.material.vertexColors = false;
-                grid.add(grid2);
+                    const grid2 = createGridWithoutCenter(30, 6, gridColors[1], 0.0005);
+                    grid2.material.depthFunc = THREE.AlwaysDepth;
+                    grid.add(grid2);
 
-                // 添加网格线到场景并渲染
+                    const axisX = createCenterAxisLine(
+                        new THREE.Vector3(-15, 0.001, 0),
+                        new THREE.Vector3(15, 0.001, 0),
+                        AXIS_X_COLOR
+                    );
+                    const axisZ = createCenterAxisLine(
+                        new THREE.Vector3(0, 0.001, -15),
+                        new THREE.Vector3(0, 0.001, 15),
+                        AXIS_Z_COLOR
+                    );
+                    grid.add(axisX);
+                    grid.add(axisZ);
+                }
+
+                if (sceneShowGround.getValue()) {
+                    const groundTint = new THREE.Mesh(
+                        new THREE.PlaneGeometry(30, 30),
+                        new THREE.MeshBasicMaterial({
+                            color: 0x272c34,
+                            transparent: true,
+                            opacity: 0.35,
+                            depthWrite: false,
+                            toneMapped: false
+                        })
+                    );
+                    groundTint.rotation.x = -Math.PI / 2;
+                    groundTint.position.y = -0.002;
+                    groundTint.renderOrder = -2;
+                    grid.add(groundTint);
+                }
+
                 scene.add(grid);
                 tempRenderer.autoClear = false;
                 tempRenderer.render(scene, camera);
@@ -422,7 +490,6 @@ function SidebarScreenshot(editor) {
             link.click();
 
             // 显示成功消息
-            console.log('正在显示通知: 截图已保存为 ' + filename);
             editor.showNotification(strings.getKey('menubar/screenshot/downloaded') + filename, false);
 
             // 恢复相机宽高比
@@ -433,8 +500,6 @@ function SidebarScreenshot(editor) {
             tempRenderer.dispose();
         } catch (error) {
             console.error('截图保存失败:', error);
-
-            console.log('正在显示错误通知: ' + error.message);
             editor.showNotification(strings.getKey('menubar/screenshot/error/capture_failed') + ': ' + error.message, true);
         }
     }
@@ -443,3 +508,43 @@ function SidebarScreenshot(editor) {
 }
 
 export { SidebarScreenshot };
+
+function createGridWithoutCenter(size, divisions, color, y = 0) {
+    const halfSize = size / 2;
+    const step = size / divisions;
+    const vertices = [];
+
+    for (let i = 0; i <= divisions; i++) {
+        const coord = -halfSize + i * step;
+        if (Math.abs(coord) < 1e-6) continue; // 中心线单独绘制
+
+        vertices.push(-halfSize, y, coord, halfSize, y, coord);
+        vertices.push(coord, y, -halfSize, coord, y, halfSize);
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+
+    const material = new THREE.LineBasicMaterial({
+        color,
+        transparent: true,
+        opacity: 0.62,
+        toneMapped: false
+    });
+    material.reflectivity = 0;
+    material.envMapIntensity = 0;
+
+    return new THREE.LineSegments(geometry, material);
+}
+
+function createCenterAxisLine(start, end, color) {
+    const geometry = new THREE.BufferGeometry().setFromPoints([start, end]);
+    const material = new THREE.LineBasicMaterial({
+        color,
+        transparent: true,
+        opacity: 0.95,
+        toneMapped: false
+    });
+
+    return new THREE.Line(geometry, material);
+}

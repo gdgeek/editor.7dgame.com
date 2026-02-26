@@ -496,6 +496,7 @@ function Strings(config) {
 
 			'sidebar/settings/viewport': 'Viewport',
 			'sidebar/settings/viewport/grid': 'Grid',
+			'sidebar/settings/viewport/ground': 'Ground',
 			'sidebar/settings/viewport/helpers': 'Helpers',
 
 			'sidebar/history': 'History',
@@ -1058,6 +1059,7 @@ function Strings(config) {
 
 			'sidebar/settings/viewport': '视窗',
 			'sidebar/settings/viewport/grid': '网格',
+			'sidebar/settings/viewport/ground': '地面',
 			'sidebar/settings/viewport/helpers': '辅助',
 
 			'sidebar/history': '历史记录',
@@ -1611,6 +1613,7 @@ function Strings(config) {
 
 			'sidebar/settings/viewport': 'ビューポート',
 			'sidebar/settings/viewport/grid': 'グリッド',
+			'sidebar/settings/viewport/ground': '地面',
 			'sidebar/settings/viewport/helpers': 'ヘルパー',
 
 			'sidebar/history': '履歴',
@@ -2161,6 +2164,7 @@ function Strings(config) {
 
 			"sidebar/settings/viewport": "視窗",
 			"sidebar/settings/viewport/grid": "網格",
+			"sidebar/settings/viewport/ground": "地面",
 			"sidebar/settings/viewport/helpers": "輔助",
 
 			"sidebar/history": "歷史記錄",
@@ -2712,6 +2716,7 @@ function Strings(config) {
 
 			"sidebar/settings/viewport": "วิวพอร์ต",
 			"sidebar/settings/viewport/grid": "กริด",
+			"sidebar/settings/viewport/ground": "พื้น",
 			"sidebar/settings/viewport/helpers": "ตัวช่วย",
 
 			"sidebar/history": "ประวัติ",

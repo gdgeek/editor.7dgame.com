@@ -225,6 +225,7 @@ function SidebarScene(editor) {
 
 	const outliner = new UIOutliner(editor);
 	outliner.setId('outliner');
+	outliner.dom.style.height = '280px';
 	outliner.onChange(function () {
 		ignoreObjectSelectedSignal = true;
 
@@ -311,7 +312,8 @@ function SidebarScene(editor) {
 	backgroundEquirectangularTexture.setDisplay('none');
 	backgroundRow.add(backgroundEquirectangularTexture);
 
-	container.add(backgroundRow);
+	// 背景设置移动到截图页，此处不再占用场景页纵向空间
+	// container.add(backgroundRow);
 
 	function onBackgroundChanged() {
 
