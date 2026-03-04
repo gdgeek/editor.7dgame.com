@@ -266,6 +266,142 @@ class DialogUtils {
     }
 
     /**
+     * 场景未保存时，前往脚本编辑的专用确认弹窗
+     * - 点击「是」: 保存并继续
+     * - 点击「否」: 不保存直接继续
+     * - 点击右上角关闭: 关闭弹窗，不进行任何操作
+     */
+    static showSceneSaveDialog(message, onYes, onNo, onClose) {
+        const existing = document.querySelector('.scene-save-dialog-overlay');
+        if (existing) {
+            existing.remove();
+        }
+
+        const overlay = document.createElement('div');
+        overlay.className = 'scene-save-dialog-overlay';
+        overlay.style.position = 'fixed';
+        overlay.style.inset = '0';
+        overlay.style.background = 'rgba(15, 23, 42, 0.22)';
+        overlay.style.backdropFilter = 'blur(2px)';
+        overlay.style.zIndex = '12000';
+        overlay.style.display = 'flex';
+        overlay.style.alignItems = 'center';
+        overlay.style.justifyContent = 'center';
+        overlay.style.opacity = '0';
+        overlay.style.transition = 'opacity 180ms ease';
+
+        const dialog = document.createElement('div');
+        dialog.style.position = 'relative';
+        dialog.style.width = '280px';
+        dialog.style.maxWidth = '90vw';
+        dialog.style.minHeight = '106px';
+        dialog.style.padding = '14px 14px 12px';
+        dialog.style.borderRadius = '10px';
+        dialog.style.border = '1px solid var(--ar-border, #e2e8f0)';
+        dialog.style.background = 'var(--ar-bg-card, #ffffff)';
+        dialog.style.color = 'var(--ar-text-primary, #1e293b)';
+        dialog.style.boxShadow = '0 8px 24px rgba(15, 23, 42, 0.18)';
+        dialog.style.transform = 'translateY(6px) scale(0.98)';
+        dialog.style.transition = 'transform 180ms ease';
+
+        const closeButton = document.createElement('button');
+        closeButton.type = 'button';
+        closeButton.textContent = '×';
+        closeButton.setAttribute('aria-label', 'Close');
+        closeButton.style.position = 'absolute';
+        closeButton.style.top = '5px';
+        closeButton.style.right = '5px';
+        closeButton.style.width = '28px';
+        closeButton.style.height = '28px';
+        closeButton.style.borderRadius = '50%';
+        closeButton.style.border = '1px solid var(--ar-border, #e2e8f0)';
+        closeButton.style.background = 'var(--ar-bg-card, #ffffff)';
+        closeButton.style.color = 'var(--ar-text-secondary, #64748b)';
+        closeButton.style.fontSize = '17px';
+        closeButton.style.lineHeight = '1';
+        closeButton.style.padding = '0';
+        closeButton.style.display = 'flex';
+        closeButton.style.alignItems = 'center';
+        closeButton.style.justifyContent = 'center';
+        closeButton.style.cursor = 'pointer';
+        dialog.appendChild(closeButton);
+
+        const messageText = document.createElement('div');
+        messageText.textContent = message;
+        messageText.style.textAlign = 'center';
+        messageText.style.fontSize = '18px';
+        messageText.style.fontWeight = '600';
+        messageText.style.margin = '12px 10px 22px';
+        messageText.style.lineHeight = '1.4';
+        dialog.appendChild(messageText);
+
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.justifyContent = 'center';
+        buttonContainer.style.gap = '18px';
+        buttonContainer.style.marginTop = '10px';
+
+        const noButton = document.createElement('button');
+        noButton.type = 'button';
+        noButton.textContent = '否';
+        noButton.style.minWidth = '90px';
+        noButton.style.height = '40px';
+        noButton.style.borderRadius = '7px';
+        noButton.style.border = '1px solid var(--ar-border-strong, #cbd5e1)';
+        noButton.style.background = 'var(--ar-bg-card, #ffffff)';
+        noButton.style.color = 'var(--ar-text-secondary, #475569)';
+        noButton.style.fontSize = '15px';
+        noButton.style.fontWeight = '600';
+        noButton.style.cursor = 'pointer';
+
+        const yesButton = document.createElement('button');
+        yesButton.type = 'button';
+        yesButton.textContent = '是';
+        yesButton.style.minWidth = '90px';
+        yesButton.style.height = '40px';
+        yesButton.style.borderRadius = '7px';
+        yesButton.style.border = 'none';
+        yesButton.style.background = 'var(--ar-primary, #00baff)';
+        yesButton.style.color = '#fff';
+        yesButton.style.fontSize = '15px';
+        yesButton.style.fontWeight = '600';
+        yesButton.style.cursor = 'pointer';
+
+        buttonContainer.appendChild(noButton);
+        buttonContainer.appendChild(yesButton);
+        dialog.appendChild(buttonContainer);
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+
+        const closeDialog = () => {
+            overlay.style.opacity = '0';
+            dialog.style.transform = 'translateY(6px) scale(0.98)';
+            setTimeout(() => {
+                if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+            }, 180);
+        };
+
+        const runAndClose = async (cb) => {
+            try {
+                if (cb) await cb();
+            } finally {
+                closeDialog();
+            }
+        };
+
+        yesButton.addEventListener('click', () => runAndClose(onYes));
+        noButton.addEventListener('click', () => runAndClose(onNo));
+        closeButton.addEventListener('click', () => runAndClose(onClose));
+
+        requestAnimationFrame(() => {
+            overlay.style.opacity = '1';
+            dialog.style.transform = 'translateY(0) scale(1)';
+        });
+
+        return overlay;
+    }
+
+    /**
      * 关闭确认框
      * @param {HTMLElement} confirmNotification - 确认框元素
      */

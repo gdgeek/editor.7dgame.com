@@ -64,38 +64,42 @@ function MenubarGoto( editor ) {
 	disableElement( scriptOption.dom );
 
 
-	scriptOption.onClick( async function (event) {
+	scriptOption.onClick( async function () {
 		// 如果还在加载中，则不允许前往脚本编辑器
 		if (editor.metaLoader && editor.metaLoader.getLoadingStatus()) {
 			console.warn('Cannot go to script editor while models are still loading');
 			return;
 		}
 
+		const gotoScriptEditor = function () {
+			editor.signals.messageSend.dispatch({
+				action: 'goto',
+				data: { 'target': 'blockly.js' }
+			});
+		};
+
 		// 检查场景是否有修改
 		const changed = (editor.verseLoader && await editor.verseLoader.changed()) || (editor.metaLoader && await editor.metaLoader.changed());
 
 		if(changed) {
-			// 只有在场景有修改时才显示确认框
-			editor.showConfirmation(strings.getKey('sidebar/confirm/scene/modified'), async function() {
-				// 用户点击确认按钮，先保存场景
-				await editor.signals.upload.dispatch();
-
-				// 延迟导航到脚本编辑器，确保保存完成
-				const data = {
-					action: 'goto',
-					data: { 'target': 'blockly.js' }
-				};
-				setTimeout(() => {
-					editor.signals.messageSend.dispatch( data );
-				}, 3000);
-			}, null, event.parent, false);
+			DialogUtils.showSceneSaveDialog(
+				strings.getKey('sidebar/confirm/scene/modified'),
+				async function () {
+					// 是：保存后进入脚本编辑
+					await editor.signals.upload.dispatch();
+					gotoScriptEditor();
+				},
+				function () {
+					// 否：不保存直接进入脚本编辑
+					gotoScriptEditor();
+				},
+				function () {
+					// 关闭：不进行任何操作
+				}
+			);
 		} else {
 			// 如果没有修改，直接导航到脚本编辑器
-			const data = {
-				action: 'goto',
-				data: { 'target': 'blockly.js' }
-			};
-			editor.signals.messageSend.dispatch( data );
+			gotoScriptEditor();
 		}
 	} );
 	options.add( scriptOption );
