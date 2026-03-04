@@ -813,6 +813,57 @@ select:hover {
 	--ar-radius-md: 12px;
 	--ar-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
 	--ar-shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
+
+	/* Scene Save Dialog (script edit confirm) */
+	--scene-save-overlay-bg: rgba(15, 23, 42, 0.22);
+	--scene-save-overlay-blur: 2px;
+	--scene-save-z-index: 12000;
+	--scene-save-overlay-transition: opacity 180ms ease;
+
+	--scene-save-dialog-width: 280px;
+	--scene-save-dialog-max-width: 90vw;
+	--scene-save-dialog-min-height: 106px;
+	--scene-save-dialog-padding: 14px 14px 12px;
+	--scene-save-dialog-radius: 10px;
+	--scene-save-dialog-border: 1px solid var(--ar-border);
+	--scene-save-dialog-bg: var(--ar-bg-card);
+	--scene-save-dialog-text: var(--ar-text-primary);
+	--scene-save-dialog-shadow: 0 8px 24px rgba(15, 23, 42, 0.18);
+	--scene-save-dialog-offset-y: 6px;
+	--scene-save-dialog-scale-out: 0.98;
+	--scene-save-dialog-transition: transform 180ms ease;
+
+	--scene-save-close-top: 5px;
+	--scene-save-close-right: 5px;
+	--scene-save-close-size: 28px;
+	--scene-save-close-radius: 50%;
+	--scene-save-close-border: 1px solid var(--ar-border);
+	--scene-save-close-bg: var(--ar-bg-card);
+	--scene-save-close-color: var(--ar-text-secondary);
+	--scene-save-close-font-size: 17px;
+	--scene-save-close-line-height: 1;
+
+	--scene-save-title-size: 18px;
+	--scene-save-title-weight: 600;
+	--scene-save-title-margin: 12px 10px 22px;
+	--scene-save-title-line-height: 1.4;
+
+	--scene-save-actions-gap: 18px;
+	--scene-save-actions-margin-top: 10px;
+
+	--scene-save-action-min-width: 90px;
+	--scene-save-action-height: 40px;
+	--scene-save-action-radius: 7px;
+	--scene-save-action-font-size: 15px;
+	--scene-save-action-font-weight: 600;
+
+	--scene-save-no-border: 1px solid var(--ar-border-strong);
+	--scene-save-no-bg: var(--ar-bg-card);
+	--scene-save-no-color: #475569;
+
+	--scene-save-yes-border: none;
+	--scene-save-yes-bg: var(--ar-primary);
+	--scene-save-yes-color: #ffffff;
 }
 
 html,
