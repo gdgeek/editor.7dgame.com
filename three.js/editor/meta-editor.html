@@ -304,14 +304,14 @@
 				// 保存用户信息
 				if (data.user) {
 					editor.data.user = data.user
-					console.error("Set user role:", editor.data.user.role);
+					console.log("Set user role:", editor.data.user.role);
 				}
 			} else if (params.action === 'user-info') {
 				
 			//	alert(editor.data)
 				// 保存用户信息
 				editor.data.user = params.data;
-				console.error("Updated user role:", editor.data.user.role);
+				console.log("Updated user role:", editor.data.user.role);
 			}
 
 		});
