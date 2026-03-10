@@ -481,7 +481,10 @@ class UIOutliner extends UIDiv {
 		}
 
 		function onDragStart( event ) {
+			currentDrag = this;
+			event.dataTransfer.setData( 'text/plain', String(this.value) );
 			event.dataTransfer.setData( 'text', 'foo' );
+			event.dataTransfer.effectAllowed = 'move';
 
 			// 检查当前拖动的元素是否在选中集合中
 			const draggedId = String(this.value);
@@ -496,22 +499,29 @@ class UIOutliner extends UIDiv {
 		function onDragOver( event ) {
 
 			if ( this === currentDrag ) return;
+			event.preventDefault();
+			event.stopPropagation();
+			event.dataTransfer.dropEffect = 'move';
 
-			const area = event.offsetY / this.clientHeight;
+			const area = getDropArea(event, this);
 
-			if ( area < 0.25 ) {
+			// 仅允许同级排序：上半区=插到前面，下半区=插到后面
+			if ( area < 0.5 ) {
 
 				this.className = 'option dragTop';
 
-			} else if ( area > 0.75 ) {
+			} else {
 
 				this.className = 'option dragBottom';
 
-			} else {
-
-				this.className = 'option drag';
-
 			}
+
+		}
+
+		function onDragEnter( event ) {
+
+			if ( this === currentDrag ) return;
+			event.preventDefault();
 
 		}
 
@@ -526,50 +536,55 @@ class UIOutliner extends UIDiv {
 		function onDrop( event ) {
 
 			if ( this === currentDrag || currentDrag === undefined ) return;
+			event.preventDefault();
+			event.stopPropagation();
 
 			this.className = 'option';
 
 			const scene = scope.scene;
 
-			// 获取所有选中的对象
-			const selectedValues = scope.getValues();
-			const selectedObjects = selectedValues.map(id => scene.getObjectById(parseInt(id))).filter(Boolean);
+			// 仅按当前拖拽对象移动，避免多选状态导致移动被拦截
+			const draggedObject = scene.getObjectById(parseInt(currentDrag.value));
 
 			// 如果没有选中对象，退出
-			if (selectedObjects.length === 0) return;
+			if (!draggedObject) return;
+			const movingObjects = [draggedObject];
 
 			// 获取当前拖拽目标
-			const area = event.offsetY / this.clientHeight;
+			const area = getDropArea(event, this);
+			const targetObject = scene.getObjectById(parseInt(this.value));
+			if (!targetObject || !targetObject.parent) return;
+			const targetParent = targetObject.parent;
 
-			if ( area < 0.25 ) {
+			if ( area < 0.5 ) {
 				// 在目标上方插入
-				const nextObject = scene.getObjectById(parseInt(this.value));
-				moveMultipleObjects(selectedObjects, nextObject.parent, nextObject);
-
-			} else if ( area > 0.75 ) {
-				// 在目标下方插入
-				let nextObject, parent;
-
-				if ( this.nextSibling !== null ) {
-					nextObject = scene.getObjectById(parseInt(this.nextSibling.value));
-					parent = nextObject.parent;
-				} else {
-					// 列表末尾（没有下一个对象）
-					nextObject = null;
-					parent = scene.getObjectById(parseInt(this.value)).parent;
-				}
-
-				moveMultipleObjects(selectedObjects, parent, nextObject);
+				moveMultipleObjects(movingObjects, targetParent, targetObject);
 
 			} else {
-				// 作为目标的子级
-				const parentObject = scene.getObjectById(parseInt(this.value));
-				moveMultipleObjects(selectedObjects, parentObject);
+				// 在目标下方插入（仅按同级 children 顺序计算，不使用 DOM nextSibling）
+				const siblings = targetParent.children;
+				const targetIndex = siblings.indexOf(targetObject);
+				const nextObject = targetIndex >= 0 ? siblings[targetIndex + 1] : undefined;
+				moveMultipleObjects(movingObjects, targetParent, nextObject);
 			}
+		}
+
+		function getDropArea(event, element) {
+			const rect = element.getBoundingClientRect();
+			const height = Math.max(rect.height, 1);
+			return (event.clientY - rect.top) / height;
 		}
 
 		function moveMultipleObjects(objects, newParent, nextObject) {
 			if (nextObject === null) nextObject = undefined;
+			if (!newParent) return;
+
+			// 仅允许同级重排，不允许改变父级关系
+			const sourceParent = objects[0] ? objects[0].parent : null;
+			if (!sourceParent || newParent !== sourceParent) return;
+			for (let i = 1; i < objects.length; i++) {
+				if (objects[i].parent !== sourceParent) return;
+			}
 
 			// 检查是否有循环引用
 			for (let i = 0; i < objects.length; i++) {
@@ -587,15 +602,66 @@ class UIOutliner extends UIDiv {
 			}
 
 			const editor = scope.editor;
+			const beforeOrder = newParent.children.map(child => child.id).join(',');
+
+			// 单对象移动：使用原生命令处理同父级索引调整，行为更稳定
+			if (objects.length === 1) {
+				const cmd = new MoveObjectCommand(editor, objects[0], newParent, nextObject);
+				editor.execute(cmd);
+				const afterOrder = newParent.children.map(child => child.id).join(',');
+
+				// 兜底：若命令执行后顺序未变化，直接按 children 重排一次
+				if (beforeOrder === afterOrder) {
+					forceReorder(objects, newParent, nextObject);
+				}
+
+				const changeEvent = new CustomEvent('change', {
+					bubbles: true,
+					cancelable: true
+				});
+				scope.dom.dispatchEvent(changeEvent);
+				return;
+			}
+
 			// 使用已经导入的MoveMultipleObjectsCommand
 			const cmd = new MoveMultipleObjectsCommand(editor, objects, newParent, nextObject);
 			editor.execute(cmd);
+			const afterOrder = newParent.children.map(child => child.id).join(',');
+
+			// 兜底：若命令执行后顺序未变化，直接按 children 重排一次
+			if (beforeOrder === afterOrder) {
+				forceReorder(objects, newParent, nextObject);
+			}
 
 			const changeEvent = new CustomEvent('change', {
 				bubbles: true,
 				cancelable: true
 			});
 			scope.dom.dispatchEvent(changeEvent);
+		}
+
+		function forceReorder(objects, parent, nextObject) {
+			if (!objects || objects.length === 0 || !parent) return;
+
+			const movingSet = new Set(objects);
+			const movingInOrder = parent.children.filter(child => movingSet.has(child));
+			if (movingInOrder.length === 0) return;
+
+			for (let i = 0; i < movingInOrder.length; i++) {
+				parent.remove(movingInOrder[i]);
+			}
+
+			let insertIndex = nextObject ? parent.children.indexOf(nextObject) : parent.children.length;
+			if (insertIndex < 0) insertIndex = parent.children.length;
+
+			for (let i = 0; i < movingInOrder.length; i++) {
+				const object = movingInOrder[i];
+				parent.children.splice(insertIndex + i, 0, object);
+				object.parent = parent;
+				object.dispatchEvent({ type: 'added' });
+			}
+
+			scope.editor.signals.sceneGraphChanged.dispatch();
 		}
 
 		//
@@ -617,6 +683,7 @@ class UIOutliner extends UIDiv {
 				div.addEventListener( 'drag', onDrag );
 				div.addEventListener( 'dragstart', onDragStart ); // Firefox needs this
 
+				div.addEventListener( 'dragenter', onDragEnter );
 				div.addEventListener( 'dragover', onDragOver );
 				div.addEventListener( 'dragleave', onDragLeave );
 				div.addEventListener( 'drop', onDrop );

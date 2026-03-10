@@ -5,7 +5,6 @@ import { UIPanel, UIRow, UIHorizontalRule } from './libs/ui.js';
 import { AddObjectCommand } from './commands/AddObjectCommand.js';
 import { MetaFactory } from './mrpp/MetaFactory.js';
 import { Builder } from './mrpp/Builder.js';
-import { DialogUtils } from './utils/DialogUtils.js';
 function disableElement(element) {
 	/*
 	element.classList.add('disabled');
@@ -78,29 +77,7 @@ function MenubarGoto( editor ) {
 			});
 		};
 
-		// 检查场景是否有修改
-		const changed = (editor.verseLoader && await editor.verseLoader.changed()) || (editor.metaLoader && await editor.metaLoader.changed());
-
-		if(changed) {
-			DialogUtils.showSceneSaveDialog(
-				strings.getKey('sidebar/confirm/scene/modified'),
-				async function () {
-					// 是：保存后进入脚本编辑
-					await editor.signals.upload.dispatch();
-					gotoScriptEditor();
-				},
-				function () {
-					// 否：不保存直接进入脚本编辑
-					gotoScriptEditor();
-				},
-				function () {
-					// 关闭：不进行任何操作
-				}
-			);
-		} else {
-			// 如果没有修改，直接导航到脚本编辑器
-			gotoScriptEditor();
-		}
+		gotoScriptEditor();
 	} );
 	options.add( scriptOption );
 

@@ -500,20 +500,10 @@ function SidebarScene(editor) {
 				}
 
 				if (editor.selector(object)) {
-
-					if (object.userData.draggable != undefined) {
-
-						const option = buildOption(object, object.userData.draggable);
-						option.style.paddingLeft = pad * 18 + 'px';
-						options.push(option);
-
-					} else {
-
-						const option = buildOption(object, true);
-						option.style.paddingLeft = pad * 18 + 'px';
-						options.push(option);
-
-					}
+					// Outliner 拖拽用于排序，与 object.userData.draggable（场景交互拖拽开关）解耦
+					const option = buildOption(object, true);
+					option.style.paddingLeft = pad * 18 + 'px';
+					options.push(option);
 				}
 
 

@@ -266,7 +266,7 @@ class DialogUtils {
     }
 
     /**
-     * 场景未保存时，前往脚本编辑的专用确认弹窗
+     * 实体未保存时的统一确认弹窗
      * - 点击「是」: 保存并继续
      * - 点击「否」: 不保存直接继续
      * - 点击右上角关闭: 关闭弹窗，不进行任何操作
@@ -276,6 +276,30 @@ class DialogUtils {
         if (existing) {
             existing.remove();
         }
+
+        const setImportantStyle = function (element, property, value) {
+            element.style.setProperty(property, value, 'important');
+        };
+
+        const bindHoverStyles = function (element, normalStyles, hoverStyles) {
+            if (!element) return;
+
+            const applyStyles = function (styles) {
+                Object.entries(styles).forEach(function ([property, value]) {
+                    setImportantStyle(element, property, value);
+                });
+            };
+
+            applyStyles(normalStyles);
+
+            element.addEventListener('mouseenter', function () {
+                applyStyles(hoverStyles);
+            });
+
+            element.addEventListener('mouseleave', function () {
+                applyStyles(normalStyles);
+            });
+        };
 
         const overlay = document.createElement('div');
         overlay.className = 'scene-save-dialog-overlay';
@@ -324,6 +348,23 @@ class DialogUtils {
         closeButton.style.alignItems = 'center';
         closeButton.style.justifyContent = 'center';
         closeButton.style.cursor = 'pointer';
+        setImportantStyle(closeButton, 'border', 'var(--scene-save-close-border, none)');
+        setImportantStyle(closeButton, 'background', 'var(--scene-save-close-bg, transparent)');
+        setImportantStyle(closeButton, 'color', 'var(--scene-save-close-color, #94a3b8)');
+        setImportantStyle(closeButton, 'padding', '0');
+        setImportantStyle(closeButton, 'border-radius', 'var(--scene-save-close-radius, 0)');
+        setImportantStyle(closeButton, 'transition', 'all 0.15s ease');
+        bindHoverStyles(
+            closeButton,
+            {
+                background: 'var(--scene-save-close-bg, transparent)',
+                color: 'var(--scene-save-close-color, #94a3b8)'
+            },
+            {
+                background: 'var(--scene-save-close-hover-bg, rgba(148, 163, 184, 0.12))',
+                color: 'var(--scene-save-close-hover-color, #64748b)'
+            }
+        );
         dialog.appendChild(closeButton);
 
         const messageText = document.createElement('div');
@@ -346,6 +387,7 @@ class DialogUtils {
         noButton.textContent = '否';
         noButton.style.minWidth = 'var(--scene-save-action-min-width, 90px)';
         noButton.style.height = 'var(--scene-save-action-height, 40px)';
+        noButton.style.padding = 'var(--scene-save-action-padding, 0 20px)';
         noButton.style.borderRadius = 'var(--scene-save-action-radius, 7px)';
         noButton.style.border = 'var(--scene-save-no-border, 1px solid var(--ar-border-strong, #cbd5e1))';
         noButton.style.background = 'var(--scene-save-no-bg, var(--ar-bg-card, #ffffff))';
@@ -353,12 +395,31 @@ class DialogUtils {
         noButton.style.fontSize = 'var(--scene-save-action-font-size, 15px)';
         noButton.style.fontWeight = 'var(--scene-save-action-font-weight, 600)';
         noButton.style.cursor = 'pointer';
+        setImportantStyle(noButton, 'border', 'var(--scene-save-no-border, 1px solid #dbe4ef)');
+        setImportantStyle(noButton, 'background', 'var(--scene-save-no-bg, #ffffff)');
+        setImportantStyle(noButton, 'color', 'var(--scene-save-no-color, #606266)');
+        setImportantStyle(noButton, 'border-radius', 'var(--scene-save-action-radius, 12px)');
+        setImportantStyle(noButton, 'transition', 'all 0.15s ease');
+        bindHoverStyles(
+            noButton,
+            {
+                border: 'var(--scene-save-no-border, 1px solid #dbe4ef)',
+                background: 'var(--scene-save-no-bg, #ffffff)',
+                color: 'var(--scene-save-no-color, #606266)'
+            },
+            {
+                border: '1px solid var(--scene-save-no-hover-border, #cfd8e3)',
+                background: 'var(--scene-save-no-hover-bg, #f8fafc)',
+                color: 'var(--scene-save-no-hover-color, #475569)'
+            }
+        );
 
         const yesButton = document.createElement('button');
         yesButton.type = 'button';
         yesButton.textContent = '是';
         yesButton.style.minWidth = 'var(--scene-save-action-min-width, 90px)';
         yesButton.style.height = 'var(--scene-save-action-height, 40px)';
+        yesButton.style.padding = 'var(--scene-save-action-padding, 0 20px)';
         yesButton.style.borderRadius = 'var(--scene-save-action-radius, 7px)';
         yesButton.style.border = 'var(--scene-save-yes-border, none)';
         yesButton.style.background = 'var(--scene-save-yes-bg, var(--ar-primary, #00baff))';
@@ -366,6 +427,24 @@ class DialogUtils {
         yesButton.style.fontSize = 'var(--scene-save-action-font-size, 15px)';
         yesButton.style.fontWeight = 'var(--scene-save-action-font-weight, 600)';
         yesButton.style.cursor = 'pointer';
+        setImportantStyle(yesButton, 'border', 'var(--scene-save-yes-border, none)');
+        setImportantStyle(yesButton, 'background', 'var(--scene-save-yes-bg, #00baff)');
+        setImportantStyle(yesButton, 'color', 'var(--scene-save-yes-color, #ffffff)');
+        setImportantStyle(yesButton, 'border-radius', 'var(--scene-save-action-radius, 12px)');
+        setImportantStyle(yesButton, 'transition', 'all 0.15s ease');
+        bindHoverStyles(
+            yesButton,
+            {
+                border: 'var(--scene-save-yes-border, none)',
+                background: 'var(--scene-save-yes-bg, #00baff)',
+                color: 'var(--scene-save-yes-color, #ffffff)'
+            },
+            {
+                border: 'var(--scene-save-yes-border, none)',
+                background: 'var(--scene-save-yes-hover-bg, var(--ar-primary-hover, #0099dd))',
+                color: 'var(--scene-save-yes-color, #ffffff)'
+            }
+        );
 
         buttonContainer.appendChild(noButton);
         buttonContainer.appendChild(yesButton);

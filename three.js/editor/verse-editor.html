@@ -240,15 +240,21 @@
 		}
 
 		// ServiceWorker
-
+		// 本地开发禁用并注销 SW，避免缓存导致调试代码不生效
 		if ('serviceWorker' in navigator) {
+			const isLocalDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 
-			try {
-
-				navigator.serviceWorker.register('sw.js');
-
-			} catch (error) { }
-
+			if (isLocalDev) {
+				navigator.serviceWorker.getRegistrations().then(function (registrations) {
+					registrations.forEach(function (registration) {
+						registration.unregister();
+					});
+				}).catch(function () { });
+			} else {
+				try {
+					navigator.serviceWorker.register('sw.js');
+				} catch (error) { }
+			}
 		}
 
 		window.addEventListener('message', e => {
@@ -256,6 +262,56 @@
 			const data = e.data;
 
 			if (data.action && data.from && data.from === 'scene.verse.web') {
+
+				if (data.action === 'check-unsaved-changes') {
+					(async () => {
+						const requestId = (data.data && data.data.requestId) || '';
+						let changed = false;
+						try {
+							if (editor.verseLoader && typeof editor.verseLoader.changed === 'function') {
+								changed = await editor.verseLoader.changed();
+							}
+						} catch (error) {
+							console.error('Failed to check unsaved changes:', error);
+						}
+						editor.signals.messageSend.dispatch({
+							action: 'unsaved-changes-result',
+							data: { requestId, changed: Boolean(changed) }
+						});
+					})();
+					return;
+				}
+
+				if (data.action === 'save-before-leave') {
+					(async () => {
+						try {
+							const changed = editor.verseLoader && typeof editor.verseLoader.changed === 'function'
+								? await editor.verseLoader.changed()
+								: false;
+
+							if (!changed) {
+								editor.signals.messageSend.dispatch({
+									action: 'save-verse-before-leave-none'
+								});
+								return;
+							}
+
+							const verse = await editor.verseLoader.getVerse();
+							const payload = { verse };
+							editor.signals.messageSend.dispatch({
+								action: 'save-verse-before-leave',
+								data: payload
+							});
+							editor.verseLoader.json = JSON.stringify(payload);
+						} catch (error) {
+							console.error('Failed to save before leave:', error);
+							editor.signals.messageSend.dispatch({
+								action: 'save-verse-before-leave-none'
+							});
+						}
+					})();
+					return;
+				}
 
 				editor.signals.messageReceive.dispatch({
 					action: data.action,
