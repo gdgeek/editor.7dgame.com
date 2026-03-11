@@ -11,6 +11,7 @@ import { SidebarMedia } from './Sidebar.Media.js'
 import { SidebarProject } from './Sidebar.Project.js'
 import { SidebarSettings } from './Sidebar.Settings.js'
 import { SidebarScreenshot } from './Sidebar.Screenshot.js'
+import { SidebarBackground } from './Sidebar.Background.js'
 import { SidebarText } from './Sidebar.Text.js'
 
 function Sidebar(editor) {
@@ -38,11 +39,13 @@ function Sidebar(editor) {
 	const project = new SidebarProject(editor)
 	const settings = new SidebarSettings(editor)
 	const screenshot = new SidebarScreenshot(editor)
+	const background = new SidebarBackground(editor)
 
 	container.addTab('scene', strings.getKey('sidebar/scene'), scene)
 	// container.addTab('project', strings.getKey('sidebar/project'), project)
 	// container.addTab('settings', strings.getKey('sidebar/settings'), settings)
 	container.addTab('screenshot', strings.getKey('sidebar/screenshot'), screenshot)
+	container.addTab('background', strings.getKey('sidebar/scene/background'), background)
 	container.select('scene')
 
 	return container

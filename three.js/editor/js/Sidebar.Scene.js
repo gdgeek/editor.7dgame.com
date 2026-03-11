@@ -1,21 +1,13 @@
-import * as THREE from 'three';
-
 import {
 	UIPanel,
-	UIBreak,
-	UIRow,
-	UIColor,
-	UISelect,
-	UIText,
-	UINumber
+	UIBreak
 } from './libs/ui.js';
-import { UIOutliner, UITexture } from './libs/ui.three.js';
+import { UIOutliner } from './libs/ui.three.js';
 import { RemoveObjectCommand } from './commands/RemoveObjectCommand.js';
 
 function SidebarScene(editor) {
 
 	const signals = editor.signals;
-	const strings = editor.strings;
 
 	const container = new UIPanel();
 	container.setBorderTop('0');
@@ -225,6 +217,7 @@ function SidebarScene(editor) {
 
 	const outliner = new UIOutliner(editor);
 	outliner.setId('outliner');
+	outliner.dom.style.height = '240px';
 	outliner.onChange(function () {
 		ignoreObjectSelectedSignal = true;
 
@@ -269,216 +262,8 @@ function SidebarScene(editor) {
 	container.add(outliner);
 	container.add(new UIBreak());
 
-	// background
-
-	const backgroundRow = new UIRow();
-
-	const backgroundType = new UISelect()
-		.setOptions({
-			None: '',
-			Color: 'Color',
-			Texture: 'Texture',
-			Equirectangular: 'Equirect'
-		})
-		.setWidth('150px');
-	backgroundType.onChange(function () {
-
-		onBackgroundChanged();
-		refreshBackgroundUI();
-
-	});
-
-	backgroundRow.add(
-		new UIText(strings.getKey('sidebar/scene/background')).setWidth('90px')
-	);
-	backgroundRow.add(backgroundType);
-
-	const backgroundColor = new UIColor()
-		.setValue('#000000')
-		.setMarginLeft('8px')
-		.onInput(onBackgroundChanged);
-	backgroundRow.add(backgroundColor);
-
-	const backgroundTexture = new UITexture()
-		.setMarginLeft('8px')
-		.onChange(onBackgroundChanged);
-	backgroundTexture.setDisplay('none');
-	backgroundRow.add(backgroundTexture);
-
-	const backgroundEquirectangularTexture = new UITexture()
-		.setMarginLeft('8px')
-		.onChange(onBackgroundChanged);
-	backgroundEquirectangularTexture.setDisplay('none');
-	backgroundRow.add(backgroundEquirectangularTexture);
-
-	container.add(backgroundRow);
-
-	function onBackgroundChanged() {
-
-		signals.sceneBackgroundChanged.dispatch(
-			backgroundType.getValue(),
-			backgroundColor.getHexValue(),
-			backgroundTexture.getValue(),
-			backgroundEquirectangularTexture.getValue()
-		);
-
-	}
-
-	function refreshBackgroundUI() {
-
-		const type = backgroundType.getValue();
-
-		backgroundType.setWidth(type === 'None' ? '150px' : '110px');
-		backgroundColor.setDisplay(type === 'Color' ? '' : 'none');
-		backgroundTexture.setDisplay(type === 'Texture' ? '' : 'none');
-		backgroundEquirectangularTexture.setDisplay(
-			type === 'Equirectangular' ? '' : 'none'
-		);
-
-	}
-
-	// environment
-
-	const environmentRow = new UIRow();
-
-	const environmentType = new UISelect()
-		.setOptions({
-			None: '',
-			Equirectangular: 'Equirect',
-			ModelViewer: 'ModelViewer'
-		})
-		.setWidth('150px');
-	environmentType.setValue('None');
-	environmentType.onChange(function () {
-
-		onEnvironmentChanged();
-		refreshEnvironmentUI();
-
-	});
-
-	environmentRow.add(
-		new UIText(strings.getKey('sidebar/scene/environment')).setWidth('90px')
-	);
-	environmentRow.add(environmentType);
-
-	const environmentEquirectangularTexture = new UITexture()
-		.setMarginLeft('8px')
-		.onChange(onEnvironmentChanged);
-	environmentEquirectangularTexture.setDisplay('none');
-	environmentRow.add(environmentEquirectangularTexture);
-
-	//container.add(environmentRow);
-
-	function onEnvironmentChanged() {
-
-		signals.sceneEnvironmentChanged.dispatch(
-			environmentType.getValue(),
-			environmentEquirectangularTexture.getValue()
-		);
-
-	}
-
-	function refreshEnvironmentUI() {
-
-		const type = environmentType.getValue();
-
-		environmentType.setWidth(type !== 'Equirectangular' ? '150px' : '110px');
-		environmentEquirectangularTexture.setDisplay(
-			type === 'Equirectangular' ? '' : 'none'
-		);
-
-	}
-
-	// fog
-
-	function onFogChanged() {
-
-		signals.sceneFogChanged.dispatch(
-			fogType.getValue(),
-			fogColor.getHexValue(),
-			fogNear.getValue(),
-			fogFar.getValue(),
-			fogDensity.getValue()
-		);
-
-	}
-
-	function onFogSettingsChanged() {
-
-		signals.sceneFogSettingsChanged.dispatch(
-			fogType.getValue(),
-			fogColor.getHexValue(),
-			fogNear.getValue(),
-			fogFar.getValue(),
-			fogDensity.getValue()
-		);
-
-	}
-
-	const fogTypeRow = new UIRow();
-	const fogType = new UISelect()
-		.setOptions({
-			None: '',
-			Fog: 'Linear',
-			FogExp2: 'Exponential'
-		})
-		.setWidth('150px');
-	fogType.onChange(function () {
-
-		onFogChanged();
-		refreshFogUI();
-
-	});
-
-	fogTypeRow.add(
-		new UIText(strings.getKey('sidebar/scene/fog')).setWidth('90px')
-	);
-	fogTypeRow.add(fogType);
-
-	//container.add(fogTypeRow);
-
-	// fog color
-
-	const fogPropertiesRow = new UIRow();
-	fogPropertiesRow.setDisplay('none');
-	fogPropertiesRow.setMarginLeft('90px');
-	container.add(fogPropertiesRow);
-
-	const fogColor = new UIColor().setValue('#aaaaaa');
-	fogColor.onInput(onFogSettingsChanged);
-	fogPropertiesRow.add(fogColor);
-
-	// fog near
-
-	const fogNear = new UINumber(0.1)
-		.setWidth('40px')
-		.setRange(0, Infinity)
-		.onChange(onFogSettingsChanged);
-	fogPropertiesRow.add(fogNear);
-
-	// fog far
-
-	const fogFar = new UINumber(50)
-		.setWidth('40px')
-		.setRange(0, Infinity)
-		.onChange(onFogSettingsChanged);
-	fogPropertiesRow.add(fogFar);
-
-	// fog density
-
-	const fogDensity = new UINumber(0.05)
-		.setWidth('40px')
-		.setRange(0, 0.1)
-		.setStep(0.001)
-		.setPrecision(3)
-		.onChange(onFogSettingsChanged);
-	fogPropertiesRow.add(fogDensity);
-
-	//
-
 	function refreshUI() {
 
-		const camera = editor.camera;
 		const scene = editor.scene;
 
 		const options = [];
@@ -545,92 +330,6 @@ function SidebarScene(editor) {
 				}
 			}
 		}
-
-		if (scene.background) {
-
-			if (scene.background.isColor) {
-
-				backgroundType.setValue('Color');
-				backgroundColor.setHexValue(scene.background.getHex());
-
-			} else if (scene.background.isTexture) {
-
-				if (
-					scene.background.mapping === THREE.EquirectangularReflectionMapping
-				) {
-
-					backgroundType.setValue('Equirectangular');
-					backgroundEquirectangularTexture.setValue(scene.background);
-
-				} else {
-
-					backgroundType.setValue('Texture');
-					backgroundTexture.setValue(scene.background);
-
-				}
-
-			}
-
-		} else {
-
-			backgroundType.setValue('None');
-
-		}
-
-		if (scene.environment) {
-
-			if (
-				scene.environment.mapping === THREE.EquirectangularReflectionMapping
-			) {
-
-				environmentType.setValue('Equirectangular');
-				environmentEquirectangularTexture.setValue(scene.environment);
-
-			}
-
-		} else {
-
-			environmentType.setValue('None');
-
-		}
-
-		if (scene.fog) {
-
-			fogColor.setHexValue(scene.fog.color.getHex());
-
-			if (scene.fog.isFog) {
-
-				fogType.setValue('Fog');
-				fogNear.setValue(scene.fog.near);
-				fogFar.setValue(scene.fog.far);
-
-			} else if (scene.fog.isFogExp2) {
-
-				fogType.setValue('FogExp2');
-				fogDensity.setValue(scene.fog.density);
-
-			}
-
-		} else {
-
-			fogType.setValue('None');
-
-		}
-
-		refreshBackgroundUI();
-		refreshEnvironmentUI();
-		refreshFogUI();
-
-	}
-
-	function refreshFogUI() {
-
-		const type = fogType.getValue();
-
-		fogPropertiesRow.setDisplay(type === 'None' ? 'none' : '');
-		fogNear.setDisplay(type === 'Fog' ? '' : 'none');
-		fogFar.setDisplay(type === 'Fog' ? '' : 'none');
-		fogDensity.setDisplay(type === 'FogExp2' ? '' : 'none');
 
 	}
 
