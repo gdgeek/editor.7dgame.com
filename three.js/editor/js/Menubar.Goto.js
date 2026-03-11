@@ -5,7 +5,6 @@ import { UIPanel, UIRow, UIHorizontalRule } from './libs/ui.js';
 import { AddObjectCommand } from './commands/AddObjectCommand.js';
 import { MetaFactory } from './mrpp/MetaFactory.js';
 import { Builder } from './mrpp/Builder.js';
-import { DialogUtils } from './utils/DialogUtils.js';
 function disableElement(element) {
 	/*
 	element.classList.add('disabled');
@@ -64,39 +63,18 @@ function MenubarGoto( editor ) {
 	disableElement( scriptOption.dom );
 
 
-	scriptOption.onClick( async function (event) {
+	scriptOption.onClick( async function () {
 		// 如果还在加载中，则不允许前往脚本编辑器
 		if (editor.metaLoader && editor.metaLoader.getLoadingStatus()) {
 			console.warn('Cannot go to script editor while models are still loading');
 			return;
 		}
 
-		// 检查场景是否有修改
-		const changed = (editor.verseLoader && await editor.verseLoader.changed()) || (editor.metaLoader && await editor.metaLoader.changed());
-
-		if(changed) {
-			// 只有在场景有修改时才显示确认框
-			editor.showConfirmation(strings.getKey('sidebar/confirm/scene/modified'), async function() {
-				// 用户点击确认按钮，先保存场景
-				await editor.signals.upload.dispatch();
-
-				// 延迟导航到脚本编辑器，确保保存完成
-				const data = {
-					action: 'goto',
-					data: { 'target': 'blockly.js' }
-				};
-				setTimeout(() => {
-					editor.signals.messageSend.dispatch( data );
-				}, 3000);
-			}, null, event.parent, false);
-		} else {
-			// 如果没有修改，直接导航到脚本编辑器
-			const data = {
-				action: 'goto',
-				data: { 'target': 'blockly.js' }
-			};
-			editor.signals.messageSend.dispatch( data );
-		}
+		// 仅发起导航请求，保存确认统一由父层全局守卫处理
+		editor.signals.messageSend.dispatch({
+			action: 'goto',
+			data: { target: 'blockly.js' }
+		});
 	} );
 	options.add( scriptOption );
 
