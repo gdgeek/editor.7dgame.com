@@ -12,6 +12,7 @@ import { MenubarHelp } from './Menubar.Help.js';
 import { MenubarStatus } from './Menubar.Status.js';
 import { MenubarComponent } from './Menubar.Component.js';
 import { MenubarCommand } from './Menubar.Command.js';
+import { MenubarScreenshot } from './Menubar.Screenshot.js';
 
 function Menubar(editor) {
 
@@ -24,6 +25,7 @@ function Menubar(editor) {
 	// container.add( new MenubarReplace( editor ) );  // 替换功能已移入编辑菜单
 	//container.add( new MenubarComponent( editor ) );
 	//container.add( new MenubarCommand( editor ) );
+	container.add(new MenubarScreenshot(editor));
 	container.add(new MenubarGoto(editor));
 	// container.add(new MenubarPlay(editor))
 	// container.add(new MenubarExamples(editor))
