@@ -278,7 +278,7 @@ function Strings(config) {
 			'sidebar/entity': 'Entity(Custom)',
 			'sidebar/entity/button': 'Edit',
 
-			'sidebar/confirm/scene/modified': 'The scene has been modified, whether to save?',
+			'sidebar/confirm/scene/modified': 'Save current scene?',
 
 			'sidebar/geometry/type': 'Type',
 			'sidebar/geometry/new': 'New',
@@ -819,7 +819,7 @@ function Strings(config) {
 			'sidebar/entity': '实体（自定义）',
 			'sidebar/entity/button': '编辑',
 
-			'sidebar/confirm/scene/modified': '场景发生了修改，是否保存?',
+			'sidebar/confirm/scene/modified': '是否保存当前场景',
 
 			'sidebar/geometry/type': '类型',
 			'sidebar/geometry/new': '更新',
@@ -1363,7 +1363,7 @@ function Strings(config) {
 			'sidebar/entity': 'コンポーネント（カスタム）',
 			'sidebar/entity/button': '編集',
 
-			'sidebar/confirm/scene/modified': 'シーンが変更されました。保存しますか？',
+			'sidebar/confirm/scene/modified': '現在のシーンを保存しますか？',
 
 			'sidebar/geometry/type': 'タイプ',
 			'sidebar/geometry/new': '更新',
@@ -1904,7 +1904,7 @@ function Strings(config) {
 			"sidebar/entity": "實體（自訂）",
 			"sidebar/entity/button": "編輯",
 
-			"sidebar/confirm/scene/modified": "場景已發生修改，是否儲存？",
+			"sidebar/confirm/scene/modified": "是否保存當前場景",
 
 			"sidebar/geometry/type": "類型",
 			"sidebar/geometry/new": "更新",
@@ -2446,7 +2446,7 @@ function Strings(config) {
 			"sidebar/entity": "เอนทิตี (กำหนดเอง)",
 			"sidebar/entity/button": "แก้ไข",
 
-			"sidebar/confirm/scene/modified": "ฉากมีการแก้ไข คุณต้องการบันทึกหรือไม่?",
+			"sidebar/confirm/scene/modified": "ต้องการบันทึกฉากปัจจุบันหรือไม่?",
 
 			"sidebar/geometry/type": "ประเภท",
 			"sidebar/geometry/new": "อัปเดต",
