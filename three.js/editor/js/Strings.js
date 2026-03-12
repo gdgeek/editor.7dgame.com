@@ -517,6 +517,8 @@ function Strings(config) {
 			'menubar/screenshot/downloaded': 'Downloaded: ',
 			'menubar/screenshot/upload': 'Upload as cover',
 			'menubar/screenshot/cancel': 'Cancel',
+			'menubar/scene': 'Scene',
+			'menubar/scene/empty': 'No scenes loaded',
 
 			'menubar/component/confirm': 'Do you want to add the "{0}" component to the current object?',
 			'menubar/component/success': 'Successfully added "{0}" component',
@@ -1060,6 +1062,8 @@ function Strings(config) {
 			'menubar/screenshot/downloaded': '图片已下载: ',
 			'menubar/screenshot/upload': '上传作为封面',
 			'menubar/screenshot/cancel': '取消',
+			'menubar/scene': '场景',
+			'menubar/scene/empty': '暂无已加载场景',
 
 			'menubar/component/confirm': '你想将"{0}"组件添加到当前对象吗？',
 			'menubar/component/success': '成功添加"{0}"组件',
@@ -1603,6 +1607,8 @@ function Strings(config) {
 			'menubar/screenshot/downloaded': 'ダウンロード完了: ',
 			'menubar/screenshot/upload': 'カバーとしてアップロード',
 			'menubar/screenshot/cancel': 'キャンセル',
+			'menubar/scene': 'シーン',
+			'menubar/scene/empty': '読み込み済みシーンなし',
 
 			'menubar/component/confirm': '現在のオブジェクトに "{0}" コンポーネントを追加しますか？',
 			'menubar/component/success': '"{0}" コンポーネントが正常に追加されました',
@@ -2145,6 +2151,8 @@ function Strings(config) {
 			"menubar/screenshot/downloaded": "圖片已下載: ",
 			"menubar/screenshot/upload": "上傳作為封面",
 			"menubar/screenshot/cancel": "取消",
+			"menubar/scene": "場景",
+			"menubar/scene/empty": "尚無已載入場景",
 
 			"menubar/component/confirm": "你想將「{0}」元件新增到當前物件嗎？",
 			"menubar/component/success": "成功新增「{0}」元件",
@@ -2687,6 +2695,8 @@ function Strings(config) {
 			"menubar/screenshot/downloaded": "ดาวน์โหลดรูปภาพแล้ว: ",
 			"menubar/screenshot/upload": "อัปโหลดเป็นหน้าปก",
 			"menubar/screenshot/cancel": "ยกเลิก",
+			"menubar/scene": "ฉาก",
+			"menubar/scene/empty": "ยังไม่มีฉากที่โหลด",
 
 			"menubar/component/confirm": "คุณต้องการเพิ่มคอมโพเนนต์ \"{0}\" ให้วัตถุปัจจุบันหรือไม่?",
 			"menubar/component/success": "เพิ่มคอมโพเนนต์ \"{0}\" สำเร็จแล้ว",
