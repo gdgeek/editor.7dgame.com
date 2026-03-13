@@ -76,6 +76,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/publish' }}
+            type=raw,value=publish,enable=${{ github.ref == 'refs/heads/publish' }}
             type=raw,value=main,enable=${{ github.ref == 'refs/heads/main' }}
             type=raw,value=master,enable=${{ github.ref == 'refs/heads/master' }}
             type=raw,value=develop,enable=${{ github.ref == 'refs/heads/develop' }}
@@ -87,6 +88,7 @@ jobs:
           images: ${{ env.TENCENT_REGISTRY }}/${{ env.TENCENT_IMAGE_NAME }}
           tags: |
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/publish' }}
+            type=raw,value=publish,enable=${{ github.ref == 'refs/heads/publish' }}
             type=raw,value=main,enable=${{ github.ref == 'refs/heads/main' }}
             type=raw,value=master,enable=${{ github.ref == 'refs/heads/master' }}
             type=raw,value=develop,enable=${{ github.ref == 'refs/heads/develop' }}
