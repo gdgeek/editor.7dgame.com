@@ -41,7 +41,28 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Check Tencent Registry availability
+        id: tencent-check
+        shell: bash
+        run: |
+          set +e
+
+          # Missing credentials: skip Tencent push without failing workflow.
+          if [ -z "${{ secrets.TENCENT_REGISTRY_USERNAME }}" ] || [ -z "${{ secrets.TENCENT_REGISTRY_PASSWORD }}" ]; then
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Tencent registry credentials are missing, skip Tencent push."
+            exit 0
+          fi
+
+          if curl -fsS --connect-timeout 6 --max-time 12 "https://${{ env.TENCENT_REGISTRY }}/v2/" >/dev/null; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Tencent registry is unreachable, skip Tencent push in this run."
+          fi
+
       - name: Login to Tencent Cloud Container Registry
+        if: steps.tencent-check.outputs.available == 'true'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.TENCENT_REGISTRY }}
@@ -68,14 +89,24 @@ jobs:
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' }}
             type=raw,value=develop,enable=${{ github.ref == 'refs/heads/develop' }}
 
-      - name: Build and push to both registries
+      - name: Build and push to GitHub Registry
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: |
-            ${{ steps.meta.outputs.tags }}
-            ${{ steps.meta-tencent.outputs.tags }}
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push to Tencent Registry
+        if: steps.tencent-check.outputs.available == 'true'
+        continue-on-error: true
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta-tencent.outputs.tags }}
+          labels: ${{ steps.meta-tencent.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

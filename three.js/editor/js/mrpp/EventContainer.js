@@ -1,4 +1,4 @@
-import { UIText, UIButton, UIRow, UIBreak } from '../libs/ui.js'; // 引入 UIRow 辅助布局
+import { UIText, UIButton, UIBreak } from '../libs/ui.js';
 import { RemoveEventCommand } from '../commands/RemoveEventCommand.js';
 
 class EventContainer {

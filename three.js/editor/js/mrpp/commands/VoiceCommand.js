@@ -132,7 +132,6 @@ class VoiceCommand {
   }
 
   reloadOptions() {
-    const strings = this.editor.strings;
     const currentValue = this.voiceSelect.getValue();
 
     // 普通用户user可选
