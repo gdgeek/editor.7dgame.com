@@ -18,27 +18,6 @@ function SidebarProperties( editor ) {
 	const container = new UITabbedPanel();
 	container.setId( 'properties' );
 
-	const panelsDom = container.panelsDiv ? container.panelsDiv.dom : null;
-
-	const updatePanelsScrollArea = () => {
-		if (!panelsDom) return;
-
-		// Keep scene/outliner area fixed and let properties content scroll independently.
-		panelsDom.style.overflowY = 'auto';
-		panelsDom.style.overflowX = 'hidden';
-		panelsDom.style.minHeight = '0';
-
-		const sidebarDom = document.getElementById('sidebar');
-		if (!sidebarDom) return;
-
-		const sidebarRect = sidebarDom.getBoundingClientRect();
-		const panelsRect = panelsDom.getBoundingClientRect();
-		const availableHeight = Math.floor(sidebarRect.bottom - panelsRect.top - 10);
-		const safeHeight = Math.max(120, availableHeight);
-
-		panelsDom.style.maxHeight = `${safeHeight}px`;
-	};
-
 	// 创建多选对象面板
 	const multipleObjectsPanel = new SidebarMultipleObjects(editor);
 
@@ -66,7 +45,6 @@ function SidebarProperties( editor ) {
 	// 添加初始面板
 	container.addTab('object', strings.getKey('sidebar/properties/object'), objectPanel);
 	container.select('object');
-	requestAnimationFrame(updatePanelsScrollArea);
 
 	// 监听对象选择事件，自动切换选项卡
 	signals.objectSelected.add(function(object) {
@@ -135,13 +113,6 @@ function SidebarProperties( editor ) {
 			container.addTab('object', strings.getKey('sidebar/properties/object'), objectPanel);
 			container.select('object');
 		}
-
-		requestAnimationFrame(updatePanelsScrollArea);
-	});
-
-	window.addEventListener('resize', updatePanelsScrollArea);
-	signals.sceneGraphChanged.add(function () {
-		requestAnimationFrame(updatePanelsScrollArea);
 	});
 
 	return container;
