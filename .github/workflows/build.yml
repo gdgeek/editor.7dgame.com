@@ -78,6 +78,7 @@ jobs:
             type=sha,prefix=
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' }}
             type=raw,value=develop,enable=${{ github.ref == 'refs/heads/develop' }}
+            type=raw,value=publish,enable=${{ github.ref == 'refs/heads/publish' }}
 
       - name: Extract metadata for Tencent Registry
         id: meta-tencent
@@ -88,6 +89,7 @@ jobs:
             type=sha,prefix=
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' }}
             type=raw,value=develop,enable=${{ github.ref == 'refs/heads/develop' }}
+            type=raw,value=publish,enable=${{ github.ref == 'refs/heads/publish' }}
 
       - name: Generate build time
         id: build-time
