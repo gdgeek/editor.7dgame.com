@@ -1,7 +1,7 @@
 import { UIPanel } from './libs/ui.js';
 
 import { MenubarAdd } from './Menubar.Add.js';
-import { MenubarReplace } from './Menubar.Replace.js';
+// import { MenubarReplace } from './Menubar.Replace.js';  // 替换功能已移入编辑菜单
 import { MenubarGoto } from './Menubar.Goto.js';
 import { MenubarEdit } from './Menubar.Edit.js';
 import { MenubarFile } from './Menubar.File.js';
@@ -15,15 +15,15 @@ import { MenubarCommand } from './Menubar.Command.js';
 import { MenubarScreenshot } from './Menubar.Screenshot.js';
 import { MenubarScene } from './Menubar.Scene.js';
 
-function Menubar( editor ) {
+function Menubar(editor) {
 
 	const container = new UIPanel();
-	container.setId( 'menubar' );
+	container.setId('menubar');
 
-	container.add( new MenubarFile( editor ) );
-	container.add( new MenubarEdit( editor ) );
-	container.add( new MenubarAdd( editor ) );
-	container.add( new MenubarReplace( editor ) );
+	container.add(new MenubarFile(editor));
+	container.add(new MenubarEdit(editor));
+	container.add(new MenubarAdd(editor));
+	// container.add( new MenubarReplace( editor ) );  // 替换功能已移入编辑菜单
 	//container.add( new MenubarComponent( editor ) );
 	//container.add( new MenubarCommand( editor ) );
 	if ( editor.type && editor.type.toLowerCase() === 'meta' ) {
@@ -37,7 +37,7 @@ function Menubar( editor ) {
 	//container.add(new MenubarView(editor))
 	//container.add(new MenubarHelp(editor))
 
-	container.add( new MenubarStatus( editor ) );
+	container.add(new MenubarStatus(editor));
 
 	return container;
 

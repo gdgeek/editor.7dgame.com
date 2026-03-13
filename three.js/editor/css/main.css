@@ -7,6 +7,8 @@
 	font-display: swap;
 }
 
+
+
 :root {
 	color-scheme: light dark;
 }
@@ -31,12 +33,13 @@ input {
 	vertical-align: middle;
 }
 
-	input[type="color"]::-webkit-color-swatch-wrapper {
-		padding: 0;
-	}
-	input[type="color"]::-webkit-color-swatch {
-		border: none;
-	}
+input[type="color"]::-webkit-color-swatch-wrapper {
+	padding: 0;
+}
+
+input[type="color"]::-webkit-color-swatch {
+	border: none;
+}
 
 textarea {
 	tab-size: 4;
@@ -44,16 +47,21 @@ textarea {
 	word-wrap: normal;
 }
 
-	textarea.success {
-		border-color: #8b8 !important;
-	}
+textarea.success {
+	border-color: #8b8 !important;
+}
 
-	textarea.fail {
-		border-color: #f00 !important;
-		background-color: rgba(255,0,0,0.05);
-	}
+textarea.fail {
+	border-color: #f00 !important;
+	background-color: rgba(255, 0, 0, 0.05);
+}
 
-textarea, input { outline: none; } /* osx */
+textarea,
+input {
+	outline: none;
+}
+
+/* osx */
 
 .Panel {
 	-moz-user-select: none;
@@ -85,18 +93,18 @@ textarea, input { outline: none; } /* osx */
 	min-width: 300px;
 }
 
-	.TabbedPanel .Tabs .Tab {
-		padding: 10px;
-		text-transform: uppercase;
-	}
+.TabbedPanel .Tabs .Tab {
+	padding: 10px;
+	text-transform: uppercase;
+}
 
-	.TabbedPanel .Panels {
-		position: relative;
-		display: block;
-		width: 100%;
-		height: 100%;
-		min-width: 300px;
-	}
+.TabbedPanel .Panels {
+	position: relative;
+	display: block;
+	width: 100%;
+	height: 100%;
+	min-width: 300px;
+}
 
 /* Listbox */
 .Listbox {
@@ -131,19 +139,19 @@ textarea, input { outline: none; } /* osx */
 
 }
 
-	.CodeMirror .errorLine {
+.CodeMirror .errorLine {
 
-		background: rgba(255,0,0,0.25);
+	background: rgba(255, 0, 0, 0.25);
 
-	}
+}
 
-	.CodeMirror .esprima-error {
+.CodeMirror .esprima-error {
 
-		color: #f00;
-		text-align: right;
-		padding: 0 20px;
+	color: #f00;
+	text-align: right;
+	padding: 0 20px;
 
-	}
+}
 
 /* outliner */
 
@@ -156,17 +164,18 @@ textarea, input { outline: none; } /* osx */
 	text-align: center;
 }
 
-	#outliner .opener.open:after {
-		content: '−';
-	}
+#outliner .opener.open:after {
+	content: '−';
+}
 
-	#outliner .opener.closed:after {
-		content: '+';
-	}
+#outliner .opener.closed:after {
+	content: '+';
+}
 
-	#outliner .opener.locked:after {
-		content: 'ø';
-	}
+#outliner .opener.locked:after {
+	content: 'ø';
+}
+
 #outliner .option {
 
 	border: 1px solid transparent;
@@ -196,12 +205,14 @@ textarea, input { outline: none; } /* osx */
 #outliner .type:after {
 	content: '●';
 }
+
 /* 隐藏后面可能出现的额外标记 (预防性清理) */
 #outliner .Geometry,
 #outliner .Material,
 #outliner .Script {
 	display: none !important;
 }
+
 /* */
 
 #outliner .Scene {
@@ -303,7 +314,8 @@ button {
 	color: #555;
 	background-color: #ddd;
 	border: 0px;
-	margin: 0px; /* GNOME Web */
+	margin: 0px;
+	/* GNOME Web */
 	padding: 5px 8px;
 	font-size: 12px;
 	text-transform: uppercase;
@@ -311,24 +323,38 @@ button {
 	outline: none;
 }
 
-	button:hover {
-		background-color: #fff;
-	}
+button:hover {
+	background-color: #fff;
+}
 
-	button.selected {
-		background-color: #fff;
-	}
+button.selected {
+	background-color: #fff;
+}
 
-input, textarea {
+input,
+textarea {
 	border: 1px solid transparent;
 	color: #444;
 }
 
 input.Number {
-	color: #08f!important;
+	color: #08f;
 	font-size: 12px;
 	border: 0px;
 	padding: 2px;
+}
+
+/* XYZ 坐标轴颜色 */
+input.Number.axis-x {
+	color: #ff5555 !important;
+}
+
+input.Number.axis-y {
+	color: #55aa55 !important;
+}
+
+input.Number.axis-z {
+	color: #5588ff !important;
 }
 
 select {
@@ -340,9 +366,9 @@ select {
 	outline: none;
 }
 
-	select:hover {
-		background-color: #fff;
-	}
+select:hover {
+	background-color: #fff;
+}
 
 /* UI */
 
@@ -364,10 +390,10 @@ select {
 	bottom: 0;
 }
 
-	#viewport #info {
-		text-shadow: 1px 1px 0 rgba(0,0,0,0.25);
-		pointer-events: none;
-	}
+#viewport #info {
+	text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.25);
+	pointer-events: none;
+}
 
 #script {
 	position: absolute;
@@ -397,68 +423,68 @@ select {
 	top: 0;
 }
 
-	#menubar .menu {
-		float: left;
-		cursor: pointer;
-		padding-right: 8px;
-	}
+#menubar .menu {
+	float: left;
+	cursor: pointer;
+	padding-right: 8px;
+}
 
-	#menubar .menu.right {
-		float: right;
-		cursor: auto;
-		padding-right: 0;
-		text-align: right;
-	}
+#menubar .menu.right {
+	float: right;
+	cursor: auto;
+	padding-right: 0;
+	text-align: right;
+}
 
-		#menubar .menu .title {
-			display: inline-block;
-			color: #888;
-			margin: 0;
-			padding: 8px;
-			line-height: 16px;
-		}
+#menubar .menu .title {
+	display: inline-block;
+	color: #888;
+	margin: 0;
+	padding: 8px;
+	line-height: 16px;
+}
 
-		#menubar .menu .options {
-			position: fixed;
-			display: none;
-			padding: 5px 0;
-			background: #eee;
-			width: 150px;
-			max-height: calc(100% - 80px);
-			overflow: auto;
-		}
+#menubar .menu .options {
+	position: fixed;
+	display: none;
+	padding: 5px 0;
+	background: #eee;
+	width: 150px;
+	max-height: calc(100% - 80px);
+	overflow: auto;
+}
 
-		#menubar .menu:hover .options {
-			display: block;
-		}
+#menubar .menu:hover .options {
+	display: block;
+}
 
-			#menubar .menu .options hr {
-				border-color: #ddd;
-			}
+#menubar .menu .options hr {
+	border-color: #ddd;
+}
 
-			#menubar .menu .options .option {
-				color: #666;
-				background-color: transparent;
-				padding: 5px 10px;
-				margin: 0 !important;
-			}
+#menubar .menu .options .option {
+	color: #666;
+	background-color: transparent;
+	padding: 5px 10px;
+	margin: 0 !important;
+}
 
-				#menubar .menu .options .option:hover {
-					color: #fff;
-					background-color: #08f;
-				}
+#menubar .menu .options .option:hover {
+	color: #fff;
+	background-color: #08f;
+}
 
-				#menubar .menu .options .option:active {
-					color: #666;
-					background: transparent;
-				}
+#menubar .menu .options .option:active {
+	color: #666;
+	background: transparent;
+}
 
-		#menubar .menu .options .inactive {
-			color: #bbb;
-			background-color: transparent;
-			padding: 5px 10px;
-			margin: 0 !important;
-		}
+#menubar .menu .options .inactive {
+	color: #bbb;
+	background-color: transparent;
+	padding: 5px 10px;
+	margin: 0 !important;
+}
 
 #sidebar {
 	position: absolute;
@@ -470,38 +496,38 @@ select {
 	overflow: auto;
 }
 
-	#sidebar .Panel {
-		color: #888;
-		padding: 10px;
-		border-top: 1px solid #ccc;
-	}
+#sidebar .Panel {
+	color: #888;
+	padding: 10px;
+	border-top: 1px solid #ccc;
+}
 
-	#sidebar .Panel.collapsed {
-		margin-bottom: 0;
-	}
+#sidebar .Panel.collapsed {
+	margin-bottom: 0;
+}
 
-	#sidebar .Row {
-		display: flex;
-		align-items: center;
-		min-height: 24px;
-		margin-bottom: 10px;
-	}
+#sidebar .Row {
+	display: flex;
+	align-items: center;
+	min-height: 24px;
+	margin-bottom: 10px;
+}
 
 #tabs {
 	background-color: #ddd;
 	border-top: 1px solid #ccc;
 }
 
-	#tabs span {
-		color: #aaa;
-		border-right: 1px solid #ccc;
-		padding: 10px;
-	}
+#tabs span {
+	color: #aaa;
+	border-right: 1px solid #ccc;
+	padding: 10px;
+}
 
-	#tabs span.selected {
-		color: #888;
-		background-color: #eee;
-	}
+#tabs span.selected {
+	color: #888;
+	background-color: #eee;
+}
 
 #toolbar {
 	position: absolute;
@@ -512,14 +538,15 @@ select {
 	text-align: center;
 }
 
-	#toolbar button, #toolbar input {
-		height: 32px;
-	}
+#toolbar button,
+#toolbar input {
+	height: 32px;
+}
 
-		#toolbar button img {
-			width: 16px;
-			opacity: 0.5;
-		}
+#toolbar button img {
+	width: 16px;
+	opacity: 0.5;
+}
 
 .Outliner {
 	color: #444;
@@ -534,39 +561,39 @@ select {
 	outline: none !important;
 }
 
-	.Outliner .option {
-		padding: 4px;
-		color: #666;
-		white-space: nowrap;
-	}
+.Outliner .option {
+	padding: 4px;
+	color: #666;
+	white-space: nowrap;
+}
 
-	.Outliner .option:hover {
-		background-color: rgba(0,0,0,0.02);
-	}
+.Outliner .option:hover {
+	background-color: rgba(0, 0, 0, 0.02);
+}
 
-	.Outliner .option.active {
-		background-color: rgba(0,0,0,0.06);
-	}
+.Outliner .option.active {
+	background-color: rgba(0, 0, 0, 0.06);
+}
 
-	/* 多选时的样式 - 颜色略深 */
-	.Outliner .option.multi-selected {
-		background-color: rgba(0,0,0,0.1);
-	}
+/* 多选时的样式 - 颜色略深 */
+.Outliner .option.multi-selected {
+	background-color: rgba(0, 0, 0, 0.1);
+}
 
 .TabbedPanel .Tabs {
 	background-color: #ddd;
 	border-top: 1px solid #ccc;
 }
 
-	.TabbedPanel .Tab {
-		color: #aaa;
-		border-right: 1px solid #ccc;
-	}
+.TabbedPanel .Tab {
+	color: #aaa;
+	border-right: 1px solid #ccc;
+}
 
-	.TabbedPanel .Tab.selected {
-		color: #888;
-		background-color: #eee;
-	}
+.TabbedPanel .Tab.selected {
+	color: #888;
+	background-color: #eee;
+}
 
 .Listbox {
 	color: #444;
@@ -579,7 +606,7 @@ select {
 
 /* */
 
-@media all and ( max-width: 600px ) {
+@media all and (max-width: 600px) {
 
 	#resizer {
 		display: none;
@@ -625,24 +652,25 @@ select {
 
 /* DARK MODE */
 
-@media ( prefers-color-scheme: dark ) {
+@media (prefers-color-scheme: dark) {
 
 	button {
 		color: #aaa;
 		background-color: #222;
 	}
 
-		button:hover {
-			color: #ccc;
-			background-color: #444;
-		}
+	button:hover {
+		color: #ccc;
+		background-color: #444;
+	}
 
-		button.selected {
-			color: #fff;
-			background-color: #08f;
-		}
+	button.selected {
+		color: #fff;
+		background-color: #08f;
+	}
 
-	input, textarea {
+	input,
+	textarea {
 		background-color: #222;
 		border: 1px solid transparent;
 		color: #888;
@@ -653,10 +681,10 @@ select {
 		background-color: #222;
 	}
 
-		select:hover {
-			color: #ccc;
-			background-color: #444;
-		}
+	select:hover {
+		color: #ccc;
+		background-color: #444;
+	}
 
 	/* UI */
 
@@ -664,88 +692,88 @@ select {
 		background: #111;
 	}
 
-			#menubar .menu .options {
-				background: #111;
-			}
+	#menubar .menu .options {
+		background: #111;
+	}
 
-				#menubar .menu .options hr {
-					border-color: #222;
-				}
+	#menubar .menu .options hr {
+		border-color: #222;
+	}
 
-				#menubar .menu .options .option {
-					color: #888;
-				}
+	#menubar .menu .options .option {
+		color: #888;
+	}
 
-			#menubar .menu .options .inactive {
-				color: #444;
-			}
+	#menubar .menu .options .inactive {
+		color: #444;
+	}
 
 	#sidebar {
 		background-color: #111;
 	}
 
-		#sidebar .Panel {
-			border-top: 1px solid #222;
-		}
+	#sidebar .Panel {
+		border-top: 1px solid #222;
+	}
 
-		#sidebar .Panel.Material canvas {
-			border: solid 1px #5A5A5A;
-		}
+	#sidebar .Panel.Material canvas {
+		border: solid 1px #5A5A5A;
+	}
 
 	#tabs {
 		background-color: #1b1b1b;
 		border-top: 1px solid #222;
 	}
 
-		#tabs span {
-			color: #555;
-			border-right: 1px solid #222;
-		}
+	#tabs span {
+		color: #555;
+		border-right: 1px solid #222;
+	}
 
-		#tabs span.selected {
-			background-color: #111;
-		}
+	#tabs span.selected {
+		background-color: #111;
+	}
 
 	#toolbar {
 		background-color: #111;
 	}
 
-		#toolbar img {
-			filter: invert(1);
-		}
+	#toolbar img {
+		filter: invert(1);
+	}
 
 	.Outliner {
 		color: #888;
 		background: #222;
 	}
 
-		.Outliner .option:hover {
-			background-color: rgba(21,60,94,0.5);
-		}
+	.Outliner .option:hover {
+		background-color: rgba(21, 60, 94, 0.5);
+	}
 
-		.Outliner .option.active {
-			background-color: rgba(21,60,94,0.8);
-		}
+	.Outliner .option.active {
+		background-color: rgba(21, 60, 94, 0.8);
+	}
 
-		/* 暗模式下多选时的样式 - 颜色略深 */
-		.Outliner .option.multi-selected {
-			background-color: rgba(21,60,94,1);
-		}
+	/* 暗模式下多选时的样式 - 颜色略深 */
+	.Outliner .option.multi-selected {
+		background-color: rgba(21, 60, 94, 1);
+	}
 
 	.TabbedPanel .Tabs {
 		background-color: #1b1b1b;
 		border-top: 1px solid #222;
 	}
 
-		.TabbedPanel .Tab {
-			color: #555;
-			border-right: 1px solid #222;
-		}
+	.TabbedPanel .Tab {
+		color: #555;
+		border-right: 1px solid #222;
+	}
 
-		.TabbedPanel .Tab.selected {
-			color: #888;
-			background-color: #111;
-		}
+	.TabbedPanel .Tab.selected {
+		color: #888;
+		background-color: #111;
+	}
 
 	.Listbox {
 		color: #888;
@@ -753,11 +781,359 @@ select {
 	}
 
 	.Listbox .ListboxItem:hover {
-		background-color: rgba(21,60,94,0.5);
+		background-color: rgba(21, 60, 94, 0.5);
 	}
 
 	.Listbox .ListboxItem.active {
-		background-color: rgba(21,60,94,1);
+		background-color: rgba(21, 60, 94, 1);
 	}
 
+}
+
+/* =========================================================
+   Vue3-style UI Skin Overrides
+   Keep behavior unchanged, only reskin editor surfaces.
+   ========================================================= */
+
+:root {
+	color-scheme: light;
+	--ar-primary: #00baff;
+	--ar-primary-hover: #0099dd;
+	--ar-primary-soft: rgba(0, 186, 255, 0.12);
+	--ar-bg-page: #f8fafc;
+	--ar-bg-card: #ffffff;
+	--ar-bg-hover: #f1f5f9;
+	--ar-border: #e2e8f0;
+	--ar-border-strong: #cbd5e1;
+	--ar-text-primary: #1e293b;
+	--ar-text-secondary: #64748b;
+	--ar-text-muted: #94a3b8;
+	--ar-menubar-h: 38px;
+	--ar-radius-sm: 8px;
+	--ar-radius-md: 12px;
+	--ar-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+	--ar-shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
+
+	/* Scene Save Dialog (script edit confirm) */
+	--scene-save-overlay-bg: rgba(15, 23, 42, 0.22);
+	--scene-save-overlay-blur: 2px;
+	--scene-save-z-index: 12000;
+	--scene-save-overlay-transition: opacity 180ms ease;
+
+	--scene-save-dialog-width: 280px;
+	--scene-save-dialog-max-width: 90vw;
+	--scene-save-dialog-min-height: 106px;
+	--scene-save-dialog-padding: 14px 14px 12px;
+	--scene-save-dialog-radius: 10px;
+	--scene-save-dialog-border: 1px solid var(--ar-border);
+	--scene-save-dialog-bg: var(--ar-bg-card);
+	--scene-save-dialog-text: var(--ar-text-primary);
+	--scene-save-dialog-shadow: 0 8px 24px rgba(15, 23, 42, 0.18);
+	--scene-save-dialog-offset-y: 6px;
+	--scene-save-dialog-scale-out: 0.98;
+	--scene-save-dialog-transition: transform 180ms ease;
+
+	--scene-save-close-top: 5px;
+	--scene-save-close-right: 5px;
+	--scene-save-close-size: 28px;
+	--scene-save-close-radius: 50%;
+	--scene-save-close-border: 1px solid var(--ar-border);
+	--scene-save-close-bg: var(--ar-bg-card);
+	--scene-save-close-color: var(--ar-text-secondary);
+	--scene-save-close-font-size: 17px;
+	--scene-save-close-line-height: 1;
+
+	--scene-save-title-size: 18px;
+	--scene-save-title-weight: 600;
+	--scene-save-title-margin: 12px 10px 22px;
+	--scene-save-title-line-height: 1.4;
+
+	--scene-save-actions-gap: 18px;
+	--scene-save-actions-margin-top: 10px;
+
+	--scene-save-action-min-width: 90px;
+	--scene-save-action-height: 40px;
+	--scene-save-action-radius: 7px;
+	--scene-save-action-font-size: 15px;
+	--scene-save-action-font-weight: 600;
+
+	--scene-save-no-border: 1px solid var(--ar-border-strong);
+	--scene-save-no-bg: var(--ar-bg-card);
+	--scene-save-no-color: #475569;
+
+	--scene-save-yes-border: none;
+	--scene-save-yes-bg: var(--ar-primary);
+	--scene-save-yes-color: #ffffff;
+}
+
+html,
+body {
+	background: var(--ar-bg-page) !important;
+	color: var(--ar-text-primary) !important;
+	font-family: 'SourceHanSansSC-VF', 'PingFang SC', 'Microsoft YaHei', 'Arial Unicode MS', sans-serif !important;
+}
+
+hr {
+	border-top-color: var(--ar-border) !important;
+}
+
+button {
+	color: var(--ar-text-secondary) !important;
+	background: var(--ar-bg-card) !important;
+	border: 1px solid var(--ar-border) !important;
+	border-radius: var(--ar-radius-sm) !important;
+	padding: 6px 10px !important;
+	text-transform: none !important;
+	font-weight: 600;
+	transition: all 150ms ease;
+}
+
+button:hover {
+	background: var(--ar-bg-hover) !important;
+	border-color: var(--ar-border-strong) !important;
+	color: var(--ar-text-primary) !important;
+}
+
+button.selected {
+	background: var(--ar-primary-soft) !important;
+	border-color: var(--ar-primary) !important;
+	color: #007cb5 !important;
+}
+
+input,
+textarea,
+select {
+	background: var(--ar-bg-card) !important;
+	color: var(--ar-text-primary) !important;
+	border: 1px solid var(--ar-border) !important;
+	border-radius: var(--ar-radius-sm) !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+	border-color: var(--ar-primary) !important;
+	box-shadow: 0 0 0 3px rgba(0, 186, 255, 0.15);
+}
+
+select {
+	text-transform: none !important;
+}
+
+#menubar {
+	height: var(--ar-menubar-h) !important;
+	background: var(--ar-bg-card) !important;
+	border-bottom: 1px solid var(--ar-border) !important;
+	box-shadow: var(--ar-shadow-sm);
+}
+
+#menubar .menu .title {
+	color: var(--ar-text-secondary) !important;
+	font-weight: 500;
+	padding: 10px 10px !important;
+	line-height: 16px !important;
+}
+
+#menubar .menu:hover .title {
+	color: var(--ar-text-primary) !important;
+}
+
+#menubar .menu {
+	position: relative;
+	padding-bottom: 6px !important;
+}
+
+#menubar .menu .options {
+	margin-top: 4px;
+	padding: 8px 0 !important;
+	background: var(--ar-bg-card) !important;
+	border: 1px solid var(--ar-border) !important;
+	border-radius: var(--ar-radius-md) !important;
+	box-shadow: var(--ar-shadow-md) !important;
+	display: block !important;
+	opacity: 0;
+	visibility: hidden;
+	pointer-events: none;
+	transform: translateY(4px);
+	transition:
+		opacity 140ms ease,
+		transform 140ms ease,
+		visibility 0s linear 240ms;
+}
+
+#menubar .menu:hover .options,
+#menubar .menu:focus-within .options,
+#menubar .menu .options:hover {
+	opacity: 1;
+	visibility: visible;
+	pointer-events: auto;
+	transform: translateY(0);
+	transition-delay: 0s;
+}
+
+#menubar .menu .options .option,
+#menubar .menu .options .inactive {
+	padding: 8px 12px !important;
+	font-weight: 500;
+}
+
+#menubar .menu .options .option {
+	color: var(--ar-text-secondary) !important;
+}
+
+#menubar .menu .options .option:hover {
+	color: #007cb5 !important;
+	background: var(--ar-primary-soft) !important;
+}
+
+#menubar .menu .options .inactive {
+	color: var(--ar-text-muted) !important;
+}
+
+#viewport,
+#script,
+#player {
+	top: var(--ar-menubar-h) !important;
+}
+
+#viewport #info {
+	text-shadow: none !important;
+	background: rgba(15, 23, 42, 0.55);
+	padding: 8px 10px;
+	border-radius: 10px;
+	backdrop-filter: blur(3px);
+}
+
+#sidebar {
+	top: var(--ar-menubar-h) !important;
+	background: var(--ar-bg-card) !important;
+	border-left: 1px solid var(--ar-border) !important;
+}
+
+#sidebar .Panel {
+	color: var(--ar-text-secondary) !important;
+	border-top: 1px solid var(--ar-border) !important;
+	padding: 8px 10px !important;
+}
+
+#sidebar .Row {
+	min-height: 28px !important;
+	margin-bottom: 8px !important;
+}
+
+#tabs,
+.TabbedPanel .Tabs {
+	background: #f7fafc !important;
+	border-top: 1px solid var(--ar-border) !important;
+}
+
+#tabs span,
+.TabbedPanel .Tab {
+	color: var(--ar-text-muted) !important;
+	border-right: 1px solid var(--ar-border) !important;
+	padding: 10px 12px !important;
+}
+
+#tabs span.selected,
+.TabbedPanel .Tab.selected {
+	color: var(--ar-text-primary) !important;
+	background: var(--ar-bg-card) !important;
+	font-weight: 500;
+}
+
+#toolbar {
+	top: 46px !important;
+	left: 12px !important;
+	background: rgba(255, 255, 255, 0.92) !important;
+	border: 1px solid var(--ar-border) !important;
+	border-radius: var(--ar-radius-md) !important;
+	box-shadow: var(--ar-shadow-sm) !important;
+	overflow: hidden;
+}
+
+#toolbar button,
+#toolbar input {
+	height: 34px !important;
+	border-radius: 0 !important;
+	border: none !important;
+	border-bottom: 1px solid var(--ar-border) !important;
+	background: transparent !important;
+}
+
+#toolbar button:last-child {
+	border-bottom: none !important;
+}
+
+#toolbar button img {
+	opacity: 0.78 !important;
+}
+
+#toolbar button.selected {
+	background: linear-gradient(180deg, rgba(0, 186, 255, 0.2), rgba(0, 186, 255, 0.1)) !important;
+	border-left: none !important;
+}
+
+#toolbar button.selected img {
+	opacity: 1 !important;
+	filter: saturate(1.25) contrast(1.05);
+}
+
+.Outliner {
+	color: var(--ar-text-secondary) !important;
+	background: #fbfdff !important;
+	border: 1px solid var(--ar-border) !important;
+	border-radius: var(--ar-radius-sm) !important;
+}
+
+.Outliner .option {
+	color: var(--ar-text-secondary) !important;
+	border-radius: 6px;
+	margin: 1px 2px;
+}
+
+.Outliner .option:hover {
+	background: #edf7ff !important;
+}
+
+.Outliner .option.active {
+	background: var(--ar-primary-soft) !important;
+	color: #007cb5 !important;
+}
+
+.Outliner .option.multi-selected {
+	background: rgba(0, 186, 255, 0.2) !important;
+	color: #00739f !important;
+}
+
+#outliner .resource-missing {
+	color: #dc2626 !important;
+}
+
+#resizer {
+	top: 44px !important;
+	background: linear-gradient(to right, transparent, rgba(148, 163, 184, 0.18), transparent);
+}
+
+*::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+	background: #cbd5e1;
+	border-radius: 999px;
+	border: 2px solid #f8fafc;
+}
+
+*::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+@media all and (max-width: 600px) {
+	#viewport,
+	#script,
+	#player {
+		top: var(--ar-menubar-h) !important;
+		height: calc(100% - 364px) !important;
+	}
 }

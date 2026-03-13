@@ -266,7 +266,7 @@ class DialogUtils {
     }
 
     /**
-     * 实体未保存时的统一确认弹窗
+     * 全局未保存确认弹窗
      * - 点击「是」: 保存并继续
      * - 点击「否」: 不保存直接继续
      * - 点击右上角关闭: 关闭弹窗，不进行任何操作
@@ -300,7 +300,6 @@ class DialogUtils {
                 applyStyles(normalStyles);
             });
         };
-
         const overlay = document.createElement('div');
         overlay.className = 'scene-save-dialog-overlay';
         overlay.style.position = 'fixed';

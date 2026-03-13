@@ -151,6 +151,10 @@ function Strings(config) {
 			'sidebar/multi_objects/reset_position_success': 'Position reset',
 			'sidebar/multi_objects/reset_rotation_success': 'Rotation reset',
 			'sidebar/multi_objects/reset_scale_success': 'Scale reset',
+			'sidebar/multi_objects/clone_all': 'Clone All',
+			'sidebar/multi_objects/delete_all': 'Delete All',
+			'sidebar/multi_objects/clone_success': 'Objects cloned successfully',
+			'sidebar/multi_objects/delete_success': 'Objects deleted successfully',
 
 			'sidebar/object/type': 'Type',
 			'sidebar/object/new': 'New',
@@ -210,6 +214,14 @@ function Strings(config) {
 			'sidebar/events/remove': 'Remove',
 			'sidebar/events/remove/confirm': 'Are you sure you want to delete this signal?',
 
+			'sidebar/entities': 'Entities',
+			'sidebar/entities/edit': 'Edit',
+			'sidebar/entities/signals': 'Signals',
+			'sidebar/entities/scene_title': 'Entities in Scene',
+			'sidebar/entities/current_title': 'Current Entity',
+			'sidebar/entities/signals_input': 'Input Signals',
+			'sidebar/entities/signals_output': 'Output Signals',
+
 			'sidebar/components/multi_selection_summary': 'selected objects component summary',
 			'sidebar/components/object_name_with_index': 'Object {0}',
 			'sidebar/components/no_components': 'None',
@@ -247,6 +259,15 @@ function Strings(config) {
 			'sidebar/components/tooltip/text': 'Text',
 			'sidebar/components/tooltip/length': 'Length',
 			'sidebar/components/tooltip/target': 'Target Position',
+			'sidebar/components/tooltip/direction': 'Direction',
+			'sidebar/components/tooltip/direction/top': 'Top',
+			'sidebar/components/tooltip/direction/bottom': 'Bottom',
+			'sidebar/components/tooltip/direction/left': 'Left',
+			'sidebar/components/tooltip/direction/right': 'Right',
+			'sidebar/components/tooltip/direction/top_right': 'Top-Right',
+			'sidebar/components/tooltip/direction/top_left': 'Top-Left',
+			'sidebar/components/tooltip/direction/bottom_right': 'Bottom-Right',
+			'sidebar/components/tooltip/direction/bottom_left': 'Bottom-Left',
 
 			'sidebar/command/multi_selection_summary': 'selected objects command summary',
 			'sidebar/command/object_name_with_index': 'Object {0}',
@@ -475,6 +496,7 @@ function Strings(config) {
 
 			'sidebar/settings/viewport': 'Viewport',
 			'sidebar/settings/viewport/grid': 'Grid',
+			'sidebar/settings/viewport/ground': 'Ground',
 			'sidebar/settings/viewport/helpers': 'Helpers',
 
 			'sidebar/history': 'History',
@@ -694,6 +716,10 @@ function Strings(config) {
 			'sidebar/multi_objects/reset_position_success': '位置已重置',
 			'sidebar/multi_objects/reset_rotation_success': '旋转已重置',
 			'sidebar/multi_objects/reset_scale_success': '缩放已重置',
+			'sidebar/multi_objects/clone_all': '拷贝全部',
+			'sidebar/multi_objects/delete_all': '删除全部',
+			'sidebar/multi_objects/clone_success': '对象拷贝成功',
+			'sidebar/multi_objects/delete_success': '对象删除成功',
 
 			'sidebar/object/type': '类型',
 			'sidebar/object/new': '更新',
@@ -752,6 +778,14 @@ function Strings(config) {
 			'sidebar/events/remove': '删除',
 			'sidebar/events/remove/confirm': '确定要删除这个信号吗？',
 
+			'sidebar/entities': '实体',
+			'sidebar/entities/edit': '编辑',
+			'sidebar/entities/signals': '信号',
+			'sidebar/entities/scene_title': '场景中现有实体',
+			'sidebar/entities/current_title': '当前实体',
+			'sidebar/entities/signals_input': '输入信号',
+			'sidebar/entities/signals_output': '输出信号',
+
 			'sidebar/components/multi_selection_summary': '个选中对象组件摘要',
 			'sidebar/components/object_name_with_index': '对象 {0}',
 			'sidebar/components/no_components': '无',
@@ -789,6 +823,15 @@ function Strings(config) {
 			'sidebar/components/tooltip/text': '文本',
 			'sidebar/components/tooltip/length': '长度',
 			'sidebar/components/tooltip/target': '目标位置',
+			'sidebar/components/tooltip/direction': '指向',
+			'sidebar/components/tooltip/direction/top': '上',
+			'sidebar/components/tooltip/direction/bottom': '下',
+			'sidebar/components/tooltip/direction/left': '左',
+			'sidebar/components/tooltip/direction/right': '右',
+			'sidebar/components/tooltip/direction/top_right': '右上',
+			'sidebar/components/tooltip/direction/top_left': '左上',
+			'sidebar/components/tooltip/direction/bottom_right': '右下',
+			'sidebar/components/tooltip/direction/bottom_left': '左下',
 
 			'sidebar/command/multi_selection_summary': '个选中对象指令摘要',
 			'sidebar/command/object_name_with_index': '对象 {0}',
@@ -1018,6 +1061,7 @@ function Strings(config) {
 
 			'sidebar/settings/viewport': '视窗',
 			'sidebar/settings/viewport/grid': '网格',
+			'sidebar/settings/viewport/ground': '地面',
 			'sidebar/settings/viewport/helpers': '辅助',
 
 			'sidebar/history': '历史记录',
@@ -1334,7 +1378,16 @@ function Strings(config) {
 			'sidebar/components/select/tooltip': 'ラベル',
 			'sidebar/components/tooltip/text': 'テキスト',
 			'sidebar/components/tooltip/length': '長さ',
-			'sidebar/components/tooltip/target': 'ターゲット位置',
+			'sidebar/components/tooltip/target': 'ターゲット',
+			'sidebar/components/tooltip/direction': '方向',
+			'sidebar/components/tooltip/direction/top': '上',
+			'sidebar/components/tooltip/direction/bottom': '下',
+			'sidebar/components/tooltip/direction/left': '左',
+			'sidebar/components/tooltip/direction/right': '右',
+			'sidebar/components/tooltip/direction/top_right': '右上',
+			'sidebar/components/tooltip/direction/top_left': '左上',
+			'sidebar/components/tooltip/direction/bottom_right': '右下',
+			'sidebar/components/tooltip/direction/bottom_left': '左下',
 
 			'sidebar/command/multi_selection_summary': '個の選択オブジェクトコマンド概要',
 			'sidebar/command/object_name_with_index': 'オブジェクト {0}',
@@ -1564,6 +1617,7 @@ function Strings(config) {
 
 			'sidebar/settings/viewport': 'ビューポート',
 			'sidebar/settings/viewport/grid': 'グリッド',
+			'sidebar/settings/viewport/ground': '地面',
 			'sidebar/settings/viewport/helpers': 'ヘルパー',
 
 			'sidebar/history': '履歴',
@@ -1880,6 +1934,15 @@ function Strings(config) {
 			"sidebar/components/tooltip/text": "文字",
 			"sidebar/components/tooltip/length": "長度",
 			"sidebar/components/tooltip/target": "目標位置",
+			"sidebar/components/tooltip/direction": "指向",
+			"sidebar/components/tooltip/direction/top": "上",
+			"sidebar/components/tooltip/direction/bottom": "下",
+			"sidebar/components/tooltip/direction/left": "左",
+			"sidebar/components/tooltip/direction/right": "右",
+			"sidebar/components/tooltip/direction/top_right": "右上",
+			"sidebar/components/tooltip/direction/top_left": "左上",
+			"sidebar/components/tooltip/direction/bottom_right": "右下",
+			"sidebar/components/tooltip/direction/bottom_left": "左下",
 
 			"sidebar/command/multi_selection_summary": "個選中物件指令摘要",
 			"sidebar/command/object_name_with_index": "物件 {0}",
@@ -2107,6 +2170,7 @@ function Strings(config) {
 
 			"sidebar/settings/viewport": "視窗",
 			"sidebar/settings/viewport/grid": "網格",
+			"sidebar/settings/viewport/ground": "地面",
 			"sidebar/settings/viewport/helpers": "輔助",
 
 			"sidebar/history": "歷史記錄",
@@ -2424,6 +2488,15 @@ function Strings(config) {
 			"sidebar/components/tooltip/text": "ข้อความ",
 			"sidebar/components/tooltip/length": "ความยาว",
 			"sidebar/components/tooltip/target": "ตำแหน่งเป้าหมาย",
+			"sidebar/components/tooltip/direction": "ทิศทาง",
+			"sidebar/components/tooltip/direction/top": "บน",
+			"sidebar/components/tooltip/direction/bottom": "ล่าง",
+			"sidebar/components/tooltip/direction/left": "ซ้าย",
+			"sidebar/components/tooltip/direction/right": "ขวา",
+			"sidebar/components/tooltip/direction/top_right": "ขวาบน",
+			"sidebar/components/tooltip/direction/top_left": "ซ้ายบน",
+			"sidebar/components/tooltip/direction/bottom_right": "ขวาล่าง",
+			"sidebar/components/tooltip/direction/bottom_left": "ซ้ายล่าง",
 
 			"sidebar/command/multi_selection_summary": "สรุปคำสั่งวัตถุที่เลือก",
 			"sidebar/command/object_name_with_index": "วัตถุ {0}",
@@ -2651,6 +2724,7 @@ function Strings(config) {
 
 			"sidebar/settings/viewport": "วิวพอร์ต",
 			"sidebar/settings/viewport/grid": "กริด",
+			"sidebar/settings/viewport/ground": "พื้น",
 			"sidebar/settings/viewport/helpers": "ตัวช่วย",
 
 			"sidebar/history": "ประวัติ",
