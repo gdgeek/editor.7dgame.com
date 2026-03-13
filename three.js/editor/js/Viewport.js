@@ -18,14 +18,6 @@ import { MultiTransformCommand } from './commands/MultiTransformCommand.js';
 
 import { RoomEnvironment } from '../../examples/jsm/environments/RoomEnvironment.js';
 
-const LIGHT_CLEAR_COLOR = 0xaaaaaa;
-const DARK_CLEAR_COLOR = 0x333333;
-const LIGHT_GRID_COLORS = [0x888888, 0x222222];
-const DARK_GRID_COLORS = [0x888888, 0x222222];
-const AXIS_X_COLOR = 0x222222;
-const AXIS_Z_COLOR = 0x222222;
-const SCENE_BACKGROUND_AUTO_THEME_KEY = 'scene/backgroundAutoTheme';
-
 function Viewport(editor) {
 
 	const signals = editor.signals;
@@ -49,190 +41,17 @@ function Viewport(editor) {
 	// helpers
 
 	const grid = new THREE.Group();
-	const grid1 = createGridWithoutCenter(30, 30, LIGHT_GRID_COLORS[0], 0);
+
+	const grid1 = new THREE.GridHelper(30, 30, 0x888888);
+	grid1.material.color.setHex(0x888888);
+	grid1.material.vertexColors = false;
 	grid.add(grid1);
 
-	const grid2 = createGridWithoutCenter(30, 6, LIGHT_GRID_COLORS[1], 0.0005);
+	const grid2 = new THREE.GridHelper(30, 6, 0x222222);
+	grid2.material.color.setHex(0x222222);
 	grid2.material.depthFunc = THREE.AlwaysDepth;
+	grid2.material.vertexColors = false;
 	grid.add(grid2);
-
-	const groundTint = new THREE.Mesh(
-			new THREE.PlaneGeometry(30, 30),
-		new THREE.MeshBasicMaterial({
-			color: 0xaaaaaa,
-			transparent: true,
-			opacity: 0,
-			depthWrite: false,
-			toneMapped: false
-		})
-	);
-	groundTint.rotation.x = -Math.PI / 2;
-	groundTint.position.y = -0.002;
-	groundTint.renderOrder = -2;
-	grid.add(groundTint);
-
-	const axisX = createCenterAxisLine(new THREE.Vector3(-15, 0.001, 0), new THREE.Vector3(15, 0.001, 0), AXIS_X_COLOR);
-	const axisZ = createCenterAxisLine(new THREE.Vector3(0, 0.001, -15), new THREE.Vector3(0, 0.001, 15), AXIS_Z_COLOR);
-	grid.add(axisX);
-	grid.add(axisZ);
-
-	let showGridEnabled = editor.config.getKey('scene/showGrid');
-	if (showGridEnabled === undefined) showGridEnabled = true;
-
-	let showGroundEnabled = editor.config.getKey('scene/showGround');
-	if (showGroundEnabled === undefined) showGroundEnabled = true;
-
-	function updateGroundAndGridVisibility() {
-		const showGridElements = showGridEnabled === true;
-
-		grid1.visible = showGridElements;
-		grid2.visible = showGridElements;
-		axisX.visible = showGridElements;
-		axisZ.visible = showGridElements;
-		groundTint.visible = showGroundEnabled === true;
-	}
-
-	function applyThemePalette(isDarkMode) {
-		if (renderer === null) return;
-
-		const clearColor = isDarkMode ? DARK_CLEAR_COLOR : LIGHT_CLEAR_COLOR;
-		const gridColors = isDarkMode ? DARK_GRID_COLORS : LIGHT_GRID_COLORS;
-
-		renderer.setClearColor(clearColor);
-		updateGridColors(grid1, grid2, gridColors);
-
-		// Auto-sync scene color only when user did not customize background.
-		if (editor.config.getKey(SCENE_BACKGROUND_AUTO_THEME_KEY) === true) {
-			const currentSceneColor = editor.config.getKey('scene/backgroundColor');
-			if (currentSceneColor !== clearColor) {
-				editor.config.setKey('scene/backgroundColor', clearColor);
-				signals.sceneBackgroundChanged.dispatch('Color', clearColor, null, null);
-			}
-		}
-	}
-
-	function parseDarkModeFromMessage(params) {
-		if (!params) return null;
-
-		const action = String(params.action || '').toLowerCase();
-		const data = params.data;
-
-		const themeActions = new Set([
-			'theme',
-			'theme-change',
-			'theme-changed',
-			'set-theme',
-			'color-scheme',
-			'set-color-scheme',
-			'appearance',
-			'set-appearance'
-		]);
-
-		const hasThemePayload = !!(
-			data &&
-			typeof data === 'object' &&
-			(
-				data.dark !== undefined ||
-				data.theme !== undefined ||
-				data.mode !== undefined ||
-				data.colorScheme !== undefined ||
-				data.appearance !== undefined
-			)
-		);
-
-		if (!themeActions.has(action) && !hasThemePayload) return null;
-
-		if (typeof data === 'boolean') return data;
-		if (data && typeof data.dark === 'boolean') return data.dark;
-
-		const value =
-			(typeof data === 'string' && data) ||
-			(data && typeof data.theme === 'string' && data.theme) ||
-			(data && typeof data.mode === 'string' && data.mode) ||
-			(data && typeof data.colorScheme === 'string' && data.colorScheme) ||
-			(data && typeof data.appearance === 'string' && data.appearance) ||
-			(data && typeof data.value === 'string' && data.value) ||
-			'';
-
-		if (!value) return null;
-
-		const normalized = value.toLowerCase();
-		if (normalized.includes('dark') || normalized.includes('night')) return true;
-		if (normalized.includes('light') || normalized.includes('day')) return false;
-
-		return null;
-	}
-
-	function detectThemeModeFromDocument(doc) {
-		if (!doc || !doc.documentElement) return null;
-
-		const root = doc.documentElement;
-		const body = doc.body;
-		const markers = [
-			root.getAttribute('data-theme'),
-			root.getAttribute('theme'),
-			body && body.getAttribute('data-theme'),
-			body && body.getAttribute('theme'),
-			root.className,
-			body && body.className
-		]
-			.filter(Boolean)
-			.join(' ')
-			.toLowerCase();
-
-		if (markers.includes('dark') || markers.includes('night')) return true;
-		if (markers.includes('light') || markers.includes('day')) return false;
-
-		return null;
-	}
-
-	function getPreferredThemeMode() {
-		try {
-			if (window.parent && window.parent !== window && window.parent.document) {
-				const parentMode = detectThemeModeFromDocument(window.parent.document);
-				if (parentMode !== null) return parentMode;
-			}
-		} catch (error) {
-			// Cross-origin parent, ignore and fallback to system scheme.
-		}
-
-		if (window.matchMedia) {
-			return window.matchMedia('(prefers-color-scheme: dark)').matches;
-		}
-
-		return false;
-	}
-
-	function observeParentThemeChanges() {
-		try {
-			if (!window.parent || window.parent === window || !window.parent.document || typeof MutationObserver === 'undefined') return;
-
-			const parentDocument = window.parent.document;
-			const callback = function () {
-				const mode = detectThemeModeFromDocument(parentDocument);
-				if (mode === null) return;
-				applyThemePalette(mode);
-				render();
-			};
-
-			const observer = new MutationObserver(callback);
-			const observeTarget = function (target) {
-				if (!target) return;
-				observer.observe(target, {
-					attributes: true,
-					attributeFilter: ['class', 'data-theme', 'theme']
-				});
-			};
-
-			observeTarget(parentDocument.documentElement);
-			observeTarget(parentDocument.body);
-		} catch (error) {
-			// Ignore parent theme observer setup errors.
-		}
-	}
-
-	updateGroundAndGridVisibility();
-	observeParentThemeChanges();
 
 	const viewHelper = new ViewHelper(camera, container);
 	const vr = new VR(editor);
@@ -672,21 +491,6 @@ function Viewport(editor) {
 	const onDownPosition = new THREE.Vector2();
 	const onUpPosition = new THREE.Vector2();
 	const onDoubleClickPosition = new THREE.Vector2();
-	const dragStartClient = new THREE.Vector2();
-	const dragEndClient = new THREE.Vector2();
-	const selectionRect = document.createElement('div');
-	let isBoxSelecting = false;
-	let movedDuringBoxSelect = false;
-	let controlsInteractionSuppressed = false;
-
-	selectionRect.style.position = 'absolute';
-	selectionRect.style.pointerEvents = 'none';
-	selectionRect.style.border = '1px solid rgba(0, 186, 255, 0.85)';
-	selectionRect.style.background = 'rgba(0, 186, 255, 0.12)';
-	selectionRect.style.borderRadius = '4px';
-	selectionRect.style.display = 'none';
-	selectionRect.style.zIndex = '20';
-	container.dom.appendChild(selectionRect);
 
 	function getMousePosition(dom, x, y) {
 
@@ -695,40 +499,29 @@ function Viewport(editor) {
 
 	}
 
-	function resolveSelectableObject(object) {
-
-		let target = object;
-
-		if (target && target.userData.object !== undefined) {
-			target = target.userData.object;
-		}
-
-		if (editor.selector != null) {
-			while (target != null && !editor.selector(target)) {
-				target = target.parent;
-			}
-		}
-
-		if (target === scene || target === camera) return null;
-		return target;
-
-	}
-
-	function handleClick(event) {
+	function handleClick() {
 
 		if (onDownPosition.distanceTo(onUpPosition) === 0) {
 
 			const intersects = getIntersects(onUpPosition);
-			const multiSelect = !!(event && (event.ctrlKey || event.metaKey));
 
 			if (intersects.length > 0) {
 
-				const target = resolveSelectableObject(intersects[0].object);
-				if (target) {
-					editor.select(target, multiSelect);
+				const object = intersects[0].object;
+
+				if (object.userData.object !== undefined) {
+
+					// helper
+
+					editor.select(object.userData.object);
+
+				} else {
+
+					editor.select(object);
+
 				}
 
-			} else if (!multiSelect) {
+			} else {
 
 				editor.select(null);
 
@@ -740,109 +533,12 @@ function Viewport(editor) {
 
 	}
 
-	function setSelectionRect(startX, startY, endX, endY) {
-
-		const rect = container.dom.getBoundingClientRect();
-		const minX = Math.max(0, Math.min(startX, endX) - rect.left);
-		const minY = Math.max(0, Math.min(startY, endY) - rect.top);
-		const maxX = Math.min(rect.width, Math.max(startX, endX) - rect.left);
-		const maxY = Math.min(rect.height, Math.max(startY, endY) - rect.top);
-
-		selectionRect.style.left = `${minX}px`;
-		selectionRect.style.top = `${minY}px`;
-		selectionRect.style.width = `${Math.max(0, maxX - minX)}px`;
-		selectionRect.style.height = `${Math.max(0, maxY - minY)}px`;
-
-	}
-
-	function selectObjectsInRect() {
-
-		const rect = container.dom.getBoundingClientRect();
-		const x0 = Math.min(dragStartClient.x, dragEndClient.x);
-		const y0 = Math.min(dragStartClient.y, dragEndClient.y);
-		const x1 = Math.max(dragStartClient.x, dragEndClient.x);
-		const y1 = Math.max(dragStartClient.y, dragEndClient.y);
-
-		const leftN = (x0 - rect.left) / rect.width;
-		const rightN = (x1 - rect.left) / rect.width;
-		const topN = (y0 - rect.top) / rect.height;
-		const bottomN = (y1 - rect.top) / rect.height;
-
-		const selected = [];
-		const seen = new Set();
-		const center = new THREE.Vector3();
-		const tmpBox = new THREE.Box3();
-
-		scene.traverseVisible(function (child) {
-
-			const target = resolveSelectableObject(child);
-			if (!target || seen.has(target.id)) return;
-
-			tmpBox.setFromObject(target);
-			if (tmpBox.isEmpty()) return;
-			tmpBox.getCenter(center);
-			center.project(camera);
-
-			const sx = (center.x + 1) * 0.5;
-			const sy = (-center.y + 1) * 0.5;
-			if (sx >= leftN && sx <= rightN && sy >= topN && sy <= bottomN) {
-				seen.add(target.id);
-				selected.push(target);
-			}
-
-		});
-
-		if (selected.length === 0) return;
-
-		const originalActive = editor.signals.objectSelected.active;
-		editor.signals.objectSelected.active = false;
-		for (let i = 0; i < selected.length; i++) {
-			editor.select(selected[i], true);
-		}
-		editor.signals.objectSelected.active = originalActive;
-		editor.signals.objectSelected.dispatch(editor.selected);
-
-		render();
-
-	}
-
-	function onMouseMove(event) {
-
-		if (!isBoxSelecting) return;
-
-		dragEndClient.set(event.clientX, event.clientY);
-		setSelectionRect(dragStartClient.x, dragStartClient.y, dragEndClient.x, dragEndClient.y);
-
-		if (!movedDuringBoxSelect) {
-			if (Math.abs(dragEndClient.x - dragStartClient.x) > 2 || Math.abs(dragEndClient.y - dragStartClient.y) > 2) {
-				movedDuringBoxSelect = true;
-			}
-		}
-
-	}
-
 	function onMouseDown(event) {
 
-		if (event.button !== 0) return;
+		// event.preventDefault();
 
 		const array = getMousePosition(container.dom, event.clientX, event.clientY);
 		onDownPosition.fromArray(array);
-
-		const multiSelect = event.ctrlKey || event.metaKey;
-		if (multiSelect) {
-			event.preventDefault();
-			isBoxSelecting = true;
-			movedDuringBoxSelect = false;
-			dragStartClient.set(event.clientX, event.clientY);
-			dragEndClient.copy(dragStartClient);
-			setSelectionRect(dragStartClient.x, dragStartClient.y, dragEndClient.x, dragEndClient.y);
-			selectionRect.style.display = 'block';
-			document.addEventListener('mousemove', onMouseMove);
-
-			// Ctrl/Cmd 框选时禁用视角拖拽，避免与框选冲突
-			controls.enabled = false;
-			controlsInteractionSuppressed = true;
-		}
 
 		document.addEventListener('mouseup', onMouseUp);
 
@@ -877,27 +573,7 @@ function Viewport(editor) {
 		const array = getMousePosition(container.dom, event.clientX, event.clientY);
 		onUpPosition.fromArray(array);
 
-		if (isBoxSelecting) {
-			dragEndClient.set(event.clientX, event.clientY);
-			selectionRect.style.display = 'none';
-			document.removeEventListener('mousemove', onMouseMove);
-
-			if (movedDuringBoxSelect) {
-				selectObjectsInRect();
-			} else {
-				handleClick(event);
-			}
-
-			isBoxSelecting = false;
-			movedDuringBoxSelect = false;
-		} else {
-			handleClick(event);
-		}
-
-		if (controlsInteractionSuppressed) {
-			controls.enabled = true;
-			controlsInteractionSuppressed = false;
-		}
+		handleClick();
 
 		document.removeEventListener('mouseup', onMouseUp);
 
@@ -921,7 +597,7 @@ function Viewport(editor) {
 		const array = getMousePosition(container.dom, touch.clientX, touch.clientY);
 		onUpPosition.fromArray(array);
 
-		handleClick(event);
+		handleClick();
 
 		document.removeEventListener('touchend', onTouchEnd);
 
@@ -1035,24 +711,23 @@ function Viewport(editor) {
 		renderer = newRenderer;
 
 		renderer.setAnimationLoop(animate);
-		renderer.setClearColor(LIGHT_CLEAR_COLOR);
+		renderer.setClearColor(0xaaaaaa);
 
 		if (window.matchMedia) {
 
 			const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 			mediaQuery.addEventListener('change', function (event) {
 
-				applyThemePalette(event.matches);
+				renderer.setClearColor(event.matches ? 0x333333 : 0xaaaaaa);
+				updateGridColors(grid1, grid2, event.matches ? [0x222222, 0x888888] : [0x888888, 0x282828]);
 
 				render();
 
 			});
 
-			applyThemePalette(getPreferredThemeMode());
+			renderer.setClearColor(mediaQuery.matches ? 0x333333 : 0xaaaaaa);
+			updateGridColors(grid1, grid2, mediaQuery.matches ? [0x222222, 0x888888] : [0x888888, 0x282828]);
 
-		}
-		else {
-			applyThemePalette(getPreferredThemeMode());
 		}
 
 		renderer.setPixelRatio(window.devicePixelRatio);
@@ -1065,14 +740,6 @@ function Viewport(editor) {
 
 		render();
 
-	});
-
-	signals.messageReceive.add(function (params) {
-		const darkMode = parseDarkModeFromMessage(params);
-		if (darkMode === null) return;
-
-		applyThemePalette(darkMode);
-		render();
 	});
 
 	signals.sceneGraphChanged.add(function () {
@@ -1438,16 +1105,7 @@ function Viewport(editor) {
 
 	signals.showGridChanged.add(function (showGrid) {
 
-		showGridEnabled = showGrid;
-		updateGroundAndGridVisibility();
-		render();
-
-	});
-
-	signals.showGroundChanged.add(function (showGround) {
-
-		showGroundEnabled = showGround;
-		updateGroundAndGridVisibility();
+		grid.visible = showGrid;
 		render();
 
 	});
@@ -1570,6 +1228,7 @@ function Viewport(editor) {
 
 		// Adding/removing grid to scene so materials with depthWrite false
 		// don't render under the grid.
+
 		scene.add(grid);
 		renderer.setViewport(0, 0, container.dom.offsetWidth, container.dom.offsetHeight);
 		renderer.render(scene, editor.viewportCamera);
@@ -1597,52 +1256,6 @@ function updateGridColors(grid1, grid2, colors) {
 
 	grid1.material.color.setHex(colors[0]);
 	grid2.material.color.setHex(colors[1]);
-
-}
-
-function createGridWithoutCenter(size, divisions, color, y = 0) {
-
-	const halfSize = size / 2;
-	const step = size / divisions;
-	const vertices = [];
-
-	for (let i = 0; i <= divisions; i++) {
-
-		const coord = -halfSize + i * step;
-		if (Math.abs(coord) < 1e-6) continue; // skip center lines, axis drawn separately
-
-		vertices.push(-halfSize, y, coord, halfSize, y, coord);
-		vertices.push(coord, y, -halfSize, coord, y, halfSize);
-
-	}
-
-	const geometry = new THREE.BufferGeometry();
-	geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-
-	const material = new THREE.LineBasicMaterial({
-		color,
-		transparent: true,
-		opacity: 0.62,
-		toneMapped: false
-	});
-	material.reflectivity = 0;
-	material.envMapIntensity = 0;
-
-	return new THREE.LineSegments(geometry, material);
-
-}
-
-function createCenterAxisLine(start, end, color) {
-
-	const geometry = new THREE.BufferGeometry().setFromPoints([start, end]);
-	const material = new THREE.LineBasicMaterial({
-		color,
-		transparent: true,
-		opacity: 0.95,
-		toneMapped: false
-	});
-
-	return new THREE.Line(geometry, material);
 
 }
 
