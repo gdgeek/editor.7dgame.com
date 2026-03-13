@@ -257,6 +257,56 @@
 
 			if (data.action && data.from && data.from === 'scene.verse.web') {
 
+				if (data.action === 'check-unsaved-changes') {
+					(async () => {
+						const requestId = (data.data && data.data.requestId) || '';
+						let changed = false;
+						try {
+							if (editor.verseLoader && typeof editor.verseLoader.changed === 'function') {
+								changed = await editor.verseLoader.changed();
+							}
+						} catch (error) {
+							console.error('Failed to check unsaved changes:', error);
+						}
+						editor.signals.messageSend.dispatch({
+							action: 'unsaved-changes-result',
+							data: { requestId, changed: Boolean(changed) }
+						});
+					})();
+					return;
+				}
+
+				if (data.action === 'save-before-leave') {
+					(async () => {
+						try {
+							const changed = editor.verseLoader && typeof editor.verseLoader.changed === 'function'
+								? await editor.verseLoader.changed()
+								: false;
+
+							if (!changed) {
+								editor.signals.messageSend.dispatch({
+									action: 'save-verse-before-leave-none'
+								});
+								return;
+							}
+
+							const verse = await editor.verseLoader.getVerse();
+							const payload = { verse };
+							editor.signals.messageSend.dispatch({
+								action: 'save-verse-before-leave',
+								data: payload
+							});
+							editor.verseLoader.json = JSON.stringify(payload);
+						} catch (error) {
+							console.error('Failed to save before leave:', error);
+							editor.signals.messageSend.dispatch({
+								action: 'save-verse-before-leave-none'
+							});
+						}
+					})();
+					return;
+				}
+
 				editor.signals.messageReceive.dispatch({
 					action: data.action,
 					data: data.data

@@ -234,6 +234,11 @@ function VerseLoader(editor) {
 						const modulePromise = new Promise(async (moduleResolve) => {
 							try {
 				const meta = metas.get(item.parameters.meta_id.toString());
+				if (!meta) {
+					console.warn(`Meta not found for module meta_id=${item.parameters.meta_id}, skipping`);
+					moduleResolve();
+					return;
+				}
 				const node = factory.addModule(item);
 				node.userData.custom = meta.custom;
 				root.add(node);

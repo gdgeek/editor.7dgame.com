@@ -138,8 +138,6 @@ function SidebarObject(editor) {
 	);
 	objectTypeRow.add(objectType);
 
-	container.add(objectTypeRow);
-
 	// uuid
 
 	const objectUUIDRow = new UIRow();
@@ -162,8 +160,6 @@ function SidebarObject(editor) {
 	);
 	objectUUIDRow.add(objectUUID);
 	//objectUUIDRow.add(objectUUIDRenew)
-
-	container.add(objectUUIDRow);
 
 	// name
 
@@ -1863,6 +1859,10 @@ function SidebarObject(editor) {
 			}
 		}
 	}
+
+	// 将“类型/识别码”放到属性面板最下方
+	container.add(objectTypeRow);
+	container.add(objectUUIDRow);
 
 	return container;
 }

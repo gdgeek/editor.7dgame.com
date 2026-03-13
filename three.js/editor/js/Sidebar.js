@@ -42,7 +42,7 @@ function Sidebar(editor) {
 	container.addTab('scene', strings.getKey('sidebar/scene'), scene)
 	// container.addTab('project', strings.getKey('sidebar/project'), project)
 	// container.addTab('settings', strings.getKey('sidebar/settings'), settings)
-	container.addTab('screenshot', strings.getKey('sidebar/scene/background'), screenshot)
+	container.addTab('screenshot', strings.getKey('sidebar/screenshot'), screenshot)
 	container.select('scene')
 
 	return container

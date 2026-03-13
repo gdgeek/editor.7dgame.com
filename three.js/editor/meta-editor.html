@@ -262,6 +262,56 @@
 
 			if (data.action && data.from && data.from === 'scene.meta.web') {
 
+				if (data.action === 'check-unsaved-changes') {
+					(async () => {
+						const requestId = (data.data && data.data.requestId) || '';
+						let changed = false;
+						try {
+							if (editor.metaLoader && typeof editor.metaLoader.changed === 'function') {
+								changed = await editor.metaLoader.changed();
+							}
+						} catch (error) {
+							console.error('Failed to check unsaved changes:', error);
+						}
+						editor.signals.messageSend.dispatch({
+							action: 'unsaved-changes-result',
+							data: { requestId, changed: Boolean(changed) }
+						});
+					})();
+					return;
+				}
+
+				if (data.action === 'save-before-leave') {
+					(async () => {
+						try {
+							const changed = editor.metaLoader && typeof editor.metaLoader.changed === 'function'
+								? await editor.metaLoader.changed()
+								: false;
+
+							if (!changed) {
+								editor.signals.messageSend.dispatch({
+									action: 'save-meta-before-leave-none'
+								});
+								return;
+							}
+
+							const meta = await editor.metaLoader.getMeta();
+							const payload = { meta, events: editor.scene.events };
+							editor.signals.messageSend.dispatch({
+								action: 'save-meta-before-leave',
+								data: payload
+							});
+							editor.metaLoader.json = JSON.stringify(payload);
+						} catch (error) {
+							console.error('Failed to save before leave:', error);
+							editor.signals.messageSend.dispatch({
+								action: 'save-meta-before-leave-none'
+							});
+						}
+					})();
+					return;
+				}
+
 				editor.signals.messageReceive.dispatch({
 					action: data.action,
 					data: data.data
@@ -304,14 +354,14 @@
 				// 保存用户信息
 				if (data.user) {
 					editor.data.user = data.user
-					console.error("Set user role:", editor.data.user.role);
+					console.log("Set user role:", editor.data.user.role);
 				}
 			} else if (params.action === 'user-info') {
 				
 			//	alert(editor.data)
 				// 保存用户信息
 				editor.data.user = params.data;
-				console.error("Updated user role:", editor.data.user.role);
+				console.log("Updated user role:", editor.data.user.role);
 			}
 
 		});
