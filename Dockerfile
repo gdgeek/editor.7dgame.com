@@ -4,8 +4,14 @@ FROM nginx:alpine
 # 删除默认的Nginx配置文件
 RUN rm -rf /usr/share/nginx/html/*
 
+# 接收打包时间参数
+ARG BUILD_TIME="unknown"
+
 # 将项目文件复制到容器的Nginx目录中
 COPY . /usr/share/nginx/html
+
+# 注入打包时间
+RUN sed -i "s/__BUILD_TIME__/${BUILD_TIME}/g" /usr/share/nginx/html/index.html
 
 # 清理不需要的文件（.dockerignore 应该已经排除，这里做二次清理）
 RUN rm -rf /usr/share/nginx/html/.git \

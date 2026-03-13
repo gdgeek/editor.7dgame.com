@@ -18,12 +18,13 @@ import { MultiTransformCommand } from './commands/MultiTransformCommand.js';
 
 import { RoomEnvironment } from '../../examples/jsm/environments/RoomEnvironment.js';
 
-const LIGHT_CLEAR_COLOR = 0x1b1f24;
-const DARK_CLEAR_COLOR = 0x1b1f24;
-const LIGHT_GRID_COLORS = [0x4f535a, 0x5a5f67];
-const DARK_GRID_COLORS = [0x4f535a, 0x5a5f67];
-const AXIS_X_COLOR = 0xd75f66;
-const AXIS_Z_COLOR = 0x5abf77;
+const LIGHT_CLEAR_COLOR = 0xaaaaaa;
+const DARK_CLEAR_COLOR = 0x333333;
+const LIGHT_GRID_COLORS = [0x888888, 0x222222];
+const DARK_GRID_COLORS = [0x888888, 0x222222];
+const AXIS_X_COLOR = 0x222222;
+const AXIS_Z_COLOR = 0x222222;
+const SCENE_BACKGROUND_AUTO_THEME_KEY = 'scene/backgroundAutoTheme';
 
 function Viewport(editor) {
 
@@ -58,9 +59,9 @@ function Viewport(editor) {
 	const groundTint = new THREE.Mesh(
 			new THREE.PlaneGeometry(30, 30),
 		new THREE.MeshBasicMaterial({
-			color: 0x272c34,
+			color: 0xaaaaaa,
 			transparent: true,
-			opacity: 0.35,
+			opacity: 0,
 			depthWrite: false,
 			toneMapped: false
 		})
@@ -91,7 +92,147 @@ function Viewport(editor) {
 		groundTint.visible = showGroundEnabled === true;
 	}
 
+	function applyThemePalette(isDarkMode) {
+		if (renderer === null) return;
+
+		const clearColor = isDarkMode ? DARK_CLEAR_COLOR : LIGHT_CLEAR_COLOR;
+		const gridColors = isDarkMode ? DARK_GRID_COLORS : LIGHT_GRID_COLORS;
+
+		renderer.setClearColor(clearColor);
+		updateGridColors(grid1, grid2, gridColors);
+
+		// Auto-sync scene color only when user did not customize background.
+		if (editor.config.getKey(SCENE_BACKGROUND_AUTO_THEME_KEY) === true) {
+			const currentSceneColor = editor.config.getKey('scene/backgroundColor');
+			if (currentSceneColor !== clearColor) {
+				editor.config.setKey('scene/backgroundColor', clearColor);
+				signals.sceneBackgroundChanged.dispatch('Color', clearColor, null, null);
+			}
+		}
+	}
+
+	function parseDarkModeFromMessage(params) {
+		if (!params) return null;
+
+		const action = String(params.action || '').toLowerCase();
+		const data = params.data;
+
+		const themeActions = new Set([
+			'theme',
+			'theme-change',
+			'theme-changed',
+			'set-theme',
+			'color-scheme',
+			'set-color-scheme',
+			'appearance',
+			'set-appearance'
+		]);
+
+		const hasThemePayload = !!(
+			data &&
+			typeof data === 'object' &&
+			(
+				data.dark !== undefined ||
+				data.theme !== undefined ||
+				data.mode !== undefined ||
+				data.colorScheme !== undefined ||
+				data.appearance !== undefined
+			)
+		);
+
+		if (!themeActions.has(action) && !hasThemePayload) return null;
+
+		if (typeof data === 'boolean') return data;
+		if (data && typeof data.dark === 'boolean') return data.dark;
+
+		const value =
+			(typeof data === 'string' && data) ||
+			(data && typeof data.theme === 'string' && data.theme) ||
+			(data && typeof data.mode === 'string' && data.mode) ||
+			(data && typeof data.colorScheme === 'string' && data.colorScheme) ||
+			(data && typeof data.appearance === 'string' && data.appearance) ||
+			(data && typeof data.value === 'string' && data.value) ||
+			'';
+
+		if (!value) return null;
+
+		const normalized = value.toLowerCase();
+		if (normalized.includes('dark') || normalized.includes('night')) return true;
+		if (normalized.includes('light') || normalized.includes('day')) return false;
+
+		return null;
+	}
+
+	function detectThemeModeFromDocument(doc) {
+		if (!doc || !doc.documentElement) return null;
+
+		const root = doc.documentElement;
+		const body = doc.body;
+		const markers = [
+			root.getAttribute('data-theme'),
+			root.getAttribute('theme'),
+			body && body.getAttribute('data-theme'),
+			body && body.getAttribute('theme'),
+			root.className,
+			body && body.className
+		]
+			.filter(Boolean)
+			.join(' ')
+			.toLowerCase();
+
+		if (markers.includes('dark') || markers.includes('night')) return true;
+		if (markers.includes('light') || markers.includes('day')) return false;
+
+		return null;
+	}
+
+	function getPreferredThemeMode() {
+		try {
+			if (window.parent && window.parent !== window && window.parent.document) {
+				const parentMode = detectThemeModeFromDocument(window.parent.document);
+				if (parentMode !== null) return parentMode;
+			}
+		} catch (error) {
+			// Cross-origin parent, ignore and fallback to system scheme.
+		}
+
+		if (window.matchMedia) {
+			return window.matchMedia('(prefers-color-scheme: dark)').matches;
+		}
+
+		return false;
+	}
+
+	function observeParentThemeChanges() {
+		try {
+			if (!window.parent || window.parent === window || !window.parent.document || typeof MutationObserver === 'undefined') return;
+
+			const parentDocument = window.parent.document;
+			const callback = function () {
+				const mode = detectThemeModeFromDocument(parentDocument);
+				if (mode === null) return;
+				applyThemePalette(mode);
+				render();
+			};
+
+			const observer = new MutationObserver(callback);
+			const observeTarget = function (target) {
+				if (!target) return;
+				observer.observe(target, {
+					attributes: true,
+					attributeFilter: ['class', 'data-theme', 'theme']
+				});
+			};
+
+			observeTarget(parentDocument.documentElement);
+			observeTarget(parentDocument.body);
+		} catch (error) {
+			// Ignore parent theme observer setup errors.
+		}
+	}
+
 	updateGroundAndGridVisibility();
+	observeParentThemeChanges();
 
 	const viewHelper = new ViewHelper(camera, container);
 	const vr = new VR(editor);
@@ -901,16 +1042,17 @@ function Viewport(editor) {
 			const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 			mediaQuery.addEventListener('change', function (event) {
 
-				renderer.setClearColor(event.matches ? DARK_CLEAR_COLOR : LIGHT_CLEAR_COLOR);
-				updateGridColors(grid1, grid2, event.matches ? DARK_GRID_COLORS : LIGHT_GRID_COLORS);
+				applyThemePalette(event.matches);
 
 				render();
 
 			});
 
-			renderer.setClearColor(mediaQuery.matches ? DARK_CLEAR_COLOR : LIGHT_CLEAR_COLOR);
-			updateGridColors(grid1, grid2, mediaQuery.matches ? DARK_GRID_COLORS : LIGHT_GRID_COLORS);
+			applyThemePalette(getPreferredThemeMode());
 
+		}
+		else {
+			applyThemePalette(getPreferredThemeMode());
 		}
 
 		renderer.setPixelRatio(window.devicePixelRatio);
@@ -923,6 +1065,14 @@ function Viewport(editor) {
 
 		render();
 
+	});
+
+	signals.messageReceive.add(function (params) {
+		const darkMode = parseDarkModeFromMessage(params);
+		if (darkMode === null) return;
+
+		applyThemePalette(darkMode);
+		render();
 	});
 
 	signals.sceneGraphChanged.add(function () {

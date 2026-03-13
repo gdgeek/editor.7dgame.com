@@ -1,2 +1,63 @@
-841511aaaaa
-hello 1
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GDGeek Editor</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      text-align: center;
+      padding: 3rem 2rem;
+      background: rgba(255,255,255,0.05);
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1);
+      max-width: 480px;
+      width: 90%;
+    }
+    h1 { font-size: 2rem; margin-bottom: 0.5rem; color: #fff; }
+    .subtitle { color: #94a3b8; margin-bottom: 2rem; }
+    .build-info {
+      background: rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 2rem;
+      font-size: 0.9rem;
+      color: #a5b4fc;
+    }
+    .build-info span { color: #fff; }
+    .link {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.6rem 1.5rem;
+      background: #3b82f6;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .link:hover { background: #2563eb; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>GDGeek Editor</h1>
+    <p class="subtitle">3D 元宇宙编辑器</p>
+    <div class="build-info">
+      打包时间：<span id="build-time">__BUILD_TIME__</span>
+    </div>
+    <a class="link" href="three.js/editor/meta-editor.html">进入编辑器</a>
+  </div>
+</body>
+</html>
+</p>
