@@ -3,12 +3,15 @@ import { UIPanel, UIRow, UIButton, UIInput, UISelect, UIText, UIColor } from './
 import { UIBoolean } from './libs/ui.three.js';
 import { ScreenshotUtils } from './utils/ScreenshotUtils.js';
 
-const LIGHT_CLEAR_COLOR = 0x1b1f24;
-const DARK_CLEAR_COLOR = 0x1b1f24;
-const LIGHT_GRID_COLORS = [0x4f535a, 0x5a5f67];
-const DARK_GRID_COLORS = [0x4f535a, 0x5a5f67];
-const AXIS_X_COLOR = 0xd75f66;
-const AXIS_Z_COLOR = 0x5abf77;
+const LIGHT_CLEAR_COLOR = 0xaaaaaa;
+const DARK_CLEAR_COLOR = 0x333333;
+const LIGHT_GRID_COLORS = [0x888888, 0x222222];
+const DARK_GRID_COLORS = [0x888888, 0x222222];
+const AXIS_X_COLOR = 0x222222;
+const AXIS_Z_COLOR = 0x222222;
+const SCENE_BACKGROUND_AUTO_THEME_KEY = 'scene/backgroundAutoTheme';
+const LEGACY_LIGHT_CLEAR_COLOR = 0xf8fafc;
+const LEGACY_DARK_CLEAR_COLOR = 0x1b1f24;
 
 function SidebarScreenshot(editor) {
     const strings = editor.strings;
@@ -210,7 +213,14 @@ function SidebarScreenshot(editor) {
         return `#${getCurrentDefaultClearColor().toString(16).padStart(6, '0')}`;
     }
 
-    function applySceneBackgroundColor() {
+    function isDefaultThemeBackgroundColor(color) {
+        return color === LIGHT_CLEAR_COLOR ||
+            color === DARK_CLEAR_COLOR ||
+            color === LEGACY_LIGHT_CLEAR_COLOR ||
+            color === LEGACY_DARK_CLEAR_COLOR;
+    }
+
+    function applySceneBackgroundColor(autoTheme = false) {
         signals.sceneBackgroundChanged.dispatch(
             'Color',
             sceneBackgroundColor.getHexValue(),
@@ -219,6 +229,7 @@ function SidebarScreenshot(editor) {
         );
 
         config.setKey('scene/backgroundColor', sceneBackgroundColor.getHexValue());
+        config.setKey(SCENE_BACKGROUND_AUTO_THEME_KEY, autoTheme);
     }
 
     function applySceneGridVisible() {
@@ -233,12 +244,21 @@ function SidebarScreenshot(editor) {
 
     // 初始化场景背景配置
     const savedSceneBackgroundColor = config.getKey('scene/backgroundColor');
-    const migratedBackgroundColor = (savedSceneBackgroundColor === 0xf8fafc) ? LIGHT_CLEAR_COLOR : savedSceneBackgroundColor;
-    if (migratedBackgroundColor !== undefined) {
-        sceneBackgroundColor.setHexValue(migratedBackgroundColor);
+    const savedSceneBackgroundAutoTheme = config.getKey(SCENE_BACKGROUND_AUTO_THEME_KEY);
+    const shouldAutoThemeBackground = savedSceneBackgroundAutoTheme !== undefined
+        ? savedSceneBackgroundAutoTheme === true
+        : (savedSceneBackgroundColor === undefined || isDefaultThemeBackgroundColor(savedSceneBackgroundColor));
+
+    const initialSceneBackgroundColor = shouldAutoThemeBackground
+        ? getCurrentDefaultClearColor()
+        : savedSceneBackgroundColor;
+
+    if (initialSceneBackgroundColor !== undefined) {
+        sceneBackgroundColor.setHexValue(initialSceneBackgroundColor);
     } else {
         sceneBackgroundColor.setValue(readSceneBackgroundColor());
     }
+    config.setKey(SCENE_BACKGROUND_AUTO_THEME_KEY, shouldAutoThemeBackground);
 
     // 初始化网格开关
     const savedSceneShowGrid = config.getKey('scene/showGrid');
@@ -247,8 +267,8 @@ function SidebarScreenshot(editor) {
     sceneShowGround.setValue(savedSceneShowGround !== undefined ? savedSceneShowGround : true);
 
     // 启动时仅在无背景时套用主题色；已有纹理背景时保留原场景设置
-    if (migratedBackgroundColor !== undefined || editor.scene.background === null || editor.scene.background.isColor) {
-        applySceneBackgroundColor();
+    if (editor.scene.background === null || editor.scene.background.isColor || shouldAutoThemeBackground) {
+        applySceneBackgroundColor(shouldAutoThemeBackground);
     }
     applySceneGridVisible();
     applySceneGroundVisible();
@@ -259,7 +279,9 @@ function SidebarScreenshot(editor) {
     });
 
     sceneBackgroundColor.onInput(function () {
-        applySceneBackgroundColor();
+        // Selecting default theme colors keeps auto-follow enabled.
+        const selectedColor = sceneBackgroundColor.getHexValue();
+        applySceneBackgroundColor(isDefaultThemeBackgroundColor(selectedColor));
     });
 
     sceneShowGrid.onChange(function() {
@@ -277,6 +299,17 @@ function SidebarScreenshot(editor) {
     formatSelect.onChange(function() {
         config.setKey('screenshot/format', formatSelect.getValue());
     });
+
+    if (window.matchMedia) {
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        mediaQuery.addEventListener('change', function (event) {
+            if (config.getKey(SCENE_BACKGROUND_AUTO_THEME_KEY) !== true) return;
+
+            const nextColor = event.matches ? DARK_CLEAR_COLOR : LIGHT_CLEAR_COLOR;
+            sceneBackgroundColor.setHexValue(nextColor);
+            applySceneBackgroundColor(true);
+        });
+    }
 
     captureButton.onClick(function() {
         captureScreenshot();
