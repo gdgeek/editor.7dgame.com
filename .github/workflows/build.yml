@@ -89,6 +89,10 @@ jobs:
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' }}
             type=raw,value=develop,enable=${{ github.ref == 'refs/heads/develop' }}
 
+      - name: Generate build time
+        id: build-time
+        run: echo "time=$(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S')" >> "$GITHUB_OUTPUT"
+
       - name: Build and push to GitHub Registry
         uses: docker/build-push-action@v5
         with:
@@ -96,6 +100,7 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: BUILD_TIME=${{ steps.build-time.outputs.time }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -108,5 +113,6 @@ jobs:
           push: true
           tags: ${{ steps.meta-tencent.outputs.tags }}
           labels: ${{ steps.meta-tencent.outputs.labels }}
+          build-args: BUILD_TIME=${{ steps.build-time.outputs.time }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
