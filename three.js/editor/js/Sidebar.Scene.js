@@ -312,24 +312,11 @@ function SidebarScene(editor) {
 
 		outliner.setOptions(options);
 
-		// 获取所有选中对象
 		const selectedObjects = editor.getSelectedObjects();
-
-		// 先设置主选中对象
-		if (editor.selected !== null) {
-			outliner.setValue(editor.selected.id);
-		}
-
-		// 如果是多选，恢复所有选中状态
-		if (selectedObjects.length > 1) {
-			// 恢复多选状态，遍历所有选中对象
-			for (let i = 0; i < selectedObjects.length; i++) {
-				const object = selectedObjects[i];
-				if (object !== editor.selected) { // 主选中对象已在上面处理
-					outliner.addToSelection(object.id);
-				}
-			}
-		}
+		const selectedIds = selectedObjects.map( ( object ) => object.id );
+		const primaryId = editor.selected !== null ? editor.selected.id : null;
+		const anchorValue = outliner.getAnchorValue();
+		outliner.setValues( selectedIds, primaryId, anchorValue );
 
 	}
 
@@ -396,32 +383,15 @@ function SidebarScene(editor) {
 
 			if (needsRefresh) refreshUI();
 
-			// 获取所有选中对象
 			const selectedObjects = editor.getSelectedObjects();
-
-			if (selectedObjects.length > 1) {
-				// 多选模式
-
-				// 先清除outliner中的选中状态
-				outliner.clearSelection();
-
-				// 设置主选择对象
-				outliner.setValue(object.id);
-
-				// 添加其余对象到选择
-				for (let i = 0; i < selectedObjects.length; i++) {
-					const obj = selectedObjects[i];
-					if (obj !== object) { // 跳过主选中对象
-						outliner.addToSelection(obj.id);
-					}
-				}
-			} else {
-				// 单选模式
-				outliner.setValue(object.id);
-			}
+			const selectedIds = selectedObjects.map( ( obj ) => obj.id );
+			const anchorValue = outliner.getAnchorValue();
+			outliner.setValues( selectedIds, object.id, anchorValue );
 
 		} else {
-			outliner.setValue(null);
+
+			outliner.setValue( null );
+
 		}
 
 	});
