@@ -71,6 +71,7 @@
 		import { Menubar } from './js/Menubar.js';
 		import { Resizer } from './js/Resizer.js';
 		import { VerseLoader } from './js/mrpp/VerseLoader.js';
+		import { initializeGlobalShortcuts } from './js/utils/GlobalShortcuts.js';
 		import { VRButton } from '../examples/jsm/webxr/VRButton.js';
 
 		window.URL = window.URL || window.webkitURL;
@@ -93,6 +94,8 @@
 			}, '*');
 
 		});
+
+		initializeGlobalShortcuts( editor );
 
 
 		window.editor = editor; // Expose editor to Console

@@ -859,6 +859,29 @@ Editor.prototype = {
 
 	},
 
+	save: function () {
+
+		if ( this.metaLoader && typeof this.metaLoader.getLoadingStatus === 'function' && this.metaLoader.getLoadingStatus() ) {
+
+			console.warn( 'Cannot save while models are still loading' );
+			return false;
+
+		}
+
+		if ( this.verseLoader && typeof this.verseLoader.getLoadingStatus === 'function' && this.verseLoader.getLoadingStatus() ) {
+
+			console.warn( 'Cannot save while modules are still loading' );
+			return false;
+
+		}
+
+		this.signals.sceneGraphChanged.dispatch();
+		this.signals.upload.dispatch();
+
+		return true;
+
+	},
+
 	execute: function ( cmd, optionalName ) {
 
 		this.history.execute( cmd, optionalName );

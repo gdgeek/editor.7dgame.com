@@ -83,13 +83,7 @@ function MenubarFile( editor ) {
 	saveOption.dom.style.pointerEvents = 'none';
 
 	saveOption.onClick( function () {
-		if (editor.metaLoader && editor.metaLoader.getLoadingStatus()) {
-			console.warn('Cannot save while models are still loading');
-			return;
-		}
-
-		editor.signals.sceneGraphChanged.dispatch();
-		editor.signals.upload.dispatch();
+		editor.save();
 	} );
 	options.add( saveOption );
 
