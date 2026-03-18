@@ -202,6 +202,7 @@ function SidebarMultipleObjects(editor) {
 		rotation: null,
 		scale: null
 	};
+	let isApplyingTransformFromPanel = false;
 
 	// 拖动开始时的处理函数
 	function onDragStart() {
@@ -1055,45 +1056,63 @@ function SidebarMultipleObjects(editor) {
 		const valY = multipleObjectsPositionY.getValue();
 		const valZ = multipleObjectsPositionZ.getValue();
 
-		// Update group position only for valid inputs
+		const oldPositions = {};
+		let hasPositionChange = false;
+		for (let i = 0; i < objects.length; i++) {
+			const object = objects[i];
+			oldPositions[object.id] = object.position.clone();
+
+			if (valX !== null && object.position.x !== valX) {
+				object.position.x = valX;
+				hasPositionChange = true;
+			}
+			if (valY !== null && object.position.y !== valY) {
+				object.position.y = valY;
+				hasPositionChange = true;
+			}
+			if (valZ !== null && object.position.z !== valZ) {
+				object.position.z = valZ;
+				hasPositionChange = true;
+			}
+
+			object.updateMatrixWorld(true);
+		}
+
+		if (hasPositionChange === false) return;
+
+		const oldGroupPosition = multiSelectGroup.position.clone();
+
 		if (valX !== null) multiSelectGroup.position.x = valX;
 		if (valY !== null) multiSelectGroup.position.y = valY;
 		if (valZ !== null) multiSelectGroup.position.z = valZ;
 
-		// 触发临时组的位置变更事件
-		if (multiSelectGroup.userData.onPositionChange) {
-			multiSelectGroup.userData.onPositionChange();
-		}
-
-		// 触发scene变化信号
-		editor.signals.sceneGraphChanged.dispatch();
-
-		// 更新每个选中对象的位置
 		for (let i = 0; i < objects.length; i++) {
 			const object = objects[i];
-			if (object.userData.offsetFromCenter) {
-				const newPosition = multiSelectGroup.position.clone().add(object.userData.offsetFromCenter);
+			object.userData.offsetFromCenter = object.position.clone().sub(multiSelectGroup.position);
+		}
 
-				// 更新对象位置
-				if (!object.position.equals(newPosition)) {
-					object.position.copy(newPosition);
+		isApplyingTransformFromPanel = true;
+
+		try {
+			editor.signals.sceneGraphChanged.dispatch();
+
+			if (!isDragging) {
+				const multiCommand = new MultiTransformCommand(editor, objects, 'MultiPositionCommand', '多对象位置变换');
+				multiCommand.oldGroupPosition = oldGroupPosition;
+
+				for (let i = 0; i < objects.length; i++) {
+					const object = objects[i];
+					multiCommand.oldPositions[object.id] = oldPositions[object.id];
 				}
+
+				editor.execute(multiCommand);
 			}
-		}
 
-		// 只有在不是拖动状态下才创建和执行命令
-		// 如果是拖动状态，会在onDragEnd中统一创建一个命令
-		if (!isDragging) {
-			// MultiTransformCommand captures current state as 'new state'.
-			// Since we already modified objects above, this captures the change.
-			const multiCommand = new MultiTransformCommand(editor, objects, 'MultiPositionCommand', '多对象位置变换');
-			multiCommand.updateNewState(); // 更新变换后的状态
-			editor.execute(multiCommand);
-		}
-
-		// 触发多选对象变换更新信号，用于更新包围盒
-		if (multiSelectGroup && objects.length > 0) {
-			editor.signals.multipleObjectsTransformChanged.dispatch(multiSelectGroup);
+			if (multiSelectGroup && objects.length > 0) {
+				editor.signals.multipleObjectsTransformChanged.dispatch(multiSelectGroup);
+			}
+		} finally {
+			isApplyingTransformFromPanel = false;
 		}
 	}
 
@@ -1107,44 +1126,69 @@ function SidebarMultipleObjects(editor) {
 		const valY = multipleObjectsRotationY.getValue();
 		const valZ = multipleObjectsRotationZ.getValue();
 
-		// Use input value if valid, otherwise keep existing group value
-		const newX = (valX !== null ? valX : multiSelectGroup.rotation.x * THREE.MathUtils.RAD2DEG) * THREE.MathUtils.DEG2RAD;
-		const newY = (valY !== null ? valY : multiSelectGroup.rotation.y * THREE.MathUtils.RAD2DEG) * THREE.MathUtils.DEG2RAD;
-		const newZ = (valZ !== null ? valZ : multiSelectGroup.rotation.z * THREE.MathUtils.RAD2DEG) * THREE.MathUtils.DEG2RAD;
-
-		// 更新临时组的旋转
-		multiSelectGroup.rotation.set(newX, newY, newZ);
-
-		// 触发临时组的旋转变更事件
-		if (multiSelectGroup.userData.onRotationChange) {
-			multiSelectGroup.userData.onRotationChange();
-		}
-
-		// 触发scene变化信号
-		editor.signals.sceneGraphChanged.dispatch();
-
-		// 更新选中对象的旋转
+		const oldRotations = {};
+		let hasRotationChange = false;
 		for (let i = 0; i < objects.length; i++) {
 			const object = objects[i];
-			const newRotation = new THREE.Euler(newX, newY, newZ);
+			oldRotations[object.id] = object.rotation.clone();
 
-			// 更新对象旋转
-			if (!object.rotation.equals(newRotation)) {
-				object.rotation.copy(newRotation);
+			if (valX !== null) {
+				const nextX = valX * THREE.MathUtils.DEG2RAD;
+				if (object.rotation.x !== nextX) {
+					object.rotation.x = nextX;
+					hasRotationChange = true;
+				}
 			}
+
+			if (valY !== null) {
+				const nextY = valY * THREE.MathUtils.DEG2RAD;
+				if (object.rotation.y !== nextY) {
+					object.rotation.y = nextY;
+					hasRotationChange = true;
+				}
+			}
+
+			if (valZ !== null) {
+				const nextZ = valZ * THREE.MathUtils.DEG2RAD;
+				if (object.rotation.z !== nextZ) {
+					object.rotation.z = nextZ;
+					hasRotationChange = true;
+				}
+			}
+
+			object.updateMatrixWorld(true);
 		}
 
-		// 只有在不是拖动状态下才创建和执行命令
-		// 如果是拖动状态，会在onDragEnd中统一创建一个命令
-		if (!isDragging) {
-			const multiCommand = new MultiTransformCommand(editor, objects, 'MultiRotationCommand', '多对象旋转变换');
-			multiCommand.updateNewState(); // 更新变换后的状态
-			editor.execute(multiCommand);
-		}
+		if (hasRotationChange === false) return;
 
-		// 触发多选对象变换更新信号，用于更新包围盒
-		if (multiSelectGroup && objects.length > 0) {
-			editor.signals.multipleObjectsTransformChanged.dispatch(multiSelectGroup);
+		const oldGroupRotation = multiSelectGroup.rotation.clone();
+
+		if (valX !== null) multiSelectGroup.rotation.x = valX * THREE.MathUtils.DEG2RAD;
+		if (valY !== null) multiSelectGroup.rotation.y = valY * THREE.MathUtils.DEG2RAD;
+		if (valZ !== null) multiSelectGroup.rotation.z = valZ * THREE.MathUtils.DEG2RAD;
+
+		isApplyingTransformFromPanel = true;
+
+		try {
+			editor.signals.sceneGraphChanged.dispatch();
+
+			if (!isDragging) {
+				const multiCommand = new MultiTransformCommand(editor, objects, 'MultiRotationCommand', '多对象旋转变换');
+				multiCommand.oldGroupRotation = oldGroupRotation;
+
+				for (let i = 0; i < objects.length; i++) {
+					const object = objects[i];
+					multiCommand.oldRotations[object.id] = oldRotations[object.id];
+				}
+
+				editor.execute(multiCommand);
+			}
+
+			if (multiSelectGroup && objects.length > 0) {
+				editor.signals.multipleObjectsTransformChanged.dispatch(multiSelectGroup);
+			}
+		} finally {
+			isApplyingTransformFromPanel = false;
 		}
 	}
 
@@ -1158,43 +1202,58 @@ function SidebarMultipleObjects(editor) {
 		const valY = multipleObjectsScaleY.getValue();
 		const valZ = multipleObjectsScaleZ.getValue();
 
-		const newX = valX !== null ? valX : multiSelectGroup.scale.x;
-		const newY = valY !== null ? valY : multiSelectGroup.scale.y;
-		const newZ = valZ !== null ? valZ : multiSelectGroup.scale.z;
-
-		// 更新临时组的缩放
-		multiSelectGroup.scale.set(newX, newY, newZ);
-
-		// 触发临时组的缩放变更事件
-		if (multiSelectGroup.userData.onScaleChange) {
-			multiSelectGroup.userData.onScaleChange();
-		}
-
-		// 触发scene变化信号
-		editor.signals.sceneGraphChanged.dispatch();
-
-		// 更新选中对象的缩放
+		const oldScales = {};
+		let hasScaleChange = false;
 		for (let i = 0; i < objects.length; i++) {
 			const object = objects[i];
-			const newScale = new THREE.Vector3(newX, newY, newZ);
+			oldScales[object.id] = object.scale.clone();
 
-			// 更新对象缩放
-			if (!object.scale.equals(newScale)) {
-				object.scale.copy(newScale);
+			if (valX !== null && object.scale.x !== valX) {
+				object.scale.x = valX;
+				hasScaleChange = true;
 			}
+			if (valY !== null && object.scale.y !== valY) {
+				object.scale.y = valY;
+				hasScaleChange = true;
+			}
+			if (valZ !== null && object.scale.z !== valZ) {
+				object.scale.z = valZ;
+				hasScaleChange = true;
+			}
+
+			object.updateMatrixWorld(true);
 		}
 
-		// 只有在不是拖动状态下才创建和执行命令
-		// 如果是拖动状态，会在onDragEnd中统一创建一个命令
-		if (!isDragging) {
-			const multiCommand = new MultiTransformCommand(editor, objects, 'MultiScaleCommand', '多对象缩放变换');
-			multiCommand.updateNewState(); // 更新变换后的状态
-			editor.execute(multiCommand);
-		}
+		if (hasScaleChange === false) return;
 
-		// 触发多选对象变换更新信号，用于更新包围盒
-		if (multiSelectGroup && objects.length > 0) {
-			editor.signals.multipleObjectsTransformChanged.dispatch(multiSelectGroup);
+		const oldGroupScale = multiSelectGroup.scale.clone();
+
+		if (valX !== null) multiSelectGroup.scale.x = valX;
+		if (valY !== null) multiSelectGroup.scale.y = valY;
+		if (valZ !== null) multiSelectGroup.scale.z = valZ;
+
+		isApplyingTransformFromPanel = true;
+
+		try {
+			editor.signals.sceneGraphChanged.dispatch();
+
+			if (!isDragging) {
+				const multiCommand = new MultiTransformCommand(editor, objects, 'MultiScaleCommand', '多对象缩放变换');
+				multiCommand.oldGroupScale = oldGroupScale;
+
+				for (let i = 0; i < objects.length; i++) {
+					const object = objects[i];
+					multiCommand.oldScales[object.id] = oldScales[object.id];
+				}
+
+				editor.execute(multiCommand);
+			}
+
+			if (multiSelectGroup && objects.length > 0) {
+				editor.signals.multipleObjectsTransformChanged.dispatch(multiSelectGroup);
+			}
+		} finally {
+			isApplyingTransformFromPanel = false;
 		}
 	}
 
@@ -1477,6 +1536,8 @@ function SidebarMultipleObjects(editor) {
 	});
 
 	signals.objectChanged.add(function (object) {
+		if (isApplyingTransformFromPanel) return;
+
 		const selectedObjects = editor.getSelectedObjects();
 
 		// 只有在多选模式下才更新UI
@@ -1503,6 +1564,8 @@ function SidebarMultipleObjects(editor) {
 	});
 
 	signals.refreshSidebarObject3D.add(function (object) {
+		if (isApplyingTransformFromPanel) return;
+
 		const selectedObjects = editor.getSelectedObjects();
 
 		// 只有在多选模式下才更新UI
@@ -1515,6 +1578,8 @@ function SidebarMultipleObjects(editor) {
 
 	// 监听多选对象变换变化信号
 	signals.multipleObjectsTransformChanged.add(function (object) {
+		if (isApplyingTransformFromPanel) return;
+
 		if (object === editor.multiSelectGroup) {
 			// 更新多选面板UI，但不触发更新命令
 			updateUIWithoutCommand(editor.getSelectedObjects());
