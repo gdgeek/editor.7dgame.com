@@ -374,16 +374,36 @@ class UIOutliner extends UIDiv {
 		// Keybindings to support arrow navigation
 		this.dom.addEventListener( 'keyup', function ( event ) {
 
+			let targetIndex = - 1;
+
 			switch ( event.keyCode ) {
 
 				case 38: // up
-					scope.selectIndex( scope.selectedIndex - 1 );
+					targetIndex = scope.selectedIndex - 1;
 					break;
 				case 40: // down
-					scope.selectIndex( scope.selectedIndex + 1 );
+					targetIndex = scope.selectedIndex + 1;
 					break;
 
 			}
+
+			if ( targetIndex < 0 || targetIndex >= scope.options.length ) return;
+
+			if ( event.shiftKey ) {
+
+				scope._selectRange( targetIndex, event.ctrlKey || event.metaKey );
+
+			} else {
+
+				scope._setSelection( [ targetIndex ], targetIndex, targetIndex, true );
+
+			}
+
+			const changeEvent = new CustomEvent( 'change', {
+				bubbles: true,
+				cancelable: true
+			} );
+			scope.dom.dispatchEvent( changeEvent );
 
 		} );
 
@@ -392,10 +412,208 @@ class UIOutliner extends UIDiv {
 		this.options = [];
 		this.selectedIndex = - 1;
 		this.selectedValue = null;
-
-		// 多选支持
 		this.selectedIndices = [];
 		this.selectedValues = [];
+		this.anchorIndex = - 1;
+
+	}
+
+	_normalizeValue( value ) {
+
+		return ( value !== null && value !== undefined ) ? String( value ) : null;
+
+	}
+
+	_getValueByIndex( index ) {
+
+		if ( index < 0 || index >= this.options.length ) return null;
+
+		return String( this.options[ index ].value );
+
+	}
+
+	_getIndexByValue( value ) {
+
+		const normalizedValue = this._normalizeValue( value );
+		if ( normalizedValue === null ) return - 1;
+
+		for ( let i = 0; i < this.options.length; i ++ ) {
+
+			if ( String( this.options[ i ].value ) === normalizedValue ) return i;
+
+		}
+
+		return - 1;
+
+	}
+
+	_applySelectionClasses() {
+
+		for ( let i = 0; i < this.options.length; i ++ ) {
+
+			this.options[ i ].classList.remove( 'active' );
+			this.options[ i ].classList.remove( 'multi-selected' );
+
+		}
+
+		for ( let i = 0; i < this.selectedIndices.length; i ++ ) {
+
+			const index = this.selectedIndices[ i ];
+			if ( index < 0 || index >= this.options.length ) continue;
+			this.options[ index ].classList.add( 'active' );
+
+			if ( this.selectedIndices.length > 1 ) {
+
+				this.options[ index ].classList.add( 'multi-selected' );
+
+			}
+
+		}
+
+	}
+
+	_scrollIndexIntoView( index ) {
+
+		if ( index < 0 || index >= this.options.length ) return;
+
+		const element = this.options[ index ];
+		const y = element.offsetTop - this.dom.offsetTop;
+		const bottomY = y + element.offsetHeight;
+		const minScroll = bottomY - this.dom.offsetHeight;
+
+		if ( this.dom.scrollTop > y ) {
+
+			this.dom.scrollTop = y;
+
+		} else if ( this.dom.scrollTop < minScroll ) {
+
+			this.dom.scrollTop = minScroll;
+
+		}
+
+	}
+
+	_setSelection( indices, primaryIndex, anchorIndex, scrollIntoView ) {
+
+		const uniqueSortedIndices = [];
+
+		for ( let i = 0; i < indices.length; i ++ ) {
+
+			const index = indices[ i ];
+			if ( index < 0 || index >= this.options.length ) continue;
+
+			if ( uniqueSortedIndices.indexOf( index ) === - 1 ) {
+
+				uniqueSortedIndices.push( index );
+
+			}
+
+		}
+
+		uniqueSortedIndices.sort( function ( a, b ) { return a - b; } );
+
+		this.selectedIndices = uniqueSortedIndices;
+		this.selectedValues = uniqueSortedIndices.map( ( index ) => this._getValueByIndex( index ) );
+
+		if ( uniqueSortedIndices.length === 0 ) {
+
+			this.selectedIndex = - 1;
+			this.selectedValue = null;
+			this.anchorIndex = - 1;
+			this._applySelectionClasses();
+			return;
+
+		}
+
+		let resolvedPrimaryIndex = primaryIndex;
+		if ( uniqueSortedIndices.indexOf( resolvedPrimaryIndex ) === - 1 ) {
+
+			resolvedPrimaryIndex = uniqueSortedIndices[ uniqueSortedIndices.length - 1 ];
+
+		}
+
+		let resolvedAnchorIndex = anchorIndex;
+		if ( uniqueSortedIndices.indexOf( resolvedAnchorIndex ) === - 1 ) {
+
+			resolvedAnchorIndex = resolvedPrimaryIndex;
+
+		}
+
+		this.selectedIndex = resolvedPrimaryIndex;
+		this.selectedValue = this._getValueByIndex( resolvedPrimaryIndex );
+		this.anchorIndex = resolvedAnchorIndex;
+
+		this._applySelectionClasses();
+
+		if ( scrollIntoView === true ) {
+
+			this._scrollIndexIntoView( resolvedPrimaryIndex );
+
+		}
+
+	}
+
+	_toggleIndex( index ) {
+
+		const nextSelectedIndices = this.selectedIndices.slice();
+		const existingIndex = nextSelectedIndices.indexOf( index );
+
+		if ( existingIndex === - 1 ) {
+
+			nextSelectedIndices.push( index );
+			this._setSelection( nextSelectedIndices, index, index, true );
+			return;
+
+		}
+
+		nextSelectedIndices.splice( existingIndex, 1 );
+
+		if ( nextSelectedIndices.length === 0 ) {
+
+			this.clearSelection();
+			return;
+
+		}
+
+		let nextPrimaryIndex = this.selectedIndex;
+		if ( nextPrimaryIndex === index || nextSelectedIndices.indexOf( nextPrimaryIndex ) === - 1 ) {
+
+			nextPrimaryIndex = nextSelectedIndices[ nextSelectedIndices.length - 1 ];
+
+		}
+
+		let nextAnchorIndex = this.anchorIndex;
+		if ( nextAnchorIndex === index || nextSelectedIndices.indexOf( nextAnchorIndex ) === - 1 ) {
+
+			nextAnchorIndex = nextPrimaryIndex;
+
+		}
+
+		this._setSelection( nextSelectedIndices, nextPrimaryIndex, nextAnchorIndex, false );
+
+	}
+
+	_selectRange( targetIndex, appendToSelection ) {
+
+		const anchorIndex = ( this.anchorIndex !== - 1 ) ? this.anchorIndex :
+			( this.selectedIndex !== - 1 ? this.selectedIndex : targetIndex );
+
+		const start = Math.min( anchorIndex, targetIndex );
+		const end = Math.max( anchorIndex, targetIndex );
+
+		const nextSelectedIndices = appendToSelection ? this.selectedIndices.slice() : [];
+
+		for ( let i = start; i <= end; i ++ ) {
+
+			if ( nextSelectedIndices.indexOf( i ) === - 1 ) {
+
+				nextSelectedIndices.push( i );
+
+			}
+
+		}
+
+		this._setSelection( nextSelectedIndices, targetIndex, anchorIndex, true );
 
 	}
 
@@ -403,12 +621,12 @@ class UIOutliner extends UIDiv {
 
 		if ( index >= 0 && index < this.options.length ) {
 
-			this.setValue( this.options[ index ].value );
+			this._setSelection( [ index ], index, index, true );
 
-			const changeEvent = new CustomEvent('change', {
+			const changeEvent = new CustomEvent( 'change', {
 				bubbles: true,
 				cancelable: true
-			});
+			} );
 			this.dom.dispatchEvent( changeEvent );
 
 		}
@@ -418,6 +636,9 @@ class UIOutliner extends UIDiv {
 	setOptions( options ) {
 
 		const scope = this;
+		const previousSelectedValues = this.getValues();
+		const previousPrimaryValue = this.getValue();
+		const previousAnchorValue = ( this.anchorIndex !== - 1 ) ? this._getValueByIndex( this.anchorIndex ) : null;
 
 		while ( scope.dom.children.length > 0 ) {
 
@@ -425,49 +646,33 @@ class UIOutliner extends UIDiv {
 
 		}
 
-		function onClick(event) {
-			// 多选支持：检查是否按下Ctrl键(Windows)或Command键(Mac)
-			const multiSelect = event.ctrlKey || event.metaKey;
+		function onClick( event ) {
 
-			// 或者检查是否按下Shift键（范围选择）
+			const currentIndex = scope.options.indexOf( this );
+			if ( currentIndex === - 1 ) return;
+
+			const toggleSelect = event.ctrlKey || event.metaKey;
 			const rangeSelect = event.shiftKey;
 
-			if (rangeSelect && scope.selectedIndex !== -1) {
-				// 实现范围选择
-				const lastIndex = scope.selectedIndex;
-				const currentIndex = options.indexOf(this);
+			if ( rangeSelect ) {
 
-				// 清除当前选择
-				scope.clearSelection();
+				scope._selectRange( currentIndex, toggleSelect );
 
-				// 选择范围内的所有项
-				const start = Math.min(lastIndex, currentIndex);
-				const end = Math.max(lastIndex, currentIndex);
+			} else if ( toggleSelect ) {
 
-				// 先设置当前点击的为主选择（最后一个）
-				scope.selectedIndex = currentIndex;
-				scope.selectedValue = options[currentIndex].value;
+				scope._toggleIndex( currentIndex );
 
-				// 添加整个范围到选择中，确保正确处理selectedValues数组
-				for (let i = start; i <= end; i++) {
-					const element = options[i];
-					element.classList.add('active');
-
-					if (scope.selectedValues.indexOf(element.value) === -1) {
-						scope.selectedIndices.push(i);
-						scope.selectedValues.push(element.value);
-					}
-				}
 			} else {
-				// 单选或Ctrl/Command多选
-			scope.setValue(this.value, multiSelect);
+
+				scope._setSelection( [ currentIndex ], currentIndex, currentIndex, true );
+
 			}
 
-			const changeEvent = new CustomEvent('change', {
+			const changeEvent = new CustomEvent( 'change', {
 				bubbles: true,
 				cancelable: true
-			});
-			scope.dom.dispatchEvent(changeEvent);
+			} );
+			scope.dom.dispatchEvent( changeEvent );
 		}
 
 		// Drag
@@ -483,14 +688,13 @@ class UIOutliner extends UIDiv {
 		function onDragStart( event ) {
 			event.dataTransfer.setData( 'text', 'foo' );
 
-			// 检查当前拖动的元素是否在选中集合中
-			const draggedId = String(this.value);
-			if (scope.selectedValues.indexOf(draggedId) === -1) {
-				// 如果拖动的不是选中集合中的元素，清除当前选择并选中该元素
+			const draggedId = String( this.value );
+			if ( scope.selectedValues.indexOf( draggedId ) === -1 ) {
+
 				scope.clearSelection();
-				scope.setValue(draggedId);
+				scope.setValue( draggedId );
+
 			}
-			// 此时currentDrag是选中集合中的一个元素
 		}
 
 		function onDragOver( event ) {
@@ -499,17 +703,19 @@ class UIOutliner extends UIDiv {
 
 			const area = event.offsetY / this.clientHeight;
 
+			this.classList.remove( 'dragTop', 'dragBottom', 'drag' );
+
 			if ( area < 0.25 ) {
 
-				this.className = 'option dragTop';
+				this.classList.add( 'dragTop' );
 
 			} else if ( area > 0.75 ) {
 
-				this.className = 'option dragBottom';
+				this.classList.add( 'dragBottom' );
 
 			} else {
 
-				this.className = 'option drag';
+				this.classList.add( 'drag' );
 
 			}
 
@@ -519,7 +725,7 @@ class UIOutliner extends UIDiv {
 
 			if ( this === currentDrag ) return;
 
-			this.className = 'option';
+			this.classList.remove( 'dragTop', 'dragBottom', 'drag' );
 
 		}
 
@@ -527,75 +733,77 @@ class UIOutliner extends UIDiv {
 
 			if ( this === currentDrag || currentDrag === undefined ) return;
 
-			this.className = 'option';
+			this.classList.remove( 'dragTop', 'dragBottom', 'drag' );
 
 			const scene = scope.scene;
 
-			// 获取所有选中的对象
 			const selectedValues = scope.getValues();
-			const selectedObjects = selectedValues.map(id => scene.getObjectById(parseInt(id))).filter(Boolean);
+			const selectedObjects = selectedValues.map( ( id ) => scene.getObjectById( parseInt( id, 10 ) ) ).filter( Boolean );
 
-			// 如果没有选中对象，退出
-			if (selectedObjects.length === 0) return;
+			if ( selectedObjects.length === 0 ) return;
 
-			// 获取当前拖拽目标
 			const area = event.offsetY / this.clientHeight;
 
 			if ( area < 0.25 ) {
-				// 在目标上方插入
-				const nextObject = scene.getObjectById(parseInt(this.value));
-				moveMultipleObjects(selectedObjects, nextObject.parent, nextObject);
+
+				const nextObject = scene.getObjectById( parseInt( this.value, 10 ) );
+				moveMultipleObjects( selectedObjects, nextObject.parent, nextObject );
 
 			} else if ( area > 0.75 ) {
-				// 在目标下方插入
+
 				let nextObject, parent;
 
 				if ( this.nextSibling !== null ) {
-					nextObject = scene.getObjectById(parseInt(this.nextSibling.value));
+
+					nextObject = scene.getObjectById( parseInt( this.nextSibling.value, 10 ) );
 					parent = nextObject.parent;
+
 				} else {
-					// 列表末尾（没有下一个对象）
+
 					nextObject = null;
-					parent = scene.getObjectById(parseInt(this.value)).parent;
+					parent = scene.getObjectById( parseInt( this.value, 10 ) ).parent;
+
 				}
 
-				moveMultipleObjects(selectedObjects, parent, nextObject);
+				moveMultipleObjects( selectedObjects, parent, nextObject );
 
 			} else {
-				// 作为目标的子级
-				const parentObject = scene.getObjectById(parseInt(this.value));
-				moveMultipleObjects(selectedObjects, parentObject);
+
+				const parentObject = scene.getObjectById( parseInt( this.value, 10 ) );
+				moveMultipleObjects( selectedObjects, parentObject );
+
 			}
 		}
 
-		function moveMultipleObjects(objects, newParent, nextObject) {
-			if (nextObject === null) nextObject = undefined;
+		function moveMultipleObjects( objects, newParent, nextObject ) {
 
-			// 检查是否有循环引用
-			for (let i = 0; i < objects.length; i++) {
-				let object = objects[i];
+			if ( nextObject === null ) nextObject = undefined;
+
+			for ( let i = 0; i < objects.length; i ++ ) {
+
+				const object = objects[ i ];
 				let newParentIsChild = false;
 
-				object.traverse(function(child) {
-					if (child === newParent) newParentIsChild = true;
-				});
+				object.traverse( function ( child ) {
 
-				if (newParentIsChild) return; // 如果存在循环引用则退出
+					if ( child === newParent ) newParentIsChild = true;
 
-				// 检查目标是否是被移动对象之一
-				if (objects.indexOf(newParent) !== -1) return;
+				} );
+
+				if ( newParentIsChild ) return;
+
+				if ( objects.indexOf( newParent ) !== - 1 ) return;
 			}
 
 			const editor = scope.editor;
-			// 使用已经导入的MoveMultipleObjectsCommand
-			const cmd = new MoveMultipleObjectsCommand(editor, objects, newParent, nextObject);
-			editor.execute(cmd);
+			const cmd = new MoveMultipleObjectsCommand( editor, objects, newParent, nextObject );
+			editor.execute( cmd );
 
-			const changeEvent = new CustomEvent('change', {
+			const changeEvent = new CustomEvent( 'change', {
 				bubbles: true,
 				cancelable: true
-			});
-			scope.dom.dispatchEvent(changeEvent);
+			} );
+			scope.dom.dispatchEvent( changeEvent );
 		}
 
 		//
@@ -626,6 +834,31 @@ class UIOutliner extends UIDiv {
 
 		}
 
+		if ( previousSelectedValues.length > 0 ) {
+
+			const restoredIndices = [];
+
+			for ( let i = 0; i < previousSelectedValues.length; i ++ ) {
+
+				const index = scope._getIndexByValue( previousSelectedValues[ i ] );
+				if ( index !== - 1 && restoredIndices.indexOf( index ) === - 1 ) {
+
+					restoredIndices.push( index );
+
+				}
+
+			}
+
+			const restoredPrimaryIndex = scope._getIndexByValue( previousPrimaryValue );
+			const restoredAnchorIndex = scope._getIndexByValue( previousAnchorValue );
+			scope._setSelection( restoredIndices, restoredPrimaryIndex, restoredAnchorIndex, false );
+
+		} else {
+
+			scope.clearSelection();
+
+		}
+
 		return scope;
 
 	}
@@ -636,138 +869,133 @@ class UIOutliner extends UIDiv {
 
 	}
 
-	// 获取所有选中的值
-	getValues() {
-		return this.selectedValues.slice();
+	getAnchorValue() {
+
+		return this._getValueByIndex( this.anchorIndex );
+
 	}
 
-	// 清除所有选择
-	clearSelection() {
-		for (let i = 0; i < this.options.length; i++) {
-			this.options[i].classList.remove('active');
-			this.options[i].classList.remove('multi-selected');
+	getValues() {
+
+		return this.selectedValues.slice();
+
+	}
+
+	setValues( values, primaryValue, anchorValue ) {
+
+		const list = Array.isArray( values ) ? values : [];
+		const indices = [];
+
+		for ( let i = 0; i < list.length; i ++ ) {
+
+			const index = this._getIndexByValue( list[ i ] );
+			if ( index !== - 1 && indices.indexOf( index ) === - 1 ) {
+
+				indices.push( index );
+
+			}
+
 		}
+
+		const primaryIndex = this._getIndexByValue( primaryValue );
+		let resolvedAnchorValue = anchorValue;
+
+		if ( resolvedAnchorValue === undefined ) {
+
+			resolvedAnchorValue = this.getAnchorValue();
+
+		}
+
+		const anchorIndex = this._getIndexByValue( resolvedAnchorValue );
+
+		this._setSelection( indices, primaryIndex, anchorIndex, false );
+
+		return this;
+
+	}
+
+	clearSelection() {
 
 		this.selectedIndices = [];
 		this.selectedValues = [];
 		this.selectedIndex = -1;
 		this.selectedValue = null;
+		this.anchorIndex = -1;
+		this._applySelectionClasses();
+
+		return this;
+
 	}
 
-	// 将项目添加到多选
-	addToSelection(value, index) {
-		const normalizedValue = String(value);
+	addToSelection( value, index ) {
 
-		if (index === undefined) {
-			// 如果没有提供索引，查找它
-			for (let i = 0; i < this.options.length; i++) {
-				if (String(this.options[i].value) === normalizedValue) {
-					index = i;
-					break;
-				}
-			}
+		const normalizedValue = this._normalizeValue( value );
+		if ( normalizedValue === null ) return this;
+
+		let targetIndex = index;
+
+		if ( targetIndex === undefined ) {
+
+			targetIndex = this._getIndexByValue( normalizedValue );
+
 		}
 
-		if (index >= 0 && index < this.options.length) {
-			const element = this.options[index];
+		if ( targetIndex < 0 || targetIndex >= this.options.length ) return this;
 
-			if (this.selectedIndices.indexOf(index) === -1) {
-				this.selectedIndices.push(index);
-				this.selectedValues.push(normalizedValue);
-				element.classList.add('active');
+		if ( this.selectedIndices.indexOf( targetIndex ) !== - 1 ) return this;
 
-				// 如果是多选状态，添加多选样式类
-				if (this.selectedValues.length > 1) {
-					// 为所有选中项添加多选样式
-					for (let i = 0; i < this.selectedIndices.length; i++) {
-						const selectedIndex = this.selectedIndices[i];
-						this.options[selectedIndex].classList.add('multi-selected');
-					}
-				}
-			}
+		const nextSelectedIndices = this.selectedIndices.slice();
+		nextSelectedIndices.push( targetIndex );
 
-			// 更新主选中索引
-			this.selectedIndex = index;
-			this.selectedValue = normalizedValue;
-		}
+		const primaryIndex = this.selectedIndex !== - 1 ? this.selectedIndex : targetIndex;
+		const anchorIndex = this.anchorIndex !== - 1 ? this.anchorIndex : primaryIndex;
+
+		this._setSelection( nextSelectedIndices, primaryIndex, anchorIndex, false );
+
+		return this;
 	}
 
-	setValue(value, multiSelect) {
-		const normalizedValue = value !== null && value !== undefined ? String(value) : value;
+	setValue( value, multiSelect ) {
 
-		if (!multiSelect) {
-			// 单选模式 - 清除所有现有选择
-			this.clearSelection();
+		const normalizedValue = this._normalizeValue( value );
+
+		if ( normalizedValue === null ) {
+
+			if ( multiSelect !== true ) {
+
+				this.clearSelection();
+
+			}
+
+			return this;
+
 		}
 
-		// 查找值对应的元素
-		let foundIndex = -1;
+		const index = this._getIndexByValue( normalizedValue );
+		if ( index === - 1 ) {
 
-		for (let i = 0; i < this.options.length; i++) {
-			const element = this.options[i];
+			if ( multiSelect !== true ) {
 
-			if (String(element.value) === normalizedValue) {
-				foundIndex = i;
+				this.clearSelection();
 
-				// 在多选模式下，切换选择状态
-				if (multiSelect) {
-					const existingIndex = this.selectedValues.indexOf(normalizedValue);
-
-					if (existingIndex === -1) {
-						// 添加到选择
-						this.selectedIndices.push(i);
-						this.selectedValues.push(normalizedValue);
-						element.classList.add('active');
-					} else {
-						// 从选择中移除
-						this.selectedIndices.splice(existingIndex, 1);
-						this.selectedValues.splice(existingIndex, 1);
-						element.classList.remove('active');
-						element.classList.remove('multi-selected');
-					}
-				} else {
-					// 单选模式
-					element.classList.add('active');
-					this.selectedIndices = [i];
-					this.selectedValues = [normalizedValue];
-
-					// 滚动到视图
-					const y = element.offsetTop - this.dom.offsetTop;
-					const bottomY = y + element.offsetHeight;
-					const minScroll = bottomY - this.dom.offsetHeight;
-
-					if (this.dom.scrollTop > y) {
-						this.dom.scrollTop = y;
-					} else if (this.dom.scrollTop < minScroll) {
-						this.dom.scrollTop = minScroll;
-					}
-				}
-
-				// 更新主选中索引和值
-				this.selectedIndex = i;
-				this.selectedValue = normalizedValue;
-			} else if (!multiSelect) {
-				// 在单选模式下移除其他项的活动状态
-				element.classList.remove('active');
-				element.classList.remove('multi-selected');
 			}
+
+			return this;
+
 		}
 
-		// 更新多选样式
-		if (this.selectedValues.length > 1) {
-			// 为所有选中项添加多选样式
-			for (let i = 0; i < this.selectedIndices.length; i++) {
-				const selectedIndex = this.selectedIndices[i];
-				this.options[selectedIndex].classList.add('multi-selected');
-			}
+		if ( multiSelect === true ) {
+
+			this._toggleIndex( index );
+
 		} else {
-			// 如果只有一个选中项，移除所有多选样式
-			for (let i = 0; i < this.options.length; i++) {
-				this.options[i].classList.remove('multi-selected');
-			}
+
+			this._setSelection( [ index ], index, index, true );
+
 		}
 
 		return this;
+
 	}
 
 }

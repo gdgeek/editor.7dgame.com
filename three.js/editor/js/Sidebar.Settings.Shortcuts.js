@@ -170,9 +170,7 @@ function SidebarSettingsShortcuts( editor ) {
 				if ( IS_MAC ? event.metaKey : event.ctrlKey ) {
 
 					event.preventDefault(); // 防止浏览器默认保存行为
-
-					editor.signals.sceneGraphChanged.dispatch();
-					editor.signals.upload.dispatch();
+					editor.save();
 
 				}
 

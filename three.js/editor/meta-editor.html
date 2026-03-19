@@ -70,6 +70,7 @@
 		import { Menubar } from './js/Menubar.js';
 		import { Resizer } from './js/Resizer.js';
 		import { MetaLoader } from './js/mrpp/MetaLoader.js';
+		import { initializeGlobalShortcuts } from './js/utils/GlobalShortcuts.js';
 		import { VRButton } from '../examples/jsm/webxr/VRButton.js';
 
 		window.URL = window.URL || window.webkitURL;
@@ -97,6 +98,8 @@
 			window.parent.postMessage(data, '*');
 
 		});
+
+		initializeGlobalShortcuts( editor );
 
 
 		window.editor = editor; // Expose editor to Console
