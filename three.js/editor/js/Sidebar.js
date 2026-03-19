@@ -16,18 +16,33 @@ import { SidebarText } from './Sidebar.Text.js'
 function Sidebar(editor) {
 	const strings = editor.strings
 
+	function getHierarchyLabel() {
+		const sceneLabel = strings.getKey('sidebar/scene')
+
+		if (sceneLabel === 'Scene') return 'Hierarchy'
+		if (sceneLabel === 'シーン') return '階層'
+		if (sceneLabel === '場景') return '層級'
+		if (sceneLabel === 'ฉาก') return 'ลำดับชั้น'
+
+		return '层级'
+	}
+
 	const container = new UITabbedPanel()
 	container.setId('sidebar')
 
+	const eventsPanel = new SidebarEvents(editor)
+	const scene = new UISpan()
+	scene.dom.style.display = 'flex'
+	scene.dom.style.flexDirection = 'column'
+	scene.dom.style.height = '100%'
+	scene.dom.style.minHeight = '0'
+	scene.add(new SidebarScene(editor))
 
-	const scene = new UISpan().add(
-		new SidebarScene(editor),
-
-		new SidebarProperties(editor),
-		// new SidebarText(editor),
-		// new SidebarAnimation(editor),
-		// new SidebarMedia(editor)
-	)
+	const propertiesPanel = new SidebarProperties(editor)
+	propertiesPanel.dom.style.marginTop = '3px'
+	propertiesPanel.dom.style.flex = '1 1 auto'
+	propertiesPanel.dom.style.minHeight = '0'
+	scene.add(propertiesPanel)
 
 	if (editor.type.toLowerCase() == 'meta') {
 		// container.addTab('component', strings.getKey('sidebar/component'), new SidebarComponent(editor))
@@ -39,9 +54,12 @@ function Sidebar(editor) {
 	const settings = new SidebarSettings(editor)
 	const screenshot = new SidebarScreenshot(editor)
 
-	container.addTab('scene', strings.getKey('sidebar/scene'), scene)
+	container.addTab('scene', getHierarchyLabel(), scene)
 	// container.addTab('project', strings.getKey('sidebar/project'), project)
 	// container.addTab('settings', strings.getKey('sidebar/settings'), settings)
+	if (editor.type && editor.type.toLowerCase() === 'meta') {
+		container.addTab('events', strings.getKey('sidebar/events'), eventsPanel.container)
+	}
 	container.addTab('screenshot', strings.getKey('sidebar/screenshot'), screenshot)
 	container.select('scene')
 

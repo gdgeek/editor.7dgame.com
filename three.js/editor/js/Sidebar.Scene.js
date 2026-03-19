@@ -1,6 +1,5 @@
 import {
-	UIPanel,
-	UIBreak
+	UIPanel
 } from './libs/ui.js';
 import { UIOutliner } from './libs/ui.three.js';
 import { RemoveObjectCommand } from './commands/RemoveObjectCommand.js';
@@ -11,7 +10,7 @@ function SidebarScene(editor) {
 
 	const container = new UIPanel();
 	container.setBorderTop('0');
-	container.setPaddingTop('20px');
+	container.setPaddingTop('10px');
 
 	// outliner
 
@@ -217,7 +216,7 @@ function SidebarScene(editor) {
 
 	const outliner = new UIOutliner(editor);
 	outliner.setId('outliner');
-	outliner.dom.style.height = '240px';
+	outliner.dom.style.height = 'clamp(280px, 39vh, 420px)';
 	outliner.onChange(function () {
 		ignoreObjectSelectedSignal = true;
 
@@ -260,7 +259,6 @@ function SidebarScene(editor) {
 
 	});
 	container.add(outliner);
-	container.add(new UIBreak());
 
 	function refreshUI() {
 
@@ -268,8 +266,6 @@ function SidebarScene(editor) {
 
 		const options = [];
 
-		//options.push(buildOption(camera, false));
-		options.push(buildOption(scene, false));
 		(function addObjects(objects, pad) {
 
 			for (let i = 0, l = objects.length; i < l; i++) {

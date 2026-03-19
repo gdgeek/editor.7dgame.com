@@ -4,7 +4,6 @@ import { SidebarObject } from './Sidebar.Object.js';
 import { SidebarGeometry } from './Sidebar.Geometry.js';
 import { SidebarMaterial } from './Sidebar.Material.js';
 import { SidebarMultipleObjects } from './Sidebar.MultipleObjects.js';
-import { SidebarEvents } from './Sidebar.Events.js';
 import { SidebarComponent } from './Sidebar.Component.js';
 import { SidebarCommand } from './Sidebar.Command.js';
 import { SidebarText } from './Sidebar.Text.js';
@@ -23,9 +22,6 @@ function SidebarProperties( editor ) {
 
 	// 创建单对象面板
 	const objectPanel = new SidebarObject(editor);
-
-	// 创建事件面板
-	const eventsPanel = new SidebarEvents(editor);
 
 	// 创建组件面板
 	const componentPanel = new SidebarComponent(editor);
@@ -60,16 +56,11 @@ function SidebarProperties( editor ) {
 				container.select('multiobjects');
 			} else {
 				// 单选模式
-				if (object === editor.scene) {
-					// Scene节点：显示事件面板
-					container.addTab('events', strings.getKey('sidebar/events'), eventsPanel.container);
-					container.select('events');
-					eventsPanel.update();
-				} else {
-					// 其他对象：显示单对象面板
-					container.addTab('object', strings.getKey('sidebar/properties/object'), objectPanel);
-					container.select('object');
+				container.addTab('object', strings.getKey('sidebar/properties/object'), objectPanel);
+				container.select('object');
 
+				// 只有非 Scene 对象才显示扩展属性面板
+				if (object !== editor.scene) {
 					// 检查对象类型
 					const objectType = object.type ? object.type.toLowerCase() : '';
 
@@ -102,10 +93,10 @@ function SidebarProperties( editor ) {
 						container.addTab('text', strings.getKey('sidebar/text'), textPanel.container);
 						textPanel.update();
 					}
-
-					// 确保默认选中object标签页
-					container.select('object');
 				}
+
+				// 确保默认选中object标签页
+				container.select('object');
 			}
 		} else {
 			// 取消选中时，显示默认的object面板

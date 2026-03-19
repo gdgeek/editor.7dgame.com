@@ -491,7 +491,34 @@ select:hover {
 	bottom: 0;
 	width: 300px;
 	background: #eee;
-	overflow: auto;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+#sidebar > .Tabs {
+	flex: 0 0 auto;
+}
+
+#sidebar > .Panels {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow: hidden;
+}
+
+#sidebar > .Panels > div {
+	height: 100%;
+	min-height: 0;
+}
+
+#sidebar > .Panels > #scene {
+	overflow: hidden;
+}
+
+#sidebar > .Panels > #events,
+#sidebar > .Panels > #screenshot {
+	overflow-x: hidden;
+	overflow-y: auto;
 }
 
 #sidebar .Panel {
@@ -509,6 +536,31 @@ select:hover {
 	align-items: center;
 	min-height: 24px;
 	margin-bottom: 10px;
+}
+
+#properties {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	min-height: 0;
+	overflow: hidden;
+}
+
+#properties > .Tabs {
+	flex: 0 0 auto;
+}
+
+#properties > .Panels {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow: hidden;
+}
+
+#properties > .Panels > div {
+	height: 100%;
+	min-height: 0;
+	overflow-x: hidden;
+	overflow-y: auto;
 }
 
 #tabs {

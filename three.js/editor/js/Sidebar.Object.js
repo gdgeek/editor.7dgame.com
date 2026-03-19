@@ -133,6 +133,51 @@ function SidebarObject(editor) {
 	const objectTypeRow = new UIRow();
 	const objectType = new UIText();
 
+	function getLocalizedObjectType(object) {
+		const rawType = (object.userData && object.userData.type) || object.type || "";
+		const normalizedType = rawType.toLowerCase();
+		const typeKeyMap = {
+			scene: "sidebar/object/type_value/scene",
+			group: "sidebar/object/type_value/group",
+			object3d: "sidebar/object/type_value/object3d",
+			mesh: "sidebar/object/type_value/mesh",
+			line: "sidebar/object/type_value/line",
+			linesegments: "sidebar/object/type_value/linesegments",
+			points: "sidebar/object/type_value/points",
+			sprite: "sidebar/object/type_value/sprite",
+			camera: "sidebar/object/type_value/camera",
+			perspectivecamera: "sidebar/object/type_value/perspectivecamera",
+			orthographiccamera: "sidebar/object/type_value/orthographiccamera",
+			light: "sidebar/object/type_value/light",
+			ambientlight: "sidebar/object/type_value/ambientlight",
+			directionallight: "sidebar/object/type_value/directionallight",
+			hemispherelight: "sidebar/object/type_value/hemispherelight",
+			pointlight: "sidebar/object/type_value/pointlight",
+			spotlight: "sidebar/object/type_value/spotlight",
+			module: "sidebar/object/type_value/module",
+			entity: "sidebar/object/type_value/entity",
+			point: "sidebar/object/type_value/point",
+			text: "sidebar/object/type_value/text",
+			polygen: "sidebar/object/type_value/polygen",
+			picture: "sidebar/object/type_value/picture",
+			video: "sidebar/object/type_value/video",
+			audio: "sidebar/object/type_value/audio",
+			sound: "sidebar/object/type_value/audio",
+			prototype: "sidebar/object/type_value/prototype",
+			voxel: "sidebar/object/type_value/voxel",
+			phototype: "sidebar/object/type_value/phototype",
+			prefab: "sidebar/object/type_value/prefab",
+		};
+		const translationKey = typeKeyMap[normalizedType];
+
+		if (translationKey) {
+			const localizedType = strings.getKey(translationKey);
+			if (localizedType !== "???") return localizedType;
+		}
+
+		return rawType;
+	}
+
 	objectTypeRow.add(
 		new UIText(strings.getKey("sidebar/object/type")).setWidth("90px")
 	);
@@ -183,6 +228,7 @@ function SidebarObject(editor) {
 	);
 	objectNameRow.add(objectName);
 
+	container.add(objectTypeRow);
 	container.add(objectNameRow);
 
 	// position
@@ -1739,7 +1785,7 @@ function SidebarObject(editor) {
 	});
 
 	function updateUI(object) {
-		objectType.setValue(object.type);
+		objectType.setValue(getLocalizedObjectType(object));
 
 		objectUUID.setValue(object.uuid);
 		objectName.setValue(object.name);
@@ -1860,8 +1906,6 @@ function SidebarObject(editor) {
 		}
 	}
 
-	// 将“类型/识别码”放到属性面板最下方
-	container.add(objectTypeRow);
 	container.add(objectUUIDRow);
 
 	return container;
