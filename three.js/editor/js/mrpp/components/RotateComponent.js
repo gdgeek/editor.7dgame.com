@@ -67,11 +67,10 @@ class RotateComponent {
       .setWidth('50px')
       .onChange(this.update.bind(this));
 
-    this.objectRotationRow.add(
-      new UIText(strings.getKey('sidebar/components/rotate/speed')).setWidth('90px')
-    );
+    const speedLabel = new UIText(`${strings.getKey('sidebar/components/rotate/speed')} (°/s)`).setWidth('92px');
+    const axisSpacer = new UIText('').setWidth('6px');
+    this.objectRotationRow.add(speedLabel, axisSpacer);
     this.objectRotationRow.add(new UIText('X').setWidth('15px').setColor('#EA5555'), this.objectRotationX, new UIText('Y').setWidth('15px').setColor('#8AC651'), this.objectRotationY, new UIText('Z').setWidth('15px').setColor('#5588EA'), this.objectRotationZ);
-
     container.add(this.objectRotationRow);
 
 

@@ -281,6 +281,7 @@ function Strings(config) {
 			'sidebar/components/select/rotate': 'Self-Rotation',
 			'sidebar/components/rotate/rotateOnLaunch': 'Rotate on Launch',
 			'sidebar/components/rotate/speed': 'Rotation Speed',
+			'sidebar/components/rotate/speed/tooltip': 'Unit: degree per second (°/s), supports negative values.',
 			'sidebar/components/rotate/preview': 'Preview (8s)',
 			'sidebar/components/rotate/stop': 'Stop',
 
@@ -888,6 +889,7 @@ function Strings(config) {
 			'sidebar/components/select/rotate': '自旋转',
 			'sidebar/components/rotate/rotateOnLaunch': '启动时旋转',
 			'sidebar/components/rotate/speed': '旋转速度',
+			'sidebar/components/rotate/speed/tooltip': '单位：度/秒（°/s），支持负数。',
 			'sidebar/components/rotate/preview': '预览 (8s)',
 			'sidebar/components/rotate/stop': '停止',
 
@@ -1487,6 +1489,7 @@ function Strings(config) {
 			'sidebar/components/select/rotate': '自動回転',
 			'sidebar/components/rotate/rotateOnLaunch': '起動時に回転',
 			'sidebar/components/rotate/speed': '回転速度',
+			'sidebar/components/rotate/speed/tooltip': '単位：度/秒（°/s）、負の値にも対応します。',
 			'sidebar/components/rotate/preview': 'プレビュー (8s)',
 			'sidebar/components/rotate/stop': '停止',
 
@@ -2085,6 +2088,7 @@ function Strings(config) {
 			"sidebar/components/select/rotate": "自旋轉",
 			"sidebar/components/rotate/rotateOnLaunch": "啟動時旋轉",
 			"sidebar/components/rotate/speed": "旋轉速度",
+			"sidebar/components/rotate/speed/tooltip": "單位：度/秒（°/s），支援負數。",
 			"sidebar/components/rotate/preview": "預覽 (8s)",
 			"sidebar/components/rotate/stop": "停止",
 
@@ -2682,6 +2686,7 @@ function Strings(config) {
 			"sidebar/components/select/rotate": "หมุนเอง",
 			"sidebar/components/rotate/rotateOnLaunch": "หมุนเมื่อเปิดใช้งาน",
 			"sidebar/components/rotate/speed": "ความเร็วในการหมุน",
+			"sidebar/components/rotate/speed/tooltip": "หน่วย: องศาต่อวินาที (°/s) และรองรับค่าติดลบ",
 			"sidebar/components/rotate/preview": "ดูตัวอย่าง (8s)",
 			"sidebar/components/rotate/stop": "หยุด",
 

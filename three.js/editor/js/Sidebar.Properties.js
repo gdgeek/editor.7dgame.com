@@ -73,8 +73,8 @@ function SidebarProperties( editor ) {
 					}
 
 					if (editor.type && editor.type.toLowerCase() === 'meta') {
-						//模型、体素、图片类型显示组件面板
-						const componentValidTypes = ['polygen', 'voxel', 'picture'];
+						// 模型、体素、图片、空节点类型显示组件面板
+						const componentValidTypes = ['polygen', 'voxel', 'picture', 'entity'];
 						//节点类型显示指令面板
 						const commandValidTypes = ['entity','point'];
 
