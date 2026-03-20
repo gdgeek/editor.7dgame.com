@@ -249,7 +249,7 @@ function SidebarScene(editor) {
 
 		// opener
 
-		if (nodeStates.has(object)) {
+		if (nodeStates.has(object) && !isEntityLikeObject(object)) {
 
 			const state = nodeStates.get(object);
 
@@ -321,6 +321,7 @@ function SidebarScene(editor) {
 		const type = object.type.toLowerCase();
 		if (type === 'module') return 'Module';
 		if (type === 'entity') return 'Point'
+		if (type === 'point') return 'Point';
 		if (type === 'text') return 'Text';
 		if (type === 'polygen') return 'Polygen'
 		if (type === 'picture') return 'Picture';
@@ -332,12 +333,30 @@ function SidebarScene(editor) {
 
 	}
 
+	function isEntityLikeObject(object) {
+
+		const type = object && object.type ? object.type.toLowerCase() : '';
+		const isVerseEditor = !!(editor.type && editor.type.toLowerCase() === 'verse');
+		if (!isVerseEditor) return false;
+		return type === 'module' || type === 'entity';
+
+	}
+
 	function buildHTML(object) {
 
-		// 只保留前面的类型指示器圆点
-		let html = `<span class="type ${getObjectType(
-			object
-		)}"></span> ${escapeHTML(object.name)}`;
+		let html = '';
+		if (isEntityLikeObject(object)) {
+
+			html = `<span class="entity-mini-icon"></span> ${escapeHTML(object.name)}`;
+
+		} else {
+
+			// 只保留前面的类型指示器圆点
+			html = `<span class="type ${getObjectType(
+				object
+			)}"></span> ${escapeHTML(object.name)}`;
+
+		}
 
 		// --- 隐藏关于 Mesh 的 Geometry 和 Material 的额外圆点代码 ---
 		// if (object.isMesh) {
@@ -375,6 +394,7 @@ function SidebarScene(editor) {
 	let ignoreObjectSelectedSignal = false;
 	let subtreeFilterMatchCache = new WeakMap();
 	const showFilter = !(editor.type && editor.type.toLowerCase() === 'verse');
+	const enableSceneReorderOnly = !!(editor.type && editor.type.toLowerCase() === 'verse');
 
 	const searchRow = new UIRow();
 	searchRow.setDisplay('flex');
@@ -452,6 +472,10 @@ function SidebarScene(editor) {
 
 	const outliner = new UIOutliner(editor);
 	outliner.setId('outliner');
+	if (editor.type && editor.type.toLowerCase() === 'verse') {
+		outliner.dom.classList.add('scene-verse-outliner');
+	}
+	outliner.reorderOnly = !!(editor.type && editor.type.toLowerCase() === 'verse');
 	outliner.dom.style.height = 'clamp(250px, 35vh, 390px)';
 	outliner.onChange(function () {
 		ignoreObjectSelectedSignal = true;
@@ -683,19 +707,14 @@ function SidebarScene(editor) {
 
 				if (isSelectableObject(object) && (!filtersActive || subtreeMatchesFilters(object))) {
 
-					if (object.userData.draggable != undefined) {
+					const isRootSceneNode = object === scene;
+					const draggable = enableSceneReorderOnly
+						? !isRootSceneNode
+						: (object.userData.draggable != undefined ? object.userData.draggable : true);
 
-						const option = buildOption(object, object.userData.draggable);
-						option.style.paddingLeft = pad * 18 + 'px';
-						options.push(option);
-
-					} else {
-
-						const option = buildOption(object, true);
-						option.style.paddingLeft = pad * 18 + 'px';
-						options.push(option);
-
-					}
+					const option = buildOption(object, draggable);
+					option.style.paddingLeft = pad * 18 + 'px';
+					options.push(option);
 				}
 
 
@@ -763,27 +782,7 @@ function SidebarScene(editor) {
 
 	signals.objectChanged.add(function (object) {
 
-		if (hasActiveFilters()) {
-
-			refreshUI();
-			return;
-
-		}
-
-		const options = outliner.options;
-
-		for (let i = 0; i < options.length; i++) {
-
-			const option = options[i];
-
-			if (option.value === object.id) {
-
-				option.innerHTML = buildHTML(object);
-				return;
-
-			}
-
-		}
+		refreshUI();
 
 	});
 

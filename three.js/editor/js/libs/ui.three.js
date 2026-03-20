@@ -415,6 +415,7 @@ class UIOutliner extends UIDiv {
 		this.selectedIndices = [];
 		this.selectedValues = [];
 		this.anchorIndex = - 1;
+		this.reorderOnly = false;
 
 	}
 
@@ -702,10 +703,23 @@ class UIOutliner extends UIDiv {
 			if ( this === currentDrag ) return;
 
 			const area = event.offsetY / this.clientHeight;
+			const reorderOnly = scope.reorderOnly === true;
 
 			this.classList.remove( 'dragTop', 'dragBottom', 'drag' );
 
-			if ( area < 0.25 ) {
+			if ( reorderOnly ) {
+
+				if ( area < 0.5 ) {
+
+					this.classList.add( 'dragTop' );
+
+				} else {
+
+					this.classList.add( 'dragBottom' );
+
+				}
+
+			} else if ( area < 0.25 ) {
 
 				this.classList.add( 'dragTop' );
 
@@ -743,6 +757,39 @@ class UIOutliner extends UIDiv {
 			if ( selectedObjects.length === 0 ) return;
 
 			const area = event.offsetY / this.clientHeight;
+			const reorderOnly = scope.reorderOnly === true;
+
+			if ( reorderOnly ) {
+
+				const targetObject = scene.getObjectById( parseInt( this.value, 10 ) );
+				if ( targetObject === undefined || targetObject === null ) return;
+
+				const sourceParent = selectedObjects[ 0 ] ? selectedObjects[ 0 ].parent : null;
+				if ( sourceParent === null ) return;
+
+				for ( let i = 0; i < selectedObjects.length; i ++ ) {
+
+					if ( selectedObjects[ i ].parent !== sourceParent ) return;
+
+				}
+
+				if ( targetObject.parent !== sourceParent ) return;
+
+				if ( area < 0.5 ) {
+
+					moveMultipleObjects( selectedObjects, sourceParent, targetObject );
+
+				} else {
+
+					const targetIndex = sourceParent.children.indexOf( targetObject );
+					const nextObject = ( targetIndex !== -1 && targetIndex + 1 < sourceParent.children.length ) ? sourceParent.children[ targetIndex + 1 ] : null;
+					moveMultipleObjects( selectedObjects, sourceParent, nextObject );
+
+				}
+
+				return;
+
+			}
 
 			if ( area < 0.25 ) {
 

@@ -43,13 +43,6 @@ function SidebarMultipleObjects(editor) {
 		icon.style.margin = '0 auto';
 	};
 
-	// 多选标题
-	const multipleObjectsTitleRow = new UIRow();
-	const multipleObjectsTitle = new UIText(strings.getKey('sidebar/properties/multi_object'));
-	multipleObjectsTitle.dom.style.fontWeight = 'bold';
-	multipleObjectsTitleRow.add(multipleObjectsTitle);
-	container.add(multipleObjectsTitleRow);
-
 	// 多选对象计数
 	const multipleObjectsCountRow = new UIRow();
 	const multipleObjectsCount = new UIText('');
@@ -59,25 +52,296 @@ function SidebarMultipleObjects(editor) {
 
 	// 多选对象名称列表标题
 	const multipleObjectsNameRow = new UIRow();
+	const multipleObjectsNameInput = new UIInput('')
+		.setWidth('120px')
+		.setFontSize('12px');
+	let hasMixedName = false;
+	let isSyncingUnifiedNameInput = false;
+	let unifiedNameValueOnFocus = '';
+
+	multipleObjectsNameInput.dom.placeholder = strings.getKey('sidebar/multi_objects/name_placeholder');
+	multipleObjectsNameInput.dom.addEventListener('focus', function () {
+		unifiedNameValueOnFocus = multipleObjectsNameInput.getValue();
+	});
+	multipleObjectsNameInput.dom.addEventListener('keydown', function (event) {
+		if (event.key === 'Enter') {
+			event.preventDefault();
+			multipleObjectsNameInput.dom.blur();
+		}
+	});
+	multipleObjectsNameInput.dom.addEventListener('blur', function () {
+		if (isSyncingUnifiedNameInput) return;
+		if (multipleObjectsNameInput.getValue() === unifiedNameValueOnFocus) return;
+		applyUnifiedName();
+	});
+
 	multipleObjectsNameRow.add(new UIText(strings.getKey('sidebar/object/name')).setWidth('90px'));
+	multipleObjectsNameRow.add(multipleObjectsNameInput);
 	container.add(multipleObjectsNameRow);
 
-	// 创建名称列表容器 - 纵向排列
-	const namesListContainer = new UIPanel();
-	namesListContainer.dom.style.marginLeft = '0px';
-	namesListContainer.dom.style.marginBottom = '10px';
-	namesListContainer.dom.style.maxHeight = '120px';
-	namesListContainer.dom.style.overflowY = 'auto';
-	namesListContainer.dom.style.border = '1px solid #ccc';
-	namesListContainer.dom.style.borderRadius = '3px';
-	namesListContainer.dom.style.padding = '3px';
-	container.add(namesListContainer);
+	// 批量前后缀命名
+	const prefixRenameRow = new UIRow();
+	const prefixRenameInput = new UIInput('')
+		.setWidth('120px')
+		.setFontSize('12px');
+	prefixRenameInput.dom.placeholder = strings.getKey('sidebar/multi_objects/prefix_placeholder');
+	let hasMixedPrefix = false;
+	let hasMixedSuffix = false;
 
-	// 存储名称文本UI元素的数组
-	const nameTextElements = [];
+	const suffixRenameRow = new UIRow();
+	const suffixRenameInput = new UIInput('')
+		.setWidth('120px')
+		.setFontSize('12px');
+	suffixRenameInput.dom.placeholder = strings.getKey('sidebar/multi_objects/suffix_placeholder');
 
-	// 拷贝和删除全部按钮行 - 放在名称列表下方
+	let isSyncingAffixInputs = false;
+	let prefixValueOnFocus = '';
+	let suffixValueOnFocus = '';
+
+	prefixRenameInput.dom.addEventListener('keydown', function (event) {
+		if (event.key === 'Enter') {
+			event.preventDefault();
+			prefixRenameInput.dom.blur();
+		}
+	});
+	prefixRenameInput.dom.addEventListener('focus', function () {
+		prefixValueOnFocus = prefixRenameInput.getValue();
+	});
+	prefixRenameInput.dom.addEventListener('blur', function () {
+		if (isSyncingAffixInputs) return;
+		if (prefixRenameInput.getValue() === prefixValueOnFocus) return;
+		applyAffixRename();
+	});
+
+	suffixRenameInput.dom.addEventListener('keydown', function (event) {
+		if (event.key === 'Enter') {
+			event.preventDefault();
+			suffixRenameInput.dom.blur();
+		}
+	});
+	suffixRenameInput.dom.addEventListener('focus', function () {
+		suffixValueOnFocus = suffixRenameInput.getValue();
+	});
+	suffixRenameInput.dom.addEventListener('blur', function () {
+		if (isSyncingAffixInputs) return;
+		if (suffixRenameInput.getValue() === suffixValueOnFocus) return;
+		applyAffixRename();
+	});
+
+	prefixRenameRow.add(new UIText(strings.getKey('sidebar/multi_objects/prefix_label')).setWidth('90px'));
+	prefixRenameRow.add(prefixRenameInput);
+	container.add(prefixRenameRow);
+
+	suffixRenameRow.add(new UIText(strings.getKey('sidebar/multi_objects/suffix_label')).setWidth('90px'));
+	suffixRenameRow.add(suffixRenameInput);
+	container.add(suffixRenameRow);
+
+	// 拷贝和删除全部按钮行
 	const cloneDeleteActionsRow = new UIRow();
+
+	function applyUnifiedName() {
+		const selectedObjects = editor.getSelectedObjects();
+		if (!selectedObjects || selectedObjects.length < 2) return;
+
+		let name = multipleObjectsNameInput.getValue();
+		if (name == null) name = '';
+		if (hasMixedName && name === '-') return;
+
+		const hasAnyChange = selectedObjects.some(function (object) {
+			const oldPrefix = (object.userData && typeof object.userData.namePrefix === 'string') ? object.userData.namePrefix : '';
+			const oldSuffix = (object.userData && typeof object.userData.nameSuffix === 'string') ? object.userData.nameSuffix : '';
+			const currentName = object.name || '';
+			let baseName = currentName;
+
+			if (oldPrefix && baseName.startsWith(oldPrefix)) {
+				baseName = baseName.slice(oldPrefix.length);
+			}
+			if (oldSuffix && baseName.endsWith(oldSuffix)) {
+				baseName = baseName.slice(0, baseName.length - oldSuffix.length);
+			}
+
+			return baseName !== name;
+		});
+
+		if (!hasAnyChange) {
+			syncUnifiedNameInput(selectedObjects);
+			return;
+		}
+
+		const cmds = selectedObjects.map(function (object) {
+			const oldPrefix = (object.userData && typeof object.userData.namePrefix === 'string') ? object.userData.namePrefix : '';
+			const oldSuffix = (object.userData && typeof object.userData.nameSuffix === 'string') ? object.userData.nameSuffix : '';
+			const nextName = `${oldPrefix}${name}${oldSuffix}`;
+			return new SetValueCommand(editor, object, 'name', nextName);
+		});
+		const cmd = new MultiCmdsCommand(editor, cmds, 'Set Unified Name', '批量统一名称');
+		editor.execute(cmd);
+
+		const message = strings.getKey('sidebar/multi_objects/name_success').replace('{0}', selectedObjects.length);
+		editor.showNotification(message, false);
+		syncUnifiedNameInput(selectedObjects);
+	}
+
+	function syncUnifiedNameInput(objects) {
+		isSyncingUnifiedNameInput = true;
+		if (!objects || objects.length === 0) {
+			hasMixedName = false;
+			multipleObjectsNameInput.setValue('');
+			isSyncingUnifiedNameInput = false;
+			return;
+		}
+
+		let firstBaseName = null;
+		let isMixed = false;
+
+		for (let i = 0; i < objects.length; i++) {
+			const object = objects[i];
+			const oldPrefix = (object.userData && typeof object.userData.namePrefix === 'string') ? object.userData.namePrefix : '';
+			const oldSuffix = (object.userData && typeof object.userData.nameSuffix === 'string') ? object.userData.nameSuffix : '';
+			const currentName = object.name || '';
+			let baseName = currentName;
+
+			if (oldPrefix && baseName.startsWith(oldPrefix)) {
+				baseName = baseName.slice(oldPrefix.length);
+			}
+			if (oldSuffix && baseName.endsWith(oldSuffix)) {
+				baseName = baseName.slice(0, baseName.length - oldSuffix.length);
+			}
+
+			if (firstBaseName === null) {
+				firstBaseName = baseName;
+			} else if (firstBaseName !== baseName) {
+				isMixed = true;
+				break;
+			}
+		}
+
+		hasMixedName = isMixed;
+		multipleObjectsNameInput.setValue(isMixed ? '-' : (firstBaseName || ''));
+		isSyncingUnifiedNameInput = false;
+	}
+
+	function applyAffixRename() {
+		const selectedObjects = editor.getSelectedObjects();
+		if (!selectedObjects || selectedObjects.length < 2) return;
+
+		let prefix = prefixRenameInput.getValue();
+		if (prefix == null) prefix = '';
+		let suffix = suffixRenameInput.getValue();
+		if (suffix == null) suffix = '';
+
+		const keepPrefix = hasMixedPrefix && prefix === '-';
+		const keepSuffix = hasMixedSuffix && suffix === '-';
+
+		if (keepPrefix && keepSuffix) return;
+
+		const cmds = [];
+		let prefixChanged = false;
+		let suffixChanged = false;
+		for (let i = 0; i < selectedObjects.length; i++) {
+			const object = selectedObjects[i];
+			const currentName = object.name || '';
+			const oldPrefix = (object.userData && typeof object.userData.namePrefix === 'string') ? object.userData.namePrefix : '';
+			const oldSuffix = (object.userData && typeof object.userData.nameSuffix === 'string') ? object.userData.nameSuffix : '';
+
+			let baseName = currentName;
+			if (oldPrefix && baseName.startsWith(oldPrefix)) {
+				baseName = baseName.slice(oldPrefix.length);
+			}
+			if (oldSuffix && baseName.endsWith(oldSuffix)) {
+				baseName = baseName.slice(0, baseName.length - oldSuffix.length);
+			}
+
+			const targetPrefix = keepPrefix ? oldPrefix : prefix;
+			const targetSuffix = keepSuffix ? oldSuffix : suffix;
+			if (targetPrefix !== oldPrefix) prefixChanged = true;
+			if (targetSuffix !== oldSuffix) suffixChanged = true;
+			const nextName = `${targetPrefix}${baseName}${targetSuffix}`;
+			if (nextName !== currentName) {
+				cmds.push(new SetValueCommand(editor, object, 'name', nextName));
+			}
+
+			const nextUserData = Object.assign({}, object.userData || {});
+			if (targetPrefix === '') {
+				delete nextUserData.namePrefix;
+			} else {
+				nextUserData.namePrefix = targetPrefix;
+			}
+
+			if (targetSuffix === '') {
+				delete nextUserData.nameSuffix;
+			} else {
+				nextUserData.nameSuffix = targetSuffix;
+			}
+			const userDataChanged =
+				((object.userData && object.userData.namePrefix) || undefined) !== (nextUserData.namePrefix || undefined) ||
+				((object.userData && object.userData.nameSuffix) || undefined) !== (nextUserData.nameSuffix || undefined);
+
+			if (userDataChanged) {
+				cmds.push(new SetValueCommand(editor, object, 'userData', nextUserData));
+			}
+		}
+
+		if (cmds.length === 0) {
+			syncAffixInputs(selectedObjects);
+			return;
+		}
+
+		const cmd = new MultiCmdsCommand(editor, cmds, 'Set Name Affix', '批量设置前后缀');
+		editor.execute(cmd);
+
+		let messageKey = 'sidebar/multi_objects/affix_success';
+		if (prefixChanged && !suffixChanged) {
+			messageKey = prefix === '' ? 'sidebar/multi_objects/prefix_removed' : 'sidebar/multi_objects/prefix_success';
+		} else if (!prefixChanged && suffixChanged) {
+			messageKey = suffix === '' ? 'sidebar/multi_objects/suffix_removed' : 'sidebar/multi_objects/suffix_success';
+		} else if (prefixChanged && suffixChanged) {
+			messageKey = 'sidebar/multi_objects/affix_success';
+		}
+		const message = strings.getKey(messageKey).replace('{0}', selectedObjects.length);
+		editor.showNotification(message, false);
+		syncAffixInputs(selectedObjects);
+	}
+
+	function syncAffixInputs(objects) {
+		isSyncingAffixInputs = true;
+		if (!objects || objects.length === 0) {
+			hasMixedPrefix = false;
+			hasMixedSuffix = false;
+			prefixRenameInput.setValue('');
+			suffixRenameInput.setValue('');
+			isSyncingAffixInputs = false;
+			return;
+		}
+
+		let firstPrefix = null;
+		let firstSuffix = null;
+		let isMixedPrefix = false;
+		let isMixedSuffix = false;
+
+		for (let i = 0; i < objects.length; i++) {
+			const object = objects[i];
+			const prefix = (object.userData && typeof object.userData.namePrefix === 'string') ? object.userData.namePrefix : '';
+			const suffix = (object.userData && typeof object.userData.nameSuffix === 'string') ? object.userData.nameSuffix : '';
+			if (firstPrefix === null) {
+				firstPrefix = prefix;
+			} else if (firstPrefix !== prefix) {
+				isMixedPrefix = true;
+			}
+
+			if (firstSuffix === null) {
+				firstSuffix = suffix;
+			} else if (firstSuffix !== suffix) {
+				isMixedSuffix = true;
+			}
+		}
+
+		hasMixedPrefix = isMixedPrefix;
+		hasMixedSuffix = isMixedSuffix;
+		prefixRenameInput.setValue(isMixedPrefix ? '-' : (firstPrefix || ''));
+		suffixRenameInput.setValue(isMixedSuffix ? '-' : (firstSuffix || ''));
+		isSyncingAffixInputs = false;
+	}
 
 	// 检查对象或其子对象是否包含 SkinnedMesh
 	function hasSkinnedMesh(object) {
@@ -1284,25 +1548,8 @@ function SidebarMultipleObjects(editor) {
 	// 用于更新UI的方法，但不触发命令
 	function updateUIWithoutCommand(objects) {
 		if (!objects || objects.length === 0) return;
-
-		// 清除现有的名称文本列表
-		namesListContainer.dom.innerHTML = '';
-		nameTextElements.length = 0;
-
-		// 提取所有对象的名称
-		const names = objects.map(obj => obj.name);
-
-		// 显示所有名称列表（纵向排列）
-		for (let i = 0; i < names.length; i++) {
-			const nameText = document.createElement('div');
-			nameText.textContent = `${i + 1}. ${names[i]}`;
-			nameText.style.fontSize = '12px';
-			nameText.style.padding = '3px 6px';
-			nameText.style.borderBottom = i < names.length - 1 ? '1px dotted #ddd' : 'none';
-			nameText.style.color = '#555';
-			namesListContainer.dom.appendChild(nameText);
-			nameTextElements.push(nameText);
-		}
+		syncUnifiedNameInput(objects);
+		syncAffixInputs(objects);
 
 		// 仅更新UI而不触发命令，用于从场景变化同步到面板
 		const multiSelectGroup = editor.multiSelectGroup;
@@ -1378,28 +1625,11 @@ function SidebarMultipleObjects(editor) {
 	// 用于更新UI的方法
 	function updateUI(objects) {
 		if (!objects || objects.length === 0) return;
+		syncUnifiedNameInput(objects);
+		syncAffixInputs(objects);
 
 		// 更新选中数量
 		multipleObjectsCount.setValue(objects.length.toString());
-
-		// 清除现有的名称文本列表
-		namesListContainer.dom.innerHTML = '';
-		nameTextElements.length = 0;
-
-		// 提取所有对象的名称
-		const names = objects.map(obj => obj.name);
-
-		// 显示所有名称列表（纵向排列）
-		for (let i = 0; i < names.length; i++) {
-			const nameText = document.createElement('div');
-			nameText.textContent = `${i + 1}. ${names[i]}`;
-			nameText.style.fontSize = '12px';
-			nameText.style.padding = '3px 6px';
-			nameText.style.borderBottom = i < names.length - 1 ? '1px dotted #ddd' : 'none';
-			nameText.style.color = '#555';
-			namesListContainer.dom.appendChild(nameText);
-			nameTextElements.push(nameText);
-		}
 
 		// 检查属性一致性函数
 		function checkConsistency(prop, axis) {

@@ -33,6 +33,7 @@ function SidebarObject(editor) {
 	container.setBorderTop("0");
 	container.setPaddingTop("20px");
 	container.setDisplay("none");
+	container.dom.style.position = "relative";
 
 	// 存储复制的变换数据
 	const clipboard = {
@@ -189,8 +190,8 @@ function SidebarObject(editor) {
 		new UIText(strings.getKey("sidebar/object/type")).setWidth("90px")
 	);
 	objectTypeRow.add(objectType);
+	const objectEditEntityRow = new UIRow().setDisplay("none");
 	const objectEditEntityButton = new UIButton(strings.getKey("sidebar/object/edit_entity"))
-		.setMarginLeft("8px")
 		.setDisplay("none")
 		.onClick(function () {
 			const object = editor.selected;
@@ -200,7 +201,7 @@ function SidebarObject(editor) {
 				data: { meta_id: object.userData.meta_id, uuid: object.uuid },
 			});
 		});
-	objectTypeRow.add(objectEditEntityButton);
+	objectEditEntityRow.add(objectEditEntityButton);
 
 	// uuid
 
@@ -716,6 +717,8 @@ function SidebarObject(editor) {
 	// 更新边框位置和大小
 	const updateBorderPosition = function () {
 		if (!objectPositionRow.dom || !objectScaleRow.dom) return;
+		const scrollTop = container.dom.scrollTop || 0;
+		const scrollLeft = container.dom.scrollLeft || 0;
 
 		// 计算数据区域的位置（标签宽度是90px）
 		const labelWidth = 90;
@@ -740,8 +743,8 @@ function SidebarObject(editor) {
 			posInputZ.offsetLeft + posInputZ.offsetWidth - posInputX.offsetLeft;
 
 		// 设置边框位置和大小，只包围数据区域（不包括单一属性复制粘贴按钮）
-		transformBorder.style.top = posRowTop - 5 + "px";
-		transformBorder.style.left = dataAreaLeft + "px";
+		transformBorder.style.top = posRowTop - scrollTop - 5 + "px";
+		transformBorder.style.left = dataAreaLeft - scrollLeft + "px";
 		transformBorder.style.width = dataAreaWidth + "px";
 		transformBorder.style.height = scaleRowBottom - posRowTop + 10 + "px";
 
@@ -753,8 +756,8 @@ function SidebarObject(editor) {
 		const buttonLeft = dataAreaLeft + (dataAreaWidth - buttonWidth) / 2;
 
 		transformActionsRow.dom.style.position = "absolute";
-		transformActionsRow.dom.style.left = buttonLeft + "px";
-		transformActionsRow.dom.style.top = scaleRowBottom + 5 + "px";
+		transformActionsRow.dom.style.left = buttonLeft - scrollLeft + "px";
+		transformActionsRow.dom.style.top = scaleRowBottom - scrollTop + 5 + "px";
 	};
 
 	// 创建或获取间隙行
@@ -884,19 +887,34 @@ function SidebarObject(editor) {
 		const transformAreaOverlay = document.createElement("div");
 		transformAreaOverlay.className = "transform-area-overlay";
 		transformAreaOverlay.style.position = "absolute";
-		transformAreaOverlay.style.top = objectPositionRow.dom.offsetTop - 5 + "px";
-		transformAreaOverlay.style.left = dataAreaLeft + "px";
+		const updateOverlayPosition = function () {
+			const scrollTop = container.dom.scrollTop || 0;
+			const scrollLeft = container.dom.scrollLeft || 0;
+			transformAreaOverlay.style.top =
+				objectPositionRow.dom.offsetTop - scrollTop - 5 + "px";
+			transformAreaOverlay.style.left = dataAreaLeft - scrollLeft + "px";
+			transformAreaOverlay.style.width = dataAreaWidth + "px";
+			transformAreaOverlay.style.height =
+				objectScaleRow.dom.offsetTop +
+				objectScaleRow.dom.offsetHeight -
+				objectPositionRow.dom.offsetTop +
+				10 +
+				"px";
+		};
+		updateOverlayPosition();
 		transformAreaOverlay.style.width = dataAreaWidth + "px";
-		transformAreaOverlay.style.height =
-			objectScaleRow.dom.offsetTop +
-			objectScaleRow.dom.offsetHeight -
-			objectPositionRow.dom.offsetTop +
-			10 +
-			"px";
 		transformAreaOverlay.style.zIndex = "1";
 		transformAreaOverlay.style.pointerEvents = "none"; // 不要阻止下层元素的事件
 
 		container.dom.appendChild(transformAreaOverlay);
+
+		// 滚动时同步更新覆盖层和按钮/边框位置，防止图标跟随滚轮偏移
+		addEventListenerWithRef(container.dom, "scroll", function () {
+			updateOverlayPosition();
+			if (transformActionsRow.dom.style.display !== "none") {
+				updateBorderPosition();
+			}
+		});
 
 		// 全局鼠标移动事件
 		const handleGlobalMouseMove = function (event) {
@@ -1815,6 +1833,7 @@ function SidebarObject(editor) {
 			object.userData.custom != 0 &&
 			object.userData.meta_id != null;
 		objectEditEntityButton.setDisplay(showEditEntityButton ? "" : "none");
+		objectEditEntityRow.setDisplay(showEditEntityButton ? "" : "none");
 
 		objectUUID.setValue(object.uuid);
 		objectName.setValue(object.name);
@@ -1936,6 +1955,7 @@ function SidebarObject(editor) {
 	}
 
 	container.add(objectUUIDRow);
+	container.add(objectEditEntityRow);
 
 	return container;
 }

@@ -16,6 +16,10 @@ function Sidebar(editor) {
 	const strings = editor.strings
 
 	function getHierarchyLabel() {
+		if (editor.type && editor.type.toLowerCase() === 'verse') {
+			return strings.getKey('sidebar/entities')
+		}
+
 		const sceneLabel = strings.getKey('sidebar/scene')
 
 		if (sceneLabel === 'Scene') return 'Hierarchy'
