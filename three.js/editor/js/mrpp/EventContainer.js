@@ -1,5 +1,6 @@
-import { UIText, UIButton, UIBreak } from '../libs/ui.js';
+import { UIButton, UIInput } from '../libs/ui.js';
 import { RemoveEventCommand } from '../commands/RemoveEventCommand.js';
+import { SetEventValueCommand } from '../commands/SetEventValueCommand.js';
 
 class EventContainer {
 
@@ -15,21 +16,43 @@ class EventContainer {
 
 		container.dom.style.display = 'flex';
 		container.dom.style.alignItems = 'center';
-		container.dom.style.justifyContent = 'space-between';
+		container.dom.style.gap = '4px';
 		container.dom.style.boxSizing = 'border-box'; // 确保 padding 不撑开宽度
 
-		const titleText = new UIText(this.event.title || '');
-		titleText.dom.style.color = '#8a8a8a';
-		titleText.dom.style.flex = '1'; // 让文字占据剩余空间
-		titleText.dom.style.textOverflow = 'ellipsis';
-		titleText.dom.style.overflow = 'hidden';
-		titleText.dom.style.whiteSpace = 'nowrap';
-		titleText.dom.style.fontSize = '12px';
-		titleText.dom.style.lineHeight = '1';
-		container.add(titleText);
+		const titleInput = new UIInput(this.event.title || '');
+		titleInput.setWidth('calc(100% - 49px)');
+		titleInput.dom.style.flex = '1 1 auto';
+		titleInput.dom.style.minWidth = '0';
+		titleInput.dom.style.fontSize = '12px';
+		titleInput.dom.addEventListener('keydown', function (event) {
 
-		const remove = new UIButton(strings.getKey('sidebar/script/remove'));
-		remove.setMarginLeft('4px');
+			if (event.key === 'Enter') {
+
+				titleInput.dom.blur();
+
+			}
+
+		});
+		titleInput.onChange(function () {
+
+			const value = titleInput.getValue().trim();
+			const currentValue = this.event && this.event.title ? this.event.title : '';
+
+			if (value === '') {
+
+				titleInput.setValue(currentValue);
+				return;
+
+			}
+
+			if (value === currentValue) return;
+
+			this.editor.execute(new SetEventValueCommand(this.editor, this.event, this.mode, 'title', value));
+
+		}.bind(this));
+		container.add(titleInput);
+
+		const remove = new UIButton(strings.getKey('sidebar/events/remove'));
 		remove.dom.style.fontSize = '10px';
 		remove.dom.style.padding = '2px 4px';
 		remove.dom.style.flexShrink = '0'; // 防止按钮被压缩
@@ -46,7 +69,6 @@ class EventContainer {
 		}.bind(this));
 
 		container.add(remove);
-		container.add(new UIBreak());
 
 	}
 }

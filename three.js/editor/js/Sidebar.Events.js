@@ -1,4 +1,4 @@
-import { UIPanel, UIBreak, UIText, UIButton, UIRow, UIInput, UIHorizontalRule } from './libs/ui.js';
+import { UIPanel, UIText, UIButton, UIRow, UIInput, UIHorizontalRule } from './libs/ui.js';
 import { AddEventCommand } from './commands/AddEventCommand.js';
 import { EventContainer } from './mrpp/EventContainer.js';
 
@@ -7,35 +7,36 @@ function SidebarEvents(editor) {
 	const signals = editor.signals;
 
 	const container = new UIPanel();
-	container.setPadding('10px');
-	
-	// const top = new UIRow();
-	// top.dom.style.borderBottom = 'none';
-	// container.add(top);
-	// top.setDisplay('block');
-	// 			top.add(new UIText(strings.getKey('sidebar/events')).setTextTransform('uppercase'));
+	container.setBorderTop('0');
+	container.setPaddingTop('10px');
 	
 	// --- 辅助函数：创建一个带标题的分组 ---
 	function createSectionHeader(text) {
 		const header = new UIRow();
-		header.setPadding('4px 8px');
-		header.setMarginBottom('10px');
+		header.setPadding('4px 0');
+		header.setMarginBottom('8px');
 		header.dom.style.border = 'none'; 
-		const label = new UIText(text).setTextTransform('uppercase');
+		const label = new UIText(text);
+		label.setFontSize('12px');
+		label.setColor('#777');
 		header.add(label);
 		return header;
 	}
 
 	// --- 辅助函数：创建添加行 ---
-	function createAddRow(type, onAdd) {
+	function createAddRow(onAdd) {
 		const row = new UIRow();
 		row.setMarginBottom('10px');
 		row.setDisplay('flex');
+		row.dom.style.alignItems = 'center';
+		row.dom.style.gap = '4px';
 		row.dom.style.border = 'none'; 
-		const input = new UIInput().setMarginRight('4px');
+		const input = new UIInput();
+		input.setWidth('calc(100% - 49px)');
 		input.setValue('');		
 		const addButton = new UIButton(strings.getKey('sidebar/events/add') || 'ADD');
 		addButton.setWidth('45px');
+		addButton.dom.style.flexShrink = '0';
 		addButton.onClick(() => {
 			const value = input.getValue();
 			if (value.trim() !== "") {
@@ -52,19 +53,12 @@ function SidebarEvents(editor) {
 	const inputSection = new UIPanel();
 	inputSection.dom.style.borderTop = 'none';
 	const outputSection = new UIPanel();
-	// outputSection.dom.style.borderTop = 'none'; 
+	outputSection.dom.style.borderTop = 'none';
 	container.add(inputSection, outputSection);
 
 	function update() {
 		inputSection.clear();
 		outputSection.clear();
-
-		const object = editor.selected;
-		if (object !== editor.scene) {
-			container.setDisplay('none');
-			return;
-		}
-		container.setDisplay('block');
 
 		if (editor.scene.events === undefined) {
 			editor.scene.events = { inputs: [], outputs: [] };
@@ -72,15 +66,13 @@ function SidebarEvents(editor) {
 
 		// --- 输入事件部分 ---
 		inputSection.add(createSectionHeader(strings.getKey('sidebar/events/inputs')));
-		inputSection.add(createAddRow('input', (value) => {
+		inputSection.add(createAddRow((value) => {
 			const command = new AddEventCommand(editor, { title: value, uuid: THREE.MathUtils.generateUUID() }, 'input');
 			editor.execute(command);
 		}));
 
 		const inputListContainer = new UIPanel();
-		inputListContainer.dom.style.display = 'flex';
-		inputListContainer.dom.style.flexWrap = 'wrap';
-		inputListContainer.dom.style.gap = '6px'; 
+		inputListContainer.dom.style.display = 'block';
 		inputListContainer.dom.style.border = 'none';
 		inputSection.add(inputListContainer);
 
@@ -88,34 +80,35 @@ function SidebarEvents(editor) {
 		if (inputs && inputs.length > 0) {
 			inputs.forEach((event) => {
 				const row = new UIRow();
-				row.dom.style.width = 'calc(50% - 3px)'; 
-				row.dom.style.margin = '0';
-				row.dom.style.border = 'none'; 
-				row.setPadding('8px 6px'); 
-				row.dom.style.minHeight = '32px'; 
+				row.dom.style.width = '100%';
+				row.dom.style.margin = '0 0 6px 0';
+				row.dom.style.border = 'none';
+				row.setPadding('8px 6px');
+				row.dom.style.minHeight = '32px';
 				
 				row.setBackgroundColor('#dddddd');
 				row.dom.style.borderRadius = '3px';
 				
 				const ec = new EventContainer(editor, event, 'input');
-				ec.renderer(row); 
+				ec.renderer(row);
 				
 				inputListContainer.add(row);
 			});
 		}
-		inputSection.add(new UIBreak());
+		const divider = new UIHorizontalRule();
+		divider.setMarginTop('4px');
+		divider.setMarginBottom('12px');
+		inputSection.add(divider);
 
 		// --- 输出事件部分 ---
 		outputSection.add(createSectionHeader(strings.getKey('sidebar/events/outputs')));
-		outputSection.add(createAddRow('output', (value) => {
+		outputSection.add(createAddRow((value) => {
 			const command = new AddEventCommand(editor, { title: value, uuid: THREE.MathUtils.generateUUID() }, 'output');
 			editor.execute(command);
 		}));
 
 		const outputListContainer = new UIPanel();
-		outputListContainer.dom.style.display = 'flex';
-		outputListContainer.dom.style.flexWrap = 'wrap';
-		outputListContainer.dom.style.gap = '6px';
+		outputListContainer.dom.style.display = 'block';
 		outputListContainer.dom.style.border = 'none';
 		outputSection.add(outputListContainer);
 
@@ -123,8 +116,8 @@ function SidebarEvents(editor) {
 		if (outputs && outputs.length > 0) {
 			outputs.forEach((event) => {
 				const row = new UIRow();
-				row.dom.style.width = 'calc(50% - 3px)';
-				row.dom.style.margin = '0';
+				row.dom.style.width = '100%';
+				row.dom.style.margin = '0 0 6px 0';
 				row.dom.style.border = 'none';
 				row.setPadding('8px 6px');
 				row.dom.style.minHeight = '32px';
@@ -143,7 +136,11 @@ function SidebarEvents(editor) {
 	signals.eventAdded.add(update);
 	signals.eventRemoved.add(update);
 	signals.eventChanged.add(update);
+	signals.editorCleared.add(update);
+	signals.sceneGraphChanged.add(update);
 	signals.objectSelected.add(update); 
+
+	update();
 
 	return { container, update };
 }

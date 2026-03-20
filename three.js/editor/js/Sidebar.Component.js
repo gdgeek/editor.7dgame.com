@@ -16,6 +16,15 @@ function SidebarComponent(editor) {
 
 	// 定义互斥组件类型
 	const mutuallyExclusiveTypes = ['Action', 'Moved', 'Trigger'];
+	const validObjectTypes = ['polygen', 'voxel', 'picture', 'entity'];
+
+	function isEntityOnlySelection(objects) {
+		if (!Array.isArray(objects) || objects.length === 0) return false;
+		return objects.every(function (object) {
+			const objectType = object && object.type ? object.type.toLowerCase() : '';
+			return objectType === 'entity';
+		});
+	}
 
 	// 添加组件选择容器
 	const addComponentContainer = new UIRow();
@@ -50,7 +59,6 @@ function SidebarComponent(editor) {
 		}
 
 		// 检查所有选中对象的类型是否合法
-		const validObjectTypes = ['polygen', 'voxel', 'picture'];
 		const invalidObjects = [];
 
 		for (let i = 0; i < selectedObjects.length; i++) {
@@ -90,15 +98,23 @@ function SidebarComponent(editor) {
 		const label = new UIText(strings.getKey('sidebar/components/select')).setWidth('90px');
 		addComponentContainer.add(label);
 
+		const entityOnlySelection = isEntityOnlySelection(selectedObjects);
+
 		// 创建下拉框
 		const select = new UISelect().setWidth('130px');
-		select.setOptions({
-			'Rotate': strings.getKey('sidebar/components/select/rotate'),
-			'Action': strings.getKey('sidebar/components/select/action'),
-			'Moved': strings.getKey('sidebar/components/select/moved'),
-			'Trigger': strings.getKey('sidebar/components/select/trigger'),
-			'Tooltip': strings.getKey('sidebar/components/select/tooltip')
-		});
+		if (entityOnlySelection) {
+			select.setOptions({
+				'Rotate': strings.getKey('sidebar/components/select/rotate')
+			});
+		} else {
+			select.setOptions({
+				'Rotate': strings.getKey('sidebar/components/select/rotate'),
+				'Action': strings.getKey('sidebar/components/select/action'),
+				'Moved': strings.getKey('sidebar/components/select/moved'),
+				'Trigger': strings.getKey('sidebar/components/select/trigger'),
+				'Tooltip': strings.getKey('sidebar/components/select/tooltip')
+			});
+		}
 		select.setValue('Rotate');
 		addComponentContainer.add(select);
 
@@ -118,7 +134,7 @@ function SidebarComponent(editor) {
 				for (let i = 0; i < selectedObjects.length; i++) {
 					const object = selectedObjects[i];
 					const objectType = object.type ? object.type.toLowerCase() : '';
-					if (['polygen', 'voxel', 'picture'].includes(objectType)) {
+					if (validObjectTypes.includes(objectType)) {
 						validObjects.push(object);
 					} else {
 						invalidTypeObjects.push(object.name || strings.getKey('sidebar/components/object_name_with_index').replace('{0}', i+1));

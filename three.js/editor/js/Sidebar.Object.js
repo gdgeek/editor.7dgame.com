@@ -33,6 +33,7 @@ function SidebarObject(editor) {
 	container.setBorderTop("0");
 	container.setPaddingTop("20px");
 	container.setDisplay("none");
+	container.dom.style.position = "relative";
 
 	// 存储复制的变换数据
 	const clipboard = {
@@ -133,10 +134,74 @@ function SidebarObject(editor) {
 	const objectTypeRow = new UIRow();
 	const objectType = new UIText();
 
+	function getLocalizedObjectType(object) {
+		const rawType = (object.userData && object.userData.type) || object.type || "";
+		const normalizedType = rawType.toLowerCase();
+		if (
+			editor.type &&
+			editor.type.toLowerCase() === "verse" &&
+			normalizedType === "module"
+		) {
+			return strings.getKey("sidebar/object/type_value/entity");
+		}
+		const typeKeyMap = {
+			scene: "sidebar/object/type_value/scene",
+			group: "sidebar/object/type_value/group",
+			object3d: "sidebar/object/type_value/object3d",
+			mesh: "sidebar/object/type_value/mesh",
+			line: "sidebar/object/type_value/line",
+			linesegments: "sidebar/object/type_value/linesegments",
+			points: "sidebar/object/type_value/points",
+			sprite: "sidebar/object/type_value/sprite",
+			camera: "sidebar/object/type_value/camera",
+			perspectivecamera: "sidebar/object/type_value/perspectivecamera",
+			orthographiccamera: "sidebar/object/type_value/orthographiccamera",
+			light: "sidebar/object/type_value/light",
+			ambientlight: "sidebar/object/type_value/ambientlight",
+			directionallight: "sidebar/object/type_value/directionallight",
+			hemispherelight: "sidebar/object/type_value/hemispherelight",
+			pointlight: "sidebar/object/type_value/pointlight",
+			spotlight: "sidebar/object/type_value/spotlight",
+			module: "sidebar/object/type_value/module",
+			entity: "sidebar/object/type_value/entity",
+			point: "sidebar/object/type_value/point",
+			text: "sidebar/object/type_value/text",
+			polygen: "sidebar/object/type_value/polygen",
+			picture: "sidebar/object/type_value/picture",
+			video: "sidebar/object/type_value/video",
+			audio: "sidebar/object/type_value/audio",
+			sound: "sidebar/object/type_value/audio",
+			prototype: "sidebar/object/type_value/prototype",
+			voxel: "sidebar/object/type_value/voxel",
+			phototype: "sidebar/object/type_value/phototype",
+			prefab: "sidebar/object/type_value/prefab",
+		};
+		const translationKey = typeKeyMap[normalizedType];
+
+		if (translationKey) {
+			const localizedType = strings.getKey(translationKey);
+			if (localizedType !== "???") return localizedType;
+		}
+
+		return rawType;
+	}
+
 	objectTypeRow.add(
 		new UIText(strings.getKey("sidebar/object/type")).setWidth("90px")
 	);
 	objectTypeRow.add(objectType);
+	const objectEditEntityRow = new UIRow().setDisplay("none");
+	const objectEditEntityButton = new UIButton(strings.getKey("sidebar/object/edit_entity"))
+		.setDisplay("none")
+		.onClick(function () {
+			const object = editor.selected;
+			if (!object || !object.userData || object.userData.meta_id == null) return;
+			editor.signals.messageSend.dispatch({
+				action: "edit-meta",
+				data: { meta_id: object.userData.meta_id, uuid: object.uuid },
+			});
+		});
+	objectEditEntityRow.add(objectEditEntityButton);
 
 	// uuid
 
@@ -183,6 +248,7 @@ function SidebarObject(editor) {
 	);
 	objectNameRow.add(objectName);
 
+	container.add(objectTypeRow);
 	container.add(objectNameRow);
 
 	// position
@@ -651,6 +717,8 @@ function SidebarObject(editor) {
 	// 更新边框位置和大小
 	const updateBorderPosition = function () {
 		if (!objectPositionRow.dom || !objectScaleRow.dom) return;
+		const scrollTop = container.dom.scrollTop || 0;
+		const scrollLeft = container.dom.scrollLeft || 0;
 
 		// 计算数据区域的位置（标签宽度是90px）
 		const labelWidth = 90;
@@ -675,8 +743,8 @@ function SidebarObject(editor) {
 			posInputZ.offsetLeft + posInputZ.offsetWidth - posInputX.offsetLeft;
 
 		// 设置边框位置和大小，只包围数据区域（不包括单一属性复制粘贴按钮）
-		transformBorder.style.top = posRowTop - 5 + "px";
-		transformBorder.style.left = dataAreaLeft + "px";
+		transformBorder.style.top = posRowTop - scrollTop - 5 + "px";
+		transformBorder.style.left = dataAreaLeft - scrollLeft + "px";
 		transformBorder.style.width = dataAreaWidth + "px";
 		transformBorder.style.height = scaleRowBottom - posRowTop + 10 + "px";
 
@@ -688,8 +756,8 @@ function SidebarObject(editor) {
 		const buttonLeft = dataAreaLeft + (dataAreaWidth - buttonWidth) / 2;
 
 		transformActionsRow.dom.style.position = "absolute";
-		transformActionsRow.dom.style.left = buttonLeft + "px";
-		transformActionsRow.dom.style.top = scaleRowBottom + 5 + "px";
+		transformActionsRow.dom.style.left = buttonLeft - scrollLeft + "px";
+		transformActionsRow.dom.style.top = scaleRowBottom - scrollTop + 5 + "px";
 	};
 
 	// 创建或获取间隙行
@@ -819,19 +887,34 @@ function SidebarObject(editor) {
 		const transformAreaOverlay = document.createElement("div");
 		transformAreaOverlay.className = "transform-area-overlay";
 		transformAreaOverlay.style.position = "absolute";
-		transformAreaOverlay.style.top = objectPositionRow.dom.offsetTop - 5 + "px";
-		transformAreaOverlay.style.left = dataAreaLeft + "px";
+		const updateOverlayPosition = function () {
+			const scrollTop = container.dom.scrollTop || 0;
+			const scrollLeft = container.dom.scrollLeft || 0;
+			transformAreaOverlay.style.top =
+				objectPositionRow.dom.offsetTop - scrollTop - 5 + "px";
+			transformAreaOverlay.style.left = dataAreaLeft - scrollLeft + "px";
+			transformAreaOverlay.style.width = dataAreaWidth + "px";
+			transformAreaOverlay.style.height =
+				objectScaleRow.dom.offsetTop +
+				objectScaleRow.dom.offsetHeight -
+				objectPositionRow.dom.offsetTop +
+				10 +
+				"px";
+		};
+		updateOverlayPosition();
 		transformAreaOverlay.style.width = dataAreaWidth + "px";
-		transformAreaOverlay.style.height =
-			objectScaleRow.dom.offsetTop +
-			objectScaleRow.dom.offsetHeight -
-			objectPositionRow.dom.offsetTop +
-			10 +
-			"px";
 		transformAreaOverlay.style.zIndex = "1";
 		transformAreaOverlay.style.pointerEvents = "none"; // 不要阻止下层元素的事件
 
 		container.dom.appendChild(transformAreaOverlay);
+
+		// 滚动时同步更新覆盖层和按钮/边框位置，防止图标跟随滚轮偏移
+		addEventListenerWithRef(container.dom, "scroll", function () {
+			updateOverlayPosition();
+			if (transformActionsRow.dom.style.display !== "none") {
+				updateBorderPosition();
+			}
+		});
 
 		// 全局鼠标移动事件
 		const handleGlobalMouseMove = function (event) {
@@ -1739,7 +1822,18 @@ function SidebarObject(editor) {
 	});
 
 	function updateUI(object) {
-		objectType.setValue(object.type);
+		objectType.setValue(getLocalizedObjectType(object));
+		const showEditEntityButton =
+			editor.type &&
+			editor.type.toLowerCase() === "verse" &&
+			object &&
+			typeof object.type === "string" &&
+			object.type.toLowerCase() === "module" &&
+			object.userData &&
+			object.userData.custom != 0 &&
+			object.userData.meta_id != null;
+		objectEditEntityButton.setDisplay(showEditEntityButton ? "" : "none");
+		objectEditEntityRow.setDisplay(showEditEntityButton ? "" : "none");
 
 		objectUUID.setValue(object.uuid);
 		objectName.setValue(object.name);
@@ -1860,9 +1954,8 @@ function SidebarObject(editor) {
 		}
 	}
 
-	// 将“类型/识别码”放到属性面板最下方
-	container.add(objectTypeRow);
 	container.add(objectUUIDRow);
+	container.add(objectEditEntityRow);
 
 	return container;
 }

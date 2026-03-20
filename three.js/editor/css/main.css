@@ -198,10 +198,25 @@ input {
 	height: 14px;
 	color: #ddd;
 	text-align: center;
+	line-height: 14px;
+	font-size: 11px;
+}
+
+#outliner .entity-mini-icon {
+	display: inline-block;
+	width: 9px;
+	height: 9px;
+	margin-right: 1px;
+	vertical-align: middle;
+	position: relative;
+	top: -1px;
+	background-color: #6f8fb3;
+	-webkit-mask: url('../images/entity-puzzle.svg') center / contain no-repeat;
+	mask: url('../images/entity-puzzle.svg') center / contain no-repeat;
 }
 
 #outliner .type:after {
-	content: '●';
+	content: '•';
 }
 
 /* 隐藏后面可能出现的额外标记 (预防性清理) */
@@ -217,12 +232,24 @@ input {
 	color: #807b7b;
 }
 
+#outliner .Scene:after {
+	content: '◉';
+}
+
 #outliner .Camera {
 	color: #dd8888;
 }
 
+#outliner .Camera:after {
+	content: '⌾';
+}
+
 #outliner .Light {
 	color: #dddd88;
+}
+
+#outliner .Light:after {
+	content: '✦';
 }
 
 /* */
@@ -231,20 +258,40 @@ input {
 	color: #aaaaee;
 }
 
+#outliner .Object3D:after {
+	content: '◇';
+}
+
 #outliner .Mesh {
 	color: #8888ee;
+}
+
+#outliner .Mesh:after {
+	content: '⬢';
 }
 
 #outliner .Line {
 	color: #88ee88;
 }
 
+#outliner .Line:after {
+	content: '⟍';
+}
+
 #outliner .LineSegments {
 	color: #88ee88;
 }
 
+#outliner .LineSegments:after {
+	content: '⟗';
+}
+
 #outliner .Points {
 	color: #ee8888;
+}
+
+#outliner .Points:after {
+	content: '∷';
 }
 
 /* */
@@ -262,32 +309,75 @@ input {
 	color: #555555;
 }
 
+#outliner .Module:after {
+	content: '⌗';
+}
+
 #outliner .Entity {
 	color: #d0d0d0;
+}
+
+#outliner .Entity:after {
+	content: '◇';
+}
+
+#outliner .Point {
+	color: #d0d0d0;
+}
+
+#outliner .Point:after {
+	content: '◇';
 }
 
 #outliner .Text {
 	color: #5b74a5;
 }
 
+#outliner .Text:after {
+	content: 'T';
+	font-weight: 600;
+}
+
 #outliner .Polygen {
 	color: #74a55b;
+}
+
+#outliner .Polygen:after {
+	content: '⬢';
 }
 
 #outliner .Picture {
 	color: #5b8ca5;
 }
 
+#outliner .Picture:after {
+	content: '▣';
+	font-size: 9px;
+}
+
 #outliner .Video {
 	color: #a55ba5;
+}
+
+#outliner .Video:after {
+	content: '▶';
+	font-size: 9px;
 }
 
 #outliner .Audio {
 	color: #5ba55b;
 }
 
+#outliner .Audio:after {
+	content: '♪';
+}
+
 #outliner .Prototype {
 	color: #a5995b;
+}
+
+#outliner .Prototype:after {
+	content: '◫';
 }
 
 /* */
@@ -491,7 +581,34 @@ select:hover {
 	bottom: 0;
 	width: 300px;
 	background: #eee;
-	overflow: auto;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+#sidebar > .Tabs {
+	flex: 0 0 auto;
+}
+
+#sidebar > .Panels {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow: hidden;
+}
+
+#sidebar > .Panels > div {
+	height: 100%;
+	min-height: 0;
+}
+
+#sidebar > .Panels > #scene {
+	overflow: hidden;
+}
+
+#sidebar > .Panels > #events,
+#sidebar > .Panels > #screenshot {
+	overflow-x: hidden;
+	overflow-y: auto;
 }
 
 #sidebar .Panel {
@@ -509,6 +626,31 @@ select:hover {
 	align-items: center;
 	min-height: 24px;
 	margin-bottom: 10px;
+}
+
+#properties {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	min-height: 0;
+	overflow: hidden;
+}
+
+#properties > .Tabs {
+	flex: 0 0 auto;
+}
+
+#properties > .Panels {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow: hidden;
+}
+
+#properties > .Panels > div {
+	height: 100%;
+	min-height: 0;
+	overflow-x: hidden;
+	overflow-y: auto;
 }
 
 #tabs {
@@ -576,6 +718,13 @@ select:hover {
 /* 多选时的样式 - 颜色略深 */
 .Outliner .option.multi-selected {
 	background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* 仅场景编辑(verse)层级面板：放大单个实体显示 */
+.Outliner.scene-verse-outliner .option {
+	font-size: 13px;
+	padding-top: 6px;
+	padding-bottom: 6px;
 }
 
 .TabbedPanel .Tabs {
