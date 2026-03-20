@@ -39,15 +39,18 @@ function Sidebar(editor) {
 	scene.add(new SidebarScene(editor))
 
 	const propertiesPanel = new SidebarProperties(editor)
-	propertiesPanel.dom.style.marginTop = '3px'
-	propertiesPanel.dom.style.flex = '1 1 auto'
 	propertiesPanel.dom.style.minHeight = '0'
-	scene.add(propertiesPanel)
 
 	if (editor.type.toLowerCase() == 'meta') {
+		propertiesPanel.dom.style.marginTop = '3px'
+		propertiesPanel.dom.style.flex = '1 1 auto'
+		scene.add(propertiesPanel)
 		// container.addTab('component', strings.getKey('sidebar/component'), new SidebarComponent(editor))
 		// container.addTab('command', strings.getKey('sidebar/command'), new SidebarCommand(editor))
 	} else if (editor.type.toLowerCase() == 'verse') {
+		propertiesPanel.dom.style.marginTop = '3px'
+		propertiesPanel.dom.style.flex = '1 1 auto'
+		scene.add(propertiesPanel)
 		scene.add(new SidebarMeta(editor))
 	}
 	const project = new SidebarProject(editor)

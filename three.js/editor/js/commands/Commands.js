@@ -5,6 +5,7 @@ export { MultiCmdsCommand } from './MultiCmdsCommand.js';
 export { RemoveObjectCommand } from './RemoveObjectCommand.js';
 export { RemoveScriptCommand } from './RemoveScriptCommand.js';
 export { SetColorCommand } from './SetColorCommand.js';
+export { SetEventValueCommand } from './SetEventValueCommand.js';
 export { SetGeometryCommand } from './SetGeometryCommand.js';
 export { SetGeometryValueCommand } from './SetGeometryValueCommand.js';
 export { SetMaterialColorCommand } from './SetMaterialColorCommand.js';
