@@ -340,6 +340,7 @@ function Strings(config) {
 
 			'sidebar/entity': 'Entity(Custom)',
 			'sidebar/entity/button': 'Edit',
+			'sidebar/object/edit_entity': 'Edit Entity',
 
 			'sidebar/confirm/scene/modified': 'Save current scene?',
 
@@ -947,6 +948,7 @@ function Strings(config) {
 
 			'sidebar/entity': '实体（自定义）',
 			'sidebar/entity/button': '编辑',
+			'sidebar/object/edit_entity': '编辑实体',
 
 			'sidebar/confirm/scene/modified': '是否保存当前场景',
 
@@ -1545,6 +1547,7 @@ function Strings(config) {
 
 			'sidebar/entity': 'コンポーネント（カスタム）',
 			'sidebar/entity/button': '編集',
+			'sidebar/object/edit_entity': 'エンティティを編集',
 
 			'sidebar/confirm/scene/modified': '現在のシーンを保存しますか？',
 
@@ -2140,6 +2143,7 @@ function Strings(config) {
 
 			"sidebar/entity": "實體（自訂）",
 			"sidebar/entity/button": "編輯",
+			"sidebar/object/edit_entity": "編輯實體",
 
 			"sidebar/confirm/scene/modified": "是否保存當前場景",
 
@@ -2736,6 +2740,7 @@ function Strings(config) {
 
 			"sidebar/entity": "เอนทิตี (กำหนดเอง)",
 			"sidebar/entity/button": "แก้ไข",
+			"sidebar/object/edit_entity": "แก้ไขเอนทิตี",
 
 			"sidebar/confirm/scene/modified": "ต้องการบันทึกฉากปัจจุบันหรือไม่?",
 

@@ -136,6 +136,13 @@ function SidebarObject(editor) {
 	function getLocalizedObjectType(object) {
 		const rawType = (object.userData && object.userData.type) || object.type || "";
 		const normalizedType = rawType.toLowerCase();
+		if (
+			editor.type &&
+			editor.type.toLowerCase() === "verse" &&
+			normalizedType === "module"
+		) {
+			return strings.getKey("sidebar/object/type_value/entity");
+		}
 		const typeKeyMap = {
 			scene: "sidebar/object/type_value/scene",
 			group: "sidebar/object/type_value/group",
@@ -182,6 +189,18 @@ function SidebarObject(editor) {
 		new UIText(strings.getKey("sidebar/object/type")).setWidth("90px")
 	);
 	objectTypeRow.add(objectType);
+	const objectEditEntityButton = new UIButton(strings.getKey("sidebar/object/edit_entity"))
+		.setMarginLeft("8px")
+		.setDisplay("none")
+		.onClick(function () {
+			const object = editor.selected;
+			if (!object || !object.userData || object.userData.meta_id == null) return;
+			editor.signals.messageSend.dispatch({
+				action: "edit-meta",
+				data: { meta_id: object.userData.meta_id, uuid: object.uuid },
+			});
+		});
+	objectTypeRow.add(objectEditEntityButton);
 
 	// uuid
 
@@ -1786,6 +1805,16 @@ function SidebarObject(editor) {
 
 	function updateUI(object) {
 		objectType.setValue(getLocalizedObjectType(object));
+		const showEditEntityButton =
+			editor.type &&
+			editor.type.toLowerCase() === "verse" &&
+			object &&
+			typeof object.type === "string" &&
+			object.type.toLowerCase() === "module" &&
+			object.userData &&
+			object.userData.custom != 0 &&
+			object.userData.meta_id != null;
+		objectEditEntityButton.setDisplay(showEditEntityButton ? "" : "none");
 
 		objectUUID.setValue(object.uuid);
 		objectName.setValue(object.name);

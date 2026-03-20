@@ -2,7 +2,6 @@ import { UITabbedPanel, UISpan } from './libs/ui.js'
 
 import { SidebarScene } from './Sidebar.Scene.js'
 import { SidebarProperties } from './Sidebar.Properties.js'
-import { SidebarMeta } from './Sidebar.Meta.js'
 import { SidebarEvents } from './Sidebar.Events.js'
 import { SidebarComponent } from './Sidebar.Component.js'
 import { SidebarCommand } from './Sidebar.Command.js'
@@ -51,7 +50,6 @@ function Sidebar(editor) {
 		propertiesPanel.dom.style.marginTop = '3px'
 		propertiesPanel.dom.style.flex = '1 1 auto'
 		scene.add(propertiesPanel)
-		scene.add(new SidebarMeta(editor))
 	}
 	const project = new SidebarProject(editor)
 	const settings = new SidebarSettings(editor)
