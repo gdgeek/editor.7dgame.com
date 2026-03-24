@@ -2,8 +2,8 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const hostname = '127.0.0.1';
-const port = 3002;
+const hostname = process.env.HOST || '0.0.0.0';
+const port = process.env.PORT || 3002;
 
 const mimeTypes = {
   '.html': 'text/html',
