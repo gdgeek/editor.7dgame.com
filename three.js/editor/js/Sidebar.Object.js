@@ -21,8 +21,10 @@ import { SetPositionCommand } from "./commands/SetPositionCommand.js";
 import { SetRotationCommand } from "./commands/SetRotationCommand.js";
 import { SetScaleCommand } from "./commands/SetScaleCommand.js";
 import { SetColorCommand } from "./commands/SetColorCommand.js";
-import { MetaFactory } from "./mrpp/MetaFactory.js";
-import { ABILITIES } from "./Access.js";
+// --- MRPP MODIFICATION START ---
+import { MetaFactory } from '../../../plugin/mrpp/MetaFactory.js';
+import { ABILITIES } from '../../../plugin/access/Access.js';
+// --- MRPP MODIFICATION END ---
 
 function SidebarObject(editor) {
 	const strings = editor.strings;
@@ -35,6 +37,7 @@ function SidebarObject(editor) {
 	container.setDisplay("none");
 	container.dom.style.position = "relative";
 
+	// --- MRPP MODIFICATION START ---
 	// 存储复制的变换数据
 	const clipboard = {
 		position: null,
@@ -84,6 +87,7 @@ function SidebarObject(editor) {
 		icon.style.display = "block";
 		icon.style.margin = "0 auto";
 	};
+	// --- MRPP MODIFICATION END ---
 
 
 	// Actions
@@ -134,6 +138,7 @@ function SidebarObject(editor) {
 	const objectTypeRow = new UIRow();
 	const objectType = new UIText();
 
+	// --- MRPP MODIFICATION START ---
 	function getLocalizedObjectType(object) {
 		const rawType = (object.userData && object.userData.type) || object.type || "";
 		const normalizedType = rawType.toLowerCase();
@@ -185,11 +190,13 @@ function SidebarObject(editor) {
 
 		return rawType;
 	}
+	// --- MRPP MODIFICATION END ---
 
 	objectTypeRow.add(
 		new UIText(strings.getKey("sidebar/object/type")).setWidth("90px")
 	);
 	objectTypeRow.add(objectType);
+	// --- MRPP MODIFICATION START ---
 	const objectEditEntityRow = new UIRow().setDisplay("none");
 	const objectEditEntityButton = new UIButton(strings.getKey("sidebar/object/edit_entity"))
 		.setDisplay("none")
@@ -202,6 +209,7 @@ function SidebarObject(editor) {
 			});
 		});
 	objectEditEntityRow.add(objectEditEntityButton);
+	// --- MRPP MODIFICATION END ---
 
 	// uuid
 
@@ -267,6 +275,7 @@ function SidebarObject(editor) {
 		.setWidth("40px")
 		.onChange(update);
 
+	// --- MRPP MODIFICATION START ---
 	// 位置复制粘贴按钮
 	const positionCopyButton = new UIButton("")
 		.setWidth("24px")
@@ -339,12 +348,15 @@ function SidebarObject(editor) {
 		positionCopyButton.dom.style.display = "none";
 		positionPasteButton.dom.style.display = "none";
 	});
+	// --- MRPP MODIFICATION END ---
 
 	objectPositionRow.add(
 		new UIText(strings.getKey("sidebar/object/position")).setWidth("90px")
 	);
 	objectPositionRow.add(objectPositionX, objectPositionY, objectPositionZ);
+	// --- MRPP MODIFICATION START ---
 	objectPositionRow.add(positionCopyButton, positionPasteButton);
+	// --- MRPP MODIFICATION END ---
 
 	container.add(objectPositionRow);
 
@@ -370,6 +382,7 @@ function SidebarObject(editor) {
 		.setWidth("40px")
 		.onChange(update);
 
+	// --- MRPP MODIFICATION START ---
 	// 旋转复制粘贴按钮
 	const rotationCopyButton = new UIButton("")
 		.setWidth("24px")
@@ -442,12 +455,15 @@ function SidebarObject(editor) {
 		rotationCopyButton.dom.style.display = "none";
 		rotationPasteButton.dom.style.display = "none";
 	});
+	// --- MRPP MODIFICATION END ---
 
 	objectRotationRow.add(
 		new UIText(strings.getKey("sidebar/object/rotation")).setWidth("90px")
 	);
 	objectRotationRow.add(objectRotationX, objectRotationY, objectRotationZ);
+	// --- MRPP MODIFICATION START ---
 	objectRotationRow.add(rotationCopyButton, rotationPasteButton);
+	// --- MRPP MODIFICATION END ---
 
 	container.add(objectRotationRow);
 
@@ -467,6 +483,7 @@ function SidebarObject(editor) {
 		.setWidth("40px")
 		.onChange(update);
 
+	// --- MRPP MODIFICATION START ---
 	// 缩放复制粘贴按钮
 	const scaleCopyButton = new UIButton("")
 		.setWidth("24px")
@@ -534,16 +551,20 @@ function SidebarObject(editor) {
 		scaleCopyButton.dom.style.display = "none";
 		scalePasteButton.dom.style.display = "none";
 	});
+	// --- MRPP MODIFICATION END ---
 
 	objectScaleRow.add(
 		new UIText(strings.getKey("sidebar/object/scale")).setWidth("90px")
 	);
 	objectScaleRow.add(objectScaleX, objectScaleY, objectScaleZ);
+	// --- MRPP MODIFICATION START ---
 	objectScaleRow.add(scaleCopyButton, scalePasteButton);
 	objectScaleRow.setMarginBottom("8px");
+	// --- MRPP MODIFICATION END ---
 
 	container.add(objectScaleRow);
 
+	// --- MRPP MODIFICATION START ---
 	// 添加重置位置/旋转/缩放按钮行
 	const objectResetRow = new UIRow();
 
@@ -589,7 +610,9 @@ function SidebarObject(editor) {
 	objectResetRow.add(resetScaleButton);
 
 	container.add(objectResetRow);
+	// --- MRPP MODIFICATION END ---
 
+	// --- MRPP MODIFICATION START ---
 	// 添加全部变换数据的复制粘贴行
 	const transformActionsRow = new UIRow();
 
@@ -685,7 +708,9 @@ function SidebarObject(editor) {
 	transformActionsRow.setDisplay("none");
 
 	container.add(transformActionsRow);
+	// --- MRPP MODIFICATION END ---
 
+	// --- MRPP MODIFICATION START ---
 	// 创建变换组边框div
 	const createTransformBorder = function () {
 		// 移除旧的边框（如果存在）
@@ -991,6 +1016,7 @@ function SidebarObject(editor) {
 			transformBorder = createTransformBorder();
 		}, 100);
 	});
+	// --- MRPP MODIFICATION END ---
 
 	// fov
 
@@ -1242,6 +1268,7 @@ function SidebarObject(editor) {
 
 	container.add(objectVisibleRow);
 
+	// --- MRPP MODIFICATION START ---
 	// loop
 	const objectLoopRow = new UIRow();
 	const objectLoop = new UICheckbox().onChange(update);
@@ -1252,8 +1279,10 @@ function SidebarObject(editor) {
 	objectLoopRow.add(objectLoop);
 
 	container.add(objectLoopRow);
+	// --- MRPP MODIFICATION END ---
 
 
+	// --- MRPP MODIFICATION START ---
 	//sortingOrder
 	const objectSortingRow = new UIRow();
 	const objectSorting = new UISelect().onChange(update);
@@ -1266,6 +1295,7 @@ function SidebarObject(editor) {
 	objectSortingRow.add(objectSorting);
 
 	container.add(objectSortingRow);
+	// --- MRPP MODIFICATION END ---
 
 	// frustumCulled
 
@@ -1623,7 +1653,7 @@ function SidebarObject(editor) {
 				console.warn(exception);
 			}
 
-
+			// --- MRPP MODIFICATION START ---
 			if (isPictureType(object)) {
 			const selectedSorting = parseInt(objectSorting.getValue(), 10) || 0;
 			const currentSorting = (object.userData && object.userData.sortingOrder !== undefined) ?
@@ -1665,6 +1695,7 @@ function SidebarObject(editor) {
 				}
 
 			}
+			// --- MRPP MODIFICATION END ---
 		}
 	}
 
@@ -1705,6 +1736,7 @@ function SidebarObject(editor) {
 			}
 		}
 
+		// --- MRPP MODIFICATION START ---
 		const isMediaObject = isMediaType(object);
 		objectLoopRow.setDisplay(isMediaObject ? "" : "none");
 		// 仅当对象为图片类型（picture）时显示 sorting order
@@ -1726,6 +1758,7 @@ function SidebarObject(editor) {
 			objectTypeRow.setDisplay('none');
 			objectUserDataRow.setDisplay('none');
 		}
+		// --- MRPP MODIFICATION END ---
 
 		if (object.isLight) {
 			objectReceiveShadow.setDisplay("none");
@@ -1736,6 +1769,7 @@ function SidebarObject(editor) {
 		}
 	}
 
+	// --- MRPP MODIFICATION START ---
 	// 判断对象是否为音频或视频类型
 	function isMediaType(object) {
 		if (object.userData && object.userData.type) {
@@ -1775,6 +1809,7 @@ function SidebarObject(editor) {
 		}
 		return false;
 	}
+	// --- MRPP MODIFICATION END ---
 
 	function updateTransformRows(object) {
 		if (
@@ -1823,6 +1858,7 @@ function SidebarObject(editor) {
 
 	function updateUI(object) {
 		objectType.setValue(getLocalizedObjectType(object));
+		// --- MRPP MODIFICATION START ---
 		const showEditEntityButton =
 			editor.type &&
 			editor.type.toLowerCase() === "verse" &&
@@ -1834,6 +1870,7 @@ function SidebarObject(editor) {
 			object.userData.meta_id != null;
 		objectEditEntityButton.setDisplay(showEditEntityButton ? "" : "none");
 		objectEditEntityRow.setDisplay(showEditEntityButton ? "" : "none");
+		// --- MRPP MODIFICATION END ---
 
 		objectUUID.setValue(object.uuid);
 		objectName.setValue(object.name);
@@ -1910,6 +1947,7 @@ function SidebarObject(editor) {
 			objectCastShadow.setValue(object.castShadow);
 		}
 
+		// --- MRPP MODIFICATION START ---
 		// 同步 sortingOrder 值（用于 picture 类型）
 		try {
 			const sortingVal = (object.userData && object.userData.sortingOrder !== undefined) ? object.userData.sortingOrder : 0;
@@ -1917,6 +1955,7 @@ function SidebarObject(editor) {
 		} catch (e) {
 			objectSorting.setValue('0');
 		}
+		// --- MRPP MODIFICATION END ---
 
 		if (object.receiveShadow !== undefined) {
 			objectReceiveShadow.setValue(object.receiveShadow);
@@ -1944,6 +1983,7 @@ function SidebarObject(editor) {
 
 		updateTransformRows(object);
 
+		// --- MRPP MODIFICATION START ---
 		if (isMediaType(object)) {
 			if (object.userData && object.userData.loop !== undefined) {
 				objectLoop.setValue(object.userData.loop);
@@ -1952,10 +1992,13 @@ function SidebarObject(editor) {
 				objectLoop.setValue(false);
 			}
 		}
+		// --- MRPP MODIFICATION END ---
 	}
 
 	container.add(objectUUIDRow);
+	// --- MRPP MODIFICATION START ---
 	container.add(objectEditEntityRow);
+	// --- MRPP MODIFICATION END ---
 
 	return container;
 }

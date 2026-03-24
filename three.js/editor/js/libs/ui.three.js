@@ -5,7 +5,9 @@ import { TGALoader } from '../../../examples/jsm/loaders/TGALoader.js';
 
 import { UIElement, UISpan, UIDiv, UIRow, UIButton, UICheckbox, UIText, UINumber } from './ui.js';
 import { MoveObjectCommand } from '../commands/MoveObjectCommand.js';
-import { MoveMultipleObjectsCommand } from '../commands/MoveMultipleObjectsCommand.js';
+// --- MRPP MODIFICATION START ---
+import { MoveMultipleObjectsCommand } from '../../../../plugin/commands/MoveMultipleObjectsCommand.js';
+// --- MRPP MODIFICATION END ---
 
 class UITexture extends UISpan {
 

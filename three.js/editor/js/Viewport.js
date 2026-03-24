@@ -14,7 +14,9 @@ import { VR } from './Viewport.VR.js';
 import { SetPositionCommand } from './commands/SetPositionCommand.js';
 import { SetRotationCommand } from './commands/SetRotationCommand.js';
 import { SetScaleCommand } from './commands/SetScaleCommand.js';
-import { MultiTransformCommand } from './commands/MultiTransformCommand.js';
+// --- MRPP MODIFICATION START ---
+import { MultiTransformCommand } from '../../../plugin/commands/MultiTransformCommand.js';
+// --- MRPP MODIFICATION END ---
 
 import { RoomEnvironment } from '../../examples/jsm/environments/RoomEnvironment.js';
 

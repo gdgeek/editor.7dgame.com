@@ -6,8 +6,10 @@ import { UIPanel, UIRow, UIHorizontalRule } from './libs/ui.js'
 import { AddObjectCommand } from './commands/AddObjectCommand.js'
 import { RemoveObjectCommand } from './commands/RemoveObjectCommand.js'
 import { SetPositionCommand } from './commands/SetPositionCommand.js'
-import { MetaFactory } from './mrpp/MetaFactory.js';
-import { Builder } from './mrpp/Builder.js';
+// --- MRPP MODIFICATION START ---
+import { MetaFactory } from '../../../plugin/mrpp/MetaFactory.js';
+import { Builder } from '../../../plugin/mrpp/Builder.js';
+// --- MRPP MODIFICATION END ---
 
 function hasSkinnedMesh(object) {
 	let found = false;

@@ -3,13 +3,16 @@ import * as THREE from 'three';
 import { UIPanel, UIRow, UIHorizontalRule } from './libs/ui.js';
 
 import { AddObjectCommand } from './commands/AddObjectCommand.js';
-import { MetaFactory } from './mrpp/MetaFactory.js';
-import { VerseFactory } from './mrpp/VerseFactory.js';
-import { Builder } from './mrpp/Builder.js';
+// --- MRPP MODIFICATION START ---
+import { MetaFactory } from '../../../plugin/mrpp/MetaFactory.js';
+import { VerseFactory } from '../../../plugin/mrpp/VerseFactory.js';
+import { Builder } from '../../../plugin/mrpp/Builder.js';
+// --- MRPP MODIFICATION END ---
 
 
 function MenubarAdd( editor ) {
 
+	// --- MRPP MODIFICATION START ---
 	const factory = new MetaFactory(editor);
 
 	const builder = new Builder();
@@ -18,6 +21,7 @@ function MenubarAdd( editor ) {
 	// 将resources暴露到window全局对象，以便其他模块能够访问
 	const resources = new Map();
 	window.resources = resources;
+	// --- MRPP MODIFICATION END ---
 
 	const container = new UIPanel();
 
@@ -32,11 +36,14 @@ function MenubarAdd( editor ) {
 	options.setClass( 'options' );
 	container.add( options );
 
+	// --- MRPP MODIFICATION START ---
 	// 存储所有创建的资源菜单项的映射
 	const resourceMenuItems = new Map();
+	// --- MRPP MODIFICATION END ---
 
 	let option = null;
 
+	// --- MRPP MODIFICATION START ---
 	if ( editor.type.toLowerCase() == 'meta' ) {
 
 
@@ -260,6 +267,7 @@ function MenubarAdd( editor ) {
 		*/
 
 	}
+	// --- MRPP MODIFICATION END ---
 
 	//
 

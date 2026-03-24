@@ -3,11 +3,13 @@ import { UITabbedPanel } from './libs/ui.js';
 import { SidebarObject } from './Sidebar.Object.js';
 import { SidebarGeometry } from './Sidebar.Geometry.js';
 import { SidebarMaterial } from './Sidebar.Material.js';
-import { SidebarMultipleObjects } from './Sidebar.MultipleObjects.js';
-import { SidebarComponent } from './Sidebar.Component.js';
-import { SidebarCommand } from './Sidebar.Command.js';
-import { SidebarText } from './Sidebar.Text.js';
-import { SidebarAnimation } from './Sidebar.Animation.js';
+// --- MRPP MODIFICATION START ---
+import { SidebarMultipleObjects } from '../../../plugin/ui/sidebar/Sidebar.MultipleObjects.js';
+import { SidebarComponent } from '../../../plugin/ui/sidebar/Sidebar.Component.js';
+import { SidebarCommand } from '../../../plugin/ui/sidebar/Sidebar.Command.js';
+import { SidebarText } from '../../../plugin/ui/sidebar/Sidebar.Text.js';
+import { SidebarAnimation } from '../../../plugin/ui/sidebar/Sidebar.Animation.js';
+// --- MRPP MODIFICATION END ---
 
 function SidebarProperties( editor ) {
 

@@ -5,9 +5,12 @@ import { Loader } from './Loader.js';
 import { History as _History } from './History.js';
 import { Strings } from './Strings.js';
 import { Storage as _Storage } from './Storage.js';
-import { DialogUtils } from './utils/DialogUtils.js';
-import { Access } from './Access.js';
+// --- MRPP MODIFICATION START ---
+import { DialogUtils } from '../../../plugin/utils/DialogUtils.js';
+import { Access } from '../../../plugin/access/Access.js';
+// --- MRPP MODIFICATION END ---
 
+// --- MRPP MODIFICATION START ---
 const mapping = {
 	'zh-CN': 'zh-cn',
 	'en-US': 'en-us',
@@ -17,6 +20,7 @@ const mapping = {
 };
 const urlParams = new URLSearchParams( window.location.search );
 const lg = urlParams.get( 'language' );
+// --- MRPP MODIFICATION END ---
 
 var _DEFAULT_CAMERA = new THREE.PerspectiveCamera( 50, 1, 0.01, 1000 );
 _DEFAULT_CAMERA.name = 'Camera';
@@ -29,8 +33,10 @@ function Editor() {
 
 	this.selector = null;
 	this.signals = {
+		// --- MRPP MODIFICATION START ---
 		upload: new Signal(),
 		release: new Signal(),
+		// --- MRPP MODIFICATION END ---
 		// script
 
 		editScript: new Signal(),
@@ -49,8 +55,10 @@ function Editor() {
 
 		editorCleared: new Signal(),
 
+		// --- MRPP MODIFICATION START ---
 		savingStarted: new Signal(),
 		savingFinished: new Signal(),
+		// --- MRPP MODIFICATION END ---
 
 		transformModeChanged: new Signal(),
 		snapChanged: new Signal(),
@@ -76,7 +84,9 @@ function Editor() {
 		objectAdded: new Signal(),
 		objectChanged: new Signal(),
 		objectRemoved: new Signal(),
+		// --- MRPP MODIFICATION START ---
 		objectsChanged: new Signal(), // 多个对象同时变化的信号
+		// --- MRPP MODIFICATION END ---
 
 		cameraAdded: new Signal(),
 		cameraRemoved: new Signal(),
@@ -92,6 +102,7 @@ function Editor() {
 		scriptChanged: new Signal(),
 		scriptRemoved: new Signal(),
 
+		// --- MRPP MODIFICATION START ---
 		componentAdded: new Signal(),
 		componentChanged: new Signal(),
 		componentRemoved: new Signal(),
@@ -103,17 +114,21 @@ function Editor() {
 		commandAdded: new Signal(),
 		commandChanged: new Signal(),
 		commandRemoved: new Signal(),
+		// --- MRPP MODIFICATION END ---
 
 		windowResize: new Signal(),
 
 		showGridChanged: new Signal(),
+		// --- MRPP MODIFICATION START ---
 		showGroundChanged: new Signal(),
+		// --- MRPP MODIFICATION END ---
 		showHelpersChanged: new Signal(),
 		refreshSidebarObject3D: new Signal(),
 		historyChanged: new Signal(),
 
 		viewportCameraChanged: new Signal(),
 
+		// --- MRPP MODIFICATION START ---
 		messageSend: new Signal(),
 		messageReceive: new Signal(),
 
@@ -124,17 +139,20 @@ function Editor() {
 		// 场景树多选相关
 		multiSelectGroup: null,
 		multipleObjectsTransformChanged: new Signal() // 多选对象变换变化信号
+		// --- MRPP MODIFICATION END ---
 	};
 
 	this.config = new Config();
 	this.history = new _History( this );
 	this.storage = new _Storage();
 
+	// --- MRPP MODIFICATION START ---
 	if ( lg && mapping[ lg ] ) {
 
 		this.config.setKey( 'language', mapping[ lg ] );
 
 	}
+	// --- MRPP MODIFICATION END ---
 
 	this.strings = new Strings( this.config );
 
@@ -158,7 +176,9 @@ function Editor() {
 	this.mixer = new THREE.AnimationMixer( this.scene );
 
 	this.selected = null;
+	// --- MRPP MODIFICATION START ---
 	this.selectedObjects = []; // 存储多选对象
+	// --- MRPP MODIFICATION END ---
 	this.helpers = {};
 
 	this.cameras = {};
@@ -166,10 +186,12 @@ function Editor() {
 
 	this.addCamera( this.camera );
 
+	// --- MRPP MODIFICATION START ---
 	this.type = '';
 	this.resources = []; // 保存场景中的资源信息
 
 	this.access = new Access(this);
+	// --- MRPP MODIFICATION END ---
 
 }
 
@@ -185,12 +207,14 @@ Editor.prototype = {
 
 		this.scene.userData = JSON.parse( JSON.stringify( scene.userData ) );
 
+		// --- MRPP MODIFICATION START ---
 		// 初始化场景中所有对象的 commands 数组
 		scene.traverse(function(object) {
 			if (object.commands === undefined) {
 				object.commands = [];
 			}
 		});
+		// --- MRPP MODIFICATION END ---
 
 		// avoid render per object
 
@@ -210,6 +234,7 @@ Editor.prototype = {
 	//
 
 	addObject: function ( object, parent, index ) {
+		// --- MRPP MODIFICATION START ---
 		// 保存原始type
 		const originalType = object.type;
 
@@ -217,6 +242,7 @@ Editor.prototype = {
 		if (object.commands === undefined) {
 			object.commands = [];
 		}
+		// --- MRPP MODIFICATION END ---
 
 		// 现有的addObject逻辑
 		var scope = this;
@@ -227,6 +253,7 @@ Editor.prototype = {
 			scope.addHelper(child);
 		});
 
+		// --- MRPP MODIFICATION START ---
 		// 恢复type
 		object.type = originalType;
 
@@ -262,6 +289,7 @@ Editor.prototype = {
 				}
 			}
 		}
+		// --- MRPP MODIFICATION END ---
 
 		this.signals.objectAdded.dispatch(object);
 		this.signals.sceneGraphChanged.dispatch();
@@ -315,6 +343,7 @@ Editor.prototype = {
 
 		object.parent.remove( object );
 
+		// --- MRPP MODIFICATION START ---
 		// 从selectedObjects数组中移除
 		const index = this.selectedObjects.indexOf(object);
 		if (index !== -1) {
@@ -327,6 +356,7 @@ Editor.prototype = {
 				this.signals.objectSelected.dispatch(this.selected);
 			}
 		}
+		// --- MRPP MODIFICATION END ---
 
 		this.signals.objectRemoved.dispatch( object );
 		this.signals.sceneGraphChanged.dispatch();
@@ -646,6 +676,7 @@ Editor.prototype = {
 
 		}
 
+		// --- MRPP MODIFICATION START ---
 		if (multiSelect) {
 			// 多选模式
 			if (object === null) {
@@ -683,6 +714,7 @@ Editor.prototype = {
 
 		this.selected = object;
 		}
+		// --- MRPP MODIFICATION END ---
 
 		let uuid = null;
 
@@ -778,7 +810,9 @@ Editor.prototype = {
 		this.mixer.stopAllAction();
 
 		this.deselect();
+		// --- MRPP MODIFICATION START ---
 		this.selectedObjects.length = 0; // 清空多选数组
+		// --- MRPP MODIFICATION END ---
 
 		this.signals.editorCleared.dispatch();
 
@@ -799,10 +833,12 @@ Editor.prototype = {
 
 		this.setScene( await loader.parseAsync( json.scene ) );
 
+		// --- MRPP MODIFICATION START ---
 		// 保存资源信息
 		if (json.resources !== undefined) {
 			this.resources = json.resources;
 		}
+		// --- MRPP MODIFICATION END ---
 
 	},
 
@@ -848,7 +884,9 @@ Editor.prototype = {
 			scene: this.scene.toJSON(),
 			scripts: this.scripts,
 			history: this.history.toJSON(),
+			// --- MRPP MODIFICATION START ---
 			resources: this.resources // 保存资源信息
+			// --- MRPP MODIFICATION END ---
 		};
 
 	},
@@ -859,6 +897,7 @@ Editor.prototype = {
 
 	},
 
+	// --- MRPP MODIFICATION START ---
 	save: function () {
 
 		if ( this.metaLoader && typeof this.metaLoader.getLoadingStatus === 'function' && this.metaLoader.getLoadingStatus() ) {
@@ -881,6 +920,7 @@ Editor.prototype = {
 		return true;
 
 	},
+	// --- MRPP MODIFICATION END ---
 
 	execute: function ( cmd, optionalName ) {
 
@@ -900,6 +940,7 @@ Editor.prototype = {
 
 	},
 
+	// --- MRPP MODIFICATION START ---
 	showNotification: function (message, isError) {
 		console.log('显示通知:', message);
 
@@ -958,6 +999,7 @@ Editor.prototype = {
 		this.selected = null;
 		this.signals.objectSelected.dispatch(null);
 	},
+	// --- MRPP MODIFICATION END ---
 
 };
 

@@ -5,7 +5,6 @@ export { MultiCmdsCommand } from './MultiCmdsCommand.js';
 export { RemoveObjectCommand } from './RemoveObjectCommand.js';
 export { RemoveScriptCommand } from './RemoveScriptCommand.js';
 export { SetColorCommand } from './SetColorCommand.js';
-export { SetEventValueCommand } from './SetEventValueCommand.js';
 export { SetGeometryCommand } from './SetGeometryCommand.js';
 export { SetGeometryValueCommand } from './SetGeometryValueCommand.js';
 export { SetMaterialColorCommand } from './SetMaterialColorCommand.js';
@@ -20,3 +19,17 @@ export { SetSceneCommand } from './SetSceneCommand.js';
 export { SetScriptValueCommand } from './SetScriptValueCommand.js';
 export { SetUuidCommand } from './SetUuidCommand.js';
 export { SetValueCommand } from './SetValueCommand.js';
+
+// --- MRPP MODIFICATION START ---
+export { AddComponentCommand } from '../../../../plugin/commands/AddComponentCommand.js';
+export { RemoveComponentCommand } from '../../../../plugin/commands/RemoveComponentCommand.js';
+export { SetComponentValueCommand } from '../../../../plugin/commands/SetComponentValueCommand.js';
+export { AddCommandCommand } from '../../../../plugin/commands/AddCommandCommand.js';
+export { RemoveCommandCommand } from '../../../../plugin/commands/RemoveCommandCommand.js';
+export { SetCommandValueCommand } from '../../../../plugin/commands/SetCommandValueCommand.js';
+export { AddEventCommand } from '../../../../plugin/commands/AddEventCommand.js';
+export { RemoveEventCommand } from '../../../../plugin/commands/RemoveEventCommand.js';
+export { SetEventValueCommand } from '../../../../plugin/commands/SetEventValueCommand.js';
+export { MoveMultipleObjectsCommand } from '../../../../plugin/commands/MoveMultipleObjectsCommand.js';
+export { MultiTransformCommand } from '../../../../plugin/commands/MultiTransformCommand.js';
+// --- MRPP MODIFICATION END ---
