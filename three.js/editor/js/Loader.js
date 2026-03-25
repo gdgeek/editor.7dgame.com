@@ -1,9 +1,6 @@
 import * as THREE from 'three'
 
 import { TGALoader } from '../../examples/jsm/loaders/TGALoader.js'
-// --- MRPP MODIFICATION START ---
-import { KTX2Loader } from '../../examples/jsm/loaders/KTX2Loader.js' // KTX2 支持
-// --- MRPP MODIFICATION END ---
 
 import { AddObjectCommand } from './commands/AddObjectCommand.js'
 import { SetSceneCommand } from './commands/SetSceneCommand.js'
@@ -16,25 +13,6 @@ function Loader(editor) {
 	const scope = this
 
 	this.texturePath = ''
-
-	// --- MRPP MODIFICATION START ---
-	// 懒初始化的 KTX2Loader
-	scope.ktx2Loader = null
-	    function ensureKTX2(manager) {
-        if (scope.ktx2Loader) return scope.ktx2Loader
-        try {
-            const k = new KTX2Loader(manager)
-                .setTranscoderPath('../examples/jsm/libs/basis/') // basis_transcoder.* 目录（需确保存在）
-                .detectSupport(editor.renderer)
-            manager.addHandler(/\.ktx2$/i, k)
-            scope.ktx2Loader = k
-            return k
-        } catch (e) {
-            console.warn('KTX2Loader 初始化失败', e)
-            return null
-        }
-    }
-	// --- MRPP MODIFICATION END ---
 
 	this.loadItemList = function (items) {
 		LoaderUtils.getFilesFromItemList(items, function (files, filesMap) {
@@ -62,12 +40,6 @@ function Loader(editor) {
 			})
 
 			manager.addHandler(/\.tga$/i, new TGALoader())
-			// --- MRPP MODIFICATION START ---
-			// 如果待加载文件中含有 .ktx2 或 glb/gltf（可能引用 .ktx2），提前初始化
-			if (files.some(f => /\.(ktx2|glb|gltf)$/i.test(f.name))) {
-				ensureKTX2(manager)
-			}
-			// --- MRPP MODIFICATION END ---
 
 			for (let i = 0; i < files.length; i++) {
 				scope.loadFile(files[i], manager)
@@ -269,19 +241,11 @@ function Loader(editor) {
 							'../../examples/jsm/loaders/GLTFLoader.js'
 						)
 
-						// --- MRPP MODIFICATION START ---
-						// 确保 KTX2 支持（如果未提前初始化）
-						if (!scope.ktx2Loader) ensureKTX2(manager)
-						// --- MRPP MODIFICATION END ---
-
 						const dracoLoader = new DRACOLoader()
 						dracoLoader.setDecoderPath('../examples/js/libs/draco/gltf/')
 
 						const loader = new GLTFLoader(manager)
 						loader.setDRACOLoader(dracoLoader)
-						// --- MRPP MODIFICATION START ---
-						if (scope.ktx2Loader) loader.setKTX2Loader(scope.ktx2Loader)
-						// --- MRPP MODIFICATION END ---
 						loader.parse(contents, '', function (result) {
 							const scene = result.scene
 							scene.name = filename
@@ -317,18 +281,11 @@ function Loader(editor) {
 								'../../examples/jsm/loaders/GLTFLoader.js'
 							)
 
-							// --- MRPP MODIFICATION START ---
-							if (!scope.ktx2Loader) ensureKTX2(manager)
-							// --- MRPP MODIFICATION END ---
-
 							const dracoLoader = new DRACOLoader()
 							dracoLoader.setDecoderPath('../examples/js/libs/draco/gltf/')
 
 							loader = new GLTFLoader(manager)
 							loader.setDRACOLoader(dracoLoader)
-							// --- MRPP MODIFICATION START ---
-							if (scope.ktx2Loader) loader.setKTX2Loader(scope.ktx2Loader)
-							// --- MRPP MODIFICATION END ---
 						}
 
 						loader.parse(contents, '', function (result) {
@@ -845,13 +802,6 @@ function Loader(editor) {
 				return url
 			})
 
-			// --- MRPP MODIFICATION START ---
-			// 如果压缩包内存在 ktx2/gltf/glb，初始化一次 KTX2 支持
-			if (!scope.ktx2Loader && /\.(ktx2|gltf|glb)$/i.test(path)) {
-				ensureKTX2(manager)
-			}
-			// --- MRPP MODIFICATION END ---
-
 			const extension = path.split('.').pop().toLowerCase()
 
 			switch (extension) {
@@ -879,9 +829,6 @@ function Loader(editor) {
 					dracoLoader.setDecoderPath('../examples/js/libs/draco/gltf/')
 					const loader = new GLTFLoader()
 					loader.setDRACOLoader(dracoLoader)
-					// --- MRPP MODIFICATION START ---
-					if (scope.ktx2Loader) loader.setKTX2Loader(scope.ktx2Loader)
-					// --- MRPP MODIFICATION END ---
 					loader.parse(file.buffer, '', function (result) {
 						const scene = result.scene
 						scene.animations.push(...result.animations)
@@ -900,9 +847,6 @@ function Loader(editor) {
 					dracoLoader.setDecoderPath('../examples/js/libs/draco/gltf/')
 					const loader = new GLTFLoader(manager)
 					loader.setDRACOLoader(dracoLoader)
-					// --- MRPP MODIFICATION START ---
-					if (scope.ktx2Loader) loader.setKTX2Loader(scope.ktx2Loader)
-					// --- MRPP MODIFICATION END ---
 					loader.parse(strFromU8(file), '', function (result) {
 						const scene = result.scene
 						scene.animations.push(...result.animations)

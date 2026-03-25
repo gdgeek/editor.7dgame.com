@@ -46,6 +46,7 @@ jobs:
             type=raw,value=develop,enable=${{ github.ref == 'refs/heads/develop' }}
             type=raw,value=publish,enable=${{ github.ref == 'refs/heads/publish' }}
             type=raw,value=main,enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' }}
+            type=raw,value=editor-plugin-separation,enable=${{ github.ref == 'refs/heads/feature/editor-plugin-separation' }}
 
       - name: Generate build time
         id: build-time

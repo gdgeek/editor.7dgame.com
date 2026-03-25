@@ -2,7 +2,7 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ main, master, develop, publish ]
+    branches: [ main, master, develop, publish, feature/editor-plugin-separation ]
   pull_request:
     branches: [ main, master ]
   workflow_dispatch:

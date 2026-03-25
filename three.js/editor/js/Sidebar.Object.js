@@ -11,7 +11,6 @@ import {
 	UITextArea,
 	UIText,
 	UINumber,
-    UISelect,
 } from "./libs/ui.js";
 import { UIBoolean } from "./libs/ui.three.js";
 
@@ -21,10 +20,6 @@ import { SetPositionCommand } from "./commands/SetPositionCommand.js";
 import { SetRotationCommand } from "./commands/SetRotationCommand.js";
 import { SetScaleCommand } from "./commands/SetScaleCommand.js";
 import { SetColorCommand } from "./commands/SetColorCommand.js";
-// --- MRPP MODIFICATION START ---
-import { MetaFactory } from '../../../plugin/mrpp/MetaFactory.js';
-import { ABILITIES } from '../../../plugin/access/Access.js';
-// --- MRPP MODIFICATION END ---
 
 function SidebarObject(editor) {
 	const strings = editor.strings;
@@ -35,60 +30,6 @@ function SidebarObject(editor) {
 	container.setBorderTop("0");
 	container.setPaddingTop("20px");
 	container.setDisplay("none");
-	container.dom.style.position = "relative";
-
-	// --- MRPP MODIFICATION START ---
-	// 存储复制的变换数据
-	const clipboard = {
-		position: null,
-		rotation: null,
-		scale: null,
-	};
-
-	// 专门存储单一属性的复制数据
-	const singlePropertyClipboard = {
-		position: null,
-		rotation: null,
-		scale: null,
-	};
-
-	// 存储事件监听器引用，以便稍后移除
-	const eventListeners = [];
-
-	// 移除所有事件监听器
-	const removeAllEventListeners = function () {
-		for (const listener of eventListeners) {
-			listener.element.removeEventListener(listener.type, listener.callback);
-		}
-		eventListeners.length = 0;
-	};
-
-	// 添加事件监听器并保存引用
-	const addEventListenerWithRef = function (element, type, callback) {
-		element.addEventListener(type, callback);
-		eventListeners.push({
-			element: element,
-			type: type,
-			callback: callback,
-		});
-	};
-
-	// 统一按钮框内图标样式：按钮框尺寸不变，仅放大图标并居中
-	const styleIconButton = function (button) {
-		button.dom.style.display = "inline-flex";
-		button.dom.style.alignItems = "center";
-		button.dom.style.justifyContent = "center";
-		button.dom.style.padding = "0";
-	};
-
-	const styleActionIcon = function (icon) {
-		icon.style.width = "13px";
-		icon.style.height = "13px";
-		icon.style.display = "block";
-		icon.style.margin = "0 auto";
-	};
-	// --- MRPP MODIFICATION END ---
-
 
 	// Actions
 
@@ -138,78 +79,10 @@ function SidebarObject(editor) {
 	const objectTypeRow = new UIRow();
 	const objectType = new UIText();
 
-	// --- MRPP MODIFICATION START ---
-	function getLocalizedObjectType(object) {
-		const rawType = (object.userData && object.userData.type) || object.type || "";
-		const normalizedType = rawType.toLowerCase();
-		if (
-			editor.type &&
-			editor.type.toLowerCase() === "verse" &&
-			normalizedType === "module"
-		) {
-			return strings.getKey("sidebar/object/type_value/entity");
-		}
-		const typeKeyMap = {
-			scene: "sidebar/object/type_value/scene",
-			group: "sidebar/object/type_value/group",
-			object3d: "sidebar/object/type_value/object3d",
-			mesh: "sidebar/object/type_value/mesh",
-			line: "sidebar/object/type_value/line",
-			linesegments: "sidebar/object/type_value/linesegments",
-			points: "sidebar/object/type_value/points",
-			sprite: "sidebar/object/type_value/sprite",
-			camera: "sidebar/object/type_value/camera",
-			perspectivecamera: "sidebar/object/type_value/perspectivecamera",
-			orthographiccamera: "sidebar/object/type_value/orthographiccamera",
-			light: "sidebar/object/type_value/light",
-			ambientlight: "sidebar/object/type_value/ambientlight",
-			directionallight: "sidebar/object/type_value/directionallight",
-			hemispherelight: "sidebar/object/type_value/hemispherelight",
-			pointlight: "sidebar/object/type_value/pointlight",
-			spotlight: "sidebar/object/type_value/spotlight",
-			module: "sidebar/object/type_value/module",
-			entity: "sidebar/object/type_value/entity",
-			point: "sidebar/object/type_value/point",
-			text: "sidebar/object/type_value/text",
-			polygen: "sidebar/object/type_value/polygen",
-			picture: "sidebar/object/type_value/picture",
-			video: "sidebar/object/type_value/video",
-			audio: "sidebar/object/type_value/audio",
-			sound: "sidebar/object/type_value/audio",
-			prototype: "sidebar/object/type_value/prototype",
-			voxel: "sidebar/object/type_value/voxel",
-			phototype: "sidebar/object/type_value/phototype",
-			prefab: "sidebar/object/type_value/prefab",
-		};
-		const translationKey = typeKeyMap[normalizedType];
-
-		if (translationKey) {
-			const localizedType = strings.getKey(translationKey);
-			if (localizedType !== "???") return localizedType;
-		}
-
-		return rawType;
-	}
-	// --- MRPP MODIFICATION END ---
-
 	objectTypeRow.add(
 		new UIText(strings.getKey("sidebar/object/type")).setWidth("90px")
 	);
 	objectTypeRow.add(objectType);
-	// --- MRPP MODIFICATION START ---
-	const objectEditEntityRow = new UIRow().setDisplay("none");
-	const objectEditEntityButton = new UIButton(strings.getKey("sidebar/object/edit_entity"))
-		.setDisplay("none")
-		.onClick(function () {
-			const object = editor.selected;
-			if (!object || !object.userData || object.userData.meta_id == null) return;
-			editor.signals.messageSend.dispatch({
-				action: "edit-meta",
-				data: { meta_id: object.userData.meta_id, uuid: object.uuid },
-			});
-		});
-	objectEditEntityRow.add(objectEditEntityButton);
-	// --- MRPP MODIFICATION END ---
 
 	// uuid
 
@@ -275,88 +148,10 @@ function SidebarObject(editor) {
 		.setWidth("40px")
 		.onChange(update);
 
-	// --- MRPP MODIFICATION START ---
-	// 位置复制粘贴按钮
-	const positionCopyButton = new UIButton("")
-		.setWidth("24px")
-		.onClick(function () {
-			if (editor.selected !== null) {
-				const positionData = new THREE.Vector3(
-					objectPositionX.getValue(),
-					objectPositionY.getValue(),
-					objectPositionZ.getValue()
-				);
-
-				// 同时更新两个剪贴板
-				singlePropertyClipboard.position = positionData;
-				clipboard.position = positionData;
-
-				editor.showNotification("位置数据复制成功");
-			}
-		});
-
-	positionCopyButton.dom.title = "复制";
-	styleIconButton(positionCopyButton);
-
-	// 添加复制图标
-	const positionCopyIcon = document.createElement("img");
-	positionCopyIcon.src = "images/copy.png";
-	styleActionIcon(positionCopyIcon);
-	positionCopyButton.dom.appendChild(positionCopyIcon);
-
-	const positionPasteButton = new UIButton("")
-		.setMarginLeft("2px")
-		.setWidth("24px")
-		.onClick(function () {
-			if (editor.selected !== null) {
-				// 优先使用单一属性剪贴板，如果没有则使用全局剪贴板
-				const positionData =
-					singlePropertyClipboard.position || clipboard.position;
-
-				if (positionData !== null) {
-					editor.execute(
-						new SetPositionCommand(
-							editor,
-							editor.selected,
-							positionData.clone()
-						)
-					);
-					editor.showNotification("位置数据粘贴成功");
-				}
-			}
-		});
-
-	positionPasteButton.dom.title = "粘贴";
-	styleIconButton(positionPasteButton);
-
-	// 添加粘贴图标
-	const positionPasteIcon = document.createElement("img");
-	positionPasteIcon.src = "images/paste.png";
-	styleActionIcon(positionPasteIcon);
-	positionPasteButton.dom.appendChild(positionPasteIcon);
-
-	// 默认隐藏复制粘贴按钮
-	positionCopyButton.dom.style.display = "none";
-	positionPasteButton.dom.style.display = "none";
-
-	// 添加鼠标悬停事件
-	objectPositionRow.dom.addEventListener("mouseenter", function () {
-		positionCopyButton.dom.style.display = "inline-flex";
-		positionPasteButton.dom.style.display = "inline-flex";
-	});
-	objectPositionRow.dom.addEventListener("mouseleave", function () {
-		positionCopyButton.dom.style.display = "none";
-		positionPasteButton.dom.style.display = "none";
-	});
-	// --- MRPP MODIFICATION END ---
-
 	objectPositionRow.add(
 		new UIText(strings.getKey("sidebar/object/position")).setWidth("90px")
 	);
 	objectPositionRow.add(objectPositionX, objectPositionY, objectPositionZ);
-	// --- MRPP MODIFICATION START ---
-	objectPositionRow.add(positionCopyButton, positionPasteButton);
-	// --- MRPP MODIFICATION END ---
 
 	container.add(objectPositionRow);
 
@@ -382,88 +177,10 @@ function SidebarObject(editor) {
 		.setWidth("40px")
 		.onChange(update);
 
-	// --- MRPP MODIFICATION START ---
-	// 旋转复制粘贴按钮
-	const rotationCopyButton = new UIButton("")
-		.setWidth("24px")
-		.onClick(function () {
-			if (editor.selected !== null) {
-				const rotationData = new THREE.Euler(
-					objectRotationX.getValue() * THREE.MathUtils.DEG2RAD,
-					objectRotationY.getValue() * THREE.MathUtils.DEG2RAD,
-					objectRotationZ.getValue() * THREE.MathUtils.DEG2RAD
-				);
-
-				// 同时更新两个剪贴板
-				singlePropertyClipboard.rotation = rotationData;
-				clipboard.rotation = rotationData;
-
-				editor.showNotification("旋转数据复制成功");
-			}
-		});
-
-	rotationCopyButton.dom.title = "复制";
-	styleIconButton(rotationCopyButton);
-
-	// 添加复制图标
-	const rotationCopyIcon = document.createElement("img");
-	rotationCopyIcon.src = "images/copy.png";
-	styleActionIcon(rotationCopyIcon);
-	rotationCopyButton.dom.appendChild(rotationCopyIcon);
-
-	const rotationPasteButton = new UIButton("")
-		.setMarginLeft("2px")
-		.setWidth("24px")
-		.onClick(function () {
-			if (editor.selected !== null) {
-				// 优先使用单一属性剪贴板，如果没有则使用全局剪贴板
-				const rotationData =
-					singlePropertyClipboard.rotation || clipboard.rotation;
-
-				if (rotationData !== null) {
-					editor.execute(
-						new SetRotationCommand(
-							editor,
-							editor.selected,
-							rotationData.clone()
-						)
-					);
-					editor.showNotification("旋转数据粘贴成功");
-				}
-			}
-		});
-
-	rotationPasteButton.dom.title = "粘贴";
-	styleIconButton(rotationPasteButton);
-
-	// 添加粘贴图标
-	const rotationPasteIcon = document.createElement("img");
-	rotationPasteIcon.src = "images/paste.png";
-	styleActionIcon(rotationPasteIcon);
-	rotationPasteButton.dom.appendChild(rotationPasteIcon);
-
-	// 默认隐藏复制粘贴按钮
-	rotationCopyButton.dom.style.display = "none";
-	rotationPasteButton.dom.style.display = "none";
-
-	// 添加鼠标悬停事件
-	objectRotationRow.dom.addEventListener("mouseenter", function () {
-		rotationCopyButton.dom.style.display = "inline-flex";
-		rotationPasteButton.dom.style.display = "inline-flex";
-	});
-	objectRotationRow.dom.addEventListener("mouseleave", function () {
-		rotationCopyButton.dom.style.display = "none";
-		rotationPasteButton.dom.style.display = "none";
-	});
-	// --- MRPP MODIFICATION END ---
-
 	objectRotationRow.add(
 		new UIText(strings.getKey("sidebar/object/rotation")).setWidth("90px")
 	);
 	objectRotationRow.add(objectRotationX, objectRotationY, objectRotationZ);
-	// --- MRPP MODIFICATION START ---
-	objectRotationRow.add(rotationCopyButton, rotationPasteButton);
-	// --- MRPP MODIFICATION END ---
 
 	container.add(objectRotationRow);
 
@@ -483,540 +200,12 @@ function SidebarObject(editor) {
 		.setWidth("40px")
 		.onChange(update);
 
-	// --- MRPP MODIFICATION START ---
-	// 缩放复制粘贴按钮
-	const scaleCopyButton = new UIButton("")
-		.setWidth("24px")
-		.onClick(function () {
-			if (editor.selected !== null) {
-				const scaleData = new THREE.Vector3(
-					objectScaleX.getValue(),
-					objectScaleY.getValue(),
-					objectScaleZ.getValue()
-				);
-
-				// 同时更新两个剪贴板
-				singlePropertyClipboard.scale = scaleData;
-				clipboard.scale = scaleData;
-
-				editor.showNotification("缩放数据复制成功");
-			}
-		});
-
-	scaleCopyButton.dom.title = "复制";
-	styleIconButton(scaleCopyButton);
-
-	// 添加复制图标
-	const scaleCopyIcon = document.createElement("img");
-	scaleCopyIcon.src = "images/copy.png";
-	styleActionIcon(scaleCopyIcon);
-	scaleCopyButton.dom.appendChild(scaleCopyIcon);
-
-	const scalePasteButton = new UIButton("")
-		.setMarginLeft("2px")
-		.setWidth("24px")
-		.onClick(function () {
-			if (editor.selected !== null) {
-				// 优先使用单一属性剪贴板，如果没有则使用全局剪贴板
-				const scaleData = singlePropertyClipboard.scale || clipboard.scale;
-
-				if (scaleData !== null) {
-					editor.execute(
-						new SetScaleCommand(editor, editor.selected, scaleData.clone())
-					);
-					editor.showNotification("缩放数据粘贴成功");
-				}
-			}
-		});
-
-	scalePasteButton.dom.title = "粘贴";
-	styleIconButton(scalePasteButton);
-
-	// 添加粘贴图标
-	const scalePasteIcon = document.createElement("img");
-	scalePasteIcon.src = "images/paste.png";
-	styleActionIcon(scalePasteIcon);
-	scalePasteButton.dom.appendChild(scalePasteIcon);
-
-	// 默认隐藏复制粘贴按钮
-	scaleCopyButton.dom.style.display = "none";
-	scalePasteButton.dom.style.display = "none";
-
-	// 添加鼠标悬停事件
-	objectScaleRow.dom.addEventListener("mouseenter", function () {
-		scaleCopyButton.dom.style.display = "inline-flex";
-		scalePasteButton.dom.style.display = "inline-flex";
-	});
-	objectScaleRow.dom.addEventListener("mouseleave", function () {
-		scaleCopyButton.dom.style.display = "none";
-		scalePasteButton.dom.style.display = "none";
-	});
-	// --- MRPP MODIFICATION END ---
-
 	objectScaleRow.add(
 		new UIText(strings.getKey("sidebar/object/scale")).setWidth("90px")
 	);
 	objectScaleRow.add(objectScaleX, objectScaleY, objectScaleZ);
-	// --- MRPP MODIFICATION START ---
-	objectScaleRow.add(scaleCopyButton, scalePasteButton);
-	objectScaleRow.setMarginBottom("8px");
-	// --- MRPP MODIFICATION END ---
 
 	container.add(objectScaleRow);
-
-	// --- MRPP MODIFICATION START ---
-	// 添加重置位置/旋转/缩放按钮行
-	const objectResetRow = new UIRow();
-
-	// 重置位置按钮
-	const resetPositionButton = new UIButton(strings.getKey("sidebar/object/resetPosition"))
-		.setWidth("80px")
-		.onClick(function () {
-			if (editor.selected !== null) {
-				const newPosition = new THREE.Vector3(0, 0, 0);
-				editor.execute(
-					new SetPositionCommand(editor, editor.selected, newPosition)
-				);
-				editor.showNotification(strings.getKey("sidebar/object/position") + strings.getKey("sidebar/object/haveReset"));
-			}
-		});
-
-	// 重置旋转按钮
-	const resetRotationButton = new UIButton(strings.getKey("sidebar/object/resetRotation"))
-		.setWidth("80px")
-		.onClick(function () {
-			if (editor.selected !== null) {
-				const newRotation = new THREE.Euler(0, 0, 0);
-				editor.execute(
-					new SetRotationCommand(editor, editor.selected, newRotation)
-				);
-				editor.showNotification(strings.getKey("sidebar/object/rotation") + strings.getKey("sidebar/object/haveReset"));
-			}
-		});
-
-	// 重置缩放按钮
-	const resetScaleButton = new UIButton(strings.getKey("sidebar/object/resetScale"))
-		.setWidth("80px")
-		.onClick(function () {
-			if (editor.selected !== null) {
-				const newScale = new THREE.Vector3(1, 1, 1);
-				editor.execute(new SetScaleCommand(editor, editor.selected, newScale));
-				editor.showNotification(strings.getKey("sidebar/object/scale") + strings.getKey("sidebar/object/haveReset"));
-			}
-		});
-
-	objectResetRow.add(resetPositionButton);
-	objectResetRow.add(resetRotationButton);
-	objectResetRow.add(resetScaleButton);
-
-	container.add(objectResetRow);
-	// --- MRPP MODIFICATION END ---
-
-	// --- MRPP MODIFICATION START ---
-	// 添加全部变换数据的复制粘贴行
-	const transformActionsRow = new UIRow();
-
-	// 全部变换数据复制按钮
-	const transformCopyButton = new UIButton("")
-		.setWidth("24px")
-		.onClick(function () {
-			if (editor.selected !== null) {
-				const positionData = new THREE.Vector3(
-					objectPositionX.getValue(),
-					objectPositionY.getValue(),
-					objectPositionZ.getValue()
-				);
-				const rotationData = new THREE.Euler(
-					objectRotationX.getValue() * THREE.MathUtils.DEG2RAD,
-					objectRotationY.getValue() * THREE.MathUtils.DEG2RAD,
-					objectRotationZ.getValue() * THREE.MathUtils.DEG2RAD
-				);
-				const scaleData = new THREE.Vector3(
-					objectScaleX.getValue(),
-					objectScaleY.getValue(),
-					objectScaleZ.getValue()
-				);
-
-				// 更新全局剪贴板
-				clipboard.position = positionData;
-				clipboard.rotation = rotationData;
-				clipboard.scale = scaleData;
-
-				editor.showNotification("全部数据复制成功");
-			}
-		});
-
-	transformCopyButton.dom.title = "复制全部数据";
-	styleIconButton(transformCopyButton);
-
-	// 添加复制图标
-	const transformCopyIcon = document.createElement("img");
-	transformCopyIcon.src = "images/copy.png";
-	styleActionIcon(transformCopyIcon);
-	transformCopyButton.dom.appendChild(transformCopyIcon);
-
-	// 全部变换数据粘贴按钮
-	const transformPasteButton = new UIButton("")
-		.setMarginLeft("2px")
-		.setWidth("24px")
-		.onClick(function () {
-			if (editor.selected !== null) {
-				if (clipboard.position !== null) {
-					editor.execute(
-						new SetPositionCommand(
-							editor,
-							editor.selected,
-							clipboard.position.clone()
-						)
-					);
-				}
-				if (clipboard.rotation !== null) {
-					editor.execute(
-						new SetRotationCommand(
-							editor,
-							editor.selected,
-							clipboard.rotation.clone()
-						)
-					);
-				}
-				if (clipboard.scale !== null) {
-					editor.execute(
-						new SetScaleCommand(
-							editor,
-							editor.selected,
-							clipboard.scale.clone()
-						)
-					);
-				}
-				editor.showNotification("全部数据粘贴成功");
-			}
-		});
-
-	transformPasteButton.dom.title = "粘贴全部数据";
-	styleIconButton(transformPasteButton);
-
-	// 添加粘贴图标
-	const transformPasteIcon = document.createElement("img");
-	transformPasteIcon.src = "images/paste.png";
-	styleActionIcon(transformPasteIcon);
-	transformPasteButton.dom.appendChild(transformPasteIcon);
-
-	transformActionsRow.add(transformCopyButton);
-	transformActionsRow.add(transformPasteButton);
-
-	// 默认隐藏复制粘贴按钮行
-	transformActionsRow.setDisplay("none");
-
-	container.add(transformActionsRow);
-	// --- MRPP MODIFICATION END ---
-
-	// --- MRPP MODIFICATION START ---
-	// 创建变换组边框div
-	const createTransformBorder = function () {
-		// 移除旧的边框（如果存在）
-		const oldBorder = container.dom.querySelector(".transform-border");
-		if (oldBorder) {
-			container.dom.removeChild(oldBorder);
-		}
-
-		// 创建新的边框
-		const transformBorder = document.createElement("div");
-		transformBorder.className = "transform-border";
-		transformBorder.style.position = "absolute";
-		transformBorder.style.border = "1px dashed #888";
-		transformBorder.style.borderRadius = "4px";
-		transformBorder.style.pointerEvents = "none";
-		transformBorder.style.display = "none";
-		transformBorder.style.zIndex = "0";
-		container.dom.appendChild(transformBorder);
-
-		return transformBorder;
-	};
-
-	// 创建并获取边框元素
-	let transformBorder = createTransformBorder();
-
-	// 创建空白间隙行变量
-	let spacerRow = null;
-
-	// 更新边框位置和大小
-	const updateBorderPosition = function () {
-		if (!objectPositionRow.dom || !objectScaleRow.dom) return;
-		const scrollTop = container.dom.scrollTop || 0;
-		const scrollLeft = container.dom.scrollLeft || 0;
-
-		// 计算数据区域的位置（标签宽度是90px）
-		const labelWidth = 90;
-		const paddingLeft = 5;
-
-		// 获取数据区域的左边界（标签宽度+一些padding）
-		const dataAreaLeft = labelWidth + paddingLeft;
-
-		// 获取位置行的输入框区域
-		const posInputX = objectPositionX.dom;
-		const posInputZ = objectPositionZ.dom;
-		const scaleInputZ = objectScaleZ.dom;
-
-		// 计算数据区域的顶部和底部位置
-		const posRowTop = objectPositionRow.dom.offsetTop;
-		const scaleRowBottom =
-			objectScaleRow.dom.offsetTop + objectScaleRow.dom.offsetHeight;
-
-		// 计算数据区域的宽度（从第一个输入框到最后一个输入框，不包括单属性复制按钮的宽度）
-		// 排除单一属性复制粘贴按钮的宽度(约52px)
-		const dataAreaWidth =
-			posInputZ.offsetLeft + posInputZ.offsetWidth - posInputX.offsetLeft;
-
-		// 设置边框位置和大小，只包围数据区域（不包括单一属性复制粘贴按钮）
-		transformBorder.style.top = posRowTop - scrollTop - 5 + "px";
-		transformBorder.style.left = dataAreaLeft - scrollLeft + "px";
-		transformBorder.style.width = dataAreaWidth + "px";
-		transformBorder.style.height = scaleRowBottom - posRowTop + 10 + "px";
-
-		// 更新按钮位置，放在数据区域的正下方并水平居中
-		const buttonWidth =
-			transformCopyButton.dom.offsetWidth +
-			transformPasteButton.dom.offsetWidth +
-			2; // +2是按钮间距
-		const buttonLeft = dataAreaLeft + (dataAreaWidth - buttonWidth) / 2;
-
-		transformActionsRow.dom.style.position = "absolute";
-		transformActionsRow.dom.style.left = buttonLeft - scrollLeft + "px";
-		transformActionsRow.dom.style.top = scaleRowBottom - scrollTop + 5 + "px";
-	};
-
-	// 创建或获取间隙行
-	const getSpacerRow = function () {
-		if (!spacerRow) {
-			spacerRow = new UIPanel();
-			spacerRow.setDisplay("none");
-			spacerRow.dom.style.border = "none";
-			spacerRow.dom.style.marginTop = "0";
-			spacerRow.dom.style.marginBottom = "0";
-			spacerRow.dom.style.height = "14px";
-
-			// 将间隙行插入到适当位置（在objectResetRow前）
-			if (container.dom.contains(objectResetRow.dom)) {
-				container.dom.insertBefore(spacerRow.dom, objectResetRow.dom);
-			} else {
-				container.add(spacerRow);
-			}
-		}
-		return spacerRow;
-	};
-
-	// 显示变换操作和边框
-	const showTransformActions = function () {
-		transformActionsRow.setDisplay("");
-		transformBorder.style.display = "block";
-		updateBorderPosition();
-
-		// 显示间隙空白行
-		getSpacerRow().setDisplay("");
-	};
-
-	// 隐藏变换操作和边框
-	const hideTransformActions = function () {
-		transformActionsRow.setDisplay("none");
-		transformBorder.style.display = "none";
-
-		// 隐藏间隙空白行
-		if (spacerRow) {
-			spacerRow.setDisplay("none");
-		}
-	};
-
-	// 创建一个透明的悬停区域覆盖三个变换行的数据区域
-	const createHoverArea = function () {
-		// 移除旧的悬停区域（如果存在）
-		const oldHoverArea = container.dom.querySelector(".transform-hover-area");
-		if (oldHoverArea) {
-			container.dom.removeChild(oldHoverArea);
-		}
-
-		// 移除所有旧的事件监听器
-		removeAllEventListeners();
-
-		if (!objectPositionRow.dom || !objectScaleRow.dom) return;
-
-		// 添加鼠标事件到各行而不是使用覆盖层
-		// 这样就不会阻止与输入框的交互
-		const rows = [objectPositionRow, objectRotationRow, objectScaleRow];
-
-		// 计算数据区域的位置信息（用于检测鼠标是否在数据区域）
-		const labelWidth = 90;
-		const paddingLeft = 5;
-		const dataAreaLeft = labelWidth + paddingLeft;
-		const posInputX = objectPositionX.dom;
-		const posInputZ = objectPositionZ.dom;
-		const dataAreaWidth =
-			posInputZ.offsetLeft + posInputZ.offsetWidth - posInputX.offsetLeft;
-
-		// 用于跟踪鼠标是否在相关区域内
-		let isMouseInRelevantArea = false;
-
-		// 检查鼠标是否要隐藏工具栏的定时器
-		let hideTimeout = null;
-
-		// 检查鼠标是否在数据区域（不包括单一属性复制粘贴按钮）
-		const isInDataArea = function (event, element) {
-			const rect = element.getBoundingClientRect();
-			const relativeX = event.clientX - rect.left;
-
-			// 判断鼠标X坐标是否在数据区域范围内
-			return (
-				relativeX >= dataAreaLeft && relativeX <= dataAreaLeft + dataAreaWidth
-			);
-		};
-
-		// 检查鼠标是否在按钮区域
-		const isInButtonArea = function (event) {
-			const rect = transformActionsRow.dom.getBoundingClientRect();
-			return (
-				event.clientX >= rect.left &&
-				event.clientX <= rect.right &&
-				event.clientY >= rect.top &&
-				event.clientY <= rect.bottom
-			);
-		};
-
-		// 安全地显示变换操作和边框
-		const safeShowTransformActions = function () {
-			// 清除任何正在等待的隐藏定时器
-			if (hideTimeout) {
-				clearTimeout(hideTimeout);
-				hideTimeout = null;
-			}
-
-			isMouseInRelevantArea = true;
-			showTransformActions();
-		};
-
-		// 安全地隐藏变换操作和边框，带延迟
-		const safeHideTransformActions = function () {
-			// 清除任何正在等待的隐藏定时器
-			if (hideTimeout) {
-				clearTimeout(hideTimeout);
-			}
-
-			// 设置一个短暂的延迟，给鼠标时间移动到按钮上
-			hideTimeout = setTimeout(function () {
-				if (!isMouseInRelevantArea) {
-					hideTransformActions();
-				}
-				hideTimeout = null;
-			}, 200);
-		};
-
-		// 创建一个覆盖整个变换数据区域的透明层（包括行与行之间的间隙）
-		const transformAreaOverlay = document.createElement("div");
-		transformAreaOverlay.className = "transform-area-overlay";
-		transformAreaOverlay.style.position = "absolute";
-		const updateOverlayPosition = function () {
-			const scrollTop = container.dom.scrollTop || 0;
-			const scrollLeft = container.dom.scrollLeft || 0;
-			transformAreaOverlay.style.top =
-				objectPositionRow.dom.offsetTop - scrollTop - 5 + "px";
-			transformAreaOverlay.style.left = dataAreaLeft - scrollLeft + "px";
-			transformAreaOverlay.style.width = dataAreaWidth + "px";
-			transformAreaOverlay.style.height =
-				objectScaleRow.dom.offsetTop +
-				objectScaleRow.dom.offsetHeight -
-				objectPositionRow.dom.offsetTop +
-				10 +
-				"px";
-		};
-		updateOverlayPosition();
-		transformAreaOverlay.style.width = dataAreaWidth + "px";
-		transformAreaOverlay.style.zIndex = "1";
-		transformAreaOverlay.style.pointerEvents = "none"; // 不要阻止下层元素的事件
-
-		container.dom.appendChild(transformAreaOverlay);
-
-		// 滚动时同步更新覆盖层和按钮/边框位置，防止图标跟随滚轮偏移
-		addEventListenerWithRef(container.dom, "scroll", function () {
-			updateOverlayPosition();
-			if (transformActionsRow.dom.style.display !== "none") {
-				updateBorderPosition();
-			}
-		});
-
-		// 全局鼠标移动事件
-		const handleGlobalMouseMove = function (event) {
-			// 计算鼠标是否在变换数据区域内
-			const overlayRect = transformAreaOverlay.getBoundingClientRect();
-			const inOverlayArea =
-				event.clientX >= overlayRect.left &&
-				event.clientX <= overlayRect.right &&
-				event.clientY >= overlayRect.top &&
-				event.clientY <= overlayRect.bottom;
-
-			const inButtonArea = isInButtonArea(event);
-
-			// 更新状态
-			isMouseInRelevantArea =
-				inOverlayArea ||
-				inButtonArea ||
-				transformActionsRow.dom.contains(event.target) ||
-				transformCopyButton.dom.contains(event.target) ||
-				transformPasteButton.dom.contains(event.target);
-
-			// 根据鼠标位置决定显示或隐藏
-			if (isMouseInRelevantArea) {
-				safeShowTransformActions();
-			} else if (transformActionsRow.dom.style.display !== "none") {
-				safeHideTransformActions();
-			}
-		};
-
-		// 为document添加鼠标移动事件
-		addEventListenerWithRef(document, "mousemove", handleGlobalMouseMove);
-
-		// 为复制粘贴按钮添加单独的鼠标事件
-		addEventListenerWithRef(transformCopyButton.dom, "mouseenter", function () {
-			isMouseInRelevantArea = true;
-			safeShowTransformActions();
-		});
-
-		addEventListenerWithRef(
-			transformPasteButton.dom,
-			"mouseenter",
-			function () {
-				isMouseInRelevantArea = true;
-				safeShowTransformActions();
-			}
-		);
-
-		// 为按钮行添加事件
-		addEventListenerWithRef(transformActionsRow.dom, "mouseenter", function () {
-			isMouseInRelevantArea = true;
-			safeShowTransformActions();
-		});
-
-		// 在document上添加全局点击事件，用于处理点击按钮后的状态
-		addEventListenerWithRef(document, "click", function (event) {
-			if (
-				transformCopyButton.dom.contains(event.target) ||
-				transformPasteButton.dom.contains(event.target)
-			) {
-				// 如果点击的是复制或粘贴按钮，保持显示一小段时间后隐藏
-				setTimeout(function () {
-					isMouseInRelevantArea = false;
-					hideTransformActions();
-				}, 200);
-			}
-		});
-	};
-
-	// 在选择对象时更新UI并创建悬停区域
-	signals.objectSelected.add(function () {
-		// 延迟执行以确保DOM已更新
-		setTimeout(function () {
-			createHoverArea();
-			transformBorder = createTransformBorder();
-		}, 100);
-	});
-	// --- MRPP MODIFICATION END ---
 
 	// fov
 
@@ -1268,35 +457,6 @@ function SidebarObject(editor) {
 
 	container.add(objectVisibleRow);
 
-	// --- MRPP MODIFICATION START ---
-	// loop
-	const objectLoopRow = new UIRow();
-	const objectLoop = new UICheckbox().onChange(update);
-
-	objectLoopRow.add(
-		new UIText(strings.getKey("sidebar/object/loop")).setWidth("90px")
-	);
-	objectLoopRow.add(objectLoop);
-
-	container.add(objectLoopRow);
-	// --- MRPP MODIFICATION END ---
-
-
-	// --- MRPP MODIFICATION START ---
-	//sortingOrder
-	const objectSortingRow = new UIRow();
-	const objectSorting = new UISelect().onChange(update);
-
-	objectSorting.setOptions(
-  	Object.fromEntries([0, 1, 2].map(i => [i, String(i)]))
-	);
-
-	objectSortingRow.add(new UIText(strings.getKey("sidebar/object/sortingOrder")).setWidth("90px"));
-	objectSortingRow.add(objectSorting);
-
-	container.add(objectSortingRow);
-	// --- MRPP MODIFICATION END ---
-
 	// frustumCulled
 
 	const objectFrustumCulledRow = new UIRow();
@@ -1307,7 +467,7 @@ function SidebarObject(editor) {
 	);
 	objectFrustumCulledRow.add(objectFrustumCulled);
 
-	//！！	container.add(objectFrustumCulledRow)
+	//container.add(objectFrustumCulledRow)
 
 	// renderOrder
 
@@ -1320,8 +480,6 @@ function SidebarObject(editor) {
 	objectRenderOrderRow.add(objectRenderOrder);
 
 	//container.add(objectRenderOrderRow)
-
-	// 文本控件已拆分到独立的 Sidebar.Text 模块（只在 Text 节点可见）
 
 	// user data
 
@@ -1652,50 +810,6 @@ function SidebarObject(editor) {
 			} catch (exception) {
 				console.warn(exception);
 			}
-
-			// --- MRPP MODIFICATION START ---
-			if (isPictureType(object)) {
-			const selectedSorting = parseInt(objectSorting.getValue(), 10) || 0;
-			const currentSorting = (object.userData && object.userData.sortingOrder !== undefined) ?
-				Number(object.userData.sortingOrder) : 0;
-
-			if (currentSorting !== selectedSorting) {
-				const userData = JSON.parse(JSON.stringify(object.userData || {}));
-				userData.sortingOrder = selectedSorting;
-
-				object.renderOrder = 0 - userData.sortingOrder;
-
-				editor.execute(
-					new SetValueCommand(
-						editor,
-						object,
-						"userData",
-						userData
-					)
-				);
-
-			// 触发对象变化信号，确保渲染更新
-			editor.signals.objectChanged.dispatch(object);
-		}
-	}
-
-			if (isMediaType(object)) {
-				if (object.userData.loop !== objectLoop.getValue()) {
-					const userData = JSON.parse(JSON.stringify(object.userData));
-					userData.loop = objectLoop.getValue();
-
-					editor.execute(
-						new SetValueCommand(
-							editor,
-							object,
-							"userData",
-							userData
-						)
-					);
-				}
-
-			}
-			// --- MRPP MODIFICATION END ---
 		}
 	}
 
@@ -1736,30 +850,6 @@ function SidebarObject(editor) {
 			}
 		}
 
-		// --- MRPP MODIFICATION START ---
-		const isMediaObject = isMediaType(object);
-		objectLoopRow.setDisplay(isMediaObject ? "" : "none");
-		// 仅当对象为图片类型（picture）时显示 sorting order
-		const isPictureObject = isPictureType(object);
-		objectSortingRow.setDisplay(isPictureObject ? "" : "none");
-
-		 // 新增：如果对象类型为 Module，则隐藏 visible 行
-		if (object && object.type && typeof object.type === 'string' && object.type.toLowerCase() === 'module') {
-			objectVisibleRow.setDisplay('none');
-		} else {
-			objectVisibleRow.setDisplay('');
-		}
-
-		// 检查 userData/type 权限
-		if (editor.access.can(ABILITIES.UI_ADVANCED)) {
-			objectTypeRow.setDisplay('');
-			objectUserDataRow.setDisplay('');
-		} else {
-			objectTypeRow.setDisplay('none');
-			objectUserDataRow.setDisplay('none');
-		}
-		// --- MRPP MODIFICATION END ---
-
 		if (object.isLight) {
 			objectReceiveShadow.setDisplay("none");
 		}
@@ -1768,48 +858,6 @@ function SidebarObject(editor) {
 			objectShadowRow.setDisplay("none");
 		}
 	}
-
-	// --- MRPP MODIFICATION START ---
-	// 判断对象是否为音频或视频类型
-	function isMediaType(object) {
-		if (object.userData && object.userData.type) {
-			const type = object.userData.type.toLowerCase();
-			if (type === 'video' || type === 'sound') return true;
-
-
-			// if (type === 'particle') {
-			// 	if (object.userData.isVideo || object.userData.isAudio) return true;
-			// }
-		}
-
-		if (object.name) {
-			const name = object.name.toLowerCase();
-			if (name.includes('[video]') || name.includes('[sound]')) return true;
-
-		}
-
-		return false;
-	}
-
-	// 判断对象是否为图片类型（picture）
-	function isPictureType(object) {
-		if (!object) return false;
-		try {
-			if (object.userData && object.userData.type) {
-				const type = object.userData.type.toLowerCase();
-				if (type === 'picture') return true;
-			}
-
-			if (object.name) {
-				const name = object.name.toLowerCase();
-				if (name.includes('[picture]') || name.includes('[photo]')) return true;
-			}
-		} catch (e) {
-			// ignore
-		}
-		return false;
-	}
-	// --- MRPP MODIFICATION END ---
 
 	function updateTransformRows(object) {
 		if (
@@ -1828,17 +876,9 @@ function SidebarObject(editor) {
 
 	signals.objectSelected.add(function (object) {
 		if (object !== null) {
-			const selectedObjects = editor.getSelectedObjects();
-
-			if (selectedObjects.length > 1) {
-				// 多选模式，隐藏单对象面板
-				container.setDisplay("none");
-			} else {
-				// 单选模式，显示单对象面板
-				container.setDisplay("block");
-				updateRows(object);
-				updateUI(object);
-			}
+			container.setDisplay("");
+			updateRows(object);
+			updateUI(object);
 		} else {
 			container.setDisplay("none");
 		}
@@ -1857,20 +897,7 @@ function SidebarObject(editor) {
 	});
 
 	function updateUI(object) {
-		objectType.setValue(getLocalizedObjectType(object));
-		// --- MRPP MODIFICATION START ---
-		const showEditEntityButton =
-			editor.type &&
-			editor.type.toLowerCase() === "verse" &&
-			object &&
-			typeof object.type === "string" &&
-			object.type.toLowerCase() === "module" &&
-			object.userData &&
-			object.userData.custom != 0 &&
-			object.userData.meta_id != null;
-		objectEditEntityButton.setDisplay(showEditEntityButton ? "" : "none");
-		objectEditEntityRow.setDisplay(showEditEntityButton ? "" : "none");
-		// --- MRPP MODIFICATION END ---
+		objectType.setValue(object.type);
 
 		objectUUID.setValue(object.uuid);
 		objectName.setValue(object.name);
@@ -1947,16 +974,6 @@ function SidebarObject(editor) {
 			objectCastShadow.setValue(object.castShadow);
 		}
 
-		// --- MRPP MODIFICATION START ---
-		// 同步 sortingOrder 值（用于 picture 类型）
-		try {
-			const sortingVal = (object.userData && object.userData.sortingOrder !== undefined) ? object.userData.sortingOrder : 0;
-			objectSorting.setValue(String(sortingVal));
-		} catch (e) {
-			objectSorting.setValue('0');
-		}
-		// --- MRPP MODIFICATION END ---
-
 		if (object.receiveShadow !== undefined) {
 			objectReceiveShadow.setValue(object.receiveShadow);
 		}
@@ -1982,23 +999,9 @@ function SidebarObject(editor) {
 		objectUserData.setBackgroundColor("");
 
 		updateTransformRows(object);
-
-		// --- MRPP MODIFICATION START ---
-		if (isMediaType(object)) {
-			if (object.userData && object.userData.loop !== undefined) {
-				objectLoop.setValue(object.userData.loop);
-			}
-			else {
-				objectLoop.setValue(false);
-			}
-		}
-		// --- MRPP MODIFICATION END ---
 	}
 
 	container.add(objectUUIDRow);
-	// --- MRPP MODIFICATION START ---
-	container.add(objectEditEntityRow);
-	// --- MRPP MODIFICATION END ---
 
 	return container;
 }

@@ -3,28 +3,12 @@ import * as THREE from 'three';
 import { UIPanel, UIRow, UIHorizontalRule } from './libs/ui.js';
 
 import { AddObjectCommand } from './commands/AddObjectCommand.js';
-// --- MRPP MODIFICATION START ---
-import { MetaFactory } from '../../../plugin/mrpp/MetaFactory.js';
-import { VerseFactory } from '../../../plugin/mrpp/VerseFactory.js';
-import { Builder } from '../../../plugin/mrpp/Builder.js';
-// --- MRPP MODIFICATION END ---
-
 
 function MenubarAdd( editor ) {
 
-	// --- MRPP MODIFICATION START ---
-	const factory = new MetaFactory(editor);
-
-	const builder = new Builder();
 	const strings = editor.strings;
 
-	// 将resources暴露到window全局对象，以便其他模块能够访问
-	const resources = new Map();
-	window.resources = resources;
-	// --- MRPP MODIFICATION END ---
-
 	const container = new UIPanel();
-
 	container.setClass( 'menu' );
 
 	const title = new UIPanel();
@@ -36,242 +20,315 @@ function MenubarAdd( editor ) {
 	options.setClass( 'options' );
 	container.add( options );
 
-	// --- MRPP MODIFICATION START ---
-	// 存储所有创建的资源菜单项的映射
-	const resourceMenuItems = new Map();
-	// --- MRPP MODIFICATION END ---
+	// Group
 
-	let option = null;
+	let option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( strings.getKey( 'menubar/add/group' ) );
+	option.onClick( function () {
 
-	// --- MRPP MODIFICATION START ---
-	if ( editor.type.toLowerCase() == 'meta' ) {
+		const mesh = new THREE.Group();
+		mesh.name = 'Group';
 
+		editor.execute( new AddObjectCommand( editor, mesh ) );
 
-		// 更新资源菜单项的可见性
-		const updateResourceMenuItems = function(availableTypes) {
-			if (!availableTypes || !Array.isArray(availableTypes)) return;
-
-			// 先隐藏所有资源菜单项
-			resourceMenuItems.forEach((menuItem) => {
-				menuItem.dom.style.display = 'none';
-			});
-
-			// 显示可用的资源菜单项
-			availableTypes.forEach(type => {
-				const menuItem = resourceMenuItems.get(type);
-				if (menuItem) {
-					menuItem.dom.style.display = 'block';
-				}
-			});
-		};
-		const loadResource = async function (data) {
-			// 将资源同时保存到本地和全局资源集合
-			resources.set(data.id.toString(), data );
-			// 添加到editor.resources
-			//if (!editor.resources) editor.resources = [];
-			if (!editor.data.resources) editor.data.resources = [];
-
-			// 更新或添加资源
-			const existingIndex = editor.data.resources.findIndex(resource =>
-				resource && resource.id == data.id
-			);
-
-			if (existingIndex >= 0) {
-				editor.data.resources[existingIndex] = data;
-			} else {
-				editor.data.resources.push(data);
-			}
-
-			// 创建对象
-			const raw = builder.resource( data );
-			if ( raw ) {
-				const node = await factory.building( raw, resources );
-				if ( node ) {
-					editor.execute( new AddObjectCommand( editor, node ) );
-				}
-			}
-		}
-
-		const loadResourceBatch = async function (items) {
-			if (!Array.isArray(items) || items.length === 0) return;
-
-			for (const item of items) {
-				if (!item) continue;
-				await loadResource(item);
-			}
-		}
-		const loadPhototype = async function (data) {
-			//alert(JSON.stringify(data));
-
-			const node = await factory.building( builder.phototype(data), resources );
-			editor.execute( new AddObjectCommand( editor, node ) );
-			//await factory.addGizmo( node );
-			console.error('加载phototype:', data);
-		}
-
-		editor.signals.messageReceive.add( async function ( params ) {
-			switch (params.action) {
-				case 'load-resource':
-					if (Array.isArray(params.data)) {
-						await loadResourceBatch(params.data);
-					} else if (params.data && Array.isArray(params.data.resources)) {
-						await loadResourceBatch(params.data.resources);
-					} else if (params.data) {
-						await loadResource(params.data);
-					}
-					break;
-				case 'load-resources':
-					if (params.data && Array.isArray(params.data.resources)) {
-						await loadResourceBatch(params.data.resources);
-					} else if (Array.isArray(params.data)) {
-						await loadResourceBatch(params.data);
-					}
-					break;
-				case 'available-resource-types':
-					updateResourceMenuItems( params.data );
-					break;
-				case 'load-phototype':
-					loadPhototype( params.data );
-					break;
-			}
-
-		} );
-
-		// Node
-		option = new UIRow();
-		option.setClass( 'option' );
-		option.setTextContent( strings.getKey( 'menubar/add/point' ) );
-		option.onClick( async function () {
-
-			const node = await factory.building( builder.entity(), resources );
-			editor.execute( new AddObjectCommand( editor, node ) );
-
-		} );
-		options.add( option );
-
-		// Text
-		option = new UIRow();
-		option.setClass( 'option' );
-		option.setTextContent( strings.getKey( 'menubar/add/text' ) );
-		option.onClick( async function () {
-
-			const node = await factory.building( builder.text(), resources );
-			editor.execute( new AddObjectCommand( editor, node ) );
-
-		} );
-		options.add( option );
-
-		// 创建资源类型菜单项的函数
-		const createResourceMenuItem = function(resourceType) {
-			const menuItem = new UIRow();
-			menuItem.setClass( 'option' );
-			menuItem.setTextContent( strings.getKey( 'menubar/add/' + resourceType ) );
-			menuItem.onClick( async function () {
-				editor.signals.messageSend.dispatch(
-					{
-						action: 'load-resource',
-						data: { type: resourceType }
-					} );
-			} );
-			// 存储创建的菜单项
-			resourceMenuItems.set(resourceType, menuItem);
-			return menuItem;
-		};
-
-		// 初始创建所有可能的资源类型菜单项，默认先隐藏
-		const allPossibleResourceTypes = ['-', 'voxel', 'polygen', 'picture', 'video', 'audio', 'particle','-','phototype'];
-		allPossibleResourceTypes.forEach(type => {
-			if (type === '-') {
-				options.add(new UIHorizontalRule());
-				return;
-			}
-			const menuItem = createResourceMenuItem(type);
-			menuItem.dom.style.display = 'none'; // 默认隐藏
-			options.add(menuItem);
-		});
-
-		// 请求获取可用的资源类型
-		editor.signals.messageSend.dispatch({
-			action: 'get-available-resource-types'
-		});
-
-		// 如果编辑器已经加载了可用资源类型，立即更新菜单
-		if (editor.availableResourceTypes) {
-			updateResourceMenuItems(editor.availableResourceTypes);
-		}
-
-	} else if ( editor.type.toLowerCase() == 'verse' ) {
-
-		// const factory = new VerseFactory();
-		editor.signals.messageReceive.add( async function ( params ) {
-
-
-			if ( params.action === 'add-module' ) {
-
-				const data = params.data.data;
-				const setup = params.data.setup;
-				const title = params.data.title;
-				if ( data.resources ) {
-
-					data.resources.forEach( resource => {
-						resources.set( resource.id.toString(), resource );
-
-					} );
-
-				}
-
-
-				const node = factory.addModule( builder.module( data.id, title ) );
-
-				node.userData.data = JSON.stringify( setup );
-				node.userData.custom = data.custom;
-				if ( data && data.data ) {
-					await factory.readMeta( node, data.data, resources, editor );
-				}
-
-				await factory.addGizmo( node );
-				editor.execute( new AddObjectCommand( editor, node ) );
-
-			}
-
-		} );
-
-
-		// Meta
-		option = new UIRow();
-		option.setClass( 'option' );
-		option.setTextContent( strings.getKey( 'menubar/add/meta' ) );
-		option.onClick( async function () {
-
-			editor.signals.messageSend.dispatch( {
-				action: 'add-meta'
-			} );
-
-		} );
-		options.add( option );
-
-/*
-		// Prefabs
-		option = new UIRow();
-		option.setClass( 'option' );
-		option.setTextContent( strings.getKey( 'menubar/add/prefab' ) );
-		option.onClick( async function () {
-
-			editor.signals.messageSend.dispatch(
-				{
-					action: 'add-prefab'
-				} );
-
-		} );
-		options.add( option );
-		*/
-
-	}
-	// --- MRPP MODIFICATION END ---
+	} );
+	options.add( option );
 
 	//
 
-	//options.add(new UIHorizontalRule());
+	options.add( new UIHorizontalRule() );
+
+	// Plane
+
+	option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( strings.getKey( 'menubar/add/plane' ) );
+	option.onClick( function () {
+
+		const geometry = new THREE.PlaneGeometry( 1, 1, 1, 1 );
+		const material = new THREE.MeshStandardMaterial();
+		const mesh = new THREE.Mesh( geometry, material );
+		mesh.name = 'Plane';
+
+		editor.execute( new AddObjectCommand( editor, mesh ) );
+
+	} );
+	options.add( option );
+
+	// Box
+
+	option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( strings.getKey( 'menubar/add/box' ) );
+	option.onClick( function () {
+
+		const geometry = new THREE.BoxGeometry( 1, 1, 1, 1, 1, 1 );
+		const material = new THREE.MeshStandardMaterial();
+		const mesh = new THREE.Mesh( geometry, material );
+		mesh.name = 'Box';
+
+		editor.execute( new AddObjectCommand( editor, mesh ) );
+
+	} );
+	options.add( option );
+
+	// Capsule
+
+	option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( strings.getKey( 'menubar/add/capsule' ) );
+	option.onClick( function () {
+
+		const geometry = new THREE.CapsuleGeometry( 1, 1, 4, 8 );
+		const material = new THREE.MeshStandardMaterial();
+		const mesh = new THREE.Mesh( geometry, material );
+		mesh.name = 'Capsule';
+
+		editor.execute( new AddObjectCommand( editor, mesh ) );
+
+	} );
+	options.add( option );
+
+	// Circle
+
+	option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( strings.getKey( 'menubar/add/circle' ) );
+	option.onClick( function () {
+
+		const geometry = new THREE.CircleGeometry( 1, 8, 0, Math.PI * 2 );
+		const material = new THREE.MeshStandardMaterial();
+		const mesh = new THREE.Mesh( geometry, material );
+		mesh.name = 'Circle';
+
+		editor.execute( new AddObjectCommand( editor, mesh ) );
+
+	} );
+	options.add( option );
+
+	// Cylinder
+
+	option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( strings.getKey( 'menubar/add/cylinder' ) );
+	option.onClick( function () {
+
+		const geometry = new THREE.CylinderGeometry( 1, 1, 1, 8, 1, false, 0, Math.PI * 2 );
+		const material = new THREE.MeshStandardMaterial();
+		const mesh = new THREE.Mesh( geometry, material );
+		mesh.name = 'Cylinder';
+
+		editor.execute( new AddObjectCommand( editor, mesh ) );
+
+	} );
+	options.add( option );
+
+	// Ring
+
+	option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( strings.getKey( 'menubar/add/ring' ) );
+	option.onClick( function () {
+
+		const geometry = new THREE.RingGeometry( 0.5, 1, 8, 1, 0, Math.PI * 2 );
+		const material = new THREE.MeshStandardMaterial();
+		const mesh = new THREE.Mesh( geometry, material );
+		mesh.name = 'Ring';
+
+		editor.execute( new AddObjectCommand( editor, mesh ) );
+
+	} );
+	options.add( option );
+
+	// Sphere
+
+	option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( strings.getKey( 'menubar/add/sphere' ) );
+	option.onClick( function () {
+
+		const geometry = new THREE.SphereGeometry( 1, 8, 6, 0, Math.PI * 2, 0, Math.PI );
+		const material = new THREE.MeshStandardMaterial();
+		const mesh = new THREE.Mesh( geometry, material );
+		mesh.name = 'Sphere';
+
+		editor.execute( new AddObjectCommand( editor, mesh ) );
+
+	} );
+	options.add( option );
+
+	// Dodecahedron
+
+	option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( strings.getKey( 'menubar/add/dodecahedron' ) );
+	option.onClick( function () {
+
+		const geometry = new THREE.DodecahedronGeometry( 1, 0 );
+		const material = new THREE.MeshStandardMaterial();
+		const mesh = new THREE.Mesh( geometry, material );
+		mesh.name = 'Dodecahedron';
+
+		editor.execute( new AddObjectCommand( editor, mesh ) );
+
+	} );
+	options.add( option );
+
+	// Icosahedron
+
+	option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( strings.getKey( 'menubar/add/icosahedron' ) );
+	option.onClick( function () {
+
+		const geometry = new THREE.IcosahedronGeometry( 1, 0 );
+		const material = new THREE.MeshStandardMaterial();
+		const mesh = new THREE.Mesh( geometry, material );
+		mesh.name = 'Icosahedron';
+
+		editor.execute( new AddObjectCommand( editor, mesh ) );
+
+	} );
+	options.add( option );
+
+	// Octahedron
+
+	option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( strings.getKey( 'menubar/add/octahedron' ) );
+	option.onClick( function () {
+
+		const geometry = new THREE.OctahedronGeometry( 1, 0 );
+		const material = new THREE.MeshStandardMaterial();
+		const mesh = new THREE.Mesh( geometry, material );
+		mesh.name = 'Octahedron';
+
+		editor.execute( new AddObjectCommand( editor, mesh ) );
+
+	} );
+	options.add( option );
+
+	// Tetrahedron
+
+	option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( strings.getKey( 'menubar/add/tetrahedron' ) );
+	option.onClick( function () {
+
+		const geometry = new THREE.TetrahedronGeometry( 1, 0 );
+		const material = new THREE.MeshStandardMaterial();
+		const mesh = new THREE.Mesh( geometry, material );
+		mesh.name = 'Tetrahedron';
+
+		editor.execute( new AddObjectCommand( editor, mesh ) );
+
+	} );
+	options.add( option );
+
+	//
+
+	options.add( new UIHorizontalRule() );
+
+	// Torus
+
+	option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( strings.getKey( 'menubar/add/torus' ) );
+	option.onClick( function () {
+
+		const geometry = new THREE.TorusGeometry( 1, 0.4, 8, 6, Math.PI * 2 );
+		const material = new THREE.MeshStandardMaterial();
+		const mesh = new THREE.Mesh( geometry, material );
+		mesh.name = 'Torus';
+
+		editor.execute( new AddObjectCommand( editor, mesh ) );
+
+	} );
+	options.add( option );
+
+	// TorusKnot
+
+	option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( strings.getKey( 'menubar/add/torusknot' ) );
+	option.onClick( function () {
+
+		const geometry = new THREE.TorusKnotGeometry( 1, 0.4, 64, 8, 2, 3 );
+		const material = new THREE.MeshStandardMaterial();
+		const mesh = new THREE.Mesh( geometry, material );
+		mesh.name = 'TorusKnot';
+
+		editor.execute( new AddObjectCommand( editor, mesh ) );
+
+	} );
+	options.add( option );
+
+	// Tube
+
+	option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( strings.getKey( 'menubar/add/tube' ) );
+	option.onClick( function () {
+
+		const path = new THREE.CatmullRomCurve3( [
+			new THREE.Vector3( 2, 2, - 2 ),
+			new THREE.Vector3( 2, - 2, - 0.6666666666666666 ),
+			new THREE.Vector3( - 2, - 2, 0.6666666666666666 ),
+			new THREE.Vector3( - 2, 2, 2 )
+		] );
+
+		const geometry = new THREE.TubeGeometry( path, 64, 1, 8, false );
+		const material = new THREE.MeshStandardMaterial();
+		const mesh = new THREE.Mesh( geometry, material );
+		mesh.name = 'Tube';
+
+		editor.execute( new AddObjectCommand( editor, mesh ) );
+
+	} );
+	options.add( option );
+
+	// Lathe
+
+	option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( strings.getKey( 'menubar/add/lathe' ) );
+	option.onClick( function () {
+
+		const points = [
+			new THREE.Vector2( 0, - 0.5 ),
+			new THREE.Vector2( 0.5, 0 ),
+			new THREE.Vector2( 0, 0.5 )
+		];
+
+		const geometry = new THREE.LatheGeometry( points, 12, 0, Math.PI * 2 );
+		const material = new THREE.MeshStandardMaterial( { side: THREE.DoubleSide } );
+		const mesh = new THREE.Mesh( geometry, material );
+		mesh.name = 'Lathe';
+
+		editor.execute( new AddObjectCommand( editor, mesh ) );
+
+	} );
+	options.add( option );
+
+	// Sprite
+
+	option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( strings.getKey( 'menubar/add/sprite' ) );
+	option.onClick( function () {
+
+		const sprite = new THREE.Sprite( new THREE.SpriteMaterial() );
+		sprite.name = 'Sprite';
+
+		editor.execute( new AddObjectCommand( editor, sprite ) );
+
+	} );
+	options.add( option );
+
+	//
+
+	options.add( new UIHorizontalRule() );
 
 	// AmbientLight
 
@@ -288,7 +345,7 @@ function MenubarAdd( editor ) {
 		editor.execute( new AddObjectCommand( editor, light ) );
 
 	} );
-	//options.add(option);
+	options.add( option );
 
 	// DirectionalLight
 
@@ -309,7 +366,7 @@ function MenubarAdd( editor ) {
 		editor.execute( new AddObjectCommand( editor, light ) );
 
 	} );
-	//options.add(option);
+	options.add( option );
 
 	// HemisphereLight
 
@@ -330,7 +387,7 @@ function MenubarAdd( editor ) {
 		editor.execute( new AddObjectCommand( editor, light ) );
 
 	} );
-	//options.add(option);
+	options.add( option );
 
 	// PointLight
 
@@ -349,7 +406,7 @@ function MenubarAdd( editor ) {
 		editor.execute( new AddObjectCommand( editor, light ) );
 
 	} );
-	//options.add(option);
+	options.add( option );
 
 	// SpotLight
 
@@ -373,11 +430,11 @@ function MenubarAdd( editor ) {
 		editor.execute( new AddObjectCommand( editor, light ) );
 
 	} );
-	//options.add(option);
+	options.add( option );
 
 	//
 
-	//options.add(new UIHorizontalRule());
+	options.add( new UIHorizontalRule() );
 
 	// OrthographicCamera
 
@@ -393,7 +450,7 @@ function MenubarAdd( editor ) {
 		editor.execute( new AddObjectCommand( editor, camera ) );
 
 	} );
-	//options.add(option);
+	options.add( option );
 
 	// PerspectiveCamera
 
@@ -408,7 +465,7 @@ function MenubarAdd( editor ) {
 		editor.execute( new AddObjectCommand( editor, camera ) );
 
 	} );
-	//options.add(option);
+	options.add( option );
 
 	return container;
 

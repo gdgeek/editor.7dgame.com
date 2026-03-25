@@ -502,8 +502,8 @@ class MetaFactory extends Factory {
 					this.setTransform(node, back.data.transform);
 					node.scale.set( 0.1, 1, 0.2 );
 
-					console.error("scale", node.scale);
-					console.error("phototype", node);
+					console.log("scale", node.scale);
+					console.log("phototype", node);
 					return node;
 				}
 			}

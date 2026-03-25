@@ -163,7 +163,7 @@ function MetaLoader(editor) {
 			y: node.scale.y,
 			z: node.scale.z
 		};
-		console.error('entity.parameters', entity);
+		console.log('entity.parameters', entity);
 		//entity.parameters.transform.active = true
 		entity.parameters.active = node.visible;
 
@@ -285,7 +285,7 @@ function MetaLoader(editor) {
 
 			const data = meta.data;
 			const resources = new Map();
-			console.error(meta);
+			console.log(meta);
 			meta.resources.forEach(r => {
 				resources.set(r.id.toString(), r);
 

@@ -1,7 +1,322 @@
 import { MetaLoader } from '../mrpp/MetaLoader.js';
 import { initializeGlobalShortcuts } from '../utils/GlobalShortcuts.js';
+import { applyEditorPatches } from '../patches/EditorPatches.js';
+import { applyLoaderPatches } from '../patches/LoaderPatches.js';
+import { applyViewportPatches } from '../patches/ViewportPatches.js';
+import { applyUIThreePatches } from '../patches/UIThreePatches.js';
+import { applySidebarPatches, applySidebarPropertiesPatches } from '../patches/SidebarPatches.js';
+import { applyMenubarPatches } from '../patches/MenubarPatches.js';
+
+/**
+ * Create a minimal UITabbedPanel-compatible wrapper from a DOM element.
+ * Used to bridge the gap between deferred DOM observation and patch
+ * functions that expect UITabbedPanel instances.
+ *
+ * @param {HTMLElement} dom - The DOM element with class TabbedPanel
+ * @returns {object} A UITabbedPanel-compatible wrapper
+ */
+function wrapAsTabbedPanel( dom ) {
+
+	const wrapper = {
+		dom: dom,
+		tabs: [],
+		panels: [],
+		selected: '',
+
+		select: function ( id ) {
+
+			// Deselect current
+			for ( let i = 0; i < this.tabs.length; i ++ ) {
+
+				if ( this.tabs[ i ].dom.id === this.selected ) {
+
+					this.tabs[ i ].dom.classList.remove( 'selected' );
+
+				}
+
+			}
+
+			for ( let i = 0; i < this.panels.length; i ++ ) {
+
+				if ( this.panels[ i ].dom.id === this.selected ) {
+
+					this.panels[ i ].dom.style.display = 'none';
+
+				}
+
+			}
+
+			// Select new
+			for ( let i = 0; i < this.tabs.length; i ++ ) {
+
+				if ( this.tabs[ i ].dom.id === id ) {
+
+					this.tabs[ i ].dom.classList.add( 'selected' );
+
+				}
+
+			}
+
+			for ( let i = 0; i < this.panels.length; i ++ ) {
+
+				if ( this.panels[ i ].dom.id === id ) {
+
+					this.panels[ i ].dom.style.display = '';
+
+				}
+
+			}
+
+			this.selected = id;
+
+		},
+
+		addTab: function ( id, label, items ) {
+
+			const tabsDiv = dom.querySelector( '.Tabs' );
+			const panelsDiv = dom.querySelector( '.Panels' );
+
+			if ( ! tabsDiv || ! panelsDiv ) return;
+
+			// Create tab element
+			const tabDom = document.createElement( 'span' );
+			tabDom.className = 'Tab';
+			tabDom.id = id;
+			tabDom.textContent = label;
+
+			const self = this;
+			tabDom.addEventListener( 'click', function () {
+
+				self.select( id );
+
+			} );
+
+			const tabObj = { dom: tabDom };
+			this.tabs.push( tabObj );
+			tabsDiv.appendChild( tabDom );
+
+			// Create panel element
+			const panelDom = document.createElement( 'div' );
+			panelDom.id = id;
+			panelDom.style.display = 'none';
+
+			if ( items ) {
+
+				if ( items.dom ) {
+
+					panelDom.appendChild( items.dom );
+
+				} else if ( items instanceof HTMLElement ) {
+
+					panelDom.appendChild( items );
+
+				}
+
+			}
+
+			const panelObj = {
+				dom: panelDom,
+				setDisplay: function ( v ) {
+
+					panelDom.style.display = v;
+
+				}
+			};
+			this.panels.push( panelObj );
+			panelsDiv.appendChild( panelDom );
+
+			this.select( id );
+
+		},
+
+		clear: function () {
+
+			const tabsDiv = dom.querySelector( '.Tabs' );
+			const panelsDiv = dom.querySelector( '.Panels' );
+
+			if ( tabsDiv ) {
+
+				while ( tabsDiv.children.length ) {
+
+					tabsDiv.removeChild( tabsDiv.lastChild );
+
+				}
+
+			}
+
+			if ( panelsDiv ) {
+
+				while ( panelsDiv.children.length ) {
+
+					panelsDiv.removeChild( panelsDiv.lastChild );
+
+				}
+
+			}
+
+			this.tabs = [];
+			this.panels = [];
+			this.selected = '';
+
+		}
+	};
+
+	// Populate tabs and panels from existing DOM
+	const tabsDiv = dom.querySelector( '.Tabs' );
+	const panelsDiv = dom.querySelector( '.Panels' );
+
+	if ( tabsDiv ) {
+
+		const tabElements = tabsDiv.children;
+		for ( let i = 0; i < tabElements.length; i ++ ) {
+
+			const tabEl = tabElements[ i ];
+			wrapper.tabs.push( { dom: tabEl } );
+
+			// Override the original UITabbedPanel click handler so that
+			// all tabs (original + newly added) use the wrapper's select().
+			// We use capture phase + stopImmediatePropagation to prevent
+			// the original handler from firing with a stale instance.
+			( function ( el ) {
+
+				el.addEventListener( 'click', function ( event ) {
+
+					event.stopImmediatePropagation();
+					wrapper.select( el.id );
+
+				}, true );
+
+			} )( tabEl );
+
+		}
+
+	}
+
+	if ( panelsDiv ) {
+
+		const panelElements = panelsDiv.children;
+		for ( let i = 0; i < panelElements.length; i ++ ) {
+
+			wrapper.panels.push( {
+				dom: panelElements[ i ],
+				setDisplay: function ( v ) {
+
+					this.dom.style.display = v;
+
+				}
+			} );
+
+		}
+
+	}
+
+	return wrapper;
+
+}
+
+
+/**
+ * Apply deferred UI patches (sidebar, menubar, properties) once the
+ * DOM elements are available. Uses a MutationObserver to detect when
+ * #sidebar and #menubar are added to the document.
+ *
+ * @param {object} editor - The Editor instance
+ */
+function applyDeferredUIPatches( editor ) {
+
+	let sidebarPatched = false;
+	let menubarPatched = false;
+
+	function tryPatchSidebar() {
+
+		if ( sidebarPatched ) return;
+
+		const sidebarDom = document.getElementById( 'sidebar' );
+		if ( ! sidebarDom ) return;
+
+		sidebarPatched = true;
+
+		const sidebarWrapper = wrapAsTabbedPanel( sidebarDom );
+		applySidebarPatches( editor, sidebarWrapper );
+
+		// Find the properties panel inside the sidebar
+		const propertiesDom = sidebarDom.querySelector( '#properties' );
+		if ( propertiesDom ) {
+
+			// Properties is a UITabbedPanel nested inside the sidebar
+			const propertiesWrapper = wrapAsTabbedPanel( propertiesDom );
+			applySidebarPropertiesPatches( editor, propertiesWrapper );
+
+		}
+
+	}
+
+	function tryPatchMenubar() {
+
+		if ( menubarPatched ) return;
+
+		const menubarDom = document.getElementById( 'menubar' );
+		if ( ! menubarDom ) return;
+
+		menubarPatched = true;
+
+		const menubarWrapper = { dom: menubarDom };
+		applyMenubarPatches( editor, menubarWrapper );
+
+	}
+
+	function tryPatchAll() {
+
+		tryPatchSidebar();
+		tryPatchMenubar();
+
+		if ( sidebarPatched && menubarPatched ) {
+
+			observer.disconnect();
+
+		}
+
+	}
+
+	// Try immediately in case elements already exist
+	tryPatchAll();
+
+	if ( sidebarPatched && menubarPatched ) return;
+
+	// Observe DOM for sidebar/menubar creation
+	const observer = new MutationObserver( function () {
+
+		tryPatchAll();
+
+	} );
+
+	const observeTarget = document.body || document.documentElement;
+	if ( observeTarget ) {
+
+		observer.observe( observeTarget, {
+			childList: true,
+			subtree: true
+		} );
+
+	}
+
+}
 
 function initMetaEditor( editor ) {
+
+	// ── Apply all patches in specified order ─────────────────────────
+	applyEditorPatches( editor );
+	applyLoaderPatches( editor );
+	applyViewportPatches( editor );
+	applyUIThreePatches( editor );
+
+	// Sidebar, Menubar, and Properties patches are deferred because
+	// these UI components are created after initMetaEditor returns
+	// (in the HTML entry point). A MutationObserver detects when
+	// #sidebar and #menubar appear in the DOM.
+	applyDeferredUIPatches( editor );
+
+	// ── Existing bootstrap logic (preserved) ─────────────────────────
 
 	editor.type = 'meta';
 

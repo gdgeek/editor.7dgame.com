@@ -108,7 +108,7 @@ function SidebarMedia(editor) {
 
     // 从对象获取媒体URL
     function getMediaUrl(object) {
-		console.error("object", object);
+		console.log("object", object);
 
         if (object.userData && object.userData.src) {
             return object.userData.src;
