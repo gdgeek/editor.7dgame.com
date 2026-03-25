@@ -1,32 +1,32 @@
-import { UIPanel, UIRow } from './libs/ui.js'
+import { UIPanel, UIRow } from './libs/ui.js';
 
-function MenubarHelp(editor) {
-	const strings = editor.strings
+function MenubarHelp( editor ) {
 
-	const container = new UIPanel()
-	container.setClass('menu')
+	const strings = editor.strings;
 
-	const title = new UIPanel()
-	title.setClass('title')
-	title.setTextContent(strings.getKey('menubar/help'))
-	container.add(title)
+	const container = new UIPanel();
+	container.setClass( 'menu' );
 
-	const options = new UIPanel()
-	options.setClass('options')
-	// container.add(options)
+	const title = new UIPanel();
+	title.setClass( 'title' );
+	title.setTextContent( strings.getKey( 'menubar/help' ) );
+	container.add( title );
+
+	const options = new UIPanel();
+	options.setClass( 'options' );
+	container.add( options );
 
 	// Source code
 
-	// let option = new UIRow()
-	// option.setClass('option')
-	// option.setTextContent(strings.getKey('menubar/help/source_code'))
-	// option.onClick(function () {
-	// 	window.open(
-	// 		'https://github.com/mrdoob/three.js/tree/master/editor',
-	// 		'_blank'
-	// 	)
-	// })
-	// options.add(option)
+	let option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( strings.getKey( 'menubar/help/source_code' ) );
+	option.onClick( function () {
+
+		window.open( 'https://github.com/mrdoob/three.js/tree/master/editor', '_blank' );
+
+	} );
+	options.add( option );
 
 	/*
 	// Icon
@@ -44,29 +44,30 @@ function MenubarHelp(editor) {
 
 	// About
 
-	// option = new UIRow();
-	// option.setClass( 'option' );
-	// option.setTextContent( strings.getKey( 'menubar/help/about' ) );
-	// option.onClick( function () {
+	option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( strings.getKey( 'menubar/help/about' ) );
+	option.onClick( function () {
 
-	// 	window.open( 'https://threejs.org', '_blank' );
+		window.open( 'https://threejs.org', '_blank' );
 
-	// } );
-	// options.add( option );
+	} );
+	options.add( option );
 
 	// Manual
 
-	// option = new UIRow();
-	// option.setClass( 'option' );
-	// option.setTextContent( strings.getKey( 'menubar/help/manual' ) );
-	// option.onClick( function () {
+	option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( strings.getKey( 'menubar/help/manual' ) );
+	option.onClick( function () {
 
-	// 	window.open( 'https://github.com/mrdoob/three.js/wiki/Editor-Manual', '_blank' );
+		window.open( 'https://github.com/mrdoob/three.js/wiki/Editor-Manual', '_blank' );
 
-	// } );
-	// options.add( option );
+	} );
+	options.add( option );
 
-	return container
+	return container;
+
 }
 
-export { MenubarHelp }
+export { MenubarHelp };

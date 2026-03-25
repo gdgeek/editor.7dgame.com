@@ -1,276 +1,51 @@
-import {
-	UIPanel,
-	UIRow,
-	UIInput,
-	UISelect,
-	UIButton
-} from './libs/ui.js';
-import { UIOutliner } from './libs/ui.three.js';
-import { RemoveObjectCommand } from './commands/RemoveObjectCommand.js';
+import * as THREE from 'three';
 
-function SidebarScene(editor) {
+import { UIPanel, UIBreak, UIRow, UIColor, UISelect, UIText, UINumber } from './libs/ui.js';
+import { UIOutliner, UITexture } from './libs/ui.three.js';
 
-	const strings = editor.strings;
+function SidebarScene( editor ) {
+
 	const signals = editor.signals;
+	const strings = editor.strings;
 
 	const container = new UIPanel();
-	container.setBorderTop('0');
-	container.setPaddingTop('10px');
+	container.setBorderTop( '0' );
+	container.setPaddingTop( '20px' );
 
 	// outliner
 
 	const nodeStates = new WeakMap();
 
-	function hasVisibleChildren(object) {
+	function buildOption( object, draggable ) {
 
-		return object.children.some(child => !(child.userData && child.userData.hidden === true));
-
-	}
-
-	function isSelectableObject(object) {
-
-		if (editor.selector == null) return !(object.userData && object.userData.hidden === true);
-
-		return editor.selector(object);
-
-	}
-
-	function getNormalizedObjectType(object) {
-
-		if (object.isScene) return 'scene';
-		if (object.isCamera || object.isLight) return object.type.toLowerCase();
-
-		const type = object.type.toLowerCase();
-
-		if (type === 'entity') return 'point';
-		if (type === 'sound') return 'audio';
-
-		return type;
-
-	}
-
-	function getObjectTypeTranslationKey(type) {
-
-		const typeKeyMap = {
-			scene: 'sidebar/object/type_value/scene',
-			group: 'sidebar/object/type_value/group',
-			object3d: 'sidebar/object/type_value/object3d',
-			mesh: 'sidebar/object/type_value/mesh',
-			line: 'sidebar/object/type_value/line',
-			linesegments: 'sidebar/object/type_value/linesegments',
-			points: 'sidebar/object/type_value/points',
-			sprite: 'sidebar/object/type_value/sprite',
-			camera: 'sidebar/object/type_value/camera',
-			perspectivecamera: 'sidebar/object/type_value/perspectivecamera',
-			orthographiccamera: 'sidebar/object/type_value/orthographiccamera',
-			light: 'sidebar/object/type_value/light',
-			ambientlight: 'sidebar/object/type_value/ambientlight',
-			directionallight: 'sidebar/object/type_value/directionallight',
-			hemispherelight: 'sidebar/object/type_value/hemispherelight',
-			pointlight: 'sidebar/object/type_value/pointlight',
-			spotlight: 'sidebar/object/type_value/spotlight',
-			module: 'sidebar/object/type_value/module',
-			entity: 'sidebar/object/type_value/entity',
-			point: 'sidebar/object/type_value/point',
-			text: 'sidebar/object/type_value/text',
-			polygen: 'sidebar/object/type_value/polygen',
-			picture: 'sidebar/object/type_value/picture',
-			video: 'sidebar/object/type_value/video',
-			audio: 'sidebar/object/type_value/audio',
-			prototype: 'sidebar/object/type_value/prototype',
-			voxel: 'sidebar/object/type_value/voxel',
-			phototype: 'sidebar/object/type_value/phototype',
-			prefab: 'sidebar/object/type_value/prefab',
-		};
-
-		return typeKeyMap[type] || null;
-
-	}
-
-	function getLocalizedObjectTypeLabel(type) {
-
-		const translationKey = getObjectTypeTranslationKey(type);
-
-		if (translationKey) {
-
-			const localizedType = strings.getKey(translationKey);
-			if (localizedType !== '???') return localizedType;
-
-		}
-
-		return type;
-
-	}
-
-	function getFilterTypeLabel(type) {
-
-		const filterTypeKeyMap = {
-			module: 'sidebar/scene/filter/type/module',
-			point: 'sidebar/scene/filter/type/point',
-			text: 'sidebar/scene/filter/type/text',
-			polygen: 'sidebar/scene/filter/type/polygen',
-			picture: 'sidebar/scene/filter/type/picture',
-			video: 'sidebar/scene/filter/type/video',
-			audio: 'sidebar/scene/filter/type/audio',
-			prototype: 'sidebar/scene/filter/type/prototype',
-		};
-
-		const translationKey = filterTypeKeyMap[type];
-
-		if (translationKey) {
-
-			const localizedType = strings.getKey(translationKey);
-			if (localizedType !== '???') return localizedType;
-
-		}
-
-		return getLocalizedObjectTypeLabel(type);
-
-	}
-
-	const componentFilterOptions = [
-		{ value: 'rotate', type: 'Rotate', label: strings.getKey('sidebar/components/select/rotate') },
-		{ value: 'action', type: 'Action', label: strings.getKey('sidebar/components/select/action') },
-		{ value: 'moved', type: 'Moved', label: strings.getKey('sidebar/components/select/moved') },
-		{ value: 'trigger', type: 'Trigger', label: strings.getKey('sidebar/components/select/trigger') },
-		{ value: 'tooltip', type: 'Tooltip', label: strings.getKey('sidebar/components/select/tooltip') },
-	];
-
-	function getSceneTypeFilterOptions() {
-
-		if (editor.type && editor.type.toLowerCase() === 'verse') {
-
-			return [
-				{
-					value: 'type:module',
-					label: `${strings.getKey('sidebar/scene/filter/type_prefix')}: ${getFilterTypeLabel('module')}`
-				}
-			];
-
-		}
-
-		return [
-			{
-				value: 'type:point',
-				label: `${strings.getKey('sidebar/scene/filter/type_prefix')}: ${getFilterTypeLabel('point')}`
-			},
-			{
-				value: 'type:text',
-				label: `${strings.getKey('sidebar/scene/filter/type_prefix')}: ${getFilterTypeLabel('text')}`
-			},
-			{
-				value: 'type:polygen',
-				label: `${strings.getKey('sidebar/scene/filter/type_prefix')}: ${getFilterTypeLabel('polygen')}`
-			},
-			{
-				value: 'type:picture',
-				label: `${strings.getKey('sidebar/scene/filter/type_prefix')}: ${getFilterTypeLabel('picture')}`
-			},
-			{
-				value: 'type:video',
-				label: `${strings.getKey('sidebar/scene/filter/type_prefix')}: ${getFilterTypeLabel('video')}`
-			},
-			{
-				value: 'type:audio',
-				label: `${strings.getKey('sidebar/scene/filter/type_prefix')}: ${getFilterTypeLabel('audio')}`
-			},
-			{
-				value: 'type:prototype',
-				label: `${strings.getKey('sidebar/scene/filter/type_prefix')}: ${getFilterTypeLabel('prototype')}`
-			},
-		];
-
-	}
-
-	function buildOption(object, draggable) {
-
-		const option = document.createElement('div');
+		const option = document.createElement( 'div' );
 		option.draggable = draggable;
-		option.innerHTML = buildHTML(object);
+		option.innerHTML = buildHTML( object );
 		option.value = object.id;
-
-		// 检查资源是否存在
-		if (object.userData && object.userData.resource) {
-			const resourceId = object.userData.resource;
-			// 检查资源是否存在
-			let resourceExists = false;
-
-			// 检查资源是否在editor.resources或window.resources中存在
-			if (editor.data.resources && Array.isArray(editor.data.resources)) {
-				resourceExists = editor.data.resources.some(resource =>
-					resource && resource.id === parseInt(resourceId)
-				);
-			}
-
-			// 如果在全局资源集合中存在
-			if (!resourceExists && window.resources) {
-				resourceExists = window.resources.has(resourceId.toString());
-			}
-
-			// 如果资源不存在，添加禁用状态
-			if (!resourceExists) {
-				option.classList.add('resource-missing');
-				option.style.opacity = '0.5';
-				// option.style.pointerEvents = 'none';
-				// option.style.cursor = 'not-allowed';
-				// 允许选择缺失资源的对象，去掉pointerEvents: none
-				option.setAttribute('title', '该资源不存在');
-				option.dataset.tooltip = '该资源不存在';
-
-				// 添加删除按钮
-				const deleteButton = document.createElement('img');
-				deleteButton.src = 'images/delete.png';
-				deleteButton.style.float = 'right';
-				deleteButton.style.width = '16px';
-				deleteButton.style.height = '16px';
-				deleteButton.style.margin = '2px';
-				deleteButton.style.cursor = 'pointer';
-				deleteButton.style.pointerEvents = 'auto';
-				deleteButton.title = '删除';
-
-				// 确保删除按钮不会覆盖整个选项的悬停提示
-				deleteButton.addEventListener('mouseover', function (event) {
-					event.stopPropagation();
-				});
-
-				// 阻止事件冒泡，让删除按钮可点击
-				deleteButton.addEventListener('click', function (event) {
-					event.stopPropagation();
-					event.preventDefault();
-
-					if (object !== null && object.parent !== null) {
-						editor.execute(new RemoveObjectCommand(editor, object));
-					}
-				});
-
-				option.appendChild(deleteButton);
-			}
-		}
 
 		// opener
 
-		if (nodeStates.has(object) && !isEntityLikeObject(object)) {
+		if ( nodeStates.has( object ) ) {
 
-			const state = nodeStates.get(object);
+			const state = nodeStates.get( object );
 
-			const opener = document.createElement('span');
-			opener.classList.add('opener');
+			const opener = document.createElement( 'span' );
+			opener.classList.add( 'opener' );
 
-			if (object.children.length > 0 && (object.isScene || hasVisibleChildren(object))) {
+			if ( object.children.length > 0 ) {
 
-				opener.classList.add(state ? 'open' : 'closed');
+				opener.classList.add( state ? 'open' : 'closed' );
 
 			}
 
+			opener.addEventListener( 'click', function () {
 
-			opener.addEventListener('click', function () {
-
-				nodeStates.set(object, nodeStates.get(object) === false); // toggle
+				nodeStates.set( object, nodeStates.get( object ) === false ); // toggle
 				refreshUI();
 
-			});
+			} );
 
-			option.insertBefore(opener, option.firstChild);
+			option.insertBefore( opener, option.firstChild );
 
 		}
 
@@ -278,19 +53,19 @@ function SidebarScene(editor) {
 
 	}
 
-	function getMaterialName(material) {
+	function getMaterialName( material ) {
 
-		if (Array.isArray(material)) {
+		if ( Array.isArray( material ) ) {
 
 			const array = [];
 
-			for (let i = 0; i < material.length; i++) {
+			for ( let i = 0; i < material.length; i ++ ) {
 
-				array.push(material[i].name);
+				array.push( material[ i ].name );
 
 			}
 
-			return array.join(',');
+			return array.join( ',' );
 
 		}
 
@@ -298,522 +73,452 @@ function SidebarScene(editor) {
 
 	}
 
-	function escapeHTML(html) {
+	function escapeHTML( html ) {
 
 		return html
-			.replace(/&/g, '&amp;')
-			.replace(/"/g, '&quot;')
-			.replace(/'/g, '&#39;')
-			.replace(/</g, '&lt;')
-			.replace(/>/g, '&gt;');
+			.replace( /&/g, '&amp;' )
+			.replace( /"/g, '&quot;' )
+			.replace( /'/g, '&#39;' )
+			.replace( /</g, '&lt;' )
+			.replace( />/g, '&gt;' );
 
 	}
 
-	function getObjectType(object) {
+	function getObjectType( object ) {
 
-		if (object.isScene) return 'Scene';
-		if (object.isCamera) return 'Camera';
-		if (object.isLight) return 'Light';
-		// if (object.isMesh) return 'Mesh';
-		// if (object.isLine) return 'Line';
-		// if (object.isPoints) return 'Points';
-		//const type = object.userData && object.userData.type ? object.userData.type.toLowerCase() : '';
-		const type = object.type.toLowerCase();
-		if (type === 'module') return 'Module';
-		if (type === 'entity') return 'Point'
-		if (type === 'point') return 'Point';
-		if (type === 'text') return 'Text';
-		if (type === 'polygen') return 'Polygen'
-		if (type === 'picture') return 'Picture';
-		if (type === 'video') return 'Video';
-		if (type === 'sound') return 'Audio';
-		if (type === 'prototype') return 'Prototype';
+		if ( object.isScene ) return 'Scene';
+		if ( object.isCamera ) return 'Camera';
+		if ( object.isLight ) return 'Light';
+		if ( object.isMesh ) return 'Mesh';
+		if ( object.isLine ) return 'Line';
+		if ( object.isPoints ) return 'Points';
 
-		return 'Object3D_4';
+		return 'Object3D';
 
 	}
 
-	function isEntityLikeObject(object) {
+	function buildHTML( object ) {
 
-		const type = object && object.type ? object.type.toLowerCase() : '';
-		const isVerseEditor = !!(editor.type && editor.type.toLowerCase() === 'verse');
-		if (!isVerseEditor) return false;
-		return type === 'module' || type === 'entity';
+		let html = `<span class="type ${ getObjectType( object ) }"></span> ${ escapeHTML( object.name ) }`;
 
-	}
+		if ( object.isMesh ) {
 
-	function buildHTML(object) {
+			const geometry = object.geometry;
+			const material = object.material;
 
-		let html = '';
-		if (isEntityLikeObject(object)) {
-
-			html = `<span class="entity-mini-icon"></span> ${escapeHTML(object.name)}`;
-
-		} else {
-
-			// 只保留前面的类型指示器圆点
-			html = `<span class="type ${getObjectType(
-				object
-			)}"></span> ${escapeHTML(object.name)}`;
+			html += ` <span class="type Geometry"></span> ${ escapeHTML( geometry.name ) }`;
+			html += ` <span class="type Material"></span> ${ escapeHTML( getMaterialName( material ) ) }`;
 
 		}
 
-		// --- 隐藏关于 Mesh 的 Geometry 和 Material 的额外圆点代码 ---
-		// if (object.isMesh) {
-		// 	const geometry = object.geometry;
-		// 	const material = object.material;
-
-		// 	html += ` <span class="type Geometry"></span> ${escapeHTML(
-		// 		geometry.name
-		// 	)}`;
-		// 	html += ` <span class="type Material"></span> ${escapeHTML(
-		// 		getMaterialName(material)
-		// 	)}`;
-
-		// }
-
-		// --- 隐藏关于 Script 的额外圆点代码 ---
-		// html += getScript(object.uuid);
+		html += getScript( object.uuid );
 
 		return html;
 
 	}
 
-	function getScript(uuid) {
+	function getScript( uuid ) {
 
-		if (editor.scripts[uuid] !== undefined) {
+		if ( editor.scripts[ uuid ] === undefined ) return '';
 
-			return ' <span class="type Script"></span>';
+		if ( editor.scripts[ uuid ].length === 0 ) return '';
 
-		}
-
-		return '';
+		return ' <span class="type Script"></span>';
 
 	}
 
 	let ignoreObjectSelectedSignal = false;
-	let subtreeFilterMatchCache = new WeakMap();
-	const showFilter = !(editor.type && editor.type.toLowerCase() === 'verse');
-	const enableSceneReorderOnly = !!(editor.type && editor.type.toLowerCase() === 'verse');
 
-	const searchRow = new UIRow();
-	searchRow.setDisplay('flex');
-	searchRow.setMarginBottom('8px');
-	searchRow.dom.style.alignItems = 'center';
-	searchRow.dom.style.gap = '10px';
-	searchRow.dom.style.border = 'none';
+	const outliner = new UIOutliner( editor );
+	outliner.setId( 'outliner' );
+	outliner.onChange( function () {
 
-	const searchInputContainer = new UIRow();
-	searchInputContainer.setDisplay('block');
-	searchInputContainer.setMarginBottom('0');
-	searchInputContainer.dom.style.position = 'relative';
-	searchInputContainer.dom.style.flex = '1 1 auto';
-	searchInputContainer.dom.style.minWidth = '0';
-	searchInputContainer.dom.style.border = 'none';
-
-	const searchInput = new UIInput('');
-	searchInput.setWidth('100%');
-	searchInput.dom.style.boxSizing = 'border-box';
-	searchInput.dom.style.paddingRight = '22px';
-	searchInput.dom.placeholder = strings.getKey('sidebar/scene/search_placeholder');
-	searchInputContainer.add(searchInput);
-
-	const clearSearchButton = new UIButton('×');
-	clearSearchButton.setWidth('18px');
-	clearSearchButton.dom.style.position = 'absolute';
-	clearSearchButton.dom.style.right = '4px';
-	clearSearchButton.dom.style.top = '50%';
-	clearSearchButton.dom.style.transform = 'translateY(-50%)';
-	clearSearchButton.dom.style.padding = '0';
-	clearSearchButton.dom.style.lineHeight = '1';
-	clearSearchButton.dom.style.minHeight = '18px';
-	clearSearchButton.dom.style.border = '0';
-	clearSearchButton.dom.style.background = 'transparent';
-	clearSearchButton.dom.style.color = '#999';
-	clearSearchButton.dom.style.display = 'none';
-	clearSearchButton.dom.title = strings.getKey('sidebar/scene/search_clear');
-	clearSearchButton.onClick(function () {
-
-		searchInput.setValue('');
-		updateClearSearchButtonVisibility();
-		searchInput.dom.focus();
-		refreshUI();
-
-	});
-	searchInputContainer.add(clearSearchButton);
-
-	function updateClearSearchButtonVisibility() {
-
-		clearSearchButton.dom.style.display = searchInput.getValue() ? 'block' : 'none';
-
-	}
-
-	searchInput.onInput(function () {
-
-		updateClearSearchButtonVisibility();
-		refreshUI();
-
-	});
-	searchRow.add(searchInputContainer);
-
-	const filterSelect = new UISelect();
-	filterSelect.setWidth('auto');
-	filterSelect.dom.style.flex = '1 1 0';
-	filterSelect.dom.style.minWidth = '0';
-	filterSelect.onChange(refreshUI);
-	if (showFilter) {
-
-		searchInputContainer.dom.style.flex = '1 1 0';
-		searchRow.add(filterSelect);
-
-	}
-
-	container.add(searchRow);
-
-	const outliner = new UIOutliner(editor);
-	outliner.setId('outliner');
-	if (editor.type && editor.type.toLowerCase() === 'verse') {
-		outliner.dom.classList.add('scene-verse-outliner');
-	}
-	outliner.reorderOnly = !!(editor.type && editor.type.toLowerCase() === 'verse');
-	outliner.dom.style.height = 'clamp(250px, 35vh, 390px)';
-	outliner.onChange(function () {
 		ignoreObjectSelectedSignal = true;
 
-		const selectedValues = outliner.getValues();
-		const mainValue = outliner.getValue();
-		const mainId = mainValue ? parseInt(mainValue) : null;
-
-		// 暂时禁用信号以避免多次触发
-		const originalActive = editor.signals.objectSelected.active;
-		editor.signals.objectSelected.active = false;
-
-		// 清除当前选择
-		editor.deselect();
-
-		// 添加所有选中项（除了主选中项）
-		for (const val of selectedValues) {
-			const id = parseInt(val);
-			if (id !== mainId) {
-				const obj = editor.scene.getObjectById(id);
-				if (obj) editor.select(obj, true);
-			}
-		}
-
-		// 最后添加主选中项，确保它成为editor.selected
-		if (mainId) {
-			const obj = editor.scene.getObjectById(mainId);
-			if (obj) editor.select(obj, true);
-		}
-
-		// 恢复信号并发送最终选择
-		editor.signals.objectSelected.active = originalActive;
-		editor.signals.objectSelected.dispatch(editor.selected);
+		editor.selectById( parseInt( outliner.getValue() ) );
 
 		ignoreObjectSelectedSignal = false;
-	});
 
-	outliner.onDblClick(function () {
+	} );
+	outliner.onDblClick( function () {
 
-		editor.focusById(parseInt(outliner.getValue()));
+		editor.focusById( parseInt( outliner.getValue() ) );
 
-	});
-	container.add(outliner);
+	} );
+	container.add( outliner );
+	container.add( new UIBreak() );
 
-	function buildFilterOptions() {
+	// background
 
-		if (!showFilter) return;
+	const backgroundRow = new UIRow();
 
-		const currentValue = filterSelect.getValue() || 'all';
-		const optionDefinitions = [
-			{ value: 'all', label: strings.getKey('sidebar/scene/filter/all') },
-			...getSceneTypeFilterOptions(),
-			...componentFilterOptions.map(function (component) {
+	const backgroundType = new UISelect().setOptions( {
 
-				return {
-					value: `component:${component.value}`,
-					label: `${strings.getKey('sidebar/scene/filter/component_prefix')}: ${component.label}`
-				};
+		'Default': 'Default',
+		'Color': 'Color',
+		'Texture': 'Texture',
+		'Equirectangular': 'Equirect'
 
-			})
-		];
+	} ).setWidth( '150px' );
+	backgroundType.setValue( 'Default' );
+	backgroundType.onChange( function () {
 
-		while (filterSelect.dom.children.length > 0) {
+		onBackgroundChanged();
+		refreshBackgroundUI();
 
-			filterSelect.dom.removeChild(filterSelect.dom.firstChild);
+	} );
+
+	backgroundRow.add( new UIText( strings.getKey( 'sidebar/scene/background' ) ).setClass( 'Label' ) );
+	backgroundRow.add( backgroundType );
+
+	const backgroundColor = new UIColor().setValue( '#000000' ).setMarginLeft( '8px' ).onInput( onBackgroundChanged );
+	backgroundRow.add( backgroundColor );
+
+	const backgroundTexture = new UITexture( editor ).setMarginLeft( '8px' ).onChange( onBackgroundChanged );
+	backgroundTexture.setDisplay( 'none' );
+	backgroundRow.add( backgroundTexture );
+
+	const backgroundEquirectangularTexture = new UITexture( editor ).setMarginLeft( '8px' ).onChange( onBackgroundChanged );
+	backgroundEquirectangularTexture.setDisplay( 'none' );
+	backgroundRow.add( backgroundEquirectangularTexture );
+
+	const backgroundColorSpaceRow = new UIRow();
+	backgroundColorSpaceRow.setDisplay( 'none' );
+	backgroundColorSpaceRow.setMarginLeft( '120px' );
+
+	const backgroundColorSpace = new UISelect().setOptions( {
+
+		[ THREE.NoColorSpace ]: 'No Color Space',
+		[ THREE.LinearSRGBColorSpace ]: 'srgb-linear',
+		[ THREE.SRGBColorSpace ]: 'srgb',
+
+	} ).setWidth( '150px' );
+	backgroundColorSpace.setValue( THREE.NoColorSpace );
+	backgroundColorSpace.onChange( onBackgroundChanged );
+	backgroundColorSpaceRow.add( backgroundColorSpace );
+
+	container.add( backgroundRow );
+	container.add( backgroundColorSpaceRow );
+
+	const backgroundEquirectRow = new UIRow();
+	backgroundEquirectRow.setDisplay( 'none' );
+	backgroundEquirectRow.setMarginLeft( '120px' );
+
+	const backgroundBlurriness = new UINumber( 0 ).setWidth( '40px' ).setRange( 0, 1 ).onChange( onBackgroundChanged );
+	backgroundEquirectRow.add( backgroundBlurriness );
+
+	const backgroundIntensity = new UINumber( 1 ).setWidth( '40px' ).setRange( 0, Infinity ).onChange( onBackgroundChanged );
+	backgroundEquirectRow.add( backgroundIntensity );
+
+	const backgroundRotation = new UINumber( 0 ).setWidth( '40px' ).setRange( - 180, 180 ).setStep( 10 ).setNudge( 0.1 ).setUnit( '°' ).onChange( onBackgroundChanged );
+	backgroundEquirectRow.add( backgroundRotation );
+
+	container.add( backgroundEquirectRow );
+
+	function onBackgroundChanged() {
+
+		signals.sceneBackgroundChanged.dispatch(
+			backgroundType.getValue(),
+			backgroundColor.getHexValue(),
+			backgroundTexture.getValue(),
+			backgroundEquirectangularTexture.getValue(),
+			backgroundColorSpace.getValue(),
+			backgroundBlurriness.getValue(),
+			backgroundIntensity.getValue(),
+			backgroundRotation.getValue()
+		);
+
+	}
+
+	function refreshBackgroundUI() {
+
+		const type = backgroundType.getValue();
+
+		backgroundType.setWidth( type === 'Default' ? '150px' : '110px' );
+		backgroundColor.setDisplay( type === 'Color' ? '' : 'none' );
+		backgroundTexture.setDisplay( type === 'Texture' ? '' : 'none' );
+		backgroundEquirectangularTexture.setDisplay( type === 'Equirectangular' ? '' : 'none' );
+		backgroundEquirectRow.setDisplay( type === 'Equirectangular' ? '' : 'none' );
+
+		if ( type === 'Texture' || type === 'Equirectangular' ) {
+
+			backgroundColorSpaceRow.setDisplay( '' );
+
+		} else {
+
+			backgroundColorSpaceRow.setDisplay( 'none' );
 
 		}
 
-		optionDefinitions.forEach(function (definition) {
+	}
 
-			const option = document.createElement('option');
-			option.value = definition.value;
-			option.innerHTML = definition.label;
+	// environment
 
-			if (definition.disabled === true) {
+	const environmentRow = new UIRow();
 
-				option.disabled = true;
+	const environmentType = new UISelect().setOptions( {
 
-			}
+		'Default': 'Default',
+		'Equirectangular': 'Equirect',
+		'None': 'None'
 
-			filterSelect.dom.appendChild(option);
+	} ).setWidth( '150px' );
+	environmentType.setValue( 'Default' );
+	environmentType.onChange( function () {
 
-		});
+		onEnvironmentChanged();
+		refreshEnvironmentUI();
 
-		const hasCurrentValue = optionDefinitions.some(function (definition) {
+	} );
 
-			return definition.disabled !== true && definition.value === currentValue;
+	environmentRow.add( new UIText( strings.getKey( 'sidebar/scene/environment' ) ).setClass( 'Label' ) );
+	environmentRow.add( environmentType );
 
-		});
+	const environmentEquirectangularTexture = new UITexture( editor ).setMarginLeft( '8px' ).onChange( onEnvironmentChanged );
+	environmentEquirectangularTexture.setDisplay( 'none' );
+	environmentRow.add( environmentEquirectangularTexture );
 
-		filterSelect.setValue(hasCurrentValue ? currentValue : 'all');
+	container.add( environmentRow );
+
+	function onEnvironmentChanged() {
+
+		signals.sceneEnvironmentChanged.dispatch(
+			environmentType.getValue(),
+			environmentEquirectangularTexture.getValue()
+		);
 
 	}
 
-	function getSearchText() {
+	function refreshEnvironmentUI() {
 
-		return searchInput.getValue().trim().toLowerCase();
+		const type = environmentType.getValue();
 
-	}
-
-	function getActiveFilter() {
-
-		if (!showFilter) return 'all';
-
-		return filterSelect.getValue() || 'all';
+		environmentType.setWidth( type !== 'Equirectangular' ? '150px' : '110px' );
+		environmentEquirectangularTexture.setDisplay( type === 'Equirectangular' ? '' : 'none' );
 
 	}
 
-	function hasActiveFilters() {
+	// fog
 
-		return getSearchText() !== '' || getActiveFilter() !== 'all';
+	function onFogChanged() {
 
-	}
-
-	function objectMatchesSearchText(object, searchText) {
-
-		if (searchText === '') return true;
-
-		const componentLabels = Array.isArray(object.components)
-			? object.components
-				.map(component => component && component.type ? component.type.toLowerCase() : '')
-				.map(function (type) {
-
-					const component = componentFilterOptions.find(item => item.value === type);
-					return component ? component.label : type;
-
-				})
-				.filter(Boolean)
-				.join(' ')
-			: '';
-
-		const haystack = [
-			object.name || '',
-			getLocalizedObjectTypeLabel(getNormalizedObjectType(object)),
-			getFilterTypeLabel(getNormalizedObjectType(object)),
-			componentLabels
-		].join(' ').toLowerCase();
-
-		return haystack.includes(searchText);
+		signals.sceneFogChanged.dispatch(
+			fogType.getValue(),
+			fogColor.getHexValue(),
+			fogNear.getValue(),
+			fogFar.getValue(),
+			fogDensity.getValue()
+		);
 
 	}
 
-	function objectMatchesDropdownFilter(object, activeFilter) {
+	function onFogSettingsChanged() {
 
-		if (activeFilter === 'all') return true;
-
-		if (activeFilter.startsWith('type:')) {
-
-			return getNormalizedObjectType(object) === activeFilter.slice(5);
-
-		}
-
-		if (activeFilter.startsWith('component:')) {
-
-			const componentType = activeFilter.slice(10);
-
-			return Array.isArray(object.components) && object.components.some(function (component) {
-
-				return component && component.type && component.type.toLowerCase() === componentType;
-
-			});
-
-		}
-
-		return true;
+		signals.sceneFogSettingsChanged.dispatch(
+			fogType.getValue(),
+			fogColor.getHexValue(),
+			fogNear.getValue(),
+			fogFar.getValue(),
+			fogDensity.getValue()
+		);
 
 	}
 
-	function objectMatchesFilters(object) {
+	const fogTypeRow = new UIRow();
+	const fogType = new UISelect().setOptions( {
 
-		const searchText = getSearchText();
-		const activeFilter = getActiveFilter();
+		'None': 'None',
+		'Fog': 'Linear',
+		'FogExp2': 'Exponential'
 
-		return objectMatchesSearchText(object, searchText) && objectMatchesDropdownFilter(object, activeFilter);
+	} ).setWidth( '150px' );
+	fogType.onChange( function () {
 
-	}
+		onFogChanged();
+		refreshFogUI();
 
-	function subtreeMatchesFilters(object) {
+	} );
 
-		if (subtreeFilterMatchCache.has(object)) {
+	fogTypeRow.add( new UIText( strings.getKey( 'sidebar/scene/fog' ) ).setClass( 'Label' ) );
+	fogTypeRow.add( fogType );
 
-			return subtreeFilterMatchCache.get(object);
+	container.add( fogTypeRow );
 
-		}
+	// fog color
 
-		if (!isSelectableObject(object)) return false;
-		if (objectMatchesFilters(object)) {
+	const fogPropertiesRow = new UIRow();
+	fogPropertiesRow.setDisplay( 'none' );
+	fogPropertiesRow.setMarginLeft( '120px' );
+	container.add( fogPropertiesRow );
 
-			subtreeFilterMatchCache.set(object, true);
-			return true;
+	const fogColor = new UIColor().setValue( '#aaaaaa' );
+	fogColor.onInput( onFogSettingsChanged );
+	fogPropertiesRow.add( fogColor );
 
-		}
+	// fog near
 
-		for (let i = 0; i < object.children.length; i++) {
+	const fogNear = new UINumber( 0.1 ).setWidth( '40px' ).setRange( 0, Infinity ).onChange( onFogSettingsChanged );
+	fogPropertiesRow.add( fogNear );
 
-			if (subtreeMatchesFilters(object.children[i])) {
+	// fog far
 
-				subtreeFilterMatchCache.set(object, true);
-				return true;
+	const fogFar = new UINumber( 50 ).setWidth( '40px' ).setRange( 0, Infinity ).onChange( onFogSettingsChanged );
+	fogPropertiesRow.add( fogFar );
 
-			}
+	// fog density
 
-		}
+	const fogDensity = new UINumber( 0.05 ).setWidth( '40px' ).setRange( 0, 0.1 ).setStep( 0.001 ).setPrecision( 3 ).onChange( onFogSettingsChanged );
+	fogPropertiesRow.add( fogDensity );
 
-		subtreeFilterMatchCache.set(object, false);
-		return false;
-
-	}
+	//
 
 	function refreshUI() {
 
+		const camera = editor.camera;
 		const scene = editor.scene;
-		const filtersActive = hasActiveFilters();
-		subtreeFilterMatchCache = new WeakMap();
 
 		const options = [];
 
-		(function addObjects(objects, pad) {
+		options.push( buildOption( camera, false ) );
+		options.push( buildOption( scene, false ) );
 
-			for (let i = 0, l = objects.length; i < l; i++) {
+		( function addObjects( objects, pad ) {
 
-				const object = objects[i];
+			for ( let i = 0, l = objects.length; i < l; i ++ ) {
 
-				if (nodeStates.has(object) === false) {
+				const object = objects[ i ];
 
-					nodeStates.set(object, false);
+				if ( nodeStates.has( object ) === false ) {
+
+					nodeStates.set( object, false );
 
 				}
 
-				if (isSelectableObject(object) && (!filtersActive || subtreeMatchesFilters(object))) {
+				const option = buildOption( object, true );
+				option.style.paddingLeft = ( pad * 18 ) + 'px';
+				options.push( option );
 
-					const isRootSceneNode = object === scene;
-					const draggable = enableSceneReorderOnly
-						? !isRootSceneNode
-						: (object.userData.draggable != undefined ? object.userData.draggable : true);
+				if ( nodeStates.get( object ) === true ) {
 
-					const option = buildOption(object, draggable);
-					option.style.paddingLeft = pad * 18 + 'px';
-					options.push(option);
-				}
-
-
-				if ((filtersActive && subtreeMatchesFilters(object)) || nodeStates.get(object) === true) {
-
-					addObjects(object.children, pad + 1);
+					addObjects( object.children, pad + 1 );
 
 				}
 
 			}
 
-		})(scene.children, 0);
+		} )( scene.children, 0 );
 
-		outliner.setOptions(options);
+		outliner.setOptions( options );
 
-		const selectedObjects = editor.getSelectedObjects();
-		const selectedIds = selectedObjects.map( ( object ) => object.id );
-		const primaryId = editor.selected !== null ? editor.selected.id : null;
-		const anchorValue = outliner.getAnchorValue();
-		outliner.setValues( selectedIds, primaryId, anchorValue );
+		if ( editor.selected !== null ) {
+
+			outliner.setValue( editor.selected.id );
+
+		}
+
+		backgroundType.setValue( editor.backgroundType );
+
+		switch ( editor.backgroundType ) {
+
+			case 'Color':
+				backgroundColor.setHexValue( scene.background.getHex() );
+				break;
+
+			case 'Texture':
+				backgroundTexture.setValue( scene.background );
+				backgroundColorSpace.setValue( scene.background.colorSpace );
+				break;
+
+			case 'Equirectangular':
+				backgroundEquirectangularTexture.setValue( scene.background );
+				backgroundBlurriness.setValue( scene.backgroundBlurriness );
+				backgroundIntensity.setValue( scene.backgroundIntensity );
+				backgroundColorSpace.setValue( scene.background.colorSpace );
+				break;
+
+			default:
+				backgroundTexture.setValue( null );
+				backgroundEquirectangularTexture.setValue( null );
+				backgroundColorSpace.setValue( THREE.NoColorSpace );
+
+		}
+
+		environmentType.setValue( editor.environmentType );
+
+		if ( editor.environmentType === 'Equirectangular' ) {
+
+			environmentEquirectangularTexture.setValue( scene.environment );
+
+		} else {
+
+			environmentEquirectangularTexture.setValue( null );
+
+		}
+
+		if ( scene.fog ) {
+
+			fogColor.setHexValue( scene.fog.color.getHex() );
+
+			if ( scene.fog.isFog ) {
+
+				fogType.setValue( 'Fog' );
+				fogNear.setValue( scene.fog.near );
+				fogFar.setValue( scene.fog.far );
+
+			} else if ( scene.fog.isFogExp2 ) {
+
+				fogType.setValue( 'FogExp2' );
+				fogDensity.setValue( scene.fog.density );
+
+			}
+
+		} else {
+
+			fogType.setValue( 'None' );
+
+		}
+
+		refreshBackgroundUI();
+		refreshEnvironmentUI();
+		refreshFogUI();
 
 	}
 
-	buildFilterOptions();
+	function refreshFogUI() {
+
+		const type = fogType.getValue();
+
+		fogPropertiesRow.setDisplay( type === 'None' ? 'none' : '' );
+		fogNear.setDisplay( type === 'Fog' ? '' : 'none' );
+		fogFar.setDisplay( type === 'Fog' ? '' : 'none' );
+		fogDensity.setDisplay( type === 'FogExp2' ? '' : 'none' );
+
+	}
+
 	refreshUI();
 
 	// events
 
-	signals.editorCleared.add(function () {
+	signals.editorCleared.add( refreshUI );
 
-		buildFilterOptions();
-		refreshUI();
+	signals.sceneGraphChanged.add( refreshUI );
 
-	});
-
-	signals.sceneGraphChanged.add(function () {
-
-		buildFilterOptions();
-		refreshUI();
-
-	});
-
-	// 监听资源变化，触发UI刷新
-	signals.messageReceive.add(function (params) {
-		if (params.action === 'load-resource' || params.action === 'replace-resource') {
-			buildFilterOptions();
-			refreshUI();
-		}
-	});
-
-	// 当对象被添加到场景时，刷新UI
-	signals.objectAdded.add(function () {
-
-		buildFilterOptions();
-		refreshUI();
-
-	});
-
-	signals.objectRemoved.add(function () {
-
-		buildFilterOptions();
-		refreshUI();
-
-	});
-
-	signals.objectChanged.add(function (object) {
-
-		refreshUI();
-
-	});
-
-	signals.componentAdded.add(function () {
-
-		buildFilterOptions();
-		refreshUI();
-
-	});
-
-	signals.componentRemoved.add(function () {
-
-		buildFilterOptions();
-		refreshUI();
-
-	});
-
-	signals.componentChanged.add(refreshUI);
-
-	/*
 	signals.objectChanged.add( function ( object ) {
 
-		let options = outliner.options;
+		const options = outliner.options;
 
 		for ( let i = 0; i < options.length; i ++ ) {
 
-			let option = options[ i ];
+			const option = options[ i ];
 
 			if ( option.value === object.id ) {
 
-				option.innerHTML = buildHTML( object );
+				const openerElement = option.querySelector( ':scope > .opener' );
+
+				const openerHTML = openerElement ? openerElement.outerHTML : '';
+
+				option.innerHTML = openerHTML + buildHTML( object );
+
 				return;
 
 			}
@@ -821,22 +526,34 @@ function SidebarScene(editor) {
 		}
 
 	} );
-	*/
 
-	signals.objectSelected.add(function (object) {
+	signals.scriptAdded.add( function () {
 
-		if (ignoreObjectSelectedSignal === true) return;
+		if ( editor.selected !== null ) signals.objectChanged.dispatch( editor.selected );
 
-		if (object !== null && object.parent !== null) {
+	} );
+
+	signals.scriptRemoved.add( function () {
+
+		if ( editor.selected !== null ) signals.objectChanged.dispatch( editor.selected );
+
+	} );
+
+
+	signals.objectSelected.add( function ( object ) {
+
+		if ( ignoreObjectSelectedSignal === true ) return;
+
+		if ( object !== null && object.parent !== null ) {
 
 			let needsRefresh = false;
 			let parent = object.parent;
 
-			while (parent !== editor.scene) {
+			while ( parent !== editor.scene ) {
 
-				if (nodeStates.get(parent) !== true) {
+				if ( nodeStates.get( parent ) !== true ) {
 
-					nodeStates.set(parent, true);
+					nodeStates.set( parent, true );
 					needsRefresh = true;
 
 				}
@@ -845,12 +562,9 @@ function SidebarScene(editor) {
 
 			}
 
-			if (needsRefresh) refreshUI();
+			if ( needsRefresh ) refreshUI();
 
-			const selectedObjects = editor.getSelectedObjects();
-			const selectedIds = selectedObjects.map( ( obj ) => obj.id );
-			const anchorValue = outliner.getAnchorValue();
-			outliner.setValues( selectedIds, object.id, anchorValue );
+			outliner.setValue( object.id );
 
 		} else {
 
@@ -858,7 +572,18 @@ function SidebarScene(editor) {
 
 		}
 
-	});
+	} );
+
+	signals.sceneBackgroundChanged.add( function () {
+
+		if ( environmentType.getValue() === 'Background' ) {
+
+			onEnvironmentChanged();
+			refreshEnvironmentUI();
+
+		}
+
+	} );
 
 	return container;
 

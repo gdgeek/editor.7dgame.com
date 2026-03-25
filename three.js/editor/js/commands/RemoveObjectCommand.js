@@ -2,30 +2,34 @@ import { Command } from '../Command.js';
 
 import { ObjectLoader } from 'three';
 
-/**
- * @param editor Editor
- * @param object THREE.Object3D
- * @constructor
- */
 class RemoveObjectCommand extends Command {
 
-	constructor( editor, object ) {
+	/**
+	 * @param {Editor} editor
+	 * @param {THREE.Object3D|null} [object=null]
+	 * @constructor
+	 */
+	constructor( editor, object = null ) {
 
 		super( editor );
 
 		this.type = 'RemoveObjectCommand';
-		this.name = 'Remove Object';
 
 		this.object = object;
-		this.parent = ( object !== undefined ) ? object.parent : undefined;
-		if ( this.parent !== undefined ) {
+		this.parent = ( object !== null ) ? object.parent : null;
+
+		if ( this.parent !== null ) {
 
 			this.index = this.parent.children.indexOf( this.object );
 
 		}
 
-		// 处理多选情况
-		this.isInSelection = editor.getSelectedObjects().indexOf(object) !== -1;
+		if ( object !== null ) {
+
+			this.name = editor.strings.getKey( 'command/RemoveObject' ) + ': ' + object.name;
+
+
+		}
 
 	}
 
@@ -38,21 +42,8 @@ class RemoveObjectCommand extends Command {
 
 	undo() {
 
-		this.parent.children.splice( this.index, 0, this.object );
-		this.object.parent = this.parent;
-		this.editor.signals.objectAdded.dispatch( this.object );
-
-		// 如果之前是多选的一部分，恢复到选择中
-		if (this.isInSelection) {
-			this.editor.select(this.object, true);
-		}
-
-	}
-
-	redo() {
-
-		this.parent.remove( this.object );
-		this.editor.signals.objectRemoved.dispatch( this.object );
+		this.editor.addObject( this.object, this.parent, this.index );
+		this.editor.select( this.object );
 
 	}
 

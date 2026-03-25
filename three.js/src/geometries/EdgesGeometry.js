@@ -1,21 +1,50 @@
 import { BufferGeometry } from '../core/BufferGeometry.js';
 import { Float32BufferAttribute } from '../core/BufferAttribute.js';
-import * as MathUtils from '../math/MathUtils.js';
+import { DEG2RAD } from '../math/MathUtils.js';
 import { Triangle } from '../math/Triangle.js';
 import { Vector3 } from '../math/Vector3.js';
 
-const _v0 = new Vector3();
-const _v1 = new Vector3();
-const _normal = new Vector3();
-const _triangle = new Triangle();
+const _v0 = /*@__PURE__*/ new Vector3();
+const _v1 = /*@__PURE__*/ new Vector3();
+const _normal = /*@__PURE__*/ new Vector3();
+const _triangle = /*@__PURE__*/ new Triangle();
 
+/**
+ * Can be used as a helper object to view the edges of a geometry.
+ *
+ * ```js
+ * const geometry = new THREE.BoxGeometry();
+ * const edges = new THREE.EdgesGeometry( geometry );
+ * const line = new THREE.LineSegments( edges );
+ * scene.add( line );
+ * ```
+ *
+ * Note: It is not yet possible to serialize/deserialize instances of this class.
+ *
+ * @augments BufferGeometry
+ */
 class EdgesGeometry extends BufferGeometry {
 
+	/**
+	 * Constructs a new edges geometry.
+	 *
+	 * @param {?BufferGeometry} [geometry=null] - The geometry.
+	 * @param {number} [thresholdAngle=1] - An edge is only rendered if the angle (in degrees)
+	 * between the face normals of the adjoining faces exceeds this value.
+	 */
 	constructor( geometry = null, thresholdAngle = 1 ) {
 
 		super();
+
 		this.type = 'EdgesGeometry';
 
+		/**
+		 * Holds the constructor parameters that have been
+		 * used to generate the geometry. Any modification
+		 * after instantiation does not change the geometry.
+		 *
+		 * @type {Object}
+		 */
 		this.parameters = {
 			geometry: geometry,
 			thresholdAngle: thresholdAngle
@@ -25,7 +54,7 @@ class EdgesGeometry extends BufferGeometry {
 
 			const precisionPoints = 4;
 			const precision = Math.pow( 10, precisionPoints );
-			const thresholdDot = Math.cos( MathUtils.DEG2RAD * thresholdAngle );
+			const thresholdDot = Math.cos( DEG2RAD * thresholdAngle );
 
 			const indexAttr = geometry.getIndex();
 			const positionAttr = geometry.getAttribute( 'position' );
@@ -133,6 +162,16 @@ class EdgesGeometry extends BufferGeometry {
 			this.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
 
 		}
+
+	}
+
+	copy( source ) {
+
+		super.copy( source );
+
+		this.parameters = Object.assign( {}, source.parameters );
+
+		return this;
 
 	}
 

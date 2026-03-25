@@ -1,14 +1,9 @@
-/* 自定义字体声明：Arial Unicode MS */
-@font-face {
-	font-family: 'Arial Unicode MS';
-	src: url('../fonts/arial-unicode-ms.otf') format('opentype');
-	font-weight: normal;
-	font-style: normal;
-	font-display: swap;
-}
-
 :root {
 	color-scheme: light dark;
+}
+
+[hidden] {
+	display: none !important;
 }
 
 body {
@@ -23,43 +18,37 @@ hr {
 	border-top: 1px solid #ccc;
 }
 
-button {
+.Button {
 	position: relative;
 }
 
-input {
+.Input {
 	vertical-align: middle;
 }
 
-input[type="color"]::-webkit-color-swatch-wrapper {
-	padding: 0;
-}
+	.Input[type="color"]::-webkit-color-swatch-wrapper {
+		padding: 0;
+	}
+	.Input[type="color"]::-webkit-color-swatch {
+		border: none;
+	}
 
-input[type="color"]::-webkit-color-swatch {
-	border: none;
-}
-
-textarea {
+.TextArea {
 	tab-size: 4;
 	white-space: pre;
 	word-wrap: normal;
 }
 
-textarea.success {
-	border-color: #8b8 !important;
-}
+	.TextArea.success {
+		border-color: #8b8 !important;
+	}
 
-textarea.fail {
-	border-color: #f00 !important;
-	background-color: rgba(255, 0, 0, 0.05);
-}
+	.TextArea.fail {
+		border-color: #f00 !important;
+		background-color: rgba(255,0,0,0.05);
+	}
 
-textarea,
-input {
-	outline: none;
-}
-
-/* osx */
+.TextArea, .Input { outline: none; } /* osx */
 
 .Panel {
 	-moz-user-select: none;
@@ -82,27 +71,42 @@ input {
 	position: relative;
 	display: block;
 	width: 100%;
+	min-width: 335px;
 }
 
 .TabbedPanel .Tabs {
 	position: relative;
+	z-index: 1; /** Above .Panels **/
 	display: block;
 	width: 100%;
-	min-width: 300px;
+	white-space: pre;
+	overflow: hidden;
+	overflow-x: auto;
 }
 
-.TabbedPanel .Tabs .Tab {
-	padding: 10px;
-	text-transform: uppercase;
-}
+	.TabbedPanel .Tabs::-webkit-scrollbar {
+		height: 5px;
+		background: #eee;
+	}
+	.TabbedPanel .Tabs::-webkit-scrollbar-thumb {
+		background: #08f3;
+	}
+	.TabbedPanel .Tabs:hover::-webkit-scrollbar-thumb {
+		background: #08f;
+		cursor: ew-resize;
+	}
 
-.TabbedPanel .Panels {
-	position: relative;
-	display: block;
-	width: 100%;
-	height: 100%;
-	min-width: 300px;
-}
+	.TabbedPanel .Tabs .Tab {
+		padding: 10px 9px;
+		text-transform: uppercase;
+	}
+
+	.TabbedPanel .Panels {
+		position: absolute;
+		top: 36px;
+		display: block;
+		width: 100%;
+	}
 
 /* Listbox */
 .Listbox {
@@ -110,16 +114,20 @@ input {
 	background-color: #fff;
 	padding: 0;
 	width: 100%;
-	min-height: 140px;
+	min-height: 180px;
 	font-size: 12px;
 	cursor: default;
 	overflow: auto;
 }
 
 .Listbox .ListboxItem {
-	padding: 6px;
+	padding: 4px;
 	color: #666;
 	white-space: nowrap;
+}
+
+.Listbox .ListboxItem:hover {
+	background-color: rgba(0, 0, 0, 0.02);
 }
 
 .Listbox .ListboxItem.active {
@@ -137,19 +145,19 @@ input {
 
 }
 
-.CodeMirror .errorLine {
+	.CodeMirror .errorLine {
 
-	background: rgba(255, 0, 0, 0.25);
+		background: rgba(255,0,0,0.25);
 
-}
+	}
 
-.CodeMirror .esprima-error {
+	.CodeMirror .esprima-error {
 
-	color: #f00;
-	text-align: right;
-	padding: 0 20px;
+		color: #f00;
+		text-align: right;
+		padding: 0 20px;
 
-}
+	}
 
 /* outliner */
 
@@ -162,17 +170,13 @@ input {
 	text-align: center;
 }
 
-#outliner .opener.open:after {
-	content: '−';
-}
+	#outliner .opener.open:after {
+		content: '−';
+	}
 
-#outliner .opener.closed:after {
-	content: '+';
-}
-
-#outliner .opener.locked:after {
-	content: 'ø';
-}
+	#outliner .opener.closed:after {
+		content: '+';
+	}
 
 #outliner .option {
 
@@ -181,15 +185,21 @@ input {
 }
 
 #outliner .option.drag {
+
 	border: 1px dashed #999;
+
 }
 
 #outliner .option.dragTop {
+
 	border-top: 1px dashed #999;
+
 }
 
 #outliner .option.dragBottom {
+
 	border-bottom: 1px dashed #999;
+
 }
 
 #outliner .type {
@@ -198,58 +208,24 @@ input {
 	height: 14px;
 	color: #ddd;
 	text-align: center;
-	line-height: 14px;
-	font-size: 11px;
-}
-
-#outliner .entity-mini-icon {
-	display: inline-block;
-	width: 9px;
-	height: 9px;
-	margin-right: 1px;
-	vertical-align: middle;
-	position: relative;
-	top: -1px;
-	background-color: #6f8fb3;
-	-webkit-mask: url('../images/entity-puzzle.svg') center / contain no-repeat;
-	mask: url('../images/entity-puzzle.svg') center / contain no-repeat;
 }
 
 #outliner .type:after {
-	content: '•';
-}
-
-/* 隐藏后面可能出现的额外标记 (预防性清理) */
-#outliner .Geometry,
-#outliner .Material,
-#outliner .Script {
-	display: none !important;
+	content: '●';
 }
 
 /* */
 
 #outliner .Scene {
-	color: #807b7b;
-}
-
-#outliner .Scene:after {
-	content: '◉';
+	color: #8888dd;
 }
 
 #outliner .Camera {
 	color: #dd8888;
 }
 
-#outliner .Camera:after {
-	content: '⌾';
-}
-
 #outliner .Light {
 	color: #dddd88;
-}
-
-#outliner .Light:after {
-	content: '✦';
 }
 
 /* */
@@ -258,40 +234,20 @@ input {
 	color: #aaaaee;
 }
 
-#outliner .Object3D:after {
-	content: '◇';
-}
-
 #outliner .Mesh {
 	color: #8888ee;
-}
-
-#outliner .Mesh:after {
-	content: '⬢';
 }
 
 #outliner .Line {
 	color: #88ee88;
 }
 
-#outliner .Line:after {
-	content: '⟍';
-}
-
 #outliner .LineSegments {
 	color: #88ee88;
 }
 
-#outliner .LineSegments:after {
-	content: '⟗';
-}
-
 #outliner .Points {
 	color: #ee8888;
-}
-
-#outliner .Points:after {
-	content: '∷';
 }
 
 /* */
@@ -304,106 +260,19 @@ input {
 	color: #eeaaee;
 }
 
-/* 自定义类型 */
-#outliner .Module {
-	color: #555555;
-}
-
-#outliner .Module:after {
-	content: '⌗';
-}
-
-#outliner .Entity {
-	color: #d0d0d0;
-}
-
-#outliner .Entity:after {
-	content: '◇';
-}
-
-#outliner .Point {
-	color: #d0d0d0;
-}
-
-#outliner .Point:after {
-	content: '◇';
-}
-
-#outliner .Text {
-	color: #5b74a5;
-}
-
-#outliner .Text:after {
-	content: 'T';
-	font-weight: 600;
-}
-
-#outliner .Polygen {
-	color: #74a55b;
-}
-
-#outliner .Polygen:after {
-	content: '⬢';
-}
-
-#outliner .Picture {
-	color: #5b8ca5;
-}
-
-#outliner .Picture:after {
-	content: '▣';
-	font-size: 9px;
-}
-
-#outliner .Video {
-	color: #a55ba5;
-}
-
-#outliner .Video:after {
-	content: '▶';
-	font-size: 9px;
-}
-
-#outliner .Audio {
-	color: #5ba55b;
-}
-
-#outliner .Audio:after {
-	content: '♪';
-}
-
-#outliner .Prototype {
-	color: #a5995b;
-}
-
-#outliner .Prototype:after {
-	content: '◫';
-}
-
 /* */
 
 #outliner .Script:after {
 	content: '◎'
 }
 
-/* 资源缺失样式 */
-#outliner .resource-missing {
-	color: #999;
-	font-style: italic;
-}
+/*  */
 
-#outliner .resource-missing:hover {
-	background-color: rgba(255, 235, 235, 0.2);
-}
-
-/* */
-
-button {
+.Button {
 	color: #555;
 	background-color: #ddd;
 	border: 0px;
-	margin: 0px;
-	/* GNOME Web */
+	margin: 0px; /* GNOME Web */
 	padding: 5px 8px;
 	font-size: 12px;
 	text-transform: uppercase;
@@ -411,99 +280,140 @@ button {
 	outline: none;
 }
 
-button:hover {
-	background-color: #fff;
-}
+	.Button:hover {
+		background-color: #fff;
+	}
 
-button.selected {
-	background-color: #fff;
-}
+	.Button.selected {
+		background-color: #fff;
+	}
 
-input,
-textarea {
+.Input, .TextArea {
 	border: 1px solid transparent;
 	color: #444;
 }
 
-input.Number {
-	color: #08f;
+.Input.Number {
+	color: #08f!important;
 	font-size: 12px;
 	border: 0px;
 	padding: 2px;
 }
 
-/* XYZ 坐标轴颜色 */
-input.Number.axis-x {
-	color: #ff5555 !important;
-}
-
-input.Number.axis-y {
-	color: #55aa55 !important;
-}
-
-input.Number.axis-z {
-	color: #5588ff !important;
-}
-
-select {
+.Select {
 	color: #666;
 	background-color: #ddd;
-	border: 0px;
+	border: 3px solid #ddd;
+	border-radius: 4px;
 	text-transform: uppercase;
 	cursor: pointer;
 	outline: none;
 }
 
-select:hover {
-	background-color: #fff;
-}
+	.Select:hover {
+		background-color: #fff;
+	}
 
 /* UI */
 
 #resizer {
 	position: absolute;
-	top: 32px;
-	right: 295px;
+	z-index: 2; /* Above #sidebar */
+	top: 36px;
+	right: 350px;
 	width: 5px;
 	bottom: 0px;
-	/* background-color: rgba(255,0,0,0.5); */
+	transform: translatex(2.5px);
 	cursor: col-resize;
 }
 
+	#resizer:hover {
+		background-color: #08f8;
+		transition-property: background-color;
+		transition-delay: 0.1s;
+		transition-duration: 0.2s;
+	}
+
+	#resizer:active {
+		background-color: #08f;
+	}
+
 #viewport {
 	position: absolute;
-	top: 32px;
+	top: 36px;
 	left: 0;
-	right: 300px;
-	bottom: 0;
+	right: 350px;
+	bottom: 36px;
 }
 
-#viewport #info {
-	text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.25);
-	pointer-events: none;
+	#viewport .Text {
+		text-shadow: 1px 1px 0 rgba(0,0,0,0.25);
+		pointer-events: none;
+	}
+
+#animation {
+	position: absolute;
+	left: 0;
+	right: 350px;
+	bottom: 0;
+	height: 36px;
+	background: #eee;
+	border-top: 1px solid #ccc;
+	display: none;
+	flex-direction: row;
 }
+
+	#animation .Panel {
+		color: #888;
+	}
+
+	#animation input[type="range"] {
+		accent-color: #08f;
+	}
+
+#animation-resizer {
+	position: absolute;
+	left: 0;
+	right: 350px;
+	bottom: 36px;
+	height: 5px;
+	transform: translateY(2.5px);
+	cursor: row-resize;
+	z-index: 2;
+}
+
+	#animation-resizer:hover {
+		background-color: #08f8;
+		transition-property: background-color;
+		transition-delay: 0.1s;
+		transition-duration: 0.2s;
+	}
+
+	#animation-resizer:active {
+		background-color: #08f;
+	}
 
 #script {
 	position: absolute;
-	top: 32px;
+	top: 36px;
 	left: 0;
-	right: 300px;
+	right: 350px;
 	bottom: 0;
 	opacity: 0.9;
 }
 
 #player {
 	position: absolute;
-	top: 32px;
+	top: 36px;
 	left: 0;
-	right: 300px;
+	right: 350px;
 	bottom: 0;
 }
 
 #menubar {
 	position: absolute;
 	width: 100%;
-	height: 32px;
+	height: 36px;
 	background: #eee;
 	padding: 0;
 	margin: 0;
@@ -511,189 +421,194 @@ select:hover {
 	top: 0;
 }
 
-#menubar .menu {
-	float: left;
-	cursor: pointer;
-	padding-right: 8px;
-}
+	#menubar .menu {
+		float: left;
+		cursor: pointer;
+		padding-right: 8px;
+	}
 
-#menubar .menu.right {
-	float: right;
-	cursor: auto;
-	padding-right: 0;
-	text-align: right;
-}
+	#menubar .menu.right {
+		float: right;
+		cursor: auto;
+		padding-right: 0;
+		text-align: right;
+	}
 
-#menubar .menu .title {
-	display: inline-block;
-	color: #888;
-	margin: 0;
-	padding: 8px;
-	line-height: 16px;
-}
+		#menubar .menu .title {
+			display: inline-block;
+			color: #888;
+			margin: 0;
+			padding: 10px;
+			line-height: 16px;
+		}
 
-#menubar .menu .options {
-	position: fixed;
-	display: none;
-	padding: 5px 0;
-	background: #eee;
-	width: 150px;
-	max-height: calc(100% - 80px);
-	overflow: auto;
-}
+		#menubar .menu .key {
+			position: absolute;
+			right: 10px;
+			color: #ccc;
+			border: 1px solid #ccc;
+			border-radius: 4px;
+			font-size: 9px;
+			line-height: normal;
+			padding: 2px 4px;
+			right: 10px;
+			pointer-events: none;
+		}
 
-#menubar .menu:hover .options {
-	display: block;
-}
+		#menubar .menu .options {
+			position: fixed;
+			z-index: 1; /* higher than resizer */
+			display: none;
+			padding: 5px 0;
+			background: #eee;
+			min-width: 150px;
+			max-height: calc(100vh - 80px);
+			overflow: auto;
+		}
 
-#menubar .menu .options hr {
-	border-color: #ddd;
-}
+		#menubar .menu:hover .options {
+			display: block;
+			box-shadow: 0 10px 10px -5px #00000033;
+		}
 
-#menubar .menu .options .option {
-	color: #666;
-	background-color: transparent;
-	padding: 5px 10px;
-	margin: 0 !important;
-}
+			#menubar .menu .options hr {
+				border-color: #ddd;
+			}
 
-#menubar .menu .options .option:hover {
-	color: #fff;
-	background-color: #08f;
-}
+			#menubar .menu .options .option {
+				color: #666;
+				background-color: transparent;
+				padding: 5px 10px;
+				line-height: 25px;
+				margin: 0 !important;
+			}
 
-#menubar .menu .options .option:active {
-	color: #666;
-	background: transparent;
-}
+				#menubar .menu .options .option:hover {
+					color: #fff;
+					background-color: #08f;
+				}
 
-#menubar .menu .options .inactive {
-	color: #bbb;
-	background-color: transparent;
-	padding: 5px 10px;
-	margin: 0 !important;
-}
+				#menubar .menu .options .option:not(.submenu-title):active {
+					color: #666;
+					background: transparent;
+				}
+
+				#menubar .menu .options .option.toggle::before {
+
+					content: ' ';
+					display: inline-block;
+					width: 16px;
+
+				}
+
+				#menubar .menu .options .option.toggle-on::before {
+
+					content: '✔';
+					font-size: 12px;
+
+				}
+
+				#menubar .submenu-title::after {
+					content: '⏵';
+					float: right;
+				}
+
+		#menubar .menu .options .inactive {
+			color: #bbb;
+			background-color: transparent;
+			padding: 5px 10px;
+			line-height: 25px;
+			margin: 0 !important;
+			cursor: not-allowed;
+		}
+
+		
 
 #sidebar {
 	position: absolute;
 	right: 0;
-	top: 32px;
+	top: 36px;
 	bottom: 0;
-	width: 300px;
+	width: 350px;
 	background: #eee;
-	display: flex;
-	flex-direction: column;
-	overflow: hidden;
-}
-
-#sidebar > .Tabs {
-	flex: 0 0 auto;
-}
-
-#sidebar > .Panels {
-	flex: 1 1 auto;
-	min-height: 0;
-	overflow: hidden;
-}
-
-#sidebar > .Panels > div {
-	height: 100%;
-	min-height: 0;
-}
-
-#sidebar > .Panels > #scene {
-	overflow: hidden;
-}
-
-#sidebar > .Panels > #events,
-#sidebar > .Panels > #screenshot {
+	overflow: auto;
 	overflow-x: hidden;
-	overflow-y: auto;
 }
 
-#sidebar .Panel {
-	color: #888;
-	padding: 10px;
-	border-top: 1px solid #ccc;
-}
+	#sidebar .Panel {
+		color: #888;
+		padding: 10px;
+		border-top: 1px solid #ccc;
+	}
 
-#sidebar .Panel.collapsed {
-	margin-bottom: 0;
-}
+	#sidebar .Panel.collapsed {
+		margin-bottom: 0;
+	}
 
-#sidebar .Row {
-	display: flex;
-	align-items: center;
-	min-height: 24px;
-	margin-bottom: 10px;
-}
+	#sidebar .Row {
+		display: flex;
+		align-items: center;
+		min-height: 24px;
+		margin-bottom: 10px;
+	}
 
-#properties {
-	display: flex;
-	flex: 1 1 auto;
-	flex-direction: column;
-	min-height: 0;
-	overflow: hidden;
-}
+	#sidebar .Row .Label {
 
-#properties > .Tabs {
-	flex: 0 0 auto;
-}
+		width: 120px;
 
-#properties > .Panels {
-	flex: 1 1 auto;
-	min-height: 0;
-	overflow: hidden;
-}
-
-#properties > .Panels > div {
-	height: 100%;
-	min-height: 0;
-	overflow-x: hidden;
-	overflow-y: auto;
-}
+	}
 
 #tabs {
 	background-color: #ddd;
 	border-top: 1px solid #ccc;
 }
 
-#tabs span {
-	color: #aaa;
-	border-right: 1px solid #ccc;
-	padding: 10px;
-}
+	#tabs span {
+		color: #aaa;
+		border-right: 1px solid #ccc;
+		padding: 10px;
+	}
 
-#tabs span.selected {
-	color: #888;
-	background-color: #eee;
-}
+	#tabs span.selected {
+		color: #888;
+		background-color: #eee;
+	}
 
 #toolbar {
 	position: absolute;
-	left: 10px;
-	top: 42px;
-	width: 32px;
+	left: calc(50% - 175px);
+	transform: translateX(-50%);
+	bottom: 56px;
+	height: 32px;
 	background: #eee;
 	text-align: center;
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	border-radius: 6px;
+	border: 3px solid #eee;
+	overflow: hidden;
 }
 
-#toolbar button,
-#toolbar input {
-	height: 32px;
-}
+	#toolbar .Button, #toolbar .Input {
+		height: 32px;
+		border-radius: 4px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
 
-#toolbar button img {
-	width: 16px;
-	opacity: 0.5;
-}
+		#toolbar .Button img {
+			width: 16px;
+			opacity: 0.5;
+		}
 
 .Outliner {
 	color: #444;
 	background-color: #fff;
 	padding: 0;
 	width: 100%;
-	height: 140px;
+	height: 180px;
 	font-size: 12px;
 	cursor: default;
 	overflow: auto;
@@ -701,46 +616,35 @@ select:hover {
 	outline: none !important;
 }
 
-.Outliner .option {
-	padding: 4px;
-	color: #666;
-	white-space: nowrap;
-}
+	.Outliner .option {
+		padding: 4px;
+		color: #666;
+		white-space: nowrap;
+	}
 
-.Outliner .option:hover {
-	background-color: rgba(0, 0, 0, 0.02);
-}
+	.Outliner .option:hover {
+		background-color: rgba(0,0,0,0.02);
+	}
 
-.Outliner .option.active {
-	background-color: rgba(0, 0, 0, 0.06);
-}
+	.Outliner .option.active {
+		background-color: rgba(0,0,0,0.04);
+	}
 
-/* 多选时的样式 - 颜色略深 */
-.Outliner .option.multi-selected {
-	background-color: rgba(0, 0, 0, 0.1);
-}
-
-/* 仅场景编辑(verse)层级面板：放大单个实体显示 */
-.Outliner.scene-verse-outliner .option {
-	font-size: 13px;
-	padding-top: 6px;
-	padding-bottom: 6px;
-}
 
 .TabbedPanel .Tabs {
 	background-color: #ddd;
 	border-top: 1px solid #ccc;
 }
 
-.TabbedPanel .Tab {
-	color: #aaa;
-	border-right: 1px solid #ccc;
-}
+	.TabbedPanel .Tab {
+		color: #aaa;
+		border-right: 1px solid #ccc;
+	}
 
-.TabbedPanel .Tab.selected {
-	color: #888;
-	background-color: #eee;
-}
+	.TabbedPanel .Tab.selected {
+		color: #888;
+		background-color: #eee;
+	}
 
 .Listbox {
 	color: #444;
@@ -753,14 +657,18 @@ select:hover {
 
 /* */
 
-@media all and (max-width: 600px) {
+@media all and ( max-width: 600px ) {
 
 	#resizer {
 		display: none;
 	}
 
+	#animation-resizer {
+		display: none;
+	}
+
 	#menubar .menu .options {
-		max-height: calc(100% - 372px);
+		max-height: calc(100% - 80px);
 	}
 
 	#menubar .menu.right {
@@ -770,22 +678,22 @@ select:hover {
 	#viewport {
 		left: 0;
 		right: 0;
-		top: 32px;
-		height: calc(100% - 352px);
+		top: 36px;
+		height: calc(100% - 356px);
 	}
 
 	#script {
 		left: 0;
 		right: 0;
-		top: 32px;
-		height: calc(100% - 352px);
+		top: 36px;
+		height: calc(100% - 356px);
 	}
 
 	#player {
 		left: 0;
 		right: 0;
-		top: 32px;
-		height: calc(100% - 352px);
+		top: 36px;
+		height: calc(100% - 356px);
 	}
 
 	#sidebar {
@@ -795,43 +703,53 @@ select:hover {
 		bottom: 0;
 	}
 
+	#toolbar {
+		left: 50%;
+		transform: translateX(-50%);
+		bottom: 330px;
+	}
+
+	#animation {
+		display: none !important;
+	}
+
 }
 
 /* DARK MODE */
 
-@media (prefers-color-scheme: dark) {
+@media ( prefers-color-scheme: dark ) {
 
-	button {
+	.Button {
 		color: #aaa;
 		background-color: #222;
 	}
 
-	button:hover {
-		color: #ccc;
-		background-color: #444;
-	}
+		.Button:hover {
+			color: #ccc;
+			background-color: #444;
+		}
 
-	button.selected {
-		color: #fff;
-		background-color: #08f;
-	}
+		.Button.selected {
+			color: #fff;
+			background-color: #08f;
+		}
 
-	input,
-	textarea {
+	.Input, .TextArea {
 		background-color: #222;
 		border: 1px solid transparent;
 		color: #888;
 	}
 
-	select {
+	.Select {
 		color: #aaa;
 		background-color: #222;
+		border-color: #222;
 	}
 
-	select:hover {
-		color: #ccc;
-		background-color: #444;
-	}
+		.Select:hover {
+			color: #ccc;
+			background-color: #444;
+		}
 
 	/* UI */
 
@@ -839,88 +757,109 @@ select:hover {
 		background: #111;
 	}
 
-	#menubar .menu .options {
-		background: #111;
-	}
+			#menubar .menu .key {
+				color: #444;
+				border-color: #444;
+			}
 
-	#menubar .menu .options hr {
-		border-color: #222;
-	}
+			#menubar .menu .options {
+				background: #111;
+			}
 
-	#menubar .menu .options .option {
-		color: #888;
-	}
+				#menubar .menu .options hr {
+					border-color: #222;
+				}
 
-	#menubar .menu .options .inactive {
-		color: #444;
-	}
+				#menubar .menu .options .option {
+					color: #888;
+				}
+
+			#menubar .menu .options .inactive {
+				color: #444;
+			}
 
 	#sidebar {
 		background-color: #111;
 	}
 
-	#sidebar .Panel {
+		#sidebar .Panel {
+			border-top: 1px solid #222;
+		}
+
+		#sidebar .Panel.Material canvas {
+			border: solid 1px #5A5A5A;
+		}
+
+	#animation {
+		background-color: #111;
 		border-top: 1px solid #222;
 	}
 
-	#sidebar .Panel.Material canvas {
-		border: solid 1px #5A5A5A;
-	}
+		#animation .Panel {
+			border-bottom: 1px solid #222;
+		}
+
+		#animation .timeline-container {
+			background: rgba(255, 255, 255, 0.05);
+		}
 
 	#tabs {
 		background-color: #1b1b1b;
 		border-top: 1px solid #222;
 	}
 
-	#tabs span {
-		color: #555;
-		border-right: 1px solid #222;
-	}
+		#tabs span {
+			color: #555;
+			border-right: 1px solid #222;
+		}
 
-	#tabs span.selected {
-		background-color: #111;
-	}
+		#tabs span.selected {
+			background-color: #111;
+		}
 
 	#toolbar {
 		background-color: #111;
+		border-color: #111;
 	}
 
-	#toolbar img {
-		filter: invert(1);
-	}
+		#toolbar img {
+			filter: invert(1);
+		}
 
 	.Outliner {
-		color: #888;
 		background: #222;
 	}
 
-	.Outliner .option:hover {
-		background-color: rgba(21, 60, 94, 0.5);
-	}
+		.Outliner .option {
+			color: #999;
+		}
 
-	.Outliner .option.active {
-		background-color: rgba(21, 60, 94, 0.8);
-	}
+		.Outliner .option:hover {
+			background-color: rgba(21,60,94,0.5);
+		}
 
-	/* 暗模式下多选时的样式 - 颜色略深 */
-	.Outliner .option.multi-selected {
-		background-color: rgba(21, 60, 94, 1);
-	}
+		.Outliner .option.active {
+			background-color: rgba(21,60,94,1);
+		}
 
 	.TabbedPanel .Tabs {
 		background-color: #1b1b1b;
 		border-top: 1px solid #222;
 	}
 
-	.TabbedPanel .Tab {
-		color: #555;
-		border-right: 1px solid #222;
-	}
+		.TabbedPanel .Tabs::-webkit-scrollbar {
+			background: #111;
+		}
 
-	.TabbedPanel .Tab.selected {
-		color: #888;
-		background-color: #111;
-	}
+		.TabbedPanel .Tab {
+			color: #555;
+			border-right: 1px solid #222;
+		}
+
+		.TabbedPanel .Tab.selected {
+			color: #888;
+			background-color: #111;
+		}
 
 	.Listbox {
 		color: #888;
@@ -928,11 +867,92 @@ select:hover {
 	}
 
 	.Listbox .ListboxItem:hover {
-		background-color: rgba(21, 60, 94, 0.5);
+		background-color: rgba(21,60,94,0.5);
 	}
 
 	.Listbox .ListboxItem.active {
-		background-color: rgba(21, 60, 94, 1);
+		background-color: rgba(21,60,94,1);
 	}
 
+}
+
+/* Dialog */
+
+.Dialog {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 100;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.Dialog-background {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 0, 0, 0.5);
+}
+
+.Dialog-content {
+	position: relative;
+	background: #eee;
+	min-width: 300px;
+	max-width: 90%;
+	max-height: 90%;
+	overflow: auto;
+}
+
+.Dialog-title {
+	padding: 10px 15px;
+	color: #666;
+	text-transform: uppercase;
+}
+
+.Dialog-body {
+	padding: 15px;
+}
+
+.Dialog-body .Row {
+	display: flex;
+	align-items: center;
+	min-height: 24px;
+	margin-bottom: 10px;
+}
+
+.Dialog-body .Row .Label {
+	width: 120px;
+	color: #888;
+}
+
+.Dialog-buttons {
+	display: flex;
+	justify-content: flex-end;
+	margin-top: 15px;
+}
+
+@media ( prefers-color-scheme: dark ) {
+
+	.Dialog-content {
+		background: #111;
+	}
+
+	.Dialog-title {
+		color: #888;
+	}
+
+
+
+}
+
+/* Temporary Chrome fix (#24794) */
+
+[draggable="true"] {
+	transform: translate(0, 0);
+	z-index: 0;
 }

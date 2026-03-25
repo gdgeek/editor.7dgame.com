@@ -1,6 +1,5 @@
 import { UIPanel, UIRow, UISelect, UISpan, UIText } from './libs/ui.js';
 
-import { SidebarSettingsViewport } from './Sidebar.Settings.Viewport.js';
 import { SidebarSettingsShortcuts } from './Sidebar.Settings.Shortcuts.js';
 import { SidebarSettingsHistory } from './Sidebar.Settings.History.js';
 
@@ -18,12 +17,11 @@ function SidebarSettings( editor ) {
 
 	// language
 
-	const options = {
-		zh: '中文',
-		en: 'English',
-		// fr: 'Français',
-		ja: '日本語',
-	};
+	const options = Object.fromEntries( [ 'en', 'fr', 'zh', 'ja', 'ko', 'fa' ].map( locale => {
+
+		return [ locale, new Intl.DisplayNames( locale, { type: 'language' } ).of( locale ) ];
+
+	} ) );
 
 	const languageRow = new UIRow();
 	const language = new UISelect().setWidth( '150px' );
@@ -43,14 +41,13 @@ function SidebarSettings( editor ) {
 
 	} );
 
-	languageRow.add( new UIText( strings.getKey( 'sidebar/settings/language' ) ).setWidth( '90px' ) );
+	languageRow.add( new UIText( strings.getKey( 'sidebar/settings/language' ) ).setClass( 'Label' ) );
 	languageRow.add( language );
 
 	settings.add( languageRow );
 
 	//
 
-	container.add( new SidebarSettingsViewport( editor ) );
 	container.add( new SidebarSettingsShortcuts( editor ) );
 	container.add( new SidebarSettingsHistory( editor ) );
 

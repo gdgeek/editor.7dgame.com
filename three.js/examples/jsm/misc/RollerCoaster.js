@@ -1,13 +1,27 @@
 import {
 	BufferAttribute,
 	BufferGeometry,
+	Color,
 	Quaternion,
 	Raycaster,
+	SRGBColorSpace,
 	Vector3
 } from 'three';
 
+/**
+ * A procedural roller coaster geometry.
+ *
+ * @augments BufferGeometry
+ * @three_import import { RollerCoasterGeometry } from 'three/addons/misc/RollerCoaster.js';
+ */
 class RollerCoasterGeometry extends BufferGeometry {
 
+	/**
+	 * Constructs a new geometry.
+	 *
+	 * @param {Curve} curve - The curve to generate the geometry along.
+ 	 * @param {number} divisions - The number of divisions which defines the detail of the geometry.
+	 */
 	constructor( curve, divisions ) {
 
 		super();
@@ -220,8 +234,20 @@ class RollerCoasterGeometry extends BufferGeometry {
 
 }
 
+/**
+ * A procedural roller coaster lifters geometry.
+ *
+ * @augments BufferGeometry
+ * @three_import import { RollerCoasterLiftersGeometry } from 'three/addons/misc/RollerCoaster.js';
+ */
 class RollerCoasterLiftersGeometry extends BufferGeometry {
 
+	/**
+	 * Constructs a new geometry.
+	 *
+	 * @param {Curve} curve - The curve to generate the geometry along.
+ 	 * @param {number} divisions - The number of divisions which defines the detail of the geometry.
+	 */
 	constructor( curve, divisions ) {
 
 		super();
@@ -396,8 +422,20 @@ class RollerCoasterLiftersGeometry extends BufferGeometry {
 
 }
 
+/**
+ * A procedural roller coaster shadow geometry.
+ *
+ * @augments BufferGeometry
+ * @three_import import { RollerCoasterShadowGeometry } from 'three/addons/misc/RollerCoaster.js';
+ */
 class RollerCoasterShadowGeometry extends BufferGeometry {
 
+	/**
+	 * Constructs a new geometry.
+	 *
+	 * @param {Curve} curve - The curve to generate the geometry along.
+ 	 * @param {number} divisions - The number of divisions which defines the detail of the geometry.
+	 */
 	constructor( curve, divisions ) {
 
 		super();
@@ -468,8 +506,17 @@ class RollerCoasterShadowGeometry extends BufferGeometry {
 
 }
 
+/**
+ * A procedural sky geometry.
+ *
+ * @augments BufferGeometry
+ * @three_import import { SkyGeometry } from 'three/addons/misc/RollerCoaster.js';
+ */
 class SkyGeometry extends BufferGeometry {
 
+	/**
+	 * Constructs a new geometry.
+	 */
 	constructor() {
 
 		super();
@@ -501,8 +548,20 @@ class SkyGeometry extends BufferGeometry {
 
 }
 
+/**
+ * A procedural trees geometry.
+ *
+ * @augments BufferGeometry
+ * @three_import import { TreesGeometry } from 'three/addons/misc/RollerCoaster.js';
+ */
 class TreesGeometry extends BufferGeometry {
 
+	/**
+	 * Constructs a new geometry.
+	 *
+	 * @param {Mesh} landscape - A mesh representing the landscape. Trees will be positioned
+	 * randomly on the landscape's surface.
+	 */
 	constructor( landscape ) {
 
 		super();
@@ -512,6 +571,8 @@ class TreesGeometry extends BufferGeometry {
 
 		const raycaster = new Raycaster();
 		raycaster.ray.direction.set( 0, - 1, 0 );
+
+		const _color = new Color();
 
 		for ( let i = 0; i < 2000; i ++ ) {
 
@@ -544,7 +605,9 @@ class TreesGeometry extends BufferGeometry {
 
 			for ( let j = 0; j < 6; j ++ ) {
 
-				colors.push( 0.2 + random, 0.4 + random, 0 );
+				_color.setRGB( 0.2 + random, 0.4 + random, 0, SRGBColorSpace );
+
+				colors.push( _color.r, _color.g, _color.b );
 
 			}
 

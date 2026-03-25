@@ -1,32 +1,32 @@
 import { Command } from '../Command.js';
 
-/**
- * @param editor Editor
- * @param object THREE.Object3D
- * @param attributeName string
- * @param newValue number, string, boolean or object
- * @constructor
- */
 class SetGeometryValueCommand extends Command {
 
-	constructor(editor, object, attributeName, newValue) {
+	/**
+	 * @param {Editor} editor
+	 * @param {THREE.Object3D|null} [object=null]
+	 * @param {string} [attributeName='']
+	 * @param {number|string|boolean|Object|null} [newValue=null]
+	 * @constructor
+	 */
+	constructor( editor, object = null, attributeName = '', newValue = null ) {
 
-		super(editor);
+		super( editor );
 
 		this.type = 'SetGeometryValueCommand';
-		this.name = `Set Geometry.${attributeName}`;
+		this.name = editor.strings.getKey( 'command/SetGeometryValue' ) + ': ' + attributeName;
 
 		this.object = object;
 		this.attributeName = attributeName;
-		this.oldValue = (object !== undefined) ? object.geometry[attributeName] : undefined;
+		this.oldValue = ( object !== null ) ? object.geometry[ attributeName ] : null;
 		this.newValue = newValue;
 
 	}
 
 	execute() {
 
-		this.object.geometry[this.attributeName] = this.newValue;
-		this.editor.signals.objectChanged.dispatch(this.object);
+		this.object.geometry[ this.attributeName ] = this.newValue;
+		this.editor.signals.objectChanged.dispatch( this.object );
 		this.editor.signals.geometryChanged.dispatch();
 		this.editor.signals.sceneGraphChanged.dispatch();
 
@@ -34,8 +34,8 @@ class SetGeometryValueCommand extends Command {
 
 	undo() {
 
-		this.object.geometry[this.attributeName] = this.oldValue;
-		this.editor.signals.objectChanged.dispatch(this.object);
+		this.object.geometry[ this.attributeName ] = this.oldValue;
+		this.editor.signals.objectChanged.dispatch( this.object );
 		this.editor.signals.geometryChanged.dispatch();
 		this.editor.signals.sceneGraphChanged.dispatch();
 
@@ -43,7 +43,7 @@ class SetGeometryValueCommand extends Command {
 
 	toJSON() {
 
-		const output = super.toJSON(this);
+		const output = super.toJSON( this );
 
 		output.objectUuid = this.object.uuid;
 		output.attributeName = this.attributeName;
@@ -54,11 +54,11 @@ class SetGeometryValueCommand extends Command {
 
 	}
 
-	fromJSON(json) {
+	fromJSON( json ) {
 
-		super.fromJSON(json);
+		super.fromJSON( json );
 
-		this.object = this.editor.objectByUuid(json.objectUuid);
+		this.object = this.editor.objectByUuid( json.objectUuid );
 		this.attributeName = json.attributeName;
 		this.oldValue = json.oldValue;
 		this.newValue = json.newValue;
