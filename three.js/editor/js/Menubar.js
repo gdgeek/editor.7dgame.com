@@ -14,6 +14,7 @@ import { MenubarComponent } from './Menubar.Component.js';
 import { MenubarCommand } from './Menubar.Command.js';
 import { MenubarScreenshot } from './Menubar.Screenshot.js';
 import { MenubarScene } from './Menubar.Scene.js';
+import { MenubarEntity } from './Menubar.Entity.js';
 
 function Menubar(editor) {
 
@@ -28,6 +29,8 @@ function Menubar(editor) {
 	//container.add( new MenubarCommand( editor ) );
 	if ( editor.type && editor.type.toLowerCase() === 'meta' ) {
 		container.add( new MenubarScene( editor ) );
+	} else if ( editor.type && editor.type.toLowerCase() === 'verse' ) {
+		container.add( new MenubarEntity( editor ) );
 	} else {
 		container.add( new MenubarScreenshot( editor ) );
 	}
