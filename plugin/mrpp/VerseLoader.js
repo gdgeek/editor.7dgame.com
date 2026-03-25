@@ -12,11 +12,17 @@ function VerseLoader(editor) {
 	const factory = new MetaFactory(editor);
 	const self = this;
 
-	editor.selector = function (object) {
-		if(object.userData.hidden){
-			return false;
+	// r183: editor.selector is a Selector class instance, not a filter function.
+	// Monkey-patch its select() method to add the hidden/type filter.
+	const originalSelectorSelect = editor.selector.select.bind( editor.selector );
+	editor.selector.select = function ( object ) {
+		if ( object && object.userData && object.userData.hidden ) {
+			return; // skip hidden objects
 		}
-		return types.includes(object.type);
+		if ( object && object.type && !types.includes( object.type ) ) {
+			return; // only allow specific types in verse mode
+		}
+		return originalSelectorSelect( object );
 	};
 
 

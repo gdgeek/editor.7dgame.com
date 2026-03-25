@@ -1035,28 +1035,76 @@ function injectSidebarObjectExtensions( editor, sidebarObjectContainer ) {
 
 		}
 
+		// ── Hide r183 rows not needed in MRPP mode ──────────────────
+
+		// UUID row
+		const uuidRow = findRowByLabel( strings.getKey( 'sidebar/object/uuid' ) );
+		if ( uuidRow ) uuidRow.style.display = 'none';
+
+		// Shadow row and sub-rows
+		const shadowRow = findRowByLabel( strings.getKey( 'sidebar/object/shadow' ) );
+		if ( shadowRow ) shadowRow.style.display = 'none';
+
+		const shadowIntensityRow = findRowByLabel( strings.getKey( 'sidebar/object/shadowIntensity' ) );
+		if ( shadowIntensityRow ) shadowIntensityRow.style.display = 'none';
+
+		const shadowBiasRow = findRowByLabel( strings.getKey( 'sidebar/object/shadowBias' ) );
+		if ( shadowBiasRow ) shadowBiasRow.style.display = 'none';
+
+		const shadowNormalBiasRow = findRowByLabel( strings.getKey( 'sidebar/object/shadowNormalBias' ) );
+		if ( shadowNormalBiasRow ) shadowNormalBiasRow.style.display = 'none';
+
+		const shadowRadiusRow = findRowByLabel( strings.getKey( 'sidebar/object/shadowRadius' ) );
+		if ( shadowRadiusRow ) shadowRadiusRow.style.display = 'none';
+
+		// frustumCulled row
+		const frustumCulledRow = findRowByLabel( strings.getKey( 'sidebar/object/frustumcull' ) );
+		if ( frustumCulledRow ) frustumCulledRow.style.display = 'none';
+
+		// renderOrder row
+		const renderOrderRow = findRowByLabel( strings.getKey( 'sidebar/object/renderorder' ) );
+		if ( renderOrderRow ) renderOrderRow.style.display = 'none';
+
+		// Export JSON button (last button in the container)
+		const buttons = sidebarObjectContainer.querySelectorAll( 'button' );
+		if ( buttons.length > 0 ) {
+
+			const lastButton = buttons[ buttons.length - 1 ];
+			if ( lastButton && lastButton.textContent.includes( strings.getKey( 'sidebar/object/export' ) ) ) {
+
+				lastButton.style.display = 'none';
+
+			}
+
+		}
+
 	}
 
 	function applyMrppUIValues( object ) {
 
-		// Localized type
+		// Localized type — use setTimeout(0) to ensure this runs AFTER
+		// r183's own updateUI handler, which sets objectType to object.type
 		const typeLabel = strings.getKey( 'sidebar/object/type' );
 		const typeRow = findRowByLabel( typeLabel );
 
 		if ( typeRow ) {
 
-			// The second span in the type row is the value display
-			const spans = typeRow.querySelectorAll( 'span' );
-			for ( let i = 0; i < spans.length; i ++ ) {
+			setTimeout( function () {
 
-				if ( spans[ i ].textContent.trim() !== typeLabel.trim() ) {
+				// The second span in the type row is the value display
+				const spans = typeRow.querySelectorAll( 'span' );
+				for ( let i = 0; i < spans.length; i ++ ) {
 
-					spans[ i ].textContent = getLocalizedObjectType( object, editor );
-					break;
+					if ( spans[ i ].textContent.trim() !== typeLabel.trim() ) {
+
+						spans[ i ].textContent = getLocalizedObjectType( object, editor );
+						break;
+
+					}
 
 				}
 
-			}
+			}, 0 );
 
 		}
 

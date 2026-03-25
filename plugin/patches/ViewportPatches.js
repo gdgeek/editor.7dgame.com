@@ -145,7 +145,8 @@ function applyViewportPatches( editor ) {
 	const state = {
 		multipleObjectsTransformOnDown: [],
 		preventAutoMove: false,
-		multiSelectionCenter: new THREE.Vector3()
+		multiSelectionCenter: new THREE.Vector3(),
+		currentTransformMode: 'translate' // tracks active TransformControls mode
 	};
 
 	editor._viewportPatch = state;
@@ -331,6 +332,17 @@ function applyViewportPatches( editor ) {
 	} );
 
 	// ─── Signal: objectChanged — multiSelectGroup handler ───────────
+	//
+	// In r183 Viewport.js, TransformControls fires 'objectChange' event which
+	// dispatches signals.objectChanged. We intercept it here for multiSelectGroup.
+
+	// Track the active transform mode so objectChanged handler can apply
+	// only the relevant callback (r183: transformModeChanged signal is reliable).
+	editor.signals.transformModeChanged.add( function ( mode ) {
+
+		state.currentTransformMode = mode;
+
+	} );
 
 	editor.signals.objectChanged.add( function ( object ) {
 
@@ -342,19 +354,19 @@ function applyViewportPatches( editor ) {
 
 				if ( selectedObjects.length > 0 && multiSelectGroup.userData ) {
 
-					if ( multiSelectGroup.userData.onPositionChange ) {
+					// Apply only the callback matching the current transform mode
+					// to avoid incorrectly propagating stale rotation/scale/position.
+					const mode = state.currentTransformMode;
+
+					if ( mode === 'translate' && multiSelectGroup.userData.onPositionChange ) {
 
 						multiSelectGroup.userData.onPositionChange();
 
-					}
-
-					if ( multiSelectGroup.userData.onRotationChange ) {
+					} else if ( mode === 'rotate' && multiSelectGroup.userData.onRotationChange ) {
 
 						multiSelectGroup.userData.onRotationChange();
 
-					}
-
-					if ( multiSelectGroup.userData.onScaleChange ) {
+					} else if ( mode === 'scale' && multiSelectGroup.userData.onScaleChange ) {
 
 						multiSelectGroup.userData.onScaleChange();
 
@@ -406,14 +418,15 @@ function applyViewportPatches( editor ) {
 	// ─── Expose transform event handlers for Viewport integration ───
 	//
 	// These functions encapsulate the multi-select branches of the
-	// TransformControls 'change', 'mouseDown', and 'mouseUp' handlers.
+	// TransformControls 'objectChange', 'mouseDown', and 'mouseUp' handlers.
 	// They are stored on editor._viewportPatch so that Viewport.js
 	// (once cleaned up) can delegate to them, or they can be wired
 	// via signal listeners.
 
 	/**
-	 * Handle TransformControls 'change' event for multi-select mode.
+	 * Handle TransformControls 'objectChange' event for multi-select mode.
 	 * Called when the transformControls object is the multiSelectGroup.
+	 * (r183: event renamed from 'change' to 'objectChange')
 	 *
 	 * @param {object} transformControls - The TransformControls instance
 	 * @param {THREE.Box3} box - The selection bounding box

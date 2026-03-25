@@ -284,7 +284,11 @@ function applyUIThreePatches( editor ) {
 /**
  * Monkey-patch UIOutliner prototype with multi-select support.
  *
- * The original r140 UIOutliner only supports single selection (getValue/setValue).
+ * In r183, UIOutliner is a class (not a function constructor as in r140),
+ * but prototype patching still works identically since class methods are
+ * defined on the prototype.
+ *
+ * The original r183 UIOutliner only supports single selection (getValue/setValue).
  * This patch adds multi-select infrastructure used by Sidebar.Scene.js:
  * - selectedIndices, selectedValues, anchorIndex, reorderOnly properties
  * - Internal helpers: _normalizeValue, _getValueByIndex, _getIndexByValue
@@ -760,8 +764,7 @@ function patchUIOutlinerPrototype() {
 			const editor = scope.editor;
 			editor.execute( new MoveObjectCommand( editor, object, newParent, nextObject ) );
 
-			const changeEvent = document.createEvent( 'HTMLEvents' );
-			changeEvent.initEvent( 'change', true, true );
+			const changeEvent = new Event( 'change', { bubbles: true, cancelable: true } );
 			scope.dom.dispatchEvent( changeEvent );
 
 		}

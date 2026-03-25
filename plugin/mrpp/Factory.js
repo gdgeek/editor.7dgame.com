@@ -20,9 +20,9 @@ class Factory {
 		node.scale.set( s.x, s.y, s.z );
 
 		node.rotation.set(
-			THREE.Math.degToRad( r.x ),
-			THREE.Math.degToRad( r.y ),
-			THREE.Math.degToRad( r.z )
+			THREE.MathUtils.degToRad( r.x ),
+			THREE.MathUtils.degToRad( r.y ),
+			THREE.MathUtils.degToRad( r.z )
 		);
 
 	}
@@ -33,9 +33,9 @@ class Factory {
 		const r = transform.rotate;
 		const rotate = new THREE.Matrix4().makeRotationFromEuler(
 			new THREE.Euler(
-				THREE.Math.degToRad( r.x ),
-				THREE.Math.degToRad( r.y ),
-				THREE.Math.degToRad( r.z ),
+				THREE.MathUtils.degToRad( r.x ),
+				THREE.MathUtils.degToRad( r.y ),
+				THREE.MathUtils.degToRad( r.z ),
 				'XYZ'
 			)
 		);
