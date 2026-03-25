@@ -5,18 +5,6 @@ import { Loader } from './Loader.js';
 import { History as _History } from './History.js';
 import { Strings } from './Strings.js';
 import { Storage as _Storage } from './Storage.js';
-import { DialogUtils } from './utils/DialogUtils.js';
-import { Access } from './Access.js';
-
-const mapping = {
-	'zh-CN': 'zh-cn',
-	'en-US': 'en-us',
-	'ja-JP': 'ja-jp',
-	'zh-TW': 'zh-tw',
-	'th-TH': 'th-th'
-};
-const urlParams = new URLSearchParams( window.location.search );
-const lg = urlParams.get( 'language' );
 
 var _DEFAULT_CAMERA = new THREE.PerspectiveCamera( 50, 1, 0.01, 1000 );
 _DEFAULT_CAMERA.name = 'Camera';
@@ -29,8 +17,7 @@ function Editor() {
 
 	this.selector = null;
 	this.signals = {
-		upload: new Signal(),
-		release: new Signal(),
+
 		// script
 
 		editScript: new Signal(),
@@ -48,9 +35,6 @@ function Editor() {
 		// notifications
 
 		editorCleared: new Signal(),
-
-		savingStarted: new Signal(),
-		savingFinished: new Signal(),
 
 		transformModeChanged: new Signal(),
 		snapChanged: new Signal(),
@@ -76,7 +60,6 @@ function Editor() {
 		objectAdded: new Signal(),
 		objectChanged: new Signal(),
 		objectRemoved: new Signal(),
-		objectsChanged: new Signal(), // 多个对象同时变化的信号
 
 		cameraAdded: new Signal(),
 		cameraRemoved: new Signal(),
@@ -92,49 +75,20 @@ function Editor() {
 		scriptChanged: new Signal(),
 		scriptRemoved: new Signal(),
 
-		componentAdded: new Signal(),
-		componentChanged: new Signal(),
-		componentRemoved: new Signal(),
-
-		eventAdded: new Signal(),
-		eventChanged: new Signal(),
-		eventRemoved: new Signal(),
-
-		commandAdded: new Signal(),
-		commandChanged: new Signal(),
-		commandRemoved: new Signal(),
-
 		windowResize: new Signal(),
 
 		showGridChanged: new Signal(),
-		showGroundChanged: new Signal(),
 		showHelpersChanged: new Signal(),
 		refreshSidebarObject3D: new Signal(),
 		historyChanged: new Signal(),
 
-		viewportCameraChanged: new Signal(),
+		viewportCameraChanged: new Signal()
 
-		messageSend: new Signal(),
-		messageReceive: new Signal(),
-
-		notificationAdded: new Signal(),
-
-		doneLoadObject: new Signal(),
-
-		// 场景树多选相关
-		multiSelectGroup: null,
-		multipleObjectsTransformChanged: new Signal() // 多选对象变换变化信号
 	};
 
 	this.config = new Config();
 	this.history = new _History( this );
 	this.storage = new _Storage();
-
-	if ( lg && mapping[ lg ] ) {
-
-		this.config.setKey( 'language', mapping[ lg ] );
-
-	}
 
 	this.strings = new Strings( this.config );
 
@@ -158,18 +112,12 @@ function Editor() {
 	this.mixer = new THREE.AnimationMixer( this.scene );
 
 	this.selected = null;
-	this.selectedObjects = []; // 存储多选对象
 	this.helpers = {};
 
 	this.cameras = {};
 	this.viewportCamera = this.camera;
 
 	this.addCamera( this.camera );
-
-	this.type = '';
-	this.resources = []; // 保存场景中的资源信息
-
-	this.access = new Access(this);
 
 }
 
@@ -184,13 +132,6 @@ Editor.prototype = {
 		this.scene.fog = scene.fog;
 
 		this.scene.userData = JSON.parse( JSON.stringify( scene.userData ) );
-
-		// 初始化场景中所有对象的 commands 数组
-		scene.traverse(function(object) {
-			if (object.commands === undefined) {
-				object.commands = [];
-			}
-		});
 
 		// avoid render per object
 
@@ -209,62 +150,25 @@ Editor.prototype = {
 
 	//
 
-	addObject: function ( object, parent, index ) {
-		// 保存原始type
-		const originalType = object.type;
+	addObject: function ( object ) {
 
-		// 初始化 commands 数组
-		if (object.commands === undefined) {
-			object.commands = [];
-		}
-
-		// 现有的addObject逻辑
 		var scope = this;
-		object.traverse(function (child) {
-			if (child.geometry !== undefined) scope.addGeometry(child.geometry);
-			if (child.material !== undefined) scope.addMaterial(child.material);
-			scope.addCamera(child);
-			scope.addHelper(child);
-		});
 
-		// 恢复type
-		object.type = originalType;
+		object.traverse( function ( child ) {
 
-		// 添加到指定的父级，如果没有父级则添加到场景中
-		if (parent !== undefined) {
-			// 如果指定了索引，则在父级的特定位置插入
-			if (index !== undefined) {
-				parent.children.splice(index, 0, object);
-				object.parent = parent;
-			} else {
-				parent.add(object);
-			}
-		} else {
-			this.scene.add(object);
-		}
+			if ( child.geometry !== undefined ) scope.addGeometry( child.geometry );
+			if ( child.material !== undefined ) scope.addMaterial( child.material );
 
-		// 如果是新加入的对象，检查它是否有资源信息并添加到全局resources
-		if (object.userData && object.userData.resource && window.resources) {
-			const resourceId = object.userData.resource;
+			scope.addCamera( child );
+			scope.addHelper( child );
 
-			// 确保资源数据在editor.resources和window.resources之间同步
-			const resourceData = window.resources.get(resourceId.toString());
-			if (resourceData) {
-				// 查找并更新或添加到editor.resources
-				const existingIndex = this.resources.findIndex(res =>
-					res && res.id === parseInt(resourceId)
-				);
+		} );
 
-				if (existingIndex >= 0) {
-					this.resources[existingIndex] = resourceData;
-				} else {
-					this.resources.push(resourceData);
-				}
-			}
-		}
+		this.scene.add( object );
 
-		this.signals.objectAdded.dispatch(object);
+		this.signals.objectAdded.dispatch( object );
 		this.signals.sceneGraphChanged.dispatch();
+
 	},
 
 	moveObject: function ( object, parent, before ) {
@@ -314,19 +218,6 @@ Editor.prototype = {
 		} );
 
 		object.parent.remove( object );
-
-		// 从selectedObjects数组中移除
-		const index = this.selectedObjects.indexOf(object);
-		if (index !== -1) {
-			this.selectedObjects.splice(index, 1);
-
-			// 如果当前主选中对象被移除，更新主选中对象
-			if (this.selected === object) {
-				this.selected = this.selectedObjects.length > 0 ?
-					this.selectedObjects[this.selectedObjects.length - 1] : null;
-				this.signals.objectSelected.dispatch(this.selected);
-			}
-		}
 
 		this.signals.objectRemoved.dispatch( object );
 		this.signals.sceneGraphChanged.dispatch();
@@ -634,7 +525,7 @@ Editor.prototype = {
 
 	//
 
-	select: function ( object, multiSelect ) {
+	select: function ( object ) {
 
 		if ( this.selector != null ) {
 
@@ -646,52 +537,21 @@ Editor.prototype = {
 
 		}
 
-		if (multiSelect) {
-			// 多选模式
-			if (object === null) {
-				// 如果传入null且是多选模式，保持当前选择不变
-				return;
-			}
-
-			const index = this.selectedObjects.indexOf(object);
-
-			if (index === -1) {
-				// 添加到选中对象数组，即使是缺失资源的对象
-				this.selectedObjects.push(object);
-
-				// 更新主选中对象
-				this.selected = object;
-			} else {
-				// 如果已选中，则从数组中移除（切换选择状态）
-				this.selectedObjects.splice(index, 1);
-
-				// 更新主选中对象为最后一个选中的对象，如果没有则为null
-				this.selected = this.selectedObjects.length > 0 ?
-					this.selectedObjects[this.selectedObjects.length - 1] : null;
-			}
-		} else {
-			// 单选模式 - 清空多选数组
-			this.selectedObjects.length = 0;
-
-			if (object !== null) {
-				this.selectedObjects.push(object);
-			}
-
-			if ( this.selected === object ) {
-				return;
-		}
+		if ( this.selected === object ) return;
 
 		this.selected = object;
-		}
 
 		let uuid = null;
 
 		if ( object !== null ) {
+
 			uuid = object.uuid;
+
 		}
 
 		this.config.setKey( 'selected', uuid );
 		this.signals.objectSelected.dispatch( object );
+
 	},
 
 	selectById: function ( id ) {
@@ -778,7 +638,6 @@ Editor.prototype = {
 		this.mixer.stopAllAction();
 
 		this.deselect();
-		this.selectedObjects.length = 0; // 清空多选数组
 
 		this.signals.editorCleared.dispatch();
 
@@ -798,11 +657,6 @@ Editor.prototype = {
 		this.scripts = json.scripts;
 
 		this.setScene( await loader.parseAsync( json.scene ) );
-
-		// 保存资源信息
-		if (json.resources !== undefined) {
-			this.resources = json.resources;
-		}
 
 	},
 
@@ -847,8 +701,7 @@ Editor.prototype = {
 			camera: this.camera.toJSON(),
 			scene: this.scene.toJSON(),
 			scripts: this.scripts,
-			history: this.history.toJSON(),
-			resources: this.resources // 保存资源信息
+			history: this.history.toJSON()
 		};
 
 	},
@@ -856,29 +709,6 @@ Editor.prototype = {
 	objectByUuid: function ( uuid ) {
 
 		return this.scene.getObjectByProperty( 'uuid', uuid, true );
-
-	},
-
-	save: function () {
-
-		if ( this.metaLoader && typeof this.metaLoader.getLoadingStatus === 'function' && this.metaLoader.getLoadingStatus() ) {
-
-			console.warn( 'Cannot save while models are still loading' );
-			return false;
-
-		}
-
-		if ( this.verseLoader && typeof this.verseLoader.getLoadingStatus === 'function' && this.verseLoader.getLoadingStatus() ) {
-
-			console.warn( 'Cannot save while modules are still loading' );
-			return false;
-
-		}
-
-		this.signals.sceneGraphChanged.dispatch();
-		this.signals.upload.dispatch();
-
-		return true;
 
 	},
 
@@ -898,66 +728,7 @@ Editor.prototype = {
 
 		this.history.redo();
 
-	},
-
-	showNotification: function (message, isError) {
-		console.log('显示通知:', message);
-
-		// 使用 DialogUtils 显示提示框
-		DialogUtils.showMessage(message, isError);
-
-		// 同时触发通知信号，保持兼容性
-		this.signals.notificationAdded.dispatch(message);
-	},
-
-	showConfirmation: function (message, onConfirm, onCancel, event, isError = false) {
-		console.log('显示确认框:', message);
-
-		// 使用 DialogUtils 显示确认框
-		DialogUtils.showConfirm(message, onConfirm, onCancel, event, isError);
-	},
-
-	// 获取所有当前选中的对象
-	getSelectedObjects: function () {
-		// 确保返回所有选中对象，包括通过Shift+范围选择的对象
-
-		// 如果使用DOM直接检查UI中选中的元素，获取更准确的多选结果
-		const outlinerElement = document.getElementById('outliner');
-		if (outlinerElement) {
-			const activeElements = outlinerElement.querySelectorAll('.option.active');
-
-			if (activeElements.length > 0) {
-				const selectedObjects = [];
-
-				for (let i = 0; i < activeElements.length; i++) {
-					const objectId = parseInt(activeElements[i].value);
-					if (!isNaN(objectId)) {
-						const object = this.scene.getObjectById(objectId) ||
-									  (this.camera.id === objectId ? this.camera : null);
-
-						if (object) {
-							selectedObjects.push(object);
-						}
-					}
-				}
-
-				// 只有在UI中找到选中对象时才返回，否则回退到内部数组
-				if (selectedObjects.length > 0) {
-					return selectedObjects;
-				}
-			}
-		}
-
-		// 回退到内部数组
-		return this.selectedObjects.slice();
-	},
-
-	// 清空所有选中的对象
-	clearSelection: function () {
-		this.selectedObjects.length = 0;
-		this.selected = null;
-		this.signals.objectSelected.dispatch(null);
-	},
+	}
 
 };
 

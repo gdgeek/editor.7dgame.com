@@ -2,7 +2,7 @@ import globals from "globals";
 
 export default [
   {
-    files: ["js/mrpp/**/*.js", "js/utils/**/*.js"],
+    files: ["plugin/**/*.js"],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "module",
@@ -39,7 +39,7 @@ export default [
       "semi": ["warn", "always"],
 
       // 禁用生产环境不需要的
-      "no-console": ["warn", { "allow": ["warn", "error"] }],
+      "no-console": ["warn", { "allow": ["warn", "error", "log"] }],
       "no-debugger": "error",
       "no-alert": "warn",
     },  },
