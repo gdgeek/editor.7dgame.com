@@ -89,13 +89,85 @@ function applyMenubarPatches( editor, menubarContainer ) {
 	const strings = editor.strings;
 	const menubarDom = menubarContainer.dom;
 
+	// ── 0. Remove r183 menus not needed in MRPP mode ─────
+
+	const menusToRemove = [
+		strings.getKey( 'menubar/view' ),
+		strings.getKey( 'menubar/render' ),
+		strings.getKey( 'menubar/help' )
+	];
+
+	const children = Array.from( menubarDom.children );
+
+	for ( let i = 0; i < children.length; i ++ ) {
+
+		const menu = children[ i ];
+		const title = menu.querySelector( '.title' );
+
+		if ( title && menusToRemove.indexOf( title.textContent ) !== - 1 ) {
+
+			menubarDom.removeChild( menu );
+
+		}
+
+	}
+
+	// ── 0b. Clean up File menu: keep only "Save" and rewire it ──
+
+	const fileMenuTitle = strings.getKey( 'menubar/file' );
+	const saveLabel = strings.getKey( 'menubar/file/save' );
+	const updatedChildren = Array.from( menubarDom.children );
+
+	for ( let i = 0; i < updatedChildren.length; i ++ ) {
+
+		const menu = updatedChildren[ i ];
+		const titleEl = menu.querySelector( '.title' );
+
+		if ( titleEl && titleEl.textContent === fileMenuTitle ) {
+
+			const optionsEl = menu.querySelector( '.options' );
+			if ( optionsEl ) {
+
+				const items = Array.from( optionsEl.children );
+				for ( let j = 0; j < items.length; j ++ ) {
+
+					const item = items[ j ];
+					if ( item.textContent.trim() !== saveLabel ) {
+
+						optionsEl.removeChild( item );
+
+					} else {
+
+						// Rewire save button to use editor.save() (MRPP save flow)
+						// instead of r183's default toJSON + download behavior
+						const newSave = item.cloneNode( true );
+						newSave.addEventListener( 'click', function () {
+
+							editor.save();
+
+						} );
+						optionsEl.replaceChild( newSave, item );
+
+					}
+
+				}
+
+			}
+
+			break;
+
+		}
+
+	}
+
 	// ── 1. Add Screenshot / Scene menu ───────────────────
 
 	const editorType = ( editor.type || '' ).toLowerCase();
 
 	// Find the Status element (last child) so we can insert before it,
 	// keeping the status bar at the far right.
-	const statusDom = menubarDom.querySelector( '#menubar-status' );
+	// In r183, MenubarStatus uses class 'menu right' (no id attribute).
+	const statusDom = menubarDom.querySelector( '.menu.right' );
 
 	if ( editorType === 'meta' ) {
 
@@ -158,40 +230,42 @@ function applyMenubarPatches( editor, menubarContainer ) {
 
 	// ── 4. Inject MRPP items into the Edit menu ──────────
 	//
-	// The original Edit menu contains:
-	//   Undo / Redo / Clear History / --- / Center / Clone / Delete / --- / Fix Color Maps
-	// MRPP mode only needs Undo / Redo / Clear History from the original.
-	// Everything after Clear History is removed, then MRPP items are injected.
+	// In r183, the Edit menu contains:
+	//   Undo / Redo / --- / Center / Clone / Delete
+	// (Clear History was removed in r183.)
+	// MRPP mode only needs Undo / Redo from the original.
+	// Everything after Redo (the separator and subsequent items) is removed,
+	// then MRPP items are injected.
 
 	const editTitle = strings.getKey( 'menubar/edit' );
 	const editOptionsDom = findMenuOptions( menubarDom, editTitle );
 
 	if ( editOptionsDom ) {
 
-		const clearHistoryLabel = strings.getKey( 'menubar/edit/clear_history' );
+		// Keep only the first two options (Undo + Redo), remove everything else
+		// (separator + Center + Clone + Delete + any other r183 items)
+		const editChildren = Array.from( editOptionsDom.children );
 
-		// Find the Clear History option, then remove everything after it
-		let foundClearHistory = false;
-		const children = Array.from( editOptionsDom.children );
+		for ( let i = 2; i < editChildren.length; i ++ ) {
 
-		for ( let i = 0; i < children.length; i ++ ) {
+			editOptionsDom.removeChild( editChildren[ i ] );
 
-			if ( ! foundClearHistory ) {
+		}
 
-				if ( children[ i ].textContent === clearHistoryLabel ) {
+		// Add "Clear History" option (removed in r183 but needed by MRPP)
+		const clearHistoryOption = document.createElement( 'div' );
+		clearHistoryOption.className = 'option';
+		clearHistoryOption.textContent = strings.getKey( 'menubar/edit/clearHistory' );
+		clearHistoryOption.addEventListener( 'click', function () {
 
-					foundClearHistory = true;
+			if ( confirm( strings.getKey( 'prompt/history/clear' ) ) ) {
 
-				}
-
-				continue;
+				editor.history.clear();
 
 			}
 
-			// Remove everything after Clear History
-			editOptionsDom.removeChild( children[ i ] );
-
-		}
+		} );
+		editOptionsDom.appendChild( clearHistoryOption );
 
 		injectMrppEditMenu( editor, wrapAsUIPanel( editOptionsDom ) );
 

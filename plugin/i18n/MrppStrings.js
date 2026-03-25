@@ -258,6 +258,7 @@ const mrppStrings = {
 		'sidebar/screenshot/preview': 'Preview',
 		'sidebar/screenshot/download': 'Download Image',
 		'sidebar/screenshot/uploadAsCover': 'Upload as Cover',
+		'sidebar/screenshot/showGrid': 'Show Grid',
 
 		'sidebar/media': 'Media Control',
 		'sidebar/media/play': 'Play',
@@ -270,6 +271,8 @@ const mrppStrings = {
 
 		'dialog/confirm/confirm': 'Confirm',
 		'dialog/confirm/cancel': 'Cancel',
+
+		'menubar/edit/clearHistory': 'Clear History',
 	},
 
 	"zh-cn": {
@@ -530,6 +533,7 @@ const mrppStrings = {
 		'sidebar/screenshot/preview': '预览',
 		'sidebar/screenshot/download': '下载图片',
 		'sidebar/screenshot/uploadAsCover': '上传作为封面',
+		'sidebar/screenshot/showGrid': '显示网格',
 		'sidebar/screenshot/upload': '上传作为封面',
 		'sidebar/screenshot/cancel': '取消',
 
@@ -544,6 +548,8 @@ const mrppStrings = {
 
 		'dialog/confirm/confirm': '确认',
 		'dialog/confirm/cancel': '取消',
+
+		'menubar/edit/clearHistory': '清空历史记录',
 	},
 
 	"ja-jp": {
@@ -791,6 +797,7 @@ const mrppStrings = {
 		'sidebar/screenshot/preview': 'プレビュー',
 		'sidebar/screenshot/download': '画像をダウンロード',
 		'sidebar/screenshot/uploadAsCover': 'カバーとしてアップロード',
+		'sidebar/screenshot/showGrid': 'グリッド表示',
 		'sidebar/screenshot/upload': 'カバーとしてアップロード',
 		'sidebar/screenshot/cancel': 'キャンセル',
 
@@ -805,6 +812,8 @@ const mrppStrings = {
 
 		'dialog/confirm/confirm': '確認',
 		'dialog/confirm/cancel': 'キャンセル',
+
+		'menubar/edit/clearHistory': '履歴をクリア',
 	},
 
 	"zh-tw": {
@@ -1053,6 +1062,7 @@ const mrppStrings = {
 		"sidebar/screenshot/preview": "預覽",
 		"sidebar/screenshot/download": "下載圖片",
 		"sidebar/screenshot/uploadAsCover": "上傳作為封面",
+		"sidebar/screenshot/showGrid": "顯示網格",
 		"sidebar/screenshot/upload": "上傳作為封面",
 		"sidebar/screenshot/cancel": "取消",
 
@@ -1067,6 +1077,8 @@ const mrppStrings = {
 
 		"dialog/confirm/confirm": "確認",
 		"dialog/confirm/cancel": "取消",
+
+		"menubar/edit/clearHistory": "清除歷史記錄",
 	},
 
 	"th-th": {
@@ -1315,6 +1327,7 @@ const mrppStrings = {
 		"sidebar/screenshot/preview": "ตัวอย่าง",
 		"sidebar/screenshot/download": "ดาวน์โหลดรูปภาพ",
 		"sidebar/screenshot/uploadAsCover": "อัปโหลดเป็นหน้าปก",
+		"sidebar/screenshot/showGrid": "แสดงเส้นตาราง",
 		"sidebar/screenshot/upload": "อัปโหลดเป็นหน้าปก",
 		"sidebar/screenshot/cancel": "ยกเลิก",
 
@@ -1329,6 +1342,8 @@ const mrppStrings = {
 
 		"dialog/confirm/confirm": "ยืนยัน",
 		"dialog/confirm/cancel": "ยกเลิก",
+
+		"menubar/edit/clearHistory": "ล้างประวัติ",
 	},
 };
 
