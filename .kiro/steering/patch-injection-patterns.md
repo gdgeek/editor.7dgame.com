@@ -45,6 +45,15 @@ inclusion: auto
 - `clear()` 移除 panelDom 后，通过 `firstChild` 等间接引用获取的节点会变成 `null`
 - 解决方案：初始化时直接保存对目标 DOM 元素的引用，不要每次通过 `parentNode.firstChild` 间接获取
 
+## 合并 develop 新功能的策略
+
+当 develop 上有新功能直接修改了已恢复为原版的 three.js 文件时：
+
+1. 保持 `three.js/editor/js/` 下的原版文件干净（解决冲突时选择我们的版本）
+2. 把新功能的代码文件移到 `plugin/` 对应目录下，更新 import 路径
+3. 在对应的 Patches 模块中添加注入逻辑
+4. 翻译 key 加到 `MrppStrings.js` 而非 `Strings.js`
+
 ## 验证清单
 
 恢复原版文件后，除了检查 MRPP 标记数量为 0，还应验证：
