@@ -198,6 +198,9 @@ function applySidebarPatches( editor, sidebarContainer ) {
 	// 7. Filter internal objects from the outliner (Bug 1.2)
 	injectOutlinerFilter( editor );
 
+	// 7b. Replace outliner type icons with MRPP custom type icons
+	injectOutlinerCustomIcons( editor );
+
 	// 8. Hide background/environment/fog rows (not needed in MRPP mode)
 	hideSceneSettingsRows( editor );
 
@@ -582,39 +585,44 @@ function injectOutlinerSearchUI( editor ) {
 		'prototype': strings.getKey( 'sidebar/scene/filter/type/prototype' ),
 	};
 
-	// ── Search row ──
-	const searchRow = new UIRow();
-	searchRow.setClass( 'Row' );
-	searchRow.dom.style.marginBottom = '4px';
+	// ── Search + Filter row (side by side) ──
+	const searchFilterRow = new UIRow();
+	searchFilterRow.setClass( 'Row' );
+	searchFilterRow.dom.style.marginBottom = '4px';
+	searchFilterRow.dom.style.display = 'flex';
+	searchFilterRow.dom.style.gap = '4px';
 
 	const searchInput = new UIInput( '' );
 	searchInput.dom.placeholder = strings.getKey( 'sidebar/scene/search_placeholder' );
-	searchInput.dom.style.width = '100%';
+	searchInput.dom.style.flex = '1';
 	searchInput.dom.style.boxSizing = 'border-box';
-	searchRow.add( searchInput );
-
-	// ── Filter row ──
-	const filterRow = new UIRow();
-	filterRow.setClass( 'Row' );
-	filterRow.dom.style.marginBottom = '4px';
-
-	const filterLabel = new UIText( strings.getKey( 'sidebar/scene/filter/type_prefix' ) );
-	filterLabel.setClass( 'Label' );
-	filterRow.add( filterLabel );
+	searchFilterRow.add( searchInput );
 
 	const filterSelect = new UISelect();
 	filterSelect.setOptions( filterOptions );
 	filterSelect.setValue( '' );
 	filterSelect.dom.style.width = '120px';
-	filterRow.add( filterSelect );
 
-	// ── Insert rows above the outliner ──
+	// Only show type filter in meta editor; verse doesn't need it
+	const isMeta = ( editor.type || '' ).toLowerCase() === 'meta';
+
+	if ( isMeta ) {
+
+		searchFilterRow.add( filterSelect );
+
+	} else {
+
+		// Verse: search box takes full width
+		searchInput.dom.style.width = '100%';
+
+	}
+
+	// ── Insert row above the outliner ──
 	const parent = outlinerDom.parentNode;
 
 	if ( parent ) {
 
-		parent.insertBefore( filterRow.dom, outlinerDom );
-		parent.insertBefore( searchRow.dom, filterRow.dom );
+		parent.insertBefore( searchFilterRow.dom, outlinerDom );
 
 	}
 
@@ -847,4 +855,207 @@ function hideSceneSettingsRows( editor ) {
 
 }
 
-export { applySidebarPatches, applySidebarPropertiesPatches, getHierarchyLabel, clearTabbedPanel, injectOutlinerFilter, injectOutlinerSearchUI };
+/**
+ * Replace r183's default outliner type icons with MRPP custom type icons.
+ *
+ * r183's getObjectType() only returns native three.js types (Scene, Camera,
+ * Mesh, Object3D, etc). MRPP objects use userData.type for custom types
+ * (Polygen, Picture, Video, Audio, Point, Text, Module, Entity, etc).
+ *
+ * This function observes the outliner and replaces the CSS class on the
+ * type span to match the MRPP custom type, enabling custom icon styling.
+ *
+ * @param {object} editor - The Editor instance
+ */
+function injectOutlinerCustomIcons( editor ) {
+
+	const outlinerDom = document.getElementById( 'outliner' );
+	if ( ! outlinerDom ) return;
+
+	// Inject CSS for custom MRPP type icons
+	const style = document.createElement( 'style' );
+	style.textContent = `
+		#outliner .type { line-height: 14px; font-size: 11px; }
+		#outliner .type.Scene { color: #807b7b; }
+		#outliner .type.Scene:after { content: '◉'; }
+		#outliner .type.Camera { color: #dd8888; }
+		#outliner .type.Camera:after { content: '⌾'; }
+		#outliner .type.Light { color: #dddd88; }
+		#outliner .type.Light:after { content: '✦'; }
+		#outliner .type.Object3D { color: #aaaaee; }
+		#outliner .type.Object3D:after { content: '◇'; }
+		#outliner .type.Mesh { color: #8888ee; }
+		#outliner .type.Mesh:after { content: '⬢'; }
+		#outliner .type.Module { color: #555555; }
+		#outliner .type.Module:after { content: '⌗'; }
+		#outliner .type.Entity { color: #d0d0d0; }
+		#outliner .type.Entity:after { content: '◇'; }
+		#outliner .type.Point { color: #d0d0d0; }
+		#outliner .type.Point:after { content: '◇'; }
+		#outliner .type.Text { color: #5b74a5; }
+		#outliner .type.Text:after { content: 'T'; font-weight: 600; }
+		#outliner .type.Polygen { color: #74a55b; }
+		#outliner .type.Polygen:after { content: '⬢'; }
+		#outliner .type.Picture { color: #5b8ca5; }
+		#outliner .type.Picture:after { content: '▣'; font-size: 9px; }
+		#outliner .type.Video { color: #a55ba5; }
+		#outliner .type.Video:after { content: '▶'; font-size: 9px; }
+		#outliner .type.Audio { color: #5ba55b; }
+		#outliner .type.Audio:after { content: '♪'; }
+		#outliner .type.Prototype { color: #a5995b; }
+		#outliner .type.Prototype:after { content: '◈'; }
+		#outliner .Geometry, #outliner .Material, #outliner .Script { display: none !important; }
+	`;
+	document.head.appendChild( style );
+
+	function replaceTypeIcons() {
+
+		const options = outlinerDom.querySelectorAll( '.option' );
+
+		for ( let i = 0; i < options.length; i ++ ) {
+
+			const option = options[ i ];
+			const id = parseInt( option.value );
+			if ( isNaN( id ) ) continue;
+
+			const object = editor.scene.getObjectById( id );
+			if ( ! object ) continue;
+
+			// Get MRPP custom type from object.type (MRPP sets type directly on the object)
+			// Fall back to userData.type for compatibility
+			const mrppType = object.type || ( object.userData && object.userData.type ) || '';
+
+			// Skip native three.js types that r183 already handles
+			const nativeTypes = [ 'Scene', 'PerspectiveCamera', 'OrthographicCamera',
+				'AmbientLight', 'DirectionalLight', 'PointLight', 'SpotLight', 'HemisphereLight',
+				'Mesh', 'SkinnedMesh', 'Line', 'LineSegments', 'LineLoop', 'Points',
+				'Group', 'Object3D', 'Bone', 'Sprite', 'LOD' ];
+
+			if ( ! mrppType || nativeTypes.indexOf( mrppType ) !== - 1 ) continue;
+
+			// Capitalize first letter for CSS class name
+			const typeCssClass = mrppType.charAt( 0 ).toUpperCase() + mrppType.slice( 1 ).toLowerCase();
+
+			// Find the type span and replace its class
+			const typeSpan = option.querySelector( '.type' );
+			if ( typeSpan && typeSpan.className !== 'type ' + typeCssClass ) {
+
+				typeSpan.className = 'type ' + typeCssClass;
+
+			}
+
+			// Hide the opener (expand/collapse button) for MRPP custom type objects.
+			// In the old version, these nodes could not be expanded.
+			const opener = option.querySelector( '.opener' );
+			if ( opener ) {
+
+				opener.style.display = 'none';
+
+			}
+
+			// Hide any child options that belong to this object's subtree.
+			// Children appear as subsequent options with greater padding.
+			const myPadding = parseInt( option.style.paddingLeft ) || 0;
+			for ( let j = i + 1; j < options.length; j ++ ) {
+
+				const childOption = options[ j ];
+				const childPadding = parseInt( childOption.style.paddingLeft ) || 0;
+
+				if ( childPadding <= myPadding ) break; // no longer a child
+
+				const childId = parseInt( childOption.value );
+				if ( isNaN( childId ) ) continue;
+
+				const childObj = editor.scene.getObjectById( childId );
+
+				// Only hide children that are internal three.js nodes (not MRPP custom types)
+				const childType = childObj ? childObj.type : '';
+				if ( nativeTypes.indexOf( childType ) !== - 1 || ! childType ) {
+
+					childOption.style.display = 'none';
+
+				}
+
+			}
+
+		}
+
+	}
+
+	const observer = new MutationObserver( replaceTypeIcons );
+	observer.observe( outlinerDom, { childList: true } );
+	replaceTypeIcons();
+
+}
+
+/**
+ * Hide object property rows that MRPP mode does not need:
+ * shadow, frustum culled, render order.
+ */
+function hideObjectPropertyRows( editor ) {
+
+const strings = editor.strings;
+
+const labelsToHide = [
+strings.getKey( 'sidebar/object/shadow' ),
+strings.getKey( 'sidebar/object/frustumcull' ),
+strings.getKey( 'sidebar/object/renderorder' )
+];
+
+function hide() {
+
+const objectPanel = document.getElementById( 'objectTab' );
+if ( ! objectPanel ) return;
+
+const rows = objectPanel.querySelectorAll( '.Row' );
+
+for ( let i = 0; i < rows.length; i ++ ) {
+
+const row = rows[ i ];
+const label = row.querySelector( '.Label' );
+
+if ( label && labelsToHide.indexOf( label.textContent ) !== - 1 ) {
+
+row.style.display = 'none';
+
+}
+
+}
+
+}
+
+editor.signals.objectSelected.add( function () {
+
+Promise.resolve().then( hide );
+
+} );
+
+hide();
+
+}
+
+/**
+ * Hide the autosave checkbox from the menubar status area.
+ */
+function hideAutosaveCheckbox() {
+
+const statusDom = document.querySelector( '.menu.right' );
+if ( ! statusDom ) return;
+
+const labels = statusDom.querySelectorAll( 'label' );
+
+for ( let i = 0; i < labels.length; i ++ ) {
+
+const checkbox = labels[ i ].querySelector( 'input[type="checkbox"]' );
+if ( checkbox ) {
+
+labels[ i ].style.display = 'none';
+break;
+
+}
+
+}
+
+}
+
+export { applySidebarPatches, applySidebarPropertiesPatches, getHierarchyLabel, clearTabbedPanel, injectOutlinerFilter, injectOutlinerSearchUI, injectOutlinerCustomIcons, hideObjectPropertyRows, hideAutosaveCheckbox };

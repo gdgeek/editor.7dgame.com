@@ -36,6 +36,9 @@ function applyLanguageMapping( editor ) {
 
 	}
 
+	// MRPP: disable autosave by default (r183 defaults to true)
+	editor.config.setKey( 'autosave', false );
+
 }
 
 /**

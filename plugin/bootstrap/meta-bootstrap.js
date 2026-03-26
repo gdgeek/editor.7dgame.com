@@ -4,7 +4,7 @@ import { applyEditorPatches } from '../patches/EditorPatches.js';
 import { applyLoaderPatches } from '../patches/LoaderPatches.js';
 import { applyViewportPatches } from '../patches/ViewportPatches.js';
 import { applyUIThreePatches } from '../patches/UIThreePatches.js';
-import { applySidebarPatches, applySidebarPropertiesPatches } from '../patches/SidebarPatches.js';
+import { applySidebarPatches, applySidebarPropertiesPatches, hideObjectPropertyRows, hideAutosaveCheckbox } from '../patches/SidebarPatches.js';
 import { applyMenubarPatches } from '../patches/MenubarPatches.js';
 
 /**
@@ -246,6 +246,7 @@ function applyDeferredUIPatches( editor ) {
 			// Properties is a UITabbedPanel nested inside the sidebar
 			const propertiesWrapper = wrapAsTabbedPanel( propertiesDom );
 			applySidebarPropertiesPatches( editor, propertiesWrapper );
+			hideObjectPropertyRows( editor );
 
 		}
 
@@ -262,6 +263,7 @@ function applyDeferredUIPatches( editor ) {
 
 		const menubarWrapper = { dom: menubarDom };
 		applyMenubarPatches( editor, menubarWrapper );
+		hideAutosaveCheckbox();
 
 	}
 

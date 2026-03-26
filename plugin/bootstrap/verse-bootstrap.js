@@ -4,7 +4,7 @@ import { applyEditorPatches } from '../patches/EditorPatches.js';
 import { applyLoaderPatches } from '../patches/LoaderPatches.js';
 import { applyViewportPatches } from '../patches/ViewportPatches.js';
 import { applyUIThreePatches } from '../patches/UIThreePatches.js';
-import { applySidebarPatches, applySidebarPropertiesPatches } from '../patches/SidebarPatches.js';
+import { applySidebarPatches, applySidebarPropertiesPatches, hideObjectPropertyRows, hideAutosaveCheckbox } from '../patches/SidebarPatches.js';
 import { applyMenubarPatches } from '../patches/MenubarPatches.js';
 
 /**
@@ -244,6 +244,7 @@ function applyDeferredUIPatches( editor ) {
 			// Properties is a UITabbedPanel nested inside the sidebar
 			const propertiesWrapper = wrapAsTabbedPanel( propertiesDom );
 			applySidebarPropertiesPatches( editor, propertiesWrapper );
+			hideObjectPropertyRows( editor );
 
 		}
 
@@ -260,6 +261,7 @@ function applyDeferredUIPatches( editor ) {
 
 		const menubarWrapper = { dom: menubarDom };
 		applyMenubarPatches( editor, menubarWrapper );
+		hideAutosaveCheckbox();
 
 	}
 
@@ -392,6 +394,25 @@ function initVerseEditor( editor ) {
 	applyLoaderPatches( editor );
 	applyViewportPatches( editor );
 	applyUIThreePatches( editor );
+
+	// ── Inject verse-specific outliner icon CSS ──────────────────────
+	// In verse editor, entity/module objects show as Object3D in r183's
+	// outliner. Replace the default dot with the puzzle icon from old version.
+	const entityIconStyle = document.createElement( 'style' );
+	entityIconStyle.textContent = `
+		#outliner .type.Object3D:after { content: ''; }
+		#outliner .type.Object3D {
+			width: 12px;
+			height: 12px;
+			background-color: #6f8fb3;
+			-webkit-mask: url('images/entity-puzzle.svg') center / contain no-repeat;
+			mask: url('images/entity-puzzle.svg') center / contain no-repeat;
+			vertical-align: middle;
+			position: relative;
+			top: -1px;
+		}
+	`;
+	document.head.appendChild( entityIconStyle );
 
 	// Sidebar, Menubar, and Properties patches are deferred because
 	// these UI components are created after initVerseEditor returns
