@@ -6,18 +6,14 @@ function MetaLoader(editor) {
 	this.json = null;
 	this.isLoading = true;
 	this.loadingPromises = [];
-	editor.selector = function (object) {
-
-		if(object.userData.hidden){
-			return false;
+	// r183: editor.selector is a Selector class instance, not a filter function.
+	// Monkey-patch its select() method to add the hidden-object filter.
+	const originalSelectorSelect = editor.selector.select.bind( editor.selector );
+	editor.selector.select = function ( object ) {
+		if ( object && object.userData && object.userData.hidden ) {
+			return; // skip hidden objects
 		}
-		/*if (object.userData.type != undefined) {
-
-			return true;
-		}*/
-
-		return true;
-
+		return originalSelectorSelect( object );
 	};
 
 	const self = this;
@@ -163,7 +159,7 @@ function MetaLoader(editor) {
 			y: node.scale.y,
 			z: node.scale.z
 		};
-		console.log('entity.parameters', entity);
+		//console.log('entity.parameters', entity);
 		//entity.parameters.transform.active = true
 		entity.parameters.active = node.visible;
 

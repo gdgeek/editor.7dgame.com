@@ -1,4 +1,4 @@
-import { UIPanel, UIBreak, UIText, UISpan } from './libs/ui.js';
+import { UIPanel, UIBreak, UIText } from './libs/ui.js';
 
 function ViewportInfo( editor ) {
 
@@ -9,129 +9,133 @@ function ViewportInfo( editor ) {
 	container.setId( 'info' );
 	container.setPosition( 'absolute' );
 	container.setLeft( '10px' );
-	container.setBottom( '10px' );
+	container.setBottom( '50px' );
 	container.setFontSize( '12px' );
 	container.setColor( '#fff' );
-	container.dom.style.pointerEvents = 'none';
-	container.dom.style.userSelect = 'none';
+	container.setTextTransform( 'lowercase' );
 
-	// 增加一个范围标识，提示用户当前看的是“总计”还是“选中项”
-	const scopeText = new UIText( '' ).setTextTransform( 'uppercase' ).setOpacity( 0.5 );
-	
-	const objectsText = new UIText( '0' ).setMarginLeft( '6px' );
-	const verticesText = new UIText( '0' ).setMarginLeft( '6px' );
-	const trianglesText = new UIText( '0' ).setMarginLeft( '6px' );
-	const frametimeText = new UIText( '0' ).setMarginLeft( '6px' );
+	const objectsText = new UIText( '0' ).setTextAlign( 'right' ).setWidth( '60px' ).setMarginRight( '6px' );
+	const verticesText = new UIText( '0' ).setTextAlign( 'right' ).setWidth( '60px' ).setMarginRight( '6px' );
+	const trianglesText = new UIText( '0' ).setTextAlign( 'right' ).setWidth( '60px' ).setMarginRight( '6px' );
+	const frametimeText = new UIText( '0' ).setTextAlign( 'right' ).setWidth( '60px' ).setMarginRight( '6px' );
+	const samplesText = new UIText( '0' ).setTextAlign( 'right' ).setWidth( '60px' ).setMarginRight( '6px' ).setHidden( true );
 
-	container.add( scopeText, new UIBreak() ); // 显示 [TOTAL] 或 [SELECTED]
-	container.add( new UIText( strings.getKey( 'viewport/info/objects' ) ).setTextTransform( 'lowercase' ) );
-	container.add( objectsText, new UIBreak() );
-	container.add( new UIText( strings.getKey( 'viewport/info/vertices' ) ).setTextTransform( 'lowercase' ) );
-	container.add( verticesText, new UIBreak() );
-	container.add( new UIText( strings.getKey( 'viewport/info/triangles' ) ).setTextTransform( 'lowercase' ) );
-	container.add( trianglesText, new UIBreak() );
-	// container.add( new UIText( strings.getKey( 'viewport/info/frametime' ) ).setTextTransform( 'lowercase' ) );
-	// container.add( frametimeText, new UIBreak() );
+	const objectsUnitText = new UIText( strings.getKey( 'viewport/info/objects' ) );
+	const verticesUnitText = new UIText( strings.getKey( 'viewport/info/vertices' ) );
+	const trianglesUnitText = new UIText( strings.getKey( 'viewport/info/triangles' ) );
+	const samplesUnitText = new UIText( strings.getKey( 'viewport/info/samples' ) ).setHidden( true );
 
-	// --- 信号监听 ---
+	container.add( objectsText, objectsUnitText, new UIBreak() );
+	container.add( verticesText, verticesUnitText, new UIBreak() );
+	container.add( trianglesText, trianglesUnitText, new UIBreak() );
+	container.add( frametimeText, new UIText( strings.getKey( 'viewport/info/rendertime' ) ), new UIBreak() );
+	container.add( samplesText, samplesUnitText, new UIBreak() );
 
 	signals.objectAdded.add( update );
 	signals.objectRemoved.add( update );
+	signals.objectChanged.add( update );
 	signals.geometryChanged.add( update );
-	signals.sceneGraphChanged.add( update );
-	
-	// 核心信号：当选择发生变化时触发更新
-	signals.objectSelected.add( update );
+	signals.sceneRendered.add( updateFrametime );
+
+	//
+
+	const pluralRules = new Intl.PluralRules( editor.config.getKey( 'language' ) );
+
+	//
 
 	function update() {
 
 		const scene = editor.scene;
-		const selected = editor.selected; // 获取当前选中的对象
-		const selectedObjects = editor.selectedObjects || []; // 多选对象数组
 
 		let objects = 0, vertices = 0, triangles = 0;
 
-		// 核心逻辑：决定遍历的根节点
-		if ( selectedObjects.length > 1 ) {
-			
-			// 情况 A：多选状态，显示所有选中对象的信息总和
-			scopeText.setValue( '[ Selected ]' );
-			for ( let i = 0; i < selectedObjects.length; i++ ) {
-				selectedObjects[ i ].traverse( function ( object ) {
-					if ( object !== scene ) countStats( object );
-				} );
-			}
-			
-			objectsText.setValue( objects.toLocaleString() );
+		for ( let i = 0, l = scene.children.length; i < l; i ++ ) {
 
-		} else if ( selected && selected !== scene ) {
-			
-			// 情况 B：单选状态（非Scene），显示选中对象的信息
-			scopeText.setValue( '[ Selected ]' );
-			selected.traverse( function ( object ) {
-				if ( object !== scene ) countStats( object );
-			} );
-			
-			objectsText.setValue( objects.toLocaleString() );
+			const object = scene.children[ i ];
 
-		} else {
-			
-			// 情况 C：无选择或选中Scene，显示全场景总和
-			scopeText.setValue( '[ Total ]' );
-			scene.traverse( function ( object ) {
-				if ( object !== scene ) countStats( object );
-			} );
-			
-			objectsText.setValue( objects.toLocaleString() );
-		}
+			object.traverseVisible( function ( object ) {
 
-		// 通用统计函数
-		function countStats( object ) {
-			
-			// 统计对象数（跳过 userData.hidden=true 的节点）
-			if ( !object.userData || object.userData.hidden !== true ) {
 				objects ++;
-			}
 
-			// 顶点和三角数统计不跳过任何节点
-			if ( object.isMesh ) {
+				if ( object.isMesh || object.isPoints ) {
 
-				const geometry = object.geometry;
+					const geometry = object.geometry;
+					const positionAttribute = geometry.attributes.position;
 
-				if ( geometry && geometry.attributes.position ) {
+					// update counts only if vertex data are defined
 
-					vertices += geometry.attributes.position.count;
+					if ( positionAttribute !== undefined && positionAttribute !== null ) {
 
-					if ( geometry.index !== null ) {
-						triangles += geometry.index.count / 3;
-					} else {
-						triangles += geometry.attributes.position.count / 3;
+						vertices += positionAttribute.count;
+
 					}
+
+					if ( object.isMesh ) {
+
+						if ( geometry.index !== null ) {
+
+							triangles += geometry.index.count / 3;
+
+						} else if ( positionAttribute !== undefined && positionAttribute !== null ) {
+
+							triangles += positionAttribute.count / 3;
+
+						}
+
+					}
+
 				}
 
-			} else if ( object.isPoints || object.isLine ) {
-				const geometry = object.geometry;
-				if ( geometry && geometry.attributes.position ) {
-					vertices += geometry.attributes.position.count;
-				}
-			}
+			} );
+
 		}
 
-		verticesText.setValue( vertices.toLocaleString() );
-		trianglesText.setValue( Math.floor( triangles ).toLocaleString() );
+		objectsText.setValue( editor.utils.formatNumber( objects ) );
+		verticesText.setValue( editor.utils.formatNumber( vertices ) );
+		trianglesText.setValue( editor.utils.formatNumber( triangles ) );
+
+		const pluralRules = new Intl.PluralRules( editor.config.getKey( 'language' ) );
+
+		const objectsStringKey = ( pluralRules.select( objects ) === 'one' ) ? 'viewport/info/object' : 'viewport/info/objects';
+		objectsUnitText.setValue( strings.getKey( objectsStringKey ) );
+
+		const verticesStringKey = ( pluralRules.select( vertices ) === 'one' ) ? 'viewport/info/vertex' : 'viewport/info/vertices';
+		verticesUnitText.setValue( strings.getKey( verticesStringKey ) );
+
+		const trianglesStringKey = ( pluralRules.select( triangles ) === 'one' ) ? 'viewport/info/triangle' : 'viewport/info/triangles';
+		trianglesUnitText.setValue( strings.getKey( trianglesStringKey ) );
 
 	}
 
-	// --- 帧率监听 ---
+	function updateFrametime( frametime ) {
 
-	// signals.sceneRendered.add( updateFrametime );
+		frametimeText.setValue( Number( frametime ).toFixed( 2 ) );
 
-	// function updateFrametime( frametime ) {
-	// 	frametimeText.setValue( Number( frametime ).toFixed( 2 ) + ' ms' );
-	// }
+	}
 
-	// 初始化执行
-	update();
+	//
+
+	editor.signals.pathTracerUpdated.add( function ( samples ) {
+
+		samples = Math.floor( samples );
+
+		samplesText.setValue( samples );
+
+		const samplesStringKey = ( pluralRules.select( samples ) === 'one' ) ? 'viewport/info/sample' : 'viewport/info/samples';
+		samplesUnitText.setValue( strings.getKey( samplesStringKey ) );
+
+	} );
+
+	editor.signals.viewportShadingChanged.add( function () {
+
+		const isRealisticShading = ( editor.viewportShading === 'realistic' );
+
+		samplesText.setHidden( ! isRealisticShading );
+		samplesUnitText.setHidden( ! isRealisticShading );
+
+		container.setBottom( isRealisticShading ? '62px' : '50px' );
+
+	} );
 
 	return container;
 

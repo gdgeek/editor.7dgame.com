@@ -1,36 +1,47 @@
-/**
- * Export draco compressed files from threejs geometry objects.
- *
- * Draco files are compressed and usually are smaller than conventional 3D file formats.
- *
- * The exporter receives a options object containing
- *  - decodeSpeed, indicates how to tune the encoder regarding decode speed (0 gives better speed but worst quality)
- *  - encodeSpeed, indicates how to tune the encoder parameters (0 gives better speed but worst quality)
- *  - encoderMethod
- *  - quantization, indicates the presision of each type of data stored in the draco file in the order (POSITION, NORMAL, COLOR, TEX_COORD, GENERIC)
- *  - exportUvs
- *  - exportNormals
- */
+import { Color, ColorManagement, SRGBColorSpace } from 'three';
 
 /* global DracoEncoderModule */
 
+/**
+ * An exporter to compress geometry with the Draco library.
+ *
+ * [Draco](https://google.github.io/draco/) is an open source library for compressing and
+ * decompressing 3D meshes and point clouds. Compressed geometry can be significantly smaller,
+ * at the cost of additional decoding time on the client device.
+ *
+ * Standalone Draco files have a `.drc` extension, and contain vertex positions,
+ * normals, colors, and other attributes. Draco files *do not* contain materials,
+ * textures, animation, or node hierarchies – to use these features, embed Draco geometry
+ * inside of a glTF file. A normal glTF file can be converted to a Draco-compressed glTF file
+ * using [glTF-Pipeline](https://github.com/AnalyticalGraphicsInc/gltf-pipeline).
+ *
+ * ```js
+ * const exporter = new DRACOExporter();
+ * const data = exporter.parse( mesh, options );
+ * ```
+ *
+ * @three_import import { DRACOExporter } from 'three/addons/exporters/DRACOExporter.js';
+ */
 class DRACOExporter {
 
-	parse( object, options = {
-		decodeSpeed: 5,
-		encodeSpeed: 5,
-		encoderMethod: DRACOExporter.MESH_EDGEBREAKER_ENCODING,
-		quantization: [ 16, 8, 8, 8, 8 ],
-		exportUvs: true,
-		exportNormals: true,
-		exportColor: false,
-	} ) {
+	/**
+	 * Parses the given mesh or point cloud and generates the Draco output.
+	 *
+	 * @param {(Mesh|Points)} object - The mesh or point cloud to export.
+	 * @param {DRACOExporter~Options} options - The export options.
+	 * @return {Int8Array} The exported Draco.
+	 */
+	parse( object, options = {} ) {
 
-		if ( object.isBufferGeometry === true ) {
-
-			throw new Error( 'DRACOExporter: The first parameter of parse() is now an instance of Mesh or Points.' );
-
-		}
+		options = Object.assign( {
+			decodeSpeed: 5,
+			encodeSpeed: 5,
+			encoderMethod: DRACOExporter.MESH_EDGEBREAKER_ENCODING,
+			quantization: [ 16, 8, 8, 8, 8 ],
+			exportUvs: true,
+			exportNormals: true,
+			exportColor: false,
+		}, options );
 
 		if ( DracoEncoderModule === undefined ) {
 
@@ -44,13 +55,6 @@ class DRACOExporter {
 		const encoder = new dracoEncoder.Encoder();
 		let builder;
 		let dracoObject;
-
-
-		if ( geometry.isBufferGeometry !== true ) {
-
-			throw new Error( 'THREE.DRACOExporter.parse(geometry, options): geometry is not a THREE.BufferGeometry instance.' );
-
-		}
 
 		if ( object.isMesh === true ) {
 
@@ -110,7 +114,9 @@ class DRACOExporter {
 
 				if ( colors !== undefined ) {
 
-					builder.AddFloatAttributeToMesh( dracoObject, dracoEncoder.COLOR, colors.count, colors.itemSize, colors.array );
+					const array = createVertexColorSRGBArray( colors );
+
+					builder.AddFloatAttributeToMesh( dracoObject, dracoEncoder.COLOR, colors.count, colors.itemSize, array );
 
 				}
 
@@ -130,7 +136,9 @@ class DRACOExporter {
 
 				if ( colors !== undefined ) {
 
-					builder.AddFloatAttribute( dracoObject, dracoEncoder.COLOR, colors.count, colors.itemSize, colors.array );
+					const array = createVertexColorSRGBArray( colors );
+
+					builder.AddFloatAttribute( dracoObject, dracoEncoder.COLOR, colors.count, colors.itemSize, array );
 
 				}
 
@@ -216,9 +224,61 @@ class DRACOExporter {
 
 }
 
+function createVertexColorSRGBArray( attribute ) {
+
+	// While .drc files do not specify colorspace, the only 'official' tooling
+	// is PLY and OBJ converters, which use sRGB. We'll assume sRGB is expected
+	// for .drc files, but note that Draco buffers embedded in glTF files will
+	// be Linear-sRGB instead.
+
+	const _color = new Color();
+
+	const count = attribute.count;
+	const itemSize = attribute.itemSize;
+	const array = new Float32Array( count * itemSize );
+
+	for ( let i = 0, il = count; i < il; i ++ ) {
+
+		_color.fromBufferAttribute( attribute, i );
+
+		ColorManagement.workingToColorSpace( _color, SRGBColorSpace );
+
+		array[ i * itemSize ] = _color.r;
+		array[ i * itemSize + 1 ] = _color.g;
+		array[ i * itemSize + 2 ] = _color.b;
+
+		if ( itemSize === 4 ) {
+
+			array[ i * itemSize + 3 ] = attribute.getW( i );
+
+		}
+
+	}
+
+	return array;
+
+}
+
 // Encoder methods
 
+/**
+ * Edgebreaker encoding.
+ *
+ * @static
+ * @constant
+ * @type {number}
+ * @default 1
+ */
 DRACOExporter.MESH_EDGEBREAKER_ENCODING = 1;
+
+/**
+ * Sequential encoding.
+ *
+ * @static
+ * @constant
+ * @type {number}
+ * @default 0
+ */
 DRACOExporter.MESH_SEQUENTIAL_ENCODING = 0;
 
 // Geometry type
@@ -234,5 +294,18 @@ DRACOExporter.NORMAL = 1;
 DRACOExporter.COLOR = 2;
 DRACOExporter.TEX_COORD = 3;
 DRACOExporter.GENERIC = 4;
+
+/**
+ * Export options of `DRACOExporter`.
+ *
+ * @typedef {Object} DRACOExporter~Options
+ * @property {number} [decodeSpeed=5] - Indicates how to tune the encoder regarding decode speed (0 gives better speed but worst quality).
+ * @property {number} [encodeSpeed=5] - Indicates how to tune the encoder parameters (0 gives better speed but worst quality).
+ * @property {number} [encoderMethod=1] - Either sequential (very little compression) or Edgebreaker. Edgebreaker traverses the triangles of the mesh in a deterministic, spiral-like way which provides most of the benefits of this data format.
+ * @property {Array<number>} [quantization=[ 16, 8, 8, 8, 8 ]] - Indicates the precision of each type of data stored in the draco file in the order (POSITION, NORMAL, COLOR, TEX_COORD, GENERIC).
+ * @property {boolean} [exportUvs=true] - Whether to export UVs or not.
+ * @property {boolean} [exportNormals=true] - Whether to export normals or not.
+ * @property {boolean} [exportColor=false] - Whether to export colors or not.
+ **/
 
 export { DRACOExporter };

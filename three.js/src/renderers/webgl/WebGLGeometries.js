@@ -1,5 +1,4 @@
 import { Uint16BufferAttribute, Uint32BufferAttribute } from '../../core/BufferAttribute.js';
-import { arrayNeedsUint32 } from '../../utils.js';
 
 function WebGLGeometries( gl, attributes, info, bindingStates ) {
 
@@ -75,22 +74,6 @@ function WebGLGeometries( gl, attributes, info, bindingStates ) {
 
 		}
 
-		// morph targets
-
-		const morphAttributes = geometry.morphAttributes;
-
-		for ( const name in morphAttributes ) {
-
-			const array = morphAttributes[ name ];
-
-			for ( let i = 0, l = array.length; i < l; i ++ ) {
-
-				attributes.update( array[ i ], gl.ARRAY_BUFFER );
-
-			}
-
-		}
-
 	}
 
 	function updateWireframeAttribute( geometry ) {
@@ -100,6 +83,12 @@ function WebGLGeometries( gl, attributes, info, bindingStates ) {
 		const geometryIndex = geometry.index;
 		const geometryPosition = geometry.attributes.position;
 		let version = 0;
+
+		if ( geometryPosition === undefined ) {
+
+			return;
+
+		}
 
 		if ( geometryIndex !== null ) {
 
@@ -133,7 +122,9 @@ function WebGLGeometries( gl, attributes, info, bindingStates ) {
 
 		}
 
-		const attribute = new ( arrayNeedsUint32( indices ) ? Uint32BufferAttribute : Uint16BufferAttribute )( indices, 1 );
+		// check whether a 32 bit or 16 bit buffer is required to store the indices
+		// account for PRIMITIVE_RESTART_FIXED_INDEX, #24565
+		const attribute = new ( geometryPosition.count >= 65535 ? Uint32BufferAttribute : Uint16BufferAttribute )( indices, 1 );
 		attribute.version = version;
 
 		// Updating index buffer in VAO now. See WebGLBindingStates

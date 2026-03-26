@@ -1,15 +1,43 @@
 import {
 	Matrix4,
 	Object3D,
+	Vector2,
 	Vector3
 } from 'three';
 
+/**
+ * The only type of 3D object that is supported by {@link CSS2DRenderer}.
+ *
+ * @augments Object3D
+ * @three_import import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+ */
 class CSS2DObject extends Object3D {
 
+	/**
+	 * Constructs a new CSS2D object.
+	 *
+	 * @param {HTMLElement} [element] - The DOM element.
+	 */
 	constructor( element = document.createElement( 'div' ) ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
+		this.isCSS2DObject = true;
+
+		/**
+		 * The DOM element which defines the appearance of this 3D object.
+		 *
+		 * @type {HTMLElement}
+		 * @readonly
+		 * @default true
+		 */
 		this.element = element;
 
 		this.element.style.position = 'absolute';
@@ -17,13 +45,26 @@ class CSS2DObject extends Object3D {
 
 		this.element.setAttribute( 'draggable', false );
 
+		/**
+		 * The 3D objects center point.
+		 * `( 0, 0 )` is the lower left, `( 1, 1 )` is the top right.
+		 *
+		 * @type {Vector2}
+		 * @default (0.5,0.5)
+		 */
+		this.center = new Vector2( 0.5, 0.5 );
+
 		this.addEventListener( 'removed', function () {
 
 			this.traverse( function ( object ) {
 
-				if ( object.element instanceof Element && object.element.parentNode !== null ) {
+				if (
+					object.element &&
+					object.element instanceof object.element.ownerDocument.defaultView.Element &&
+					object.element.parentNode !== null
+				) {
 
-					object.element.parentNode.removeChild( object.element );
+					object.element.remove();
 
 				}
 
@@ -39,13 +80,13 @@ class CSS2DObject extends Object3D {
 
 		this.element = source.element.cloneNode( true );
 
+		this.center = source.center;
+
 		return this;
 
 	}
 
 }
-
-CSS2DObject.prototype.isCSS2DObject = true;
 
 //
 
@@ -55,8 +96,25 @@ const _viewProjectionMatrix = new Matrix4();
 const _a = new Vector3();
 const _b = new Vector3();
 
+/**
+ * This renderer is a simplified version of {@link CSS3DRenderer}. The only transformation that is
+ * supported is translation.
+ *
+ * The renderer is very useful if you want to combine HTML based labels with 3D objects. Here too,
+ * the respective DOM elements are wrapped into an instance of {@link CSS2DObject} and added to the
+ * scene graph. All other types of renderable 3D objects (like meshes or point clouds) are ignored.
+ *
+ * `CSS2DRenderer` only supports 100% browser and display zoom.
+ *
+ * @three_import import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
+ */
 class CSS2DRenderer {
 
+	/**
+	 * Constructs a new CSS2D renderer.
+	 *
+	 * @param {CSS2DRenderer~Parameters} [parameters] - The parameters.
+	 */
 	constructor( parameters = {} ) {
 
 		const _this = this;
@@ -72,8 +130,28 @@ class CSS2DRenderer {
 
 		domElement.style.overflow = 'hidden';
 
+		/**
+		 * The DOM where the renderer appends its child-elements.
+		 *
+		 * @type {HTMLElement}
+		 */
 		this.domElement = domElement;
 
+		/**
+		 * Controls whether the renderer assigns `z-index` values to CSS2DObject DOM elements.
+		 * If set to `true`, z-index values are assigned first based on the `renderOrder`
+		 * and secondly - the distance to the camera. If set to `false`, no z-index values are assigned.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
+		this.sortObjects = true;
+
+		/**
+		 * Returns an object containing the width and height of the renderer.
+		 *
+		 * @return {{width:number,height:number}} The size of the renderer.
+		 */
 		this.getSize = function () {
 
 			return {
@@ -83,19 +161,31 @@ class CSS2DRenderer {
 
 		};
 
+		/**
+		 * Renders the given scene using the given camera.
+		 *
+		 * @param {Object3D} scene - A scene or any other type of 3D object.
+		 * @param {Camera} camera - The camera.
+		 */
 		this.render = function ( scene, camera ) {
 
-			if ( scene.autoUpdate === true ) scene.updateMatrixWorld();
-			if ( camera.parent === null ) camera.updateMatrixWorld();
+			if ( scene.matrixWorldAutoUpdate === true ) scene.updateMatrixWorld();
+			if ( camera.parent === null && camera.matrixWorldAutoUpdate === true ) camera.updateMatrixWorld();
 
 			_viewMatrix.copy( camera.matrixWorldInverse );
 			_viewProjectionMatrix.multiplyMatrices( camera.projectionMatrix, _viewMatrix );
 
 			renderObject( scene, scene, camera );
-			zOrder( scene );
+			if ( this.sortObjects ) zOrder( scene );
 
 		};
 
+		/**
+		 * Resizes the renderer to the given width and height.
+		 *
+		 * @param {number} width - The width of the renderer.
+		 * @param {number} height - The height of the renderer.
+		 */
 		this.setSize = function ( width, height ) {
 
 			_width = width;
@@ -109,32 +199,43 @@ class CSS2DRenderer {
 
 		};
 
+		function hideObject( object ) {
+
+			if ( object.isCSS2DObject ) object.element.style.display = 'none';
+
+			for ( let i = 0, l = object.children.length; i < l; i ++ ) {
+
+				hideObject( object.children[ i ] );
+
+			}
+
+		}
+
 		function renderObject( object, scene, camera ) {
+
+			if ( object.visible === false ) {
+
+				hideObject( object );
+
+				return;
+
+			}
 
 			if ( object.isCSS2DObject ) {
 
 				_vector.setFromMatrixPosition( object.matrixWorld );
 				_vector.applyMatrix4( _viewProjectionMatrix );
 
-				const visible = ( object.visible === true ) && ( _vector.z >= - 1 && _vector.z <= 1 ) && ( object.layers.test( camera.layers ) === true );
-				object.element.style.display = ( visible === true ) ? '' : 'none';
+				const visible = ( _vector.z >= - 1 && _vector.z <= 1 ) && ( object.layers.test( camera.layers ) === true );
+
+				const element = object.element;
+				element.style.display = visible === true ? '' : 'none';
 
 				if ( visible === true ) {
 
 					object.onBeforeRender( _this, scene, camera );
 
-					const element = object.element;
-
-					if ( /apple/i.test( navigator.vendor ) ) {
-
-						// https://github.com/mrdoob/three.js/issues/21415
-						element.style.transform = 'translate(-50%,-50%) translate(' + Math.round( _vector.x * _widthHalf + _widthHalf ) + 'px,' + Math.round( - _vector.y * _heightHalf + _heightHalf ) + 'px)';
-
-					} else {
-
-						element.style.transform = 'translate(-50%,-50%) translate(' + ( _vector.x * _widthHalf + _widthHalf ) + 'px,' + ( - _vector.y * _heightHalf + _heightHalf ) + 'px)';
-
-					}
+					element.style.transform = 'translate(' + ( - 100 * object.center.x ) + '%,' + ( - 100 * object.center.y ) + '%)' + 'translate(' + ( _vector.x * _widthHalf + _widthHalf ) + 'px,' + ( - _vector.y * _heightHalf + _heightHalf ) + 'px)';
 
 					if ( element.parentNode !== domElement ) {
 
@@ -175,7 +276,7 @@ class CSS2DRenderer {
 
 			const result = [];
 
-			scene.traverse( function ( object ) {
+			scene.traverseVisible( function ( object ) {
 
 				if ( object.isCSS2DObject ) result.push( object );
 
@@ -215,5 +316,13 @@ class CSS2DRenderer {
 	}
 
 }
+
+/**
+ * Constructor parameters of `CSS2DRenderer`.
+ *
+ * @typedef {Object} CSS2DRenderer~Parameters
+ * @property {HTMLElement} [element] - A DOM element where the renderer appends its child-elements.
+ * If not passed in here, a new div element will be created.
+ **/
 
 export { CSS2DObject, CSS2DRenderer };

@@ -1,21 +1,23 @@
-import {
-	Vector3
-} from 'three';
-
+import { Vector3 } from 'three';
 
 /**
- * Generates 2D-Coordinates in a very fast way.
+ * @module GeometryUtils
+ * @three_import import * as GeometryUtils from 'three/addons/utils/GeometryUtils.js';
+ */
+
+/**
+ * Generates 2D-Coordinates along a Hilbert curve.
  *
- * Based on work by:
- * @link http://www.openprocessing.org/sketch/15493
+ * Based on work by: {@link http://www.openprocessing.org/sketch/15493}
  *
- * @param center     Center of Hilbert curve.
- * @param size       Total width of Hilbert curve.
- * @param iterations Number of subdivisions.
- * @param v0         Corner index -X, -Z.
- * @param v1         Corner index -X, +Z.
- * @param v2         Corner index +X, +Z.
- * @param v3         Corner index +X, -Z.
+ * @param {Vector3} [center] - Center of Hilbert curve.
+ * @param {number} [size=10] - Total width of Hilbert curve.
+ * @param {number} [iterations=10] - Number of subdivisions.
+ * @param {number} [v0=0] - Corner index -X, -Z.
+ * @param {number} [v1=1] - Corner index -X, +Z.
+ * @param {number} [v2=2] - Corner index +X, +Z.
+ * @param {number} [v3=3] - Corner index +X, -Z.
+ * @returns {Array<Vector3>} The Hilbert curve points.
  */
 function hilbert2D( center = new Vector3( 0, 0, 0 ), size = 10, iterations = 1, v0 = 0, v1 = 1, v2 = 2, v3 = 3 ) {
 
@@ -38,15 +40,12 @@ function hilbert2D( center = new Vector3( 0, 0, 0 ), size = 10, iterations = 1, 
 	// Recurse iterations
 	if ( 0 <= -- iterations ) {
 
-		const tmp = [];
-
-		Array.prototype.push.apply( tmp, hilbert2D( vec[ 0 ], half, iterations, v0, v3, v2, v1 ) );
-		Array.prototype.push.apply( tmp, hilbert2D( vec[ 1 ], half, iterations, v0, v1, v2, v3 ) );
-		Array.prototype.push.apply( tmp, hilbert2D( vec[ 2 ], half, iterations, v0, v1, v2, v3 ) );
-		Array.prototype.push.apply( tmp, hilbert2D( vec[ 3 ], half, iterations, v2, v1, v0, v3 ) );
-
-		// Return recursive call
-		return tmp;
+		return [
+			...hilbert2D( vec[ 0 ], half, iterations, v0, v3, v2, v1 ),
+			...hilbert2D( vec[ 1 ], half, iterations, v0, v1, v2, v3 ),
+			...hilbert2D( vec[ 2 ], half, iterations, v0, v1, v2, v3 ),
+			...hilbert2D( vec[ 3 ], half, iterations, v2, v1, v0, v3 )
+		];
 
 	}
 
@@ -56,22 +55,22 @@ function hilbert2D( center = new Vector3( 0, 0, 0 ), size = 10, iterations = 1, 
 }
 
 /**
- * Generates 3D-Coordinates in a very fast way.
+ * Generates 3D-Coordinates along a Hilbert curve.
  *
- * Based on work by:
- * @link https://openprocessing.org/user/5654
+ * Based on work by: {@link https://openprocessing.org/user/5654}
  *
- * @param center     Center of Hilbert curve.
- * @param size       Total width of Hilbert curve.
- * @param iterations Number of subdivisions.
- * @param v0         Corner index -X, +Y, -Z.
- * @param v1         Corner index -X, +Y, +Z.
- * @param v2         Corner index -X, -Y, +Z.
- * @param v3         Corner index -X, -Y, -Z.
- * @param v4         Corner index +X, -Y, -Z.
- * @param v5         Corner index +X, -Y, +Z.
- * @param v6         Corner index +X, +Y, +Z.
- * @param v7         Corner index +X, +Y, -Z.
+ * @param {Vector3} [center] - Center of Hilbert curve.
+ * @param {number} [size=10] - Total width of Hilbert curve.
+ * @param {number} [iterations=1] - Number of subdivisions.
+ * @param {number} [v0=0] - Corner index -X, +Y, -Z.
+ * @param {number} [v1=1] - Corner index -X, +Y, +Z.
+ * @param {number} [v2=2] - Corner index -X, -Y, +Z.
+ * @param {number} [v3=3] - Corner index -X, -Y, -Z.
+ * @param {number} [v4=4] - Corner index +X, -Y, -Z.
+ * @param {number} [v5=5] - Corner index +X, -Y, +Z.
+ * @param {number} [v6=6] - Corner index +X, +Y, +Z.
+ * @param {number} [v7=7] - Corner index +X, +Y, -Z.
+ * @returns {Array<Vector3>}  - The Hilbert curve points.
  */
 function hilbert3D( center = new Vector3( 0, 0, 0 ), size = 10, iterations = 1, v0 = 0, v1 = 1, v2 = 2, v3 = 3, v4 = 4, v5 = 5, v6 = 6, v7 = 7 ) {
 
@@ -103,19 +102,16 @@ function hilbert3D( center = new Vector3( 0, 0, 0 ), size = 10, iterations = 1, 
 	// Recurse iterations
 	if ( -- iterations >= 0 ) {
 
-		const tmp = [];
-
-		Array.prototype.push.apply( tmp, hilbert3D( vec[ 0 ], half, iterations, v0, v3, v4, v7, v6, v5, v2, v1 ) );
-		Array.prototype.push.apply( tmp, hilbert3D( vec[ 1 ], half, iterations, v0, v7, v6, v1, v2, v5, v4, v3 ) );
-		Array.prototype.push.apply( tmp, hilbert3D( vec[ 2 ], half, iterations, v0, v7, v6, v1, v2, v5, v4, v3 ) );
-		Array.prototype.push.apply( tmp, hilbert3D( vec[ 3 ], half, iterations, v2, v3, v0, v1, v6, v7, v4, v5 ) );
-		Array.prototype.push.apply( tmp, hilbert3D( vec[ 4 ], half, iterations, v2, v3, v0, v1, v6, v7, v4, v5 ) );
-		Array.prototype.push.apply( tmp, hilbert3D( vec[ 5 ], half, iterations, v4, v3, v2, v5, v6, v1, v0, v7 ) );
-		Array.prototype.push.apply( tmp, hilbert3D( vec[ 6 ], half, iterations, v4, v3, v2, v5, v6, v1, v0, v7 ) );
-		Array.prototype.push.apply( tmp, hilbert3D( vec[ 7 ], half, iterations, v6, v5, v2, v1, v0, v3, v4, v7 ) );
-
-		// Return recursive call
-		return tmp;
+		return [
+			...hilbert3D( vec[ 0 ], half, iterations, v0, v3, v4, v7, v6, v5, v2, v1 ),
+			...hilbert3D( vec[ 1 ], half, iterations, v0, v7, v6, v1, v2, v5, v4, v3 ),
+			...hilbert3D( vec[ 2 ], half, iterations, v0, v7, v6, v1, v2, v5, v4, v3 ),
+			...hilbert3D( vec[ 3 ], half, iterations, v2, v3, v0, v1, v6, v7, v4, v5 ),
+			...hilbert3D( vec[ 4 ], half, iterations, v2, v3, v0, v1, v6, v7, v4, v5 ),
+			...hilbert3D( vec[ 5 ], half, iterations, v4, v3, v2, v5, v6, v1, v0, v7 ),
+			...hilbert3D( vec[ 6 ], half, iterations, v4, v3, v2, v5, v6, v1, v0, v7 ),
+			...hilbert3D( vec[ 7 ], half, iterations, v6, v5, v2, v1, v0, v3, v4, v7 )
+		];
 
 	}
 
@@ -125,11 +121,12 @@ function hilbert3D( center = new Vector3( 0, 0, 0 ), size = 10, iterations = 1, 
 }
 
 /**
- * Generates a Gosper curve (lying in the XY plane)
+ * Generates a Gosper curve (lying in the XY plane).
  *
- * https://gist.github.com/nitaku/6521802
+ * Reference: {@link https://gist.github.com/nitaku/6521802}
  *
- * @param size The size of a single gosper island.
+ * @param {number} [size=1] - The size of a single gosper island.
+ * @return {Array<number>} The gosper island points.
  */
 function gosper( size = 1 ) {
 

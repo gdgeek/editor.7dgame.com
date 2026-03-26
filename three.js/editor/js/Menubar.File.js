@@ -1,13 +1,12 @@
-import * as THREE from 'three';
-
-import { zipSync, strToU8 } from '../../examples/jsm/libs/fflate.module.js';
-
 import { UIPanel, UIRow, UIHorizontalRule } from './libs/ui.js';
+import { FileLoader } from 'three';
 
 function MenubarFile( editor ) {
 
-	const config = editor.config;
 	const strings = editor.strings;
+
+	const saveArrayBuffer = editor.utils.saveArrayBuffer;
+	const saveString = editor.utils.saveString;
 
 	const container = new UIPanel();
 	container.setClass( 'menu' );
@@ -21,25 +20,167 @@ function MenubarFile( editor ) {
 	options.setClass( 'options' );
 	container.add( options );
 
-	// New
+	// New Project
 
-	let option = new UIRow();
-	option.setClass( 'option' );
-	option.setTextContent( strings.getKey( 'menubar/file/new' ) );
+	const newProjectSubmenuTitle = new UIRow().setTextContent( strings.getKey( 'menubar/file/new' ) ).addClass( 'option' ).addClass( 'submenu-title' );
+	newProjectSubmenuTitle.onMouseOver( function () {
+
+		const { top, right } = this.dom.getBoundingClientRect();
+		const { paddingTop } = getComputedStyle( this.dom );
+		newProjectSubmenu.setLeft( right + 'px' );
+		newProjectSubmenu.setTop( top - parseFloat( paddingTop ) + 'px' );
+		newProjectSubmenu.setDisplay( 'block' );
+
+	} );
+	newProjectSubmenuTitle.onMouseOut( function () {
+
+		newProjectSubmenu.setDisplay( 'none' );
+
+	} );
+	options.add( newProjectSubmenuTitle );
+
+	const newProjectSubmenu = new UIPanel().setPosition( 'fixed' ).addClass( 'options' ).setDisplay( 'none' );
+	newProjectSubmenuTitle.add( newProjectSubmenu );
+
+	// New Project / Empty
+
+	let option = new UIRow().setTextContent( strings.getKey( 'menubar/file/new/empty' ) ).setClass( 'option' );
 	option.onClick( function () {
 
-		if ( confirm( 'Any unsaved data will be lost. Are you sure?' ) ) {
+		if ( confirm( strings.getKey( 'prompt/file/open' ) ) ) {
 
 			editor.clear();
 
 		}
 
 	} );
-	//options.add(option)
+	newProjectSubmenu.add( option );
 
 	//
 
-	//options.add(new UIHorizontalRule())
+	newProjectSubmenu.add( new UIHorizontalRule() );
+
+	// New Project / ...
+
+	const examples = [
+		{ title: 'menubar/file/new/Arkanoid', file: 'arkanoid.app.json' },
+		{ title: 'menubar/file/new/Camera', file: 'camera.app.json' },
+		{ title: 'menubar/file/new/Particles', file: 'particles.app.json' },
+		{ title: 'menubar/file/new/Pong', file: 'pong.app.json' },
+		{ title: 'menubar/file/new/Shaders', file: 'shaders.app.json' }
+	];
+
+	const loader = new FileLoader();
+
+	for ( let i = 0; i < examples.length; i ++ ) {
+
+		( function ( i ) {
+
+			const example = examples[ i ];
+
+			const option = new UIRow();
+			option.setClass( 'option' );
+			option.setTextContent( strings.getKey( example.title ) );
+			option.onClick( function () {
+
+				if ( confirm( strings.getKey( 'prompt/file/open' ) ) ) {
+
+					loader.load( 'examples/' + example.file, function ( text ) {
+
+						editor.clear();
+						editor.fromJSON( JSON.parse( text ) );
+
+					} );
+
+				}
+
+			} );
+			newProjectSubmenu.add( option );
+
+		} )( i );
+
+	}
+
+	// Open
+
+	const openProjectForm = document.createElement( 'form' );
+	openProjectForm.style.display = 'none';
+	document.body.appendChild( openProjectForm );
+
+	const openProjectInput = document.createElement( 'input' );
+	openProjectInput.multiple = false;
+	openProjectInput.type = 'file';
+	openProjectInput.accept = '.json';
+	openProjectInput.addEventListener( 'change', async function () {
+
+		const file = openProjectInput.files[ 0 ];
+
+		if ( file === undefined ) return;
+
+		try {
+
+			const json = JSON.parse( await file.text() );
+
+			async function onEditorCleared() {
+
+				await editor.fromJSON( json );
+
+				editor.signals.editorCleared.remove( onEditorCleared );
+
+			}
+
+			editor.signals.editorCleared.add( onEditorCleared );
+
+			editor.clear();
+
+		} catch ( e ) {
+
+			alert( strings.getKey( 'prompt/file/failedToOpenProject' ) );
+			console.error( e );
+
+		} finally {
+
+			form.reset();
+
+		}
+
+	} );
+
+	openProjectForm.appendChild( openProjectInput );
+
+	option = new UIRow()
+		.addClass( 'option' )
+		.setTextContent( strings.getKey( 'menubar/file/open' ) )
+		.onClick( function () {
+
+			if ( confirm( strings.getKey( 'prompt/file/open' ) ) ) {
+
+				openProjectInput.click();
+
+			}
+
+		} );
+
+	options.add( option );
+
+	// Save
+
+	option = new UIRow()
+		.addClass( 'option' )
+		.setTextContent( strings.getKey( 'menubar/file/save' ) )
+		.onClick( function () {
+
+			const json = editor.toJSON();
+			const blob = new Blob( [ JSON.stringify( json ) ], { type: 'application/json' } );
+			editor.utils.save( blob, 'project.json' );
+
+		} );
+
+	options.add( option );
+
+	//
+
+	options.add( new UIHorizontalRule() );
 
 	// Import
 
@@ -66,495 +207,244 @@ function MenubarFile( editor ) {
 		fileInput.click();
 
 	} );
-	//options.add(option)
+	options.add( option );
 
-	//
+	// Export
 
-	//options.add(new UIHorizontalRule())
+	const fileExportSubmenuTitle = new UIRow().setTextContent( strings.getKey( 'menubar/file/export' ) ).addClass( 'option' ).addClass( 'submenu-title' );
+	fileExportSubmenuTitle.onMouseOver( function () {
 
-	// SAVE
-	const saveOption = new UIRow();
-	saveOption.setClass( 'option' );
-	saveOption.setTextContent( strings.getKey( 'menubar/file/save' ) );
+		const { top, right } = this.dom.getBoundingClientRect();
+		const { paddingTop } = getComputedStyle( this.dom );
+		fileExportSubmenu.setLeft( right + 'px' );
+		fileExportSubmenu.setTop( top - parseFloat( paddingTop ) + 'px' );
+		fileExportSubmenu.setDisplay( 'block' );
 
-	// 设置按钮初始状态为禁用
-	saveOption.dom.classList.add('disabled');
-	saveOption.dom.style.opacity = '0.5';
-	saveOption.dom.style.pointerEvents = 'none';
-
-	saveOption.onClick( function () {
-		editor.save();
 	} );
-	options.add( saveOption );
+	fileExportSubmenuTitle.onMouseOut( function () {
 
-	// 处理加载状态的变化
-	editor.signals.savingStarted.add(function () {
+		fileExportSubmenu.setDisplay( 'none' );
 
-		saveOption.dom.classList.add('disabled');
-		saveOption.dom.style.opacity = '0.5';
-		saveOption.dom.style.pointerEvents = 'none';
-	});
-
-	editor.signals.savingFinished.add(function () {
-
-		saveOption.dom.classList.remove('disabled');
-		saveOption.dom.style.opacity = '1';
-		saveOption.dom.style.pointerEvents = 'auto';
-	});
-
-	// PUBLISH
-	const publishOption = new UIRow();
-	publishOption.setClass( 'option' );
-	publishOption.setTextContent( strings.getKey( 'menubar/file/publish' ) );
-
-	// 设置发布按钮初始状态为禁用
-	publishOption.dom.classList.add('disabled');
-	publishOption.dom.style.opacity = '0.5';
-	publishOption.dom.style.pointerEvents = 'none';
-
-	publishOption.onClick( function () {
-		// 在加载过程中禁止发布
-		if (editor.verseLoader && editor.verseLoader.getLoadingStatus()) {
-			console.warn('Cannot publish while modules are still loading');
-			return;
-		}
-
-		editor.signals.sceneGraphChanged.dispatch();
-		editor.signals.release.dispatch();
 	} );
+	options.add( fileExportSubmenuTitle );
 
-	if (editor.type && editor.type.toLowerCase() === 'verse') {
-		options.add( publishOption );
-
-		// 为发布按钮添加加载状态响应
-		editor.signals.savingStarted.add(function () {
-			publishOption.dom.classList.add('disabled');
-			publishOption.dom.style.opacity = '0.5';
-			publishOption.dom.style.pointerEvents = 'none';
-		});
-
-		editor.signals.savingFinished.add(function () {
-			publishOption.dom.classList.remove('disabled');
-			publishOption.dom.style.opacity = '1';
-			publishOption.dom.style.pointerEvents = 'auto';
-		});
-	}
-
-	/*
-	// Export Geometry
-
-	option = new UIRow()
-	option.setClass('option')
-	option.setTextContent(strings.getKey('menubar/file/export/geometry'))
-	option.onClick(function () {
-		const object = editor.selected
-
-		if (object === null) {
-			alert('No object selected.')
-			return
-		}
-
-		const geometry = object.geometry
-
-		if (geometry === undefined) {
-			alert("The selected object doesn't have geometry.")
-			return
-		}
-
-		let output = geometry.toJSON()
-
-		try {
-			output = JSON.stringify(output, null, '\t')
-			output = output.replace(/[\n\t]+([\d\.e\-\[\]]+)/g, '$1')
-		} catch (e) {
-			output = JSON.stringify(output)
-		}
-
-		saveString(output, 'geometry.json')
-	})
-	options.add(option)
-
-	// Export Object
-
-	option = new UIRow()
-	option.setClass('option')
-	option.setTextContent(strings.getKey('menubar/file/export/object'))
-	option.onClick(function () {
-		const object = editor.selected
-
-		if (object === null) {
-			alert('No object selected')
-			return
-		}
-
-		let output = object.toJSON()
-
-		try {
-			output = JSON.stringify(output, null, '\t')
-			output = output.replace(/[\n\t]+([\d\.e\-\[\]]+)/g, '$1')
-		} catch (e) {
-			output = JSON.stringify(output)
-		}
-
-		saveString(output, 'model.json')
-	})
-	options.add(option)
-
-	// Export Scene
-
-	option = new UIRow()
-	option.setClass('option')
-	option.setTextContent(strings.getKey('menubar/file/export/scene'))
-	option.onClick(function () {
-		let output = editor.scene.toJSON()
-
-		try {
-			output = JSON.stringify(output, null, '\t')
-			output = output.replace(/[\n\t]+([\d\.e\-\[\]]+)/g, '$1')
-		} catch (e) {
-			output = JSON.stringify(output)
-		}
-
-		saveString(output, 'scene.json')
-	})
-	options.add(option)
-
-	//
-
-	options.add(new UIHorizontalRule())
-
-	// Export DAE
-
-	option = new UIRow()
-	option.setClass('option')
-	option.setTextContent(strings.getKey('menubar/file/export/dae'))
-	option.onClick(async function () {
-		const { ColladaExporter } = await import(
-			'../../examples/jsm/exporters/ColladaExporter.js'
-		)
-
-		const exporter = new ColladaExporter()
-
-		exporter.parse(editor.scene, function (result) {
-			saveString(result.data, 'scene.dae')
-		})
-	})
-	options.add(option)
+	const fileExportSubmenu = new UIPanel().setPosition( 'fixed' ).addClass( 'options' ).setDisplay( 'none' );
+	fileExportSubmenuTitle.add( fileExportSubmenu );
 
 	// Export DRC
 
-	option = new UIRow()
-	option.setClass('option')
-	option.setTextContent(strings.getKey('menubar/file/export/drc'))
-	option.onClick(async function () {
-		const object = editor.selected
+	option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( 'DRC' );
+	option.onClick( async function () {
 
-		if (object === null || object.isMesh === undefined) {
-			alert('No mesh selected')
-			return
+		const object = editor.selected;
+
+		if ( object === null || object.isMesh === undefined ) {
+
+			alert( strings.getKey( 'prompt/file/export/noMeshSelected' ) );
+			return;
+
 		}
 
-		const { DRACOExporter } = await import(
-			'../../examples/jsm/exporters/DRACOExporter.js'
-		)
+		const { DRACOExporter } = await import( 'three/addons/exporters/DRACOExporter.js' );
 
-		const exporter = new DRACOExporter()
+		const exporter = new DRACOExporter();
 
 		const options = {
 			decodeSpeed: 5,
 			encodeSpeed: 5,
 			encoderMethod: DRACOExporter.MESH_EDGEBREAKER_ENCODING,
-			quantization: [16, 8, 8, 8, 8],
+			quantization: [ 16, 8, 8, 8, 8 ],
 			exportUvs: true,
 			exportNormals: true,
-			exportColor: object.geometry.hasAttribute('color')
-		}
+			exportColor: object.geometry.hasAttribute( 'color' )
+		};
 
 		// TODO: Change to DRACOExporter's parse( geometry, onParse )?
-		const result = exporter.parse(object, options)
-		saveArrayBuffer(result, 'model.drc')
-	})
-	options.add(option)
+		const result = exporter.parse( object, options );
+		saveArrayBuffer( result, 'model.drc' );
+
+	} );
+	fileExportSubmenu.add( option );
 
 	// Export GLB
 
-	option = new UIRow()
-	option.setClass('option')
-	option.setTextContent(strings.getKey('menubar/file/export/glb'))
-	option.onClick(async function () {
-		const scene = editor.scene
-		const animations = getAnimations(scene)
+	option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( 'GLB' );
+	option.onClick( async function () {
 
-		const { GLTFExporter } = await import(
-			'../../examples/jsm/exporters/GLTFExporter.js'
-		)
+		const scene = editor.scene;
+		const animations = getAnimations( scene );
 
-		const exporter = new GLTFExporter()
+		const optimizedAnimations = [];
 
-		exporter.parse(
-			scene,
-			function (result) {
-				saveArrayBuffer(result, 'scene.glb')
-			},
-			undefined,
-			{ binary: true, animations: animations }
-		)
-	})
-	options.add(option)
+		for ( const animation of animations ) {
+
+			optimizedAnimations.push( animation.clone().optimize() );
+
+		}
+
+		const { GLTFExporter } = await import( 'three/addons/exporters/GLTFExporter.js' );
+
+		const exporter = new GLTFExporter();
+
+		exporter.parse( scene, function ( result ) {
+
+			saveArrayBuffer( result, 'scene.glb' );
+
+		}, undefined, { binary: true, animations: optimizedAnimations } );
+
+	} );
+	fileExportSubmenu.add( option );
 
 	// Export GLTF
 
-	option = new UIRow()
-	option.setClass('option')
-	option.setTextContent(strings.getKey('menubar/file/export/gltf'))
-	option.onClick(async function () {
-		const scene = editor.scene
-		const animations = getAnimations(scene)
+	option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( 'GLTF' );
+	option.onClick( async function () {
 
-		const { GLTFExporter } = await import(
-			'../../examples/jsm/exporters/GLTFExporter.js'
-		)
+		const scene = editor.scene;
+		const animations = getAnimations( scene );
 
-		const exporter = new GLTFExporter()
+		const optimizedAnimations = [];
 
-		exporter.parse(
-			scene,
-			function (result) {
-				saveString(JSON.stringify(result, null, 2), 'scene.gltf')
-			},
-			undefined,
-			{ animations: animations }
-		)
-	})
-	options.add(option)
+		for ( const animation of animations ) {
+
+			optimizedAnimations.push( animation.clone().optimize() );
+
+		}
+
+		const { GLTFExporter } = await import( 'three/addons/exporters/GLTFExporter.js' );
+
+		const exporter = new GLTFExporter();
+
+		exporter.parse( scene, function ( result ) {
+
+			saveString( JSON.stringify( result, null, 2 ), 'scene.gltf' );
+
+		}, undefined, { animations: optimizedAnimations } );
+
+
+	} );
+	fileExportSubmenu.add( option );
 
 	// Export OBJ
 
-	option = new UIRow()
-	option.setClass('option')
-	option.setTextContent(strings.getKey('menubar/file/export/obj'))
-	option.onClick(async function () {
-		const object = editor.selected
+	option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( 'OBJ' );
+	option.onClick( async function () {
 
-		if (object === null) {
-			alert('No object selected.')
-			return
+		const object = editor.selected;
+
+		if ( object === null ) {
+
+			alert( strings.getKey( 'prompt/file/export/noObjectSelected' ) );
+			return;
+
 		}
 
-		const { OBJExporter } = await import(
-			'../../examples/jsm/exporters/OBJExporter.js'
-		)
+		const { OBJExporter } = await import( 'three/addons/exporters/OBJExporter.js' );
 
-		const exporter = new OBJExporter()
+		const exporter = new OBJExporter();
 
-		saveString(exporter.parse(object), 'model.obj')
-	})
-	options.add(option)
+		saveString( exporter.parse( object ), 'model.obj' );
+
+	} );
+	fileExportSubmenu.add( option );
 
 	// Export PLY (ASCII)
 
-	option = new UIRow()
-	option.setClass('option')
-	option.setTextContent(strings.getKey('menubar/file/export/ply'))
-	option.onClick(async function () {
-		const { PLYExporter } = await import(
-			'../../examples/jsm/exporters/PLYExporter.js'
-		)
+	option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( 'PLY' );
+	option.onClick( async function () {
 
-		// 	const exporter = new PLYExporter()
+		const { PLYExporter } = await import( 'three/addons/exporters/PLYExporter.js' );
 
-		exporter.parse(editor.scene, function (result) {
-			saveArrayBuffer(result, 'model.ply')
-		})
-	})
-	options.add(option)
+		const exporter = new PLYExporter();
 
-	// Export PLY (Binary)
+		exporter.parse( editor.scene, function ( result ) {
 
-	option = new UIRow()
-	option.setClass('option')
-	option.setTextContent(strings.getKey('menubar/file/export/ply_binary'))
-	option.onClick(async function () {
-		const { PLYExporter } = await import(
-			'../../examples/jsm/exporters/PLYExporter.js'
-		)
+			saveArrayBuffer( result, 'model.ply' );
 
-		const exporter = new PLYExporter()
+		} );
 
-		exporter.parse(
-			editor.scene,
-			function (result) {
-				saveArrayBuffer(result, 'model-binary.ply')
-			},
-			{ binary: true }
-		)
-	})
-	options.add(option)
+	} );
+	fileExportSubmenu.add( option );
+
+	// Export PLY (BINARY)
+
+	option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( 'PLY (BINARY)' );
+	option.onClick( async function () {
+
+		const { PLYExporter } = await import( 'three/addons/exporters/PLYExporter.js' );
+
+		const exporter = new PLYExporter();
+
+		exporter.parse( editor.scene, function ( result ) {
+
+			saveArrayBuffer( result, 'model-binary.ply' );
+
+		}, { binary: true } );
+
+	} );
+	fileExportSubmenu.add( option );
 
 	// Export STL (ASCII)
 
-	option = new UIRow()
-	option.setClass('option')
-	option.setTextContent(strings.getKey('menubar/file/export/stl'))
-	option.onClick(async function () {
-		const { STLExporter } = await import(
-			'../../examples/jsm/exporters/STLExporter.js'
-		)
+	option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( 'STL' );
+	option.onClick( async function () {
 
-		const exporter = new STLExporter()
+		const { STLExporter } = await import( 'three/addons/exporters/STLExporter.js' );
 
-		saveString(exporter.parse(editor.scene), 'model.stl')
-	})
-	options.add(option)
+		const exporter = new STLExporter();
 
-	// Export STL (Binary)
+		saveString( exporter.parse( editor.scene ), 'model.stl' );
 
-	option = new UIRow()
-	option.setClass('option')
-	option.setTextContent(strings.getKey('menubar/file/export/stl_binary'))
-	option.onClick(async function () {
-		const { STLExporter } = await import(
-			'../../examples/jsm/exporters/STLExporter.js'
-		)
+	} );
+	fileExportSubmenu.add( option );
 
-		const exporter = new STLExporter()
+	// Export STL (BINARY)
 
-		saveArrayBuffer(
-			exporter.parse(editor.scene, { binary: true }),
-			'model-binary.stl'
-		)
-	})
-	options.add(option)
+	option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( 'STL (BINARY)' );
+	option.onClick( async function () {
+
+		const { STLExporter } = await import( 'three/addons/exporters/STLExporter.js' );
+
+		const exporter = new STLExporter();
+
+		saveArrayBuffer( exporter.parse( editor.scene, { binary: true } ), 'model-binary.stl' );
+
+	} );
+	fileExportSubmenu.add( option );
 
 	// Export USDZ
 
-	option = new UIRow()
-	option.setClass('option')
-	option.setTextContent(strings.getKey('menubar/file/export/usdz'))
-	option.onClick(async function () {
-		const { USDZExporter } = await import(
-			'../../examples/jsm/exporters/USDZExporter.js'
-		)
+	option = new UIRow();
+	option.setClass( 'option' );
+	option.setTextContent( 'USDZ' );
+	option.onClick( async function () {
 
-		const exporter = new USDZExporter()
+		const { USDZExporter } = await import( 'three/addons/exporters/USDZExporter.js' );
 
-		saveArrayBuffer(
-			await exporter.parse(editor.scene, { binary: true }),
-			'model.usdz'
-		)
-	})
-	options.add(option)
+		const exporter = new USDZExporter();
 
-	options.add(new UIHorizontalRule())
-*/
-	///Publish
+		saveArrayBuffer( await exporter.parseAsync( editor.scene ), 'model.usdz' );
 
-	// option = new UIRow();
-	// option.setClass( 'option' );
-	// option.setTextContent( strings.getKey( 'menubar/file/publish' ) );
-	// option.onClick( function () {
+	} );
+	fileExportSubmenu.add( option );
 
-	// 	const toZip = {};
-
-	// 	//
-
-	// 	let output = editor.toJSON();
-	// 	output.metadata.type = 'App';
-	// 	delete output.history;
-
-	// 	output = JSON.stringify( output, null, '\t' );
-	// 	output = output.replace( /[\n\t]+([\d\.e\-\[\]]+)/g, '$1' );
-
-	// 	toZip[ 'app.json' ] = strToU8( output );
-
-	// 	//
-
-	// 	const title = config.getKey( 'project/title' );
-
-	// 	const manager = new THREE.LoadingManager( function () {
-
-	// 		const zipped = zipSync( toZip, { level: 9 } );
-
-	// 		const blob = new Blob( [ zipped.buffer ], { type: 'application/zip' } );
-
-	// 		save( blob, ( title !== '' ? title : 'untitled' ) + '.zip' );
-
-	// 	} );
-
-	// 	const loader = new THREE.FileLoader( manager );
-	// 	loader.load( 'js/libs/app/index.html', function ( content ) {
-
-	// 		content = content.replace( '<!-- title -->', title );
-
-	// 		const includes = [];
-
-	// 		content = content.replace( '<!-- includes -->', includes.join( '\n\t\t' ) );
-
-	// 		let editButton = '';
-
-	// 		if ( config.getKey( 'project/editable' ) ) {
-
-	// 			editButton = [
-	// 				'			let button = document.createElement( \'a\' );',
-	// 				'			button.href = \'https://threejs.org/editor/#file=\' + location.href.split( \'/\' ).slice( 0, - 1 ).join( \'/\' ) + \'/app.json\';',
-	// 				'			button.style.cssText = \'position: absolute; bottom: 20px; right: 20px; padding: 10px 16px; color: #fff; border: 1px solid #fff; border-radius: 20px; text-decoration: none;\';',
-	// 				'			button.target = \'_blank\';',
-	// 				'			button.textContent = \'EDIT\';',
-	// 				'			document.body.appendChild( button );'
-	// 			].join( '\n' );
-
-	// 		}
-
-	// 		content = content.replace( '\t\t\t/* edit button */', editButton );
-
-	// 		toZip[ 'index.html' ] = strToU8( content );
-
-	// 	} );
-	// 	loader.load( 'js/libs/app.js', function ( content ) {
-
-	// 		toZip[ 'js/app.js' ] = strToU8( content );
-
-	// 	} );
-	// 	loader.load( '../build/three.module.js', function ( content ) {
-
-	// 		toZip[ 'js/three.module.js' ] = strToU8( content );
-
-	// 	} );
-	// 	loader.load( '../examples/jsm/webxr/VRButton.js', function ( content ) {
-
-	// 		toZip[ 'js/VRButton.js' ] = strToU8( content );
-
-	// 	} );
-
-	// } );
-	//options.add(option)
-
-	const link = document.createElement( 'a' );
-	function save( blob, filename ) {
-
-		if ( link.href ) {
-
-			URL.revokeObjectURL( link.href );
-
-		}
-
-		link.href = URL.createObjectURL( blob );
-		link.download = filename || 'data.json';
-		link.dispatchEvent( new MouseEvent( 'click' ) );
-
-	}
-
-	function saveArrayBuffer( buffer, filename ) {
-
-		save( new Blob( [ buffer ], { type: 'application/octet-stream' } ), filename );
-
-	}
-
-	function saveString( text, filename ) {
-
-		save( new Blob( [ text ], { type: 'text/plain' } ), filename );
-
-	}
+	//
 
 	function getAnimations( scene ) {
 
@@ -562,7 +452,7 @@ function MenubarFile( editor ) {
 
 		scene.traverse( function ( object ) {
 
-			animations.push( ...object.animations );
+			animations.push( ... object.animations );
 
 		} );
 

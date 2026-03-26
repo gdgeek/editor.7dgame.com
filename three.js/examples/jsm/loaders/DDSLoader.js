@@ -4,20 +4,47 @@ import {
 	RGBA_S3TC_DXT3_Format,
 	RGBA_S3TC_DXT5_Format,
 	RGB_ETC1_Format,
-	RGB_S3TC_DXT1_Format
+	RGB_S3TC_DXT1_Format,
+	RGB_BPTC_SIGNED_Format,
+	RGB_BPTC_UNSIGNED_Format
 } from 'three';
 
+/**
+ * A loader for the S3TC texture compression format.
+ *
+ * ```js
+ * const loader = new DDSLoader();
+ *
+ * const map = loader.load( 'textures/compressed/disturb_dxt1_nomip.dds' );
+ * map.colorSpace = THREE.SRGBColorSpace; // only for color textures
+ * ```
+ *
+ * @augments CompressedTextureLoader
+ * @three_import import { DDSLoader } from 'three/addons/loaders/DDSLoader.js';
+ */
 class DDSLoader extends CompressedTextureLoader {
 
+	/**
+	 * Constructs a new DDS loader.
+	 *
+	 * @param {LoadingManager} [manager] - The loading manager.
+	 */
 	constructor( manager ) {
 
 		super( manager );
 
 	}
 
+	/**
+	 * Parses the given S3TC texture data.
+	 *
+	 * @param {ArrayBuffer} buffer - The raw texture data.
+	 * @param {boolean} loadMipmaps - Whether to load mipmaps or not.
+	 * @return {CompressedTextureLoader~TexData} An object representing the parsed texture data.
+	 */
 	parse( buffer, loadMipmaps ) {
 
-		const dds = { mipmaps: [], width: 0, height: 0, format: null, mipmapCount: 1 };
+		const dds = { mipmaps: [], width: 0, height: 0, format: null, mipmapCount: 1, isCubemap: false };
 
 		// Adapted from @toji's DDS utils
 		// https://github.com/toji/webgl-texture-utils/blob/master/texture-util/dds.js
@@ -27,18 +54,18 @@ class DDSLoader extends CompressedTextureLoader {
 
 		const DDS_MAGIC = 0x20534444;
 
-		// let DDSD_CAPS = 0x1;
-		// let DDSD_HEIGHT = 0x2;
-		// let DDSD_WIDTH = 0x4;
-		// let DDSD_PITCH = 0x8;
-		// let DDSD_PIXELFORMAT = 0x1000;
+		// const DDSD_CAPS = 0x1;
+		// const DDSD_HEIGHT = 0x2;
+		// const DDSD_WIDTH = 0x4;
+		// const DDSD_PITCH = 0x8;
+		// const DDSD_PIXELFORMAT = 0x1000;
 		const DDSD_MIPMAPCOUNT = 0x20000;
-		// let DDSD_LINEARSIZE = 0x80000;
-		// let DDSD_DEPTH = 0x800000;
+		// const DDSD_LINEARSIZE = 0x80000;
+		// const DDSD_DEPTH = 0x800000;
 
-		// let DDSCAPS_COMPLEX = 0x8;
-		// let DDSCAPS_MIPMAP = 0x400000;
-		// let DDSCAPS_TEXTURE = 0x1000;
+		// const DDSCAPS_COMPLEX = 0x8;
+		// const DDSCAPS_MIPMAP = 0x400000;
+		// const DDSCAPS_TEXTURE = 0x1000;
 
 		const DDSCAPS2_CUBEMAP = 0x200;
 		const DDSCAPS2_CUBEMAP_POSITIVEX = 0x400;
@@ -47,14 +74,17 @@ class DDSLoader extends CompressedTextureLoader {
 		const DDSCAPS2_CUBEMAP_NEGATIVEY = 0x2000;
 		const DDSCAPS2_CUBEMAP_POSITIVEZ = 0x4000;
 		const DDSCAPS2_CUBEMAP_NEGATIVEZ = 0x8000;
-		// let DDSCAPS2_VOLUME = 0x200000;
+		// const DDSCAPS2_VOLUME = 0x200000;
 
-		// let DDPF_ALPHAPIXELS = 0x1;
-		// let DDPF_ALPHA = 0x2;
-		const DDPF_FOURCC = 0x4;
-		// let DDPF_RGB = 0x40;
-		// let DDPF_YUV = 0x200;
-		// let DDPF_LUMINANCE = 0x20000;
+		// const DDPF_ALPHAPIXELS = 0x1;
+		// const DDPF_ALPHA = 0x2;
+		// const DDPF_FOURCC = 0x4;
+		// const DDPF_RGB = 0x40;
+		// const DDPF_YUV = 0x200;
+		// const DDPF_LUMINANCE = 0x20000;
+
+		const DXGI_FORMAT_BC6H_UF16 = 95;
+		const DXGI_FORMAT_BC6H_SF16 = 96;
 
 		function fourCCToInt32( value ) {
 
@@ -104,12 +134,41 @@ class DDSLoader extends CompressedTextureLoader {
 
 		}
 
+		function loadRGBMip( buffer, dataOffset, width, height ) {
+
+			const dataLength = width * height * 3;
+			const srcBuffer = new Uint8Array( buffer, dataOffset, dataLength );
+			const byteArray = new Uint8Array( width * height * 4 );
+			let dst = 0;
+			let src = 0;
+			for ( let y = 0; y < height; y ++ ) {
+
+				for ( let x = 0; x < width; x ++ ) {
+
+					const b = srcBuffer[ src ]; src ++;
+					const g = srcBuffer[ src ]; src ++;
+					const r = srcBuffer[ src ]; src ++;
+					byteArray[ dst ] = r; dst ++;	//r
+					byteArray[ dst ] = g; dst ++;	//g
+					byteArray[ dst ] = b; dst ++;	//b
+					byteArray[ dst ] = 255; dst ++; //a
+
+				}
+
+			}
+
+			return byteArray;
+
+		}
+
 		const FOURCC_DXT1 = fourCCToInt32( 'DXT1' );
 		const FOURCC_DXT3 = fourCCToInt32( 'DXT3' );
 		const FOURCC_DXT5 = fourCCToInt32( 'DXT5' );
 		const FOURCC_ETC1 = fourCCToInt32( 'ETC1' );
+		const FOURCC_DX10 = fourCCToInt32( 'DX10' );
 
 		const headerLengthInt = 31; // The header length in 32 bit ints
+		const extendedHeaderLengthInt = 5; // The extended header length in 32 bit ints
 
 		// Offsets into the header array
 
@@ -122,7 +181,7 @@ class DDSLoader extends CompressedTextureLoader {
 
 		const off_mipmapCount = 7;
 
-		const off_pfFlags = 20;
+		// const off_pfFlags = 20;
 		const off_pfFourCC = 21;
 		const off_RGBBitCount = 22;
 		const off_RBitMask = 23;
@@ -130,10 +189,13 @@ class DDSLoader extends CompressedTextureLoader {
 		const off_BBitMask = 25;
 		const off_ABitMask = 26;
 
-		// let off_caps = 27;
+		// const off_caps = 27;
 		const off_caps2 = 28;
-		// let off_caps3 = 29;
-		// let off_caps4 = 30;
+		// const off_caps3 = 29;
+		// const off_caps4 = 30;
+
+		// If fourCC = DX10, the extended header starts after 32
+		const off_dxgiFormat = 0;
 
 		// Parse header
 
@@ -146,18 +208,14 @@ class DDSLoader extends CompressedTextureLoader {
 
 		}
 
-		if ( ! header[ off_pfFlags ] & DDPF_FOURCC ) {
-
-			console.error( 'THREE.DDSLoader.parse: Unsupported format, must contain a FourCC code.' );
-			return dds;
-
-		}
-
 		let blockBytes;
 
 		const fourCC = header[ off_pfFourCC ];
 
 		let isRGBAUncompressed = false;
+		let isRGBUncompressed = false;
+
+		let dataOffset = header[ off_size ] + 4;
 
 		switch ( fourCC ) {
 
@@ -185,6 +243,40 @@ class DDSLoader extends CompressedTextureLoader {
 				dds.format = RGB_ETC1_Format;
 				break;
 
+			case FOURCC_DX10:
+
+				dataOffset += extendedHeaderLengthInt * 4;
+				const extendedHeader = new Int32Array( buffer, ( headerLengthInt + 1 ) * 4, extendedHeaderLengthInt );
+				const dxgiFormat = extendedHeader[ off_dxgiFormat ];
+				switch ( dxgiFormat ) {
+
+					case DXGI_FORMAT_BC6H_SF16: {
+
+						blockBytes = 16;
+						dds.format = RGB_BPTC_SIGNED_Format;
+						break;
+
+					}
+
+					case DXGI_FORMAT_BC6H_UF16: {
+
+						blockBytes = 16;
+						dds.format = RGB_BPTC_UNSIGNED_Format;
+						break;
+
+					}
+
+					default: {
+
+						console.error( 'THREE.DDSLoader.parse: Unsupported DXGI_FORMAT code ', dxgiFormat );
+						return dds;
+
+					}
+
+				}
+
+				break;
+
 			default:
 
 				if ( header[ off_RGBBitCount ] === 32
@@ -196,6 +288,15 @@ class DDSLoader extends CompressedTextureLoader {
 					isRGBAUncompressed = true;
 					blockBytes = 64;
 					dds.format = RGBAFormat;
+
+				} else if ( header[ off_RGBBitCount ] === 24
+					&& header[ off_RBitMask ] & 0xff0000
+					&& header[ off_GBitMask ] & 0xff00
+					&& header[ off_BBitMask ] & 0xff ) {
+
+				    	isRGBUncompressed = true;
+                    			blockBytes = 64;
+                    			dds.format = RGBAFormat;
 
 				} else {
 
@@ -233,8 +334,6 @@ class DDSLoader extends CompressedTextureLoader {
 		dds.width = header[ off_width ];
 		dds.height = header[ off_height ];
 
-		let dataOffset = header[ off_size ] + 4;
-
 		// Extract mipmaps buffers
 
 		const faces = dds.isCubemap ? 6 : 1;
@@ -252,6 +351,11 @@ class DDSLoader extends CompressedTextureLoader {
 
 					byteArray = loadARGBMip( buffer, dataOffset, width, height );
 					dataLength = byteArray.length;
+
+				} else if ( isRGBUncompressed ) {
+
+					byteArray = loadRGBMip( buffer, dataOffset, width, height );
+					dataLength = width * height * 3;
 
 				} else {
 

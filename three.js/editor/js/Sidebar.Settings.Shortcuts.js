@@ -2,7 +2,6 @@ import { UIPanel, UIText, UIRow, UIInput } from './libs/ui.js';
 
 import { RemoveObjectCommand } from './commands/RemoveObjectCommand.js';
 
-//
 function SidebarSettingsShortcuts( editor ) {
 
 	const strings = editor.strings;
@@ -24,7 +23,7 @@ function SidebarSettingsShortcuts( editor ) {
 	headerRow.add( new UIText( strings.getKey( 'sidebar/settings/shortcuts' ).toUpperCase() ) );
 	container.add( headerRow );
 
-	const shortcuts = [ 'translate', 'rotate', 'scale', 'undo', 'focus', 'save' ];
+	const shortcuts = [ 'translate', 'rotate', 'scale', 'undo', 'focus' ];
 
 	function createShortcutInput( name ) {
 
@@ -83,7 +82,7 @@ function SidebarSettingsShortcuts( editor ) {
 		}
 
 		shortcutInput.dom.maxLength = 1;
-		shortcutRow.add( new UIText( strings.getKey( 'sidebar/settings/shortcuts/' + name ) ).setTextTransform( 'capitalize' ).setWidth( '90px' ) );
+		shortcutRow.add( new UIText( strings.getKey( 'sidebar/settings/shortcuts/' + name ) ).setTextTransform( 'capitalize' ).setClass( 'Label' ) );
 		shortcutRow.add( shortcutInput );
 
 		container.add( shortcutRow );
@@ -160,17 +159,6 @@ function SidebarSettingsShortcuts( editor ) {
 				if ( editor.selected !== null ) {
 
 					editor.focus( editor.selected );
-
-				}
-
-				break;
-
-			case config.getKey( 'settings/shortcuts/save' ):
-
-				if ( IS_MAC ? event.metaKey : event.ctrlKey ) {
-
-					event.preventDefault(); // 防止浏览器默认保存行为
-					editor.save();
 
 				}
 

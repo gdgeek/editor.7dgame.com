@@ -1,6 +1,6 @@
 function Storage() {
 
-	const indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+	const indexedDB = window.indexedDB;
 
 	if ( indexedDB === undefined ) {
 
@@ -50,7 +50,7 @@ function Storage() {
 
 		get: function ( callback ) {
 
-			const transaction = database.transaction( [ 'states' ], 'readwrite' );
+			const transaction = database.transaction( [ 'states' ], 'readonly' );
 			const objectStore = transaction.objectStore( 'states' );
 			const request = objectStore.get( 0 );
 			request.onsuccess = function ( event ) {

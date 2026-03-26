@@ -85,13 +85,10 @@ function MenubarScreenshot(editor) {
             tempRenderer.setSize(width, height);
 
             // 设置渲染器属性以匹配编辑器的渲染器
-            tempRenderer.outputEncoding = THREE.sRGBEncoding;
+            tempRenderer.outputColorSpace = THREE.SRGBColorSpace; // r183: outputEncoding → outputColorSpace
 
-            // 物理正确光照
-            const physicallyCorrectLights = editor.config.getKey('project/renderer/physicallyCorrectLights');
-            if (physicallyCorrectLights !== undefined) {
-                tempRenderer.physicallyCorrectLights = physicallyCorrectLights;
-            }
+            // 物理正确光照（r183 已移除 physicallyCorrectLights，默认行为等同于原 true）
+            // const physicallyCorrectLights = editor.config.getKey('project/renderer/physicallyCorrectLights');
 
             // 阴影
             const shadows = editor.config.getKey('project/renderer/shadows');

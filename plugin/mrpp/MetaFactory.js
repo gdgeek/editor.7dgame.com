@@ -256,13 +256,13 @@ class MetaFactory extends Factory {
 			const loader = new GLTFLoader(THREE.DefaultLoadingManager);
 			const dracoLoader = new DRACOLoader();
 
-			dracoLoader.setDecoderPath('./draco/');
+			dracoLoader.setDecoderPath('../examples/jsm/libs/draco/gltf/');
 			loader.setDRACOLoader(dracoLoader);
 
 			// 如果 KTX2Loader 未初始化，则进行初始化
 			if (this.ktx2Loader === null) {
 				this.ktx2Loader = new KTX2Loader();
-				this.ktx2Loader.setTranscoderPath('./basis/');
+				this.ktx2Loader.setTranscoderPath('../examples/jsm/libs/basis/');
 				if (this.editor && this.editor.renderer) {
 					this.ktx2Loader.detectSupport(this.editor.renderer);
 				} else {

@@ -6,17 +6,68 @@ import { Matrix3 } from '../math/Matrix3.js';
 import { Matrix4 } from '../math/Matrix4.js';
 import { FileLoader } from './FileLoader.js';
 import { Loader } from './Loader.js';
-import { Material } from '../materials/Material.js';
+import {
+	ShadowMaterial,
+	SpriteMaterial,
+	RawShaderMaterial,
+	ShaderMaterial,
+	PointsMaterial,
+	MeshPhysicalMaterial,
+	MeshStandardMaterial,
+	MeshPhongMaterial,
+	MeshToonMaterial,
+	MeshNormalMaterial,
+	MeshLambertMaterial,
+	MeshDepthMaterial,
+	MeshDistanceMaterial,
+	MeshBasicMaterial,
+	MeshMatcapMaterial,
+	LineDashedMaterial,
+	LineBasicMaterial,
+	Material,
+} from '../materials/Materials.js';
+import { error, warn } from '../utils.js';
 
+/**
+ * Class for loading materials. The files are internally
+ * loaded via {@link FileLoader}.
+ *
+ * ```js
+ * const loader = new THREE.MaterialLoader();
+ * const material = await loader.loadAsync( 'material.json' );
+ * ```
+ * This loader does not support node materials. Use {@link NodeMaterialLoader} instead.
+ *
+ * @augments Loader
+ */
 class MaterialLoader extends Loader {
 
+	/**
+	 * Constructs a new material loader.
+	 *
+	 * @param {LoadingManager} [manager] - The loading manager.
+	 */
 	constructor( manager ) {
 
 		super( manager );
+
+		/**
+		 * A dictionary holding textures used by the material.
+		 *
+		 * @type {Object<string,Texture>}
+		 */
 		this.textures = {};
 
 	}
 
+	/**
+	 * Starts loading from the given URL and pass the loaded material to the `onLoad()` callback.
+	 *
+	 * @param {string} url - The path/URL of the file to be loaded. This can also be a data URI.
+	 * @param {function(Material)} onLoad - Executed when the loading process has been finished.
+	 * @param {onProgressCallback} onProgress - Executed while the loading is in progress.
+	 * @param {onErrorCallback} onError - Executed when errors occur.
+	 */
 	load( url, onLoad, onProgress, onError ) {
 
 		const scope = this;
@@ -39,7 +90,7 @@ class MaterialLoader extends Loader {
 
 				} else {
 
-					console.error( e );
+					error( e );
 
 				}
 
@@ -51,6 +102,12 @@ class MaterialLoader extends Loader {
 
 	}
 
+	/**
+	 * Parses the given JSON object and returns a material.
+	 *
+	 * @param {Object} json - The serialized material.
+	 * @return {Material} The parsed material.
+	 */
 	parse( json ) {
 
 		const textures = this.textures;
@@ -59,7 +116,7 @@ class MaterialLoader extends Loader {
 
 			if ( textures[ name ] === undefined ) {
 
-				console.warn( 'THREE.MaterialLoader: Undefined texture', name );
+				warn( 'MaterialLoader: Undefined texture', name );
 
 			}
 
@@ -67,7 +124,7 @@ class MaterialLoader extends Loader {
 
 		}
 
-		const material = Material.fromType( json.type );
+		const material = this.createMaterialFromType( json.type );
 
 		if ( json.uuid !== undefined ) material.uuid = json.uuid;
 		if ( json.name !== undefined ) material.name = json.name;
@@ -84,10 +141,16 @@ class MaterialLoader extends Loader {
 		if ( json.shininess !== undefined ) material.shininess = json.shininess;
 		if ( json.clearcoat !== undefined ) material.clearcoat = json.clearcoat;
 		if ( json.clearcoatRoughness !== undefined ) material.clearcoatRoughness = json.clearcoatRoughness;
+		if ( json.dispersion !== undefined ) material.dispersion = json.dispersion;
+		if ( json.iridescence !== undefined ) material.iridescence = json.iridescence;
+		if ( json.iridescenceIOR !== undefined ) material.iridescenceIOR = json.iridescenceIOR;
+		if ( json.iridescenceThicknessRange !== undefined ) material.iridescenceThicknessRange = json.iridescenceThicknessRange;
 		if ( json.transmission !== undefined ) material.transmission = json.transmission;
 		if ( json.thickness !== undefined ) material.thickness = json.thickness;
 		if ( json.attenuationDistance !== undefined ) material.attenuationDistance = json.attenuationDistance;
 		if ( json.attenuationColor !== undefined && material.attenuationColor !== undefined ) material.attenuationColor.setHex( json.attenuationColor );
+		if ( json.anisotropy !== undefined ) material.anisotropy = json.anisotropy;
+		if ( json.anisotropyRotation !== undefined ) material.anisotropyRotation = json.anisotropyRotation;
 		if ( json.fog !== undefined ) material.fog = json.fog;
 		if ( json.flatShading !== undefined ) material.flatShading = json.flatShading;
 		if ( json.blending !== undefined ) material.blending = json.blending;
@@ -97,11 +160,19 @@ class MaterialLoader extends Loader {
 		if ( json.opacity !== undefined ) material.opacity = json.opacity;
 		if ( json.transparent !== undefined ) material.transparent = json.transparent;
 		if ( json.alphaTest !== undefined ) material.alphaTest = json.alphaTest;
+		if ( json.alphaHash !== undefined ) material.alphaHash = json.alphaHash;
+		if ( json.depthFunc !== undefined ) material.depthFunc = json.depthFunc;
 		if ( json.depthTest !== undefined ) material.depthTest = json.depthTest;
 		if ( json.depthWrite !== undefined ) material.depthWrite = json.depthWrite;
 		if ( json.colorWrite !== undefined ) material.colorWrite = json.colorWrite;
-
-		if ( json.stencilWrite !== undefined ) material.stencilWrite = json.stencilWrite;
+		if ( json.blendSrc !== undefined ) material.blendSrc = json.blendSrc;
+		if ( json.blendDst !== undefined ) material.blendDst = json.blendDst;
+		if ( json.blendEquation !== undefined ) material.blendEquation = json.blendEquation;
+		if ( json.blendSrcAlpha !== undefined ) material.blendSrcAlpha = json.blendSrcAlpha;
+		if ( json.blendDstAlpha !== undefined ) material.blendDstAlpha = json.blendDstAlpha;
+		if ( json.blendEquationAlpha !== undefined ) material.blendEquationAlpha = json.blendEquationAlpha;
+		if ( json.blendColor !== undefined && material.blendColor !== undefined ) material.blendColor.setHex( json.blendColor );
+		if ( json.blendAlpha !== undefined ) material.blendAlpha = json.blendAlpha;
 		if ( json.stencilWriteMask !== undefined ) material.stencilWriteMask = json.stencilWriteMask;
 		if ( json.stencilFunc !== undefined ) material.stencilFunc = json.stencilFunc;
 		if ( json.stencilRef !== undefined ) material.stencilRef = json.stencilRef;
@@ -109,6 +180,7 @@ class MaterialLoader extends Loader {
 		if ( json.stencilFail !== undefined ) material.stencilFail = json.stencilFail;
 		if ( json.stencilZFail !== undefined ) material.stencilZFail = json.stencilZFail;
 		if ( json.stencilZPass !== undefined ) material.stencilZPass = json.stencilZPass;
+		if ( json.stencilWrite !== undefined ) material.stencilWrite = json.stencilWrite;
 
 		if ( json.wireframe !== undefined ) material.wireframe = json.wireframe;
 		if ( json.wireframeLinewidth !== undefined ) material.wireframeLinewidth = json.wireframeLinewidth;
@@ -117,7 +189,7 @@ class MaterialLoader extends Loader {
 
 		if ( json.rotation !== undefined ) material.rotation = json.rotation;
 
-		if ( json.linewidth !== 1 ) material.linewidth = json.linewidth;
+		if ( json.linewidth !== undefined ) material.linewidth = json.linewidth;
 		if ( json.dashSize !== undefined ) material.dashSize = json.dashSize;
 		if ( json.gapSize !== undefined ) material.gapSize = json.gapSize;
 		if ( json.scale !== undefined ) material.scale = json.scale;
@@ -130,6 +202,8 @@ class MaterialLoader extends Loader {
 
 		if ( json.alphaToCoverage !== undefined ) material.alphaToCoverage = json.alphaToCoverage;
 		if ( json.premultipliedAlpha !== undefined ) material.premultipliedAlpha = json.premultipliedAlpha;
+		if ( json.forceSinglePass !== undefined ) material.forceSinglePass = json.forceSinglePass;
+		if ( json.allowOverride !== undefined ) material.allowOverride = json.allowOverride;
 
 		if ( json.visible !== undefined ) material.visible = json.visible;
 
@@ -203,6 +277,7 @@ class MaterialLoader extends Loader {
 		if ( json.defines !== undefined ) material.defines = json.defines;
 		if ( json.vertexShader !== undefined ) material.vertexShader = json.vertexShader;
 		if ( json.fragmentShader !== undefined ) material.fragmentShader = json.fragmentShader;
+		if ( json.glslVersion !== undefined ) material.glslVersion = json.glslVersion;
 
 		if ( json.extensions !== undefined ) {
 
@@ -214,9 +289,8 @@ class MaterialLoader extends Loader {
 
 		}
 
-		// Deprecated
-
-		if ( json.shading !== undefined ) material.flatShading = json.shading === 1; // THREE.FlatShading
+		if ( json.lights !== undefined ) material.lights = json.lights;
+		if ( json.clipping !== undefined ) material.clipping = json.clipping;
 
 		// for PointsMaterial
 
@@ -266,6 +340,7 @@ class MaterialLoader extends Loader {
 		if ( json.specularColorMap !== undefined ) material.specularColorMap = getTexture( json.specularColorMap );
 
 		if ( json.envMap !== undefined ) material.envMap = getTexture( json.envMap );
+		if ( json.envMapRotation !== undefined ) material.envMapRotation.fromArray( json.envMapRotation );
 		if ( json.envMapIntensity !== undefined ) material.envMapIntensity = json.envMapIntensity;
 
 		if ( json.reflectivity !== undefined ) material.reflectivity = json.reflectivity;
@@ -284,8 +359,13 @@ class MaterialLoader extends Loader {
 		if ( json.clearcoatNormalMap !== undefined ) material.clearcoatNormalMap = getTexture( json.clearcoatNormalMap );
 		if ( json.clearcoatNormalScale !== undefined ) material.clearcoatNormalScale = new Vector2().fromArray( json.clearcoatNormalScale );
 
+		if ( json.iridescenceMap !== undefined ) material.iridescenceMap = getTexture( json.iridescenceMap );
+		if ( json.iridescenceThicknessMap !== undefined ) material.iridescenceThicknessMap = getTexture( json.iridescenceThicknessMap );
+
 		if ( json.transmissionMap !== undefined ) material.transmissionMap = getTexture( json.transmissionMap );
 		if ( json.thicknessMap !== undefined ) material.thicknessMap = getTexture( json.thicknessMap );
+
+		if ( json.anisotropyMap !== undefined ) material.anisotropyMap = getTexture( json.anisotropyMap );
 
 		if ( json.sheenColorMap !== undefined ) material.sheenColorMap = getTexture( json.sheenColorMap );
 		if ( json.sheenRoughnessMap !== undefined ) material.sheenRoughnessMap = getTexture( json.sheenRoughnessMap );
@@ -294,6 +374,13 @@ class MaterialLoader extends Loader {
 
 	}
 
+	/**
+	 * Textures are not embedded in the material JSON so they have
+	 * to be injected before the loading process starts.
+	 *
+	 * @param {Object} value - A dictionary holding textures for material properties.
+	 * @return {MaterialLoader} A reference to this material loader.
+	 */
 	setTextures( value ) {
 
 		this.textures = value;
@@ -301,7 +388,52 @@ class MaterialLoader extends Loader {
 
 	}
 
-}
+	/**
+	 * Creates a material for the given type.
+	 *
+	 * @param {string} type - The material type.
+	 * @return {Material} The new material.
+	 */
+	createMaterialFromType( type ) {
 
+		return MaterialLoader.createMaterialFromType( type );
+
+	}
+
+	/**
+	 * Creates a material for the given type.
+	 *
+	 * @static
+	 * @param {string} type - The material type.
+	 * @return {Material} The new material.
+	 */
+	static createMaterialFromType( type ) {
+
+		const materialLib = {
+			ShadowMaterial,
+			SpriteMaterial,
+			RawShaderMaterial,
+			ShaderMaterial,
+			PointsMaterial,
+			MeshPhysicalMaterial,
+			MeshStandardMaterial,
+			MeshPhongMaterial,
+			MeshToonMaterial,
+			MeshNormalMaterial,
+			MeshLambertMaterial,
+			MeshDepthMaterial,
+			MeshDistanceMaterial,
+			MeshBasicMaterial,
+			MeshMatcapMaterial,
+			LineDashedMaterial,
+			LineBasicMaterial,
+			Material
+		};
+
+		return new materialLib[ type ]();
+
+	}
+
+}
 
 export { MaterialLoader };

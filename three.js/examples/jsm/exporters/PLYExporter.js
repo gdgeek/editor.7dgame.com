@@ -1,49 +1,51 @@
 import {
 	Matrix3,
 	Vector3,
-	Color
+	Color,
+	ColorManagement,
+	SRGBColorSpace
 } from 'three';
 
 /**
- * https://github.com/gkjohnson/ply-exporter-js
+ * An exporter for PLY.
  *
- * Usage:
- *  const exporter = new PLYExporter();
+ * PLY (Polygon or Stanford Triangle Format) is a file format for efficient delivery and
+ * loading of simple, static 3D content in a dense format. Both binary and ascii formats are
+ * supported. PLY can store vertex positions, colors, normals and uv coordinates. No textures
+ * or texture references are saved.
  *
- *  // second argument is a list of options
- *  exporter.parse(mesh, data => console.log(data), { binary: true, excludeAttributes: [ 'color' ], littleEndian: true });
+ * ```js
+ * const exporter = new PLYExporter();
+ * const data = exporter.parse( scene, options );
+ * ```
  *
- * Format Definition:
- * http://paulbourke.net/dataformats/ply/
+ * @three_import import { PLYExporter } from 'three/addons/exporters/PLYExporter.js';
  */
-
 class PLYExporter {
 
-	parse( object, onDone, options ) {
+	/**
+	 * Parses the given 3D object and generates the PLY output.
+	 *
+	 * If the 3D object is composed of multiple children and geometry, they are merged into a single mesh in the file.
+	 *
+	 * @param {Object3D} object - The 3D object to export.
+	 * @param {PLYExporter~OnDone} onDone - A callback function that is executed when the export has finished.
+	 * @param {PLYExporter~Options} options - The export options.
+	 * @return {?(string|ArrayBuffer)} The exported PLY.
+	 */
+	parse( object, onDone, options = {} ) {
 
-		if ( onDone && typeof onDone === 'object' ) {
-
-			console.warn( 'THREE.PLYExporter: The options parameter is now the third argument to the "parse" function. See the documentation for the new API.' );
-			options = onDone;
-			onDone = undefined;
-
-		}
+		// reference https://github.com/gkjohnson/ply-exporter-js
 
 		// Iterate over the valid meshes in the object
 		function traverseMeshes( cb ) {
 
 			object.traverse( function ( child ) {
 
-				if ( child.isMesh === true ) {
+				if ( child.isMesh === true || child.isPoints ) {
 
 					const mesh = child;
 					const geometry = mesh.geometry;
-
-					if ( geometry.isBufferGeometry !== true ) {
-
-						throw new Error( 'THREE.PLYExporter: Geometry is not of type THREE.BufferGeometry.' );
-
-					}
 
 					if ( geometry.hasAttribute( 'position' ) === true ) {
 
@@ -67,6 +69,7 @@ class PLYExporter {
 		options = Object.assign( defaultOptions, options );
 
 		const excludeAttributes = options.excludeAttributes;
+		let includeIndices = true;
 		let includeNormals = false;
 		let includeColors = false;
 		let includeUVs = false;
@@ -75,18 +78,13 @@ class PLYExporter {
 		// and cache the BufferGeometry
 		let vertexCount = 0;
 		let faceCount = 0;
+
 		object.traverse( function ( child ) {
 
 			if ( child.isMesh === true ) {
 
 				const mesh = child;
 				const geometry = mesh.geometry;
-
-				if ( geometry.isBufferGeometry !== true ) {
-
-					throw new Error( 'THREE.PLYExporter: Geometry is not of type THREE.BufferGeometry.' );
-
-				}
 
 				const vertices = geometry.getAttribute( 'position' );
 				const normals = geometry.getAttribute( 'normal' );
@@ -109,12 +107,29 @@ class PLYExporter {
 
 				if ( colors !== undefined ) includeColors = true;
 
+			} else if ( child.isPoints ) {
+
+				const mesh = child;
+				const geometry = mesh.geometry;
+
+				const vertices = geometry.getAttribute( 'position' );
+				const normals = geometry.getAttribute( 'normal' );
+				const colors = geometry.getAttribute( 'color' );
+
+				vertexCount += vertices.count;
+
+				if ( normals !== undefined ) includeNormals = true;
+
+				if ( colors !== undefined ) includeColors = true;
+
+				includeIndices = false;
+
 			}
 
 		} );
 
 		const tempColor = new Color();
-		const includeIndices = excludeAttributes.indexOf( 'index' ) === - 1;
+		includeIndices = includeIndices && excludeAttributes.indexOf( 'index' ) === - 1;
 		includeNormals = includeNormals && excludeAttributes.indexOf( 'normal' ) === - 1;
 		includeColors = includeColors && excludeAttributes.indexOf( 'color' ) === - 1;
 		includeUVs = includeUVs && excludeAttributes.indexOf( 'uv' ) === - 1;
@@ -123,7 +138,7 @@ class PLYExporter {
 		if ( includeIndices && faceCount !== Math.floor( faceCount ) ) {
 
 			// point cloud meshes will not have an index array and may not have a
-			// number of vertices that is divisble by 3 (and therefore representable
+			// number of vertices that is divisible by 3 (and therefore representable
 			// as triangles)
 			console.error(
 
@@ -205,7 +220,7 @@ class PLYExporter {
 			// 2 uv values at 4 bytes
 			const vertexListLength = vertexCount * ( 4 * 3 + ( includeNormals ? 4 * 3 : 0 ) + ( includeColors ? 3 : 0 ) + ( includeUVs ? 4 * 2 : 0 ) );
 
-			// 1 byte shape desciptor
+			// 1 byte shape descriptor
 			// 3 vertex indices at ${indexByteCount} bytes
 			const faceListLength = includeIndices ? faceCount * ( indexByteCount * 3 + 1 ) : 0;
 			const output = new DataView( new ArrayBuffer( headerBin.length + vertexListLength + faceListLength ) );
@@ -303,9 +318,9 @@ class PLYExporter {
 
 						if ( colors != null ) {
 
-							tempColor
-								.fromBufferAttribute( colors, i )
-								.convertLinearToSRGB();
+							tempColor.fromBufferAttribute( colors, i );
+
+							ColorManagement.workingToColorSpace( tempColor, SRGBColorSpace );
 
 							output.setUint8( vOffset, Math.floor( tempColor.r * 255 ) );
 							vOffset += 1;
@@ -462,9 +477,9 @@ class PLYExporter {
 
 						if ( colors != null ) {
 
-							tempColor
-								.fromBufferAttribute( colors, i )
-								.convertLinearToSRGB();
+							tempColor.fromBufferAttribute( colors, i );
+
+							ColorManagement.workingToColorSpace( tempColor, SRGBColorSpace );
 
 							line += ' ' +
 								Math.floor( tempColor.r * 255 ) + ' ' +
@@ -525,5 +540,23 @@ class PLYExporter {
 	}
 
 }
+
+/**
+ * Export options of `PLYExporter`.
+ *
+ * @typedef {Object} PLYExporter~Options
+ * @property {boolean} [binary=false] - Whether to export in binary format or ASCII.
+ * @property {Array<string>} [excludeAttributes] - Which properties to explicitly exclude from
+ * the exported PLY file. Valid values are `'color'`, `'normal'`, `'uv'`, and `'index'`. If triangle
+ * indices are excluded, then a point cloud is exported.
+ * @property {boolean} [littleEndian=false] - Whether the binary export uses little or big endian.
+ **/
+
+/**
+ * onDone callback of `PLYExporter`.
+ *
+ * @callback PLYExporter~OnDone
+ * @param {string|ArrayBuffer} result - The generated PLY ascii or binary.
+ */
 
 export { PLYExporter };

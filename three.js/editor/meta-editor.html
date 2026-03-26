@@ -1,248 +1,286 @@
 <!DOCTYPE html>
 <html lang="en">
+	<head>
+		<title>three.js editor</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link rel="apple-touch-icon" href="images/icon.png">
+		<link rel="manifest" href="manifest.json">
+		<link rel="shortcut icon" href="../files/favicon_white.ico" media="(prefers-color-scheme: dark)"/>
+		<link rel="shortcut icon" href="../files/favicon.ico" media="(prefers-color-scheme: light)" />
+	</head>
+	<body>
+		<link rel="stylesheet" href="css/main.css">
 
-<head>
-	<title>three.js editor</title>
-	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
-	<link rel="apple-touch-icon" href="images/icon.png" />
-	<link rel="manifest" href="manifest.json" />
-	<link rel="shortcut icon" href="../files/favicon_white.ico" media="(prefers-color-scheme: dark)" />
-	<link rel="shortcut icon" href="../files/favicon.ico" media="(prefers-color-scheme: light)" />
-</head>
+		<!-- MRPP: ffmpeg for video/media features -->
+		<script src="https://unpkg.com/@ffmpeg/ffmpeg@0.9.6/dist/ffmpeg.min.js" defer></script>
 
-<body>
-	<link rel="stylesheet" href="css/main.css" />
-
-	<script src="https://unpkg.com/@ffmpeg/ffmpeg@0.9.6/dist/ffmpeg.min.js" defer></script>
-	<script src="../examples/js/libs/draco/draco_encoder.js"></script>
-
-	<link rel="stylesheet" href="js/libs/codemirror/codemirror.css" />
-	<link rel="stylesheet" href="js/libs/codemirror/theme/monokai.css" />
-	<script src="js/libs/codemirror/codemirror.js"></script>
-	<script src="js/libs/codemirror/mode/javascript.js"></script>
-	<script src="js/libs/codemirror/mode/glsl.js"></script>
-
-	<script src="js/libs/esprima.js"></script>
-	<script src="js/libs/jsonlint.js"></script>
-
-	<link rel="stylesheet" href="js/libs/codemirror/addon/dialog.css" />
-	<link rel="stylesheet" href="js/libs/codemirror/addon/show-hint.css" />
-	<link rel="stylesheet" href="js/libs/codemirror/addon/tern.css" />
-
-	<script src="js/libs/codemirror/addon/dialog.js"></script>
-	<script src="js/libs/codemirror/addon/show-hint.js"></script>
-	<script src="js/libs/codemirror/addon/tern.js"></script>
-	<script src="js/libs/acorn/acorn.js"></script>
-	<script src="js/libs/acorn/acorn_loose.js"></script>
-	<script src="js/libs/acorn/walk.js"></script>
-	<script src="js/libs/ternjs/polyfill.js"></script>
-	<script src="js/libs/ternjs/signal.js"></script>
-	<script src="js/libs/ternjs/tern.js"></script>
-	<script src="js/libs/ternjs/def.js"></script>
-	<script src="js/libs/ternjs/comment.js"></script>
-	<script src="js/libs/ternjs/infer.js"></script>
-	<script src="js/libs/ternjs/doc_comment.js"></script>
-	<script src="js/libs/tern-threejs/threejs.js"></script>
-	<script src="js/libs/signals.min.js"></script>
-
-	<!-- Import maps polyfill -->
-	<!-- Remove this when import maps will be widely supported -->
-	<script async src="/libs/es-module-shims.js"></script>
-
-	<script type="importmap">
+		<script type="importmap">
 			{
 				"imports": {
-					"three": "../build/three.module.js"
+					"three": "../build/three.module.js",
+					"three/webgpu": "../build/three.webgpu.js",
+					"three/addons/": "../examples/jsm/",
+					"three/examples/": "../examples/",
+					"three-gpu-pathtracer": "https://cdn.jsdelivr.net/npm/three-gpu-pathtracer@0.0.23/build/index.module.js",
+					"three-mesh-bvh": "https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.7.4/build/index.module.js"
 				}
 			}
 		</script>
 
-	<script type="module">
-		import * as THREE from 'three';
+		<script src="../examples/jsm/libs/draco/draco_encoder.js"></script>
 
-		import { Editor } from './js/Editor.js';
-		import { Viewport } from './js/Viewport.js';
-		import { Toolbar } from './js/Toolbar.js';
-		import { Script } from './js/Script.js';
-		import { Player } from './js/Player.js';
-		import { Sidebar } from './js/Sidebar.js';
-		import { Menubar } from './js/Menubar.js';
-		import { Resizer } from './js/Resizer.js';
-		import { initMetaEditor } from '../../plugin/bootstrap/meta-bootstrap.js';
-		import { VRButton } from '../examples/jsm/webxr/VRButton.js';
+		<link rel="stylesheet" href="js/libs/codemirror/codemirror.css">
+		<link rel="stylesheet" href="js/libs/codemirror/theme/monokai.css">
+		<script src="js/libs/codemirror/codemirror.js"></script>
+		<script src="js/libs/codemirror/mode/javascript.js"></script>
+		<script src="js/libs/codemirror/mode/glsl.js"></script>
 
-		window.URL = window.URL || window.webkitURL;
-		window.BlobBuilder =
-			window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder;
+		<script src="js/libs/esprima.js"></script>
+		<script src="js/libs/jsonlint.js"></script>
 
-		Number.prototype.format = function () {
+		<link rel="stylesheet" href="js/libs/codemirror/addon/dialog.css">
+		<link rel="stylesheet" href="js/libs/codemirror/addon/show-hint.css">
+		<link rel="stylesheet" href="js/libs/codemirror/addon/tern.css">
 
-			return this.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
+		<script src="js/libs/codemirror/addon/dialog.js"></script>
+		<script src="js/libs/codemirror/addon/show-hint.js"></script>
+		<script src="js/libs/codemirror/addon/tern.js"></script>
+		<script src="js/libs/acorn/acorn.js"></script>
+		<script src="js/libs/acorn/acorn_loose.js"></script>
+		<script src="js/libs/acorn/walk.js"></script>
+		<script src="js/libs/ternjs/polyfill.js"></script>
+		<script src="js/libs/ternjs/signal.js"></script>
+		<script src="js/libs/ternjs/tern.js"></script>
+		<script src="js/libs/ternjs/def.js"></script>
+		<script src="js/libs/ternjs/comment.js"></script>
+		<script src="js/libs/ternjs/infer.js"></script>
+		<script src="js/libs/ternjs/doc_comment.js"></script>
+		<script src="js/libs/tern-threejs/threejs.js"></script>
+		<script src="js/libs/signals.min.js"></script>
 
-		};
+		<script type="module">
 
+			import * as THREE from 'three';
 
-	
-		const editor = new Editor();
+			import { Editor } from './js/Editor.js';
+			import { Viewport } from './js/Viewport.js';
+			import { Toolbar } from './js/Toolbar.js';
+			import { Script } from './js/Script.js';
+			import { Player } from './js/Player.js';
+			import { Sidebar } from './js/Sidebar.js';
+			import { Menubar } from './js/Menubar.js';
+			import { Resizer } from './js/Resizer.js';
+			import { AnimationResizer } from './js/AnimationResizer.js';
+			import { Animation } from './js/Animation.js';
 
-		initMetaEditor(editor);
+			// MRPP bootstrap
+			import { initMetaEditor } from '../../plugin/bootstrap/meta-bootstrap.js';
 
-		window.editor = editor; // Expose editor to Console
-		window.THREE = THREE; // Expose THREE to APP Scripts and Console
-		window.VRButton = VRButton; // Expose VRButton to APP Scripts
-
-		const viewport = new Viewport(editor);
-		document.body.appendChild(viewport.dom);
-
-		const toolbar = new Toolbar(editor);
-		document.body.appendChild(toolbar.dom);
-
-		const script = new Script(editor);
-		document.body.appendChild(script.dom);
-
-		const player = new Player(editor);
-		document.body.appendChild(player.dom);
-
-		const sidebar = new Sidebar(editor);
-		document.body.appendChild(sidebar.dom);
-
-		const menubar = new Menubar(editor);
-		document.body.appendChild(menubar.dom);
-
-		const resizer = new Resizer(editor);
-		document.body.appendChild(resizer.dom);
-
-		//
-
-		editor.storage.init(function () {
-
-			editor.storage.get(function (state) {
-
-				if (isLoadingFromHash) return;
-
-				const selected = editor.config.getKey('selected');
-
-				if (selected !== undefined) {
-					editor.selectByUuid(selected);
-				}
-
-			});
+			window.URL = window.URL || window.webkitURL;
+			window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder;
 
 			//
 
-			let timeout;
+			const editor = new Editor();
 
-			function saveState() {
+			// MRPP: initialize meta editor extensions before UI construction
+			initMetaEditor( editor );
 
+			window.editor = editor; // Expose editor to Console
+			window.THREE = THREE; // Expose THREE to APP Scripts and Console
 
-				if (editor.config.getKey('autosave') === false) {
+			const viewport = new Viewport( editor );
+			document.body.appendChild( viewport.dom );
 
-					return;
+			const toolbar = new Toolbar( editor );
+			document.body.appendChild( toolbar.dom );
+
+			const script = new Script( editor );
+			document.body.appendChild( script.dom );
+
+			const player = new Player( editor );
+			document.body.appendChild( player.dom );
+
+			const sidebar = new Sidebar( editor );
+			document.body.appendChild( sidebar.dom );
+
+			const menubar = new Menubar( editor );
+			document.body.appendChild( menubar.dom );
+
+			const resizer = new Resizer( editor );
+			document.body.appendChild( resizer.dom );
+
+			const animation = new Animation( editor );
+			document.body.appendChild( animation.dom );
+
+			const animationResizer = new AnimationResizer( editor );
+			document.body.appendChild( animationResizer.dom );
+
+			editor.signals.animationPanelChanged.add( function ( height ) {
+
+				const visible = height !== false;
+
+				viewport.dom.classList.toggle( 'with-animation', visible );
+				toolbar.dom.classList.toggle( 'with-animation', visible );
+
+				if ( visible ) {
+
+					viewport.dom.style.bottom = height + 'px';
+					toolbar.dom.style.bottom = ( height + 20 ) + 'px';
+
+				} else {
+
+					viewport.dom.style.bottom = '';
+					toolbar.dom.style.bottom = '';
 
 				}
 
-				clearTimeout(timeout);
+				editor.signals.windowResize.dispatch();
 
-				timeout = setTimeout(function () {
+			} );
 
-					editor.signals.savingStarted.dispatch();
+			//
 
-					timeout = setTimeout(function () {
+			editor.storage.init( function () {
 
-						editor.storage.set(editor.toJSON());
+				editor.storage.get( async function ( state ) {
 
-						editor.signals.savingFinished.dispatch();
+					if ( isLoadingFromHash ) return;
 
-					}, 100);
+					// MRPP: Skip restoring cached scene from IndexedDB.
+					// MRPP loads scene data from the API via MetaLoader,
+					// restoring stale IndexedDB data causes duplicate objects.
+					// Clear the storage to prevent stale data accumulation.
+					editor.storage.clear();
 
-				}, 1000);
+				} );
+
+				//
+
+				let timeout;
+
+				function saveState() {
+
+					if ( editor.config.getKey( 'autosave' ) === false ) {
+
+						return;
+
+					}
+
+					clearTimeout( timeout );
+
+					timeout = setTimeout( function () {
+
+						editor.signals.savingStarted.dispatch();
+
+						timeout = setTimeout( function () {
+
+							editor.storage.set( editor.toJSON() );
+
+							editor.signals.savingFinished.dispatch();
+
+						}, 100 );
+
+					}, 1000 );
+
+				}
+
+				const signals = editor.signals;
+
+				signals.geometryChanged.add( saveState );
+				signals.objectAdded.add( saveState );
+				signals.objectChanged.add( saveState );
+				signals.objectRemoved.add( saveState );
+				signals.materialChanged.add( saveState );
+				signals.sceneBackgroundChanged.add( saveState );
+				signals.sceneEnvironmentChanged.add( saveState );
+				signals.sceneFogChanged.add( saveState );
+				signals.sceneGraphChanged.add( saveState );
+				signals.scriptChanged.add( saveState );
+				signals.historyChanged.add( saveState );
+
+			} );
+
+			//
+
+			document.addEventListener( 'dragover', function ( event ) {
+
+				event.preventDefault();
+				event.dataTransfer.dropEffect = 'copy';
+
+			} );
+
+			document.addEventListener( 'drop', function ( event ) {
+
+				event.preventDefault();
+
+				if ( event.dataTransfer.types[ 0 ] === 'text/plain' ) return; // Outliner drop
+
+				if ( event.dataTransfer.items ) {
+
+					// DataTransferItemList supports folders
+
+					editor.loader.loadItemList( event.dataTransfer.items );
+
+				} else {
+
+					editor.loader.loadFiles( event.dataTransfer.files );
+
+				}
+
+			} );
+
+			function onWindowResize() {
+
+				editor.signals.windowResize.dispatch();
 
 			}
 
-			const signals = editor.signals;
+			window.addEventListener( 'resize', onWindowResize );
 
-			signals.geometryChanged.add(saveState);
-			signals.objectAdded.add(saveState);
-			signals.objectChanged.add(saveState);
-			signals.objectRemoved.add(saveState);
-			signals.materialChanged.add(saveState);
-			signals.sceneBackgroundChanged.add(saveState);
-			signals.sceneEnvironmentChanged.add(saveState);
-			signals.sceneFogChanged.add(saveState);
-			signals.sceneGraphChanged.add(saveState);
-			signals.scriptChanged.add(saveState);
-			signals.historyChanged.add(saveState);
+			onWindowResize();
 
-		});
+			//
 
-		//
+			let isLoadingFromHash = false;
+			const hash = window.location.hash;
 
-		document.addEventListener('dragover', function (event) {
+			if ( hash.slice( 1, 6 ) === 'file=' ) {
 
-			event.preventDefault();
-			event.dataTransfer.dropEffect = 'copy';
+				const file = hash.slice( 6 );
 
-		});
+				if ( confirm( editor.strings.getKey( 'prompt/file/open' ) ) ) {
 
-		document.addEventListener('drop', function (event) {
+					const loader = new THREE.FileLoader();
+					loader.crossOrigin = '';
+					loader.load( file, function ( text ) {
 
-			event.preventDefault();
-			if (event.dataTransfer.types[0] === 'text/plain') return; // Outliner drop
-			if (event.dataTransfer.items) {
-				editor.loader.loadItemList(event.dataTransfer.items);
-			} else {
-				editor.loader.loadFiles(event.dataTransfer.files);
-			}
+						editor.clear();
+						editor.fromJSON( JSON.parse( text ) );
 
-		});
+					} );
 
-		function onWindowResize() {
+					isLoadingFromHash = true;
 
-			editor.signals.windowResize.dispatch();
-
-		}
-
-		window.addEventListener('resize', onWindowResize);
-
-		onWindowResize();
-
-		let isLoadingFromHash = false;
-		const hash = window.location.hash;
-
-		if (hash.slice(1, 6) === 'file=') {
-
-			const file = hash.slice(6);
-
-			if (confirm('Any unsaved data will be lost. Are you sure?')) {
-
-				const loader = new THREE.FileLoader();
-				loader.crossOrigin = '';
-				await loader.load(file, function (text) {
-
-					editor.clear();
-					editor.fromJSON(JSON.parse(text));
-
-				});
-
-				isLoadingFromHash = true;
+				}
 
 			}
 
-		}
+			// @deprecated, r183
 
-		// ServiceWorker
+			if ( 'serviceWorker' in navigator ) {
 
-		if ('serviceWorker' in navigator) {
+				try {
 
-			try {
+					navigator.serviceWorker.register( 'sw.js' );
 
-				navigator.serviceWorker.register('sw.js');
+				} catch ( error ) {
 
-			} catch (error) { }
+				}
 
-		}
-	</script>
-</body>
+			}
 
+		</script>
+	</body>
 </html>

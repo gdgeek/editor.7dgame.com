@@ -1,6 +1,6 @@
 class UIElement {
 
-	constructor(dom) {
+	constructor( dom ) {
 
 		this.dom = dom;
 
@@ -8,17 +8,17 @@ class UIElement {
 
 	add() {
 
-		for (let i = 0; i < arguments.length; i++) {
+		for ( let i = 0; i < arguments.length; i ++ ) {
 
-			const argument = arguments[i];
+			const argument = arguments[ i ];
 
-			if (argument instanceof UIElement) {
+			if ( argument instanceof UIElement ) {
 
-				this.dom.appendChild(argument.dom);
+				this.dom.appendChild( argument.dom );
 
 			} else {
 
-				console.error('UIElement:', argument, 'is not an instance of UIElement.');
+				console.error( 'UIElement:', argument, 'is not an instance of UIElement.' );
 
 			}
 
@@ -30,17 +30,17 @@ class UIElement {
 
 	remove() {
 
-		for (let i = 0; i < arguments.length; i++) {
+		for ( let i = 0; i < arguments.length; i ++ ) {
 
-			const argument = arguments[i];
+			const argument = arguments[ i ];
 
-			if (argument instanceof UIElement) {
+			if ( argument instanceof UIElement ) {
 
-				this.dom.removeChild(argument.dom);
+				this.dom.removeChild( argument.dom );
 
 			} else {
 
-				console.error('UIElement:', argument, 'is not an instance of UIElement.');
+				console.error( 'UIElement:', argument, 'is not an instance of UIElement.' );
 
 			}
 
@@ -52,15 +52,15 @@ class UIElement {
 
 	clear() {
 
-		while (this.dom.children.length) {
+		while ( this.dom.children.length ) {
 
-			this.dom.removeChild(this.dom.lastChild);
+			this.dom.removeChild( this.dom.lastChild );
 
 		}
 
 	}
 
-	setId(id) {
+	setId( id ) {
 
 		this.dom.id = id;
 
@@ -74,7 +74,7 @@ class UIElement {
 
 	}
 
-	setClass(name) {
+	setClass( name ) {
 
 		this.dom.className = name;
 
@@ -82,27 +82,35 @@ class UIElement {
 
 	}
 
-	addClass(name) {
+	addClass( name ) {
 
-		this.dom.classList.add(name);
-
-		return this;
-
-	}
-
-	removeClass(name) {
-
-		this.dom.classList.remove(name);
+		this.dom.classList.add( name );
 
 		return this;
 
 	}
 
-	setStyle(style, array) {
+	removeClass( name ) {
 
-		for (let i = 0; i < array.length; i++) {
+		this.dom.classList.remove( name );
 
-			this.dom.style[style] = array[i];
+		return this;
+
+	}
+
+	toggleClass( name, toggle ) {
+
+		this.dom.classList.toggle( name, toggle );
+
+		return this;
+
+	}
+
+	setStyle( style, array ) {
+
+		for ( let i = 0; i < array.length; i ++ ) {
+
+			this.dom.style[ style ] = array[ i ];
 
 		}
 
@@ -110,7 +118,21 @@ class UIElement {
 
 	}
 
-	setDisabled(value) {
+	setHidden( isHidden ) {
+
+		this.dom.hidden = isHidden;
+
+		return this;
+
+	}
+
+	isHidden() {
+
+		return this.dom.hidden;
+
+	}
+
+	setDisabled( value ) {
 
 		this.dom.disabled = value;
 
@@ -118,7 +140,7 @@ class UIElement {
 
 	}
 
-	setTextContent(value) {
+	setTextContent( value ) {
 
 		this.dom.textContent = value;
 
@@ -126,15 +148,15 @@ class UIElement {
 
 	}
 
-	setInnerHTML(value) {
+	setInnerHTML( value ) {
 
 		this.dom.innerHTML = value;
 
 	}
 
-	getIndexOfChild(element) {
+	getIndexOfChild( element ) {
 
-		return Array.prototype.indexOf.call(this.dom.children, element.dom);
+		return Array.prototype.indexOf.call( this.dom.children, element.dom );
 
 	}
 
@@ -142,50 +164,50 @@ class UIElement {
 
 // properties
 
-const properties = ['position', 'left', 'top', 'right', 'bottom', 'width', 'height',
+const properties = [ 'position', 'left', 'top', 'right', 'bottom', 'width', 'height',
 	'display', 'verticalAlign', 'overflow', 'color', 'background', 'backgroundColor', 'opacity',
 	'border', 'borderLeft', 'borderTop', 'borderRight', 'borderBottom', 'borderColor',
 	'margin', 'marginLeft', 'marginTop', 'marginRight', 'marginBottom',
 	'padding', 'paddingLeft', 'paddingTop', 'paddingRight', 'paddingBottom',
-	'fontSize', 'fontWeight', 'textAlign', 'textDecoration', 'textTransform', 'cursor', 'zIndex'];
+	'fontSize', 'fontWeight', 'textAlign', 'textDecoration', 'textTransform', 'cursor', 'zIndex' ];
 
-properties.forEach(function (property) {
+properties.forEach( function ( property ) {
 
-	const method = 'set' + property.substr(0, 1).toUpperCase() + property.substr(1, property.length);
+	const method = 'set' + property.substring( 0, 1 ).toUpperCase() + property.substring( 1 );
 
-	UIElement.prototype[method] = function () {
+	UIElement.prototype[ method ] = function () {
 
-		this.setStyle(property, arguments);
+		this.setStyle( property, arguments );
 
 		return this;
 
 	};
 
-});
+} );
 
 // events
 
-const events = ['KeyUp', 'KeyDown', 'MouseOver', 'MouseOut', 'Click', 'DblClick', 'Change', 'Input'];
+const events = [ 'KeyUp', 'KeyDown', 'MouseOver', 'MouseOut', 'Click', 'DblClick', 'Change', 'Input' ];
 
-events.forEach(function (event) {
+events.forEach( function ( event ) {
 
 	const method = 'on' + event;
 
-	UIElement.prototype[method] = function (callback) {
+	UIElement.prototype[ method ] = function ( callback ) {
 
-		this.dom.addEventListener(event.toLowerCase(), callback.bind(this));
+		this.dom.addEventListener( event.toLowerCase(), callback.bind( this ) );
 
 		return this;
 
 	};
 
-});
+} );
 
 class UISpan extends UIElement {
 
 	constructor() {
 
-		super(document.createElement('span'));
+		super( document.createElement( 'span' ) );
 
 	}
 
@@ -195,7 +217,7 @@ class UIDiv extends UIElement {
 
 	constructor() {
 
-		super(document.createElement('div'));
+		super( document.createElement( 'div' ) );
 
 	}
 
@@ -227,7 +249,7 @@ class UIPanel extends UIDiv {
 
 class UIText extends UISpan {
 
-	constructor(text) {
+	constructor( text ) {
 
 		super();
 
@@ -235,7 +257,7 @@ class UIText extends UISpan {
 		this.dom.style.cursor = 'default';
 		this.dom.style.display = 'inline-block';
 
-		this.setValue(text);
+		this.setValue( text );
 
 	}
 
@@ -245,9 +267,9 @@ class UIText extends UISpan {
 
 	}
 
-	setValue(value) {
+	setValue( value ) {
 
-		if (value !== undefined) {
+		if ( value !== undefined ) {
 
 			this.dom.textContent = value;
 
@@ -262,23 +284,23 @@ class UIText extends UISpan {
 
 class UIInput extends UIElement {
 
-	constructor(text) {
+	constructor( text ) {
 
-		super(document.createElement('input'));
+		super( document.createElement( 'input' ) );
 
 		this.dom.className = 'Input';
 		this.dom.style.padding = '2px';
 		this.dom.style.border = '1px solid transparent';
 
-		this.dom.setAttribute('autocomplete', 'off');
+		this.dom.setAttribute( 'autocomplete', 'off' );
 
-		this.dom.addEventListener('keydown', function (event) {
+		this.dom.addEventListener( 'keydown', function ( event ) {
 
 			event.stopPropagation();
 
-		});
+		} );
 
-		this.setValue(text);
+		this.setValue( text );
 
 	}
 
@@ -288,7 +310,7 @@ class UIInput extends UIElement {
 
 	}
 
-	setValue(value) {
+	setValue( value ) {
 
 		this.dom.value = value;
 
@@ -302,31 +324,31 @@ class UITextArea extends UIElement {
 
 	constructor() {
 
-		super(document.createElement('textarea'));
+		super( document.createElement( 'textarea' ) );
 
 		this.dom.className = 'TextArea';
 		this.dom.style.padding = '2px';
 		this.dom.spellcheck = false;
 
-		this.dom.setAttribute('autocomplete', 'off');
+		this.dom.setAttribute( 'autocomplete', 'off' );
 
-		this.dom.addEventListener('keydown', function (event) {
+		this.dom.addEventListener( 'keydown', function ( event ) {
 
 			event.stopPropagation();
 
-			if (event.keyCode === 9) {
+			if ( event.code === 'Tab' ) {
 
 				event.preventDefault();
 
 				const cursor = this.selectionStart;
 
-				this.value = this.value.substring(0, cursor) + '\t' + this.value.substring(cursor);
+				this.value = this.value.substring( 0, cursor ) + '\t' + this.value.substring( cursor );
 				this.selectionStart = cursor + 1;
 				this.selectionEnd = this.selectionStart;
 
 			}
 
-		});
+		} );
 
 	}
 
@@ -336,7 +358,7 @@ class UITextArea extends UIElement {
 
 	}
 
-	setValue(value) {
+	setValue( value ) {
 
 		this.dom.value = value;
 
@@ -350,16 +372,22 @@ class UISelect extends UIElement {
 
 	constructor() {
 
-		super(document.createElement('select'));
+		super( document.createElement( 'select' ) );
 
 		this.dom.className = 'Select';
 		this.dom.style.padding = '2px';
 
-		this.dom.setAttribute('autocomplete', 'off');
+		this.dom.setAttribute( 'autocomplete', 'off' );
+
+		this.dom.addEventListener( 'pointerdown', function ( event ) {
+
+			event.stopPropagation();
+
+		} );
 
 	}
 
-	setMultiple(boolean) {
+	setMultiple( boolean ) {
 
 		this.dom.multiple = boolean;
 
@@ -367,22 +395,22 @@ class UISelect extends UIElement {
 
 	}
 
-	setOptions(options) {
+	setOptions( options ) {
 
 		const selected = this.dom.value;
 
-		while (this.dom.children.length > 0) {
+		while ( this.dom.children.length > 0 ) {
 
-			this.dom.removeChild(this.dom.firstChild);
+			this.dom.removeChild( this.dom.firstChild );
 
 		}
 
-		for (const key in options) {
+		for ( const key in options ) {
 
-			const option = document.createElement('option');
+			const option = document.createElement( 'option' );
 			option.value = key;
-			option.innerHTML = options[key];
-			this.dom.appendChild(option);
+			option.innerHTML = options[ key ];
+			this.dom.appendChild( option );
 
 		}
 
@@ -398,21 +426,11 @@ class UISelect extends UIElement {
 
 	}
 
-	getSelectedHtml() {
+	setValue( value ) {
 
-		if (this.dom.selectedIndex !== -1) {
-			return this.dom.options[this.dom.selectedIndex].innerHTML;
-		}
+		value = String( value );
 
-		return '';
-
-	}
-
-	setValue(value) {
-
-		value = String(value);
-
-		if (this.dom.value !== value) {
+		if ( this.dom.value !== value ) {
 
 			this.dom.value = value;
 
@@ -426,14 +444,22 @@ class UISelect extends UIElement {
 
 class UICheckbox extends UIElement {
 
-	constructor(boolean) {
+	constructor( boolean ) {
 
-		super(document.createElement('input'));
+		super( document.createElement( 'input' ) );
 
-		this.dom.className = 'Checkbox';
+		this.dom.className = 'Checkbox Input';
 		this.dom.type = 'checkbox';
 
-		this.setValue(boolean);
+		this.dom.addEventListener( 'pointerdown', function ( event ) {
+
+			// Workaround for TransformControls blocking events in Viewport.Controls checkboxes
+
+			event.stopPropagation();
+
+		} );
+
+		this.setValue( boolean );
 
 	}
 
@@ -443,9 +469,9 @@ class UICheckbox extends UIElement {
 
 	}
 
-	setValue(value) {
+	setValue( value ) {
 
-		if (value !== undefined) {
+		if ( value !== undefined ) {
 
 			this.dom.checked = value;
 
@@ -462,23 +488,23 @@ class UIColor extends UIElement {
 
 	constructor() {
 
-		super(document.createElement('input'));
+		super( document.createElement( 'input' ) );
 
-		this.dom.className = 'Color';
+		this.dom.className = 'Color Input';
 		this.dom.style.width = '32px';
 		this.dom.style.height = '16px';
 		this.dom.style.border = '0px';
 		this.dom.style.padding = '2px';
 		this.dom.style.backgroundColor = 'transparent';
 
-		this.dom.setAttribute('autocomplete', 'off');
+		this.dom.setAttribute( 'autocomplete', 'off' );
 
 		try {
 
 			this.dom.type = 'color';
 			this.dom.value = '#ffffff';
 
-		} catch (exception) { }
+		} catch ( exception ) {}
 
 	}
 
@@ -490,11 +516,11 @@ class UIColor extends UIElement {
 
 	getHexValue() {
 
-		return parseInt(this.dom.value.substr(1), 16);
+		return parseInt( this.dom.value.substring( 1 ), 16 );
 
 	}
 
-	setValue(value) {
+	setValue( value ) {
 
 		this.dom.value = value;
 
@@ -502,9 +528,9 @@ class UIColor extends UIElement {
 
 	}
 
-	setHexValue(hex) {
+	setHexValue( hex ) {
 
-		this.dom.value = '#' + ('000000' + hex.toString(16)).slice(- 6);
+		this.dom.value = '#' + ( '000000' + hex.toString( 16 ) ).slice( - 6 );
 
 		return this;
 
@@ -514,15 +540,15 @@ class UIColor extends UIElement {
 
 class UINumber extends UIElement {
 
-	constructor(number) {
+	constructor( number ) {
 
-		super(document.createElement('input'));
+		super( document.createElement( 'input' ) );
 
 		this.dom.style.cursor = 'ns-resize';
-		this.dom.className = 'Number';
+		this.dom.className = 'Number Input';
 		this.dom.value = '0.00';
 
-		this.dom.setAttribute('autocomplete', 'off');
+		this.dom.setAttribute( 'autocomplete', 'off' );
 
 		this.value = 0;
 
@@ -534,12 +560,11 @@ class UINumber extends UIElement {
 		this.unit = '';
 		this.nudge = 0.01;
 
-		this.setValue(number);
+		this.setValue( number );
 
 		const scope = this;
 
-		const changeEvent = document.createEvent('HTMLEvents');
-		changeEvent.initEvent('change', true, true);
+		const changeEvent = new Event( 'change', { bubbles: true, cancelable: true } );
 
 		let distance = 0;
 		let onMouseDownValue = 0;
@@ -547,7 +572,9 @@ class UINumber extends UIElement {
 		const pointer = { x: 0, y: 0 };
 		const prevPointer = { x: 0, y: 0 };
 
-		function onMouseDown(event) {
+		function onPointerDown( event ) {
+
+			if ( document.activeElement === scope.dom ) return;
 
 			event.preventDefault();
 
@@ -558,27 +585,29 @@ class UINumber extends UIElement {
 			prevPointer.x = event.clientX;
 			prevPointer.y = event.clientY;
 
-			document.addEventListener('mousemove', onMouseMove);
-			document.addEventListener('mouseup', onMouseUp);
+			scope.dom.setPointerCapture( event.pointerId );
+
+			scope.dom.addEventListener( 'pointermove', onPointerMove );
+			scope.dom.addEventListener( 'pointerup', onPointerUp );
 
 		}
 
-		function onMouseMove(event) {
+		function onPointerMove( event ) {
 
 			const currentValue = scope.value;
 
 			pointer.x = event.clientX;
 			pointer.y = event.clientY;
 
-			distance += (pointer.x - prevPointer.x) - (pointer.y - prevPointer.y);
+			distance += ( pointer.x - prevPointer.x ) - ( pointer.y - prevPointer.y );
 
-			let value = onMouseDownValue + (distance / (event.shiftKey ? 5 : 50)) * scope.step;
-			value = Math.min(scope.max, Math.max(scope.min, value));
+			let value = onMouseDownValue + ( distance / ( event.shiftKey ? 5 : 50 ) ) * scope.step;
+			value = Math.min( scope.max, Math.max( scope.min, value ) );
 
-			if (currentValue !== value) {
+			if ( currentValue !== value ) {
 
-				scope.setValue(value);
-				scope.dom.dispatchEvent(changeEvent);
+				scope.setValue( value );
+				scope.dom.dispatchEvent( changeEvent );
 
 			}
 
@@ -587,12 +616,14 @@ class UINumber extends UIElement {
 
 		}
 
-		function onMouseUp() {
+		function onPointerUp( event ) {
 
-			document.removeEventListener('mousemove', onMouseMove);
-			document.removeEventListener('mouseup', onMouseUp);
+			scope.dom.releasePointerCapture( event.pointerId );
 
-			if (Math.abs(distance) < 2) {
+			scope.dom.removeEventListener( 'pointermove', onPointerMove );
+			scope.dom.removeEventListener( 'pointerup', onPointerUp );
+
+			if ( Math.abs( distance ) < 2 ) {
 
 				scope.dom.focus();
 				scope.dom.select();
@@ -601,62 +632,9 @@ class UINumber extends UIElement {
 
 		}
 
-		function onTouchStart(event) {
-
-			if (event.touches.length === 1) {
-
-				distance = 0;
-
-				onMouseDownValue = scope.value;
-
-				prevPointer.x = event.touches[0].pageX;
-				prevPointer.y = event.touches[0].pageY;
-
-				document.addEventListener('touchmove', onTouchMove);
-				document.addEventListener('touchend', onTouchEnd);
-
-			}
-
-		}
-
-		function onTouchMove(event) {
-
-			const currentValue = scope.value;
-
-			pointer.x = event.touches[0].pageX;
-			pointer.y = event.touches[0].pageY;
-
-			distance += (pointer.x - prevPointer.x) - (pointer.y - prevPointer.y);
-
-			let value = onMouseDownValue + (distance / (event.shiftKey ? 5 : 50)) * scope.step;
-			value = Math.min(scope.max, Math.max(scope.min, value));
-
-			if (currentValue !== value) {
-
-				scope.setValue(value);
-				scope.dom.dispatchEvent(changeEvent);
-
-			}
-
-			prevPointer.x = event.touches[0].pageX;
-			prevPointer.y = event.touches[0].pageY;
-
-		}
-
-		function onTouchEnd(event) {
-
-			if (event.touches.length === 0) {
-
-				document.removeEventListener('touchmove', onTouchMove);
-				document.removeEventListener('touchend', onTouchEnd);
-
-			}
-
-		}
-
 		function onChange() {
 
-			scope.setValue(scope.dom.value);
+			scope.setValue( scope.dom.value );
 
 		}
 
@@ -674,26 +652,26 @@ class UINumber extends UIElement {
 
 		}
 
-		function onKeyDown(event) {
+		function onKeyDown( event ) {
 
 			event.stopPropagation();
 
-			switch (event.keyCode) {
+			switch ( event.code ) {
 
-				case 13: // enter
+				case 'Enter':
 					scope.dom.blur();
 					break;
 
-				case 38: // up
+				case 'ArrowUp':
 					event.preventDefault();
-					scope.setValue(scope.getValue() + scope.nudge);
-					scope.dom.dispatchEvent(changeEvent);
+					scope.setValue( scope.getValue() + scope.nudge );
+					scope.dom.dispatchEvent( changeEvent );
 					break;
 
-				case 40: // down
+				case 'ArrowDown':
 					event.preventDefault();
-					scope.setValue(scope.getValue() - scope.nudge);
-					scope.dom.dispatchEvent(changeEvent);
+					scope.setValue( scope.getValue() - scope.nudge );
+					scope.dom.dispatchEvent( changeEvent );
 					break;
 
 			}
@@ -702,12 +680,11 @@ class UINumber extends UIElement {
 
 		onBlur();
 
-		this.dom.addEventListener('keydown', onKeyDown);
-		this.dom.addEventListener('mousedown', onMouseDown);
-		this.dom.addEventListener('touchstart', onTouchStart);
-		this.dom.addEventListener('change', onChange);
-		this.dom.addEventListener('focus', onFocus);
-		this.dom.addEventListener('blur', onBlur);
+		this.dom.addEventListener( 'keydown', onKeyDown );
+		this.dom.addEventListener( 'pointerdown', onPointerDown );
+		this.dom.addEventListener( 'change', onChange );
+		this.dom.addEventListener( 'focus', onFocus );
+		this.dom.addEventListener( 'blur', onBlur );
 
 	}
 
@@ -717,24 +694,19 @@ class UINumber extends UIElement {
 
 	}
 
-	setValue(value) {
+	setValue( value ) {
 
-		if (value !== undefined && value !== null && !isNaN(value)) {
+		if ( value !== undefined ) {
 
-			value = parseFloat(value);
+			value = parseFloat( value );
 
-			if (value < this.min) value = this.min;
-			if (value > this.max) value = this.max;
+			if ( value < this.min ) value = this.min;
+			if ( value > this.max ) value = this.max;
 
 			this.value = value;
-			this.dom.value = value.toFixed(this.precision);
+			this.dom.value = value.toFixed( this.precision );
 
-			if (this.unit !== '') this.dom.value += ' ' + this.unit;
-
-		} else {
-
-			this.value = null;
-			this.dom.value = '';
+			if ( this.unit !== '' ) this.dom.value += ' ' + this.unit;
 
 		}
 
@@ -742,7 +714,7 @@ class UINumber extends UIElement {
 
 	}
 
-	setPrecision(precision) {
+	setPrecision( precision ) {
 
 		this.precision = precision;
 
@@ -750,7 +722,7 @@ class UINumber extends UIElement {
 
 	}
 
-	setStep(step) {
+	setStep( step ) {
 
 		this.step = step;
 
@@ -758,7 +730,7 @@ class UINumber extends UIElement {
 
 	}
 
-	setNudge(nudge) {
+	setNudge( nudge ) {
 
 		this.nudge = nudge;
 
@@ -766,7 +738,7 @@ class UINumber extends UIElement {
 
 	}
 
-	setRange(min, max) {
+	setRange( min, max ) {
 
 		this.min = min;
 		this.max = max;
@@ -775,9 +747,11 @@ class UINumber extends UIElement {
 
 	}
 
-	setUnit(unit) {
+	setUnit( unit ) {
 
 		this.unit = unit;
+
+		this.setValue( this.value );
 
 		return this;
 
@@ -787,15 +761,15 @@ class UINumber extends UIElement {
 
 class UIInteger extends UIElement {
 
-	constructor(number) {
+	constructor( number ) {
 
-		super(document.createElement('input'));
+		super( document.createElement( 'input' ) );
 
 		this.dom.style.cursor = 'ns-resize';
-		this.dom.className = 'Number';
+		this.dom.className = 'Number Input';
 		this.dom.value = '0';
 
-		this.dom.setAttribute('autocomplete', 'off');
+		this.dom.setAttribute( 'autocomplete', 'off' );
 
 		this.value = 0;
 
@@ -805,12 +779,11 @@ class UIInteger extends UIElement {
 		this.step = 1;
 		this.nudge = 1;
 
-		this.setValue(number);
+		this.setValue( number );
 
 		const scope = this;
 
-		const changeEvent = document.createEvent('HTMLEvents');
-		changeEvent.initEvent('change', true, true);
+		const changeEvent = new Event( 'change', { bubbles: true, cancelable: true } );
 
 		let distance = 0;
 		let onMouseDownValue = 0;
@@ -818,7 +791,9 @@ class UIInteger extends UIElement {
 		const pointer = { x: 0, y: 0 };
 		const prevPointer = { x: 0, y: 0 };
 
-		function onMouseDown(event) {
+		function onPointerDown( event ) {
+
+			if ( document.activeElement === scope.dom ) return;
 
 			event.preventDefault();
 
@@ -829,27 +804,29 @@ class UIInteger extends UIElement {
 			prevPointer.x = event.clientX;
 			prevPointer.y = event.clientY;
 
-			document.addEventListener('mousemove', onMouseMove);
-			document.addEventListener('mouseup', onMouseUp);
+			scope.dom.setPointerCapture( event.pointerId );
+
+			scope.dom.addEventListener( 'pointermove', onPointerMove );
+			scope.dom.addEventListener( 'pointerup', onPointerUp );
 
 		}
 
-		function onMouseMove(event) {
+		function onPointerMove( event ) {
 
 			const currentValue = scope.value;
 
 			pointer.x = event.clientX;
 			pointer.y = event.clientY;
 
-			distance += (pointer.x - prevPointer.x) - (pointer.y - prevPointer.y);
+			distance += ( pointer.x - prevPointer.x ) - ( pointer.y - prevPointer.y );
 
-			let value = onMouseDownValue + (distance / (event.shiftKey ? 5 : 50)) * scope.step;
-			value = Math.min(scope.max, Math.max(scope.min, value)) | 0;
+			let value = onMouseDownValue + ( distance / ( event.shiftKey ? 5 : 50 ) ) * scope.step;
+			value = Math.min( scope.max, Math.max( scope.min, value ) ) | 0;
 
-			if (currentValue !== value) {
+			if ( currentValue !== value ) {
 
-				scope.setValue(value);
-				scope.dom.dispatchEvent(changeEvent);
+				scope.setValue( value );
+				scope.dom.dispatchEvent( changeEvent );
 
 			}
 
@@ -858,12 +835,14 @@ class UIInteger extends UIElement {
 
 		}
 
-		function onMouseUp() {
+		function onPointerUp( event ) {
 
-			document.removeEventListener('mousemove', onMouseMove);
-			document.removeEventListener('mouseup', onMouseUp);
+			scope.dom.releasePointerCapture( event.pointerId );
 
-			if (Math.abs(distance) < 2) {
+			scope.dom.removeEventListener( 'pointermove', onPointerMove );
+			scope.dom.removeEventListener( 'pointerup', onPointerUp );
+
+			if ( Math.abs( distance ) < 2 ) {
 
 				scope.dom.focus();
 				scope.dom.select();
@@ -874,7 +853,7 @@ class UIInteger extends UIElement {
 
 		function onChange() {
 
-			scope.setValue(scope.dom.value);
+			scope.setValue( scope.dom.value );
 
 		}
 
@@ -892,26 +871,26 @@ class UIInteger extends UIElement {
 
 		}
 
-		function onKeyDown(event) {
+		function onKeyDown( event ) {
 
 			event.stopPropagation();
 
-			switch (event.keyCode) {
+			switch ( event.code ) {
 
-				case 13: // enter
+				case 'Enter':
 					scope.dom.blur();
 					break;
 
-				case 38: // up
+				case 'ArrowUp':
 					event.preventDefault();
-					scope.setValue(scope.getValue() + scope.nudge);
-					scope.dom.dispatchEvent(changeEvent);
+					scope.setValue( scope.getValue() + scope.nudge );
+					scope.dom.dispatchEvent( changeEvent );
 					break;
 
-				case 40: // down
+				case 'ArrowDown':
 					event.preventDefault();
-					scope.setValue(scope.getValue() - scope.nudge);
-					scope.dom.dispatchEvent(changeEvent);
+					scope.setValue( scope.getValue() - scope.nudge );
+					scope.dom.dispatchEvent( changeEvent );
 					break;
 
 			}
@@ -920,11 +899,11 @@ class UIInteger extends UIElement {
 
 		onBlur();
 
-		this.dom.addEventListener('keydown', onKeyDown);
-		this.dom.addEventListener('mousedown', onMouseDown);
-		this.dom.addEventListener('change', onChange);
-		this.dom.addEventListener('focus', onFocus);
-		this.dom.addEventListener('blur', onBlur);
+		this.dom.addEventListener( 'keydown', onKeyDown );
+		this.dom.addEventListener( 'pointerdown', onPointerDown );
+		this.dom.addEventListener( 'change', onChange );
+		this.dom.addEventListener( 'focus', onFocus );
+		this.dom.addEventListener( 'blur', onBlur );
 
 	}
 
@@ -934,11 +913,11 @@ class UIInteger extends UIElement {
 
 	}
 
-	setValue(value) {
+	setValue( value ) {
 
-		if (value !== undefined) {
+		if ( value !== undefined ) {
 
-			value = parseInt(value);
+			value = parseInt( value );
 
 			this.value = value;
 			this.dom.value = value;
@@ -949,15 +928,15 @@ class UIInteger extends UIElement {
 
 	}
 
-	setStep(step) {
+	setStep( step ) {
 
-		this.step = parseInt(step);
+		this.step = parseInt( step );
 
 		return this;
 
 	}
 
-	setNudge(nudge) {
+	setNudge( nudge ) {
 
 		this.nudge = nudge;
 
@@ -965,7 +944,7 @@ class UIInteger extends UIElement {
 
 	}
 
-	setRange(min, max) {
+	setRange( min, max ) {
 
 		this.min = min;
 		this.max = max;
@@ -980,7 +959,7 @@ class UIBreak extends UIElement {
 
 	constructor() {
 
-		super(document.createElement('br'));
+		super( document.createElement( 'br' ) );
 
 		this.dom.className = 'Break';
 
@@ -992,7 +971,7 @@ class UIHorizontalRule extends UIElement {
 
 	constructor() {
 
-		super(document.createElement('hr'));
+		super( document.createElement( 'hr' ) );
 
 		this.dom.className = 'HorizontalRule';
 
@@ -1002,9 +981,9 @@ class UIHorizontalRule extends UIElement {
 
 class UIButton extends UIElement {
 
-	constructor(value) {
+	constructor( value ) {
 
-		super(document.createElement('button'));
+		super( document.createElement( 'button' ) );
 
 		this.dom.className = 'Button';
 		this.dom.textContent = value;
@@ -1015,15 +994,15 @@ class UIButton extends UIElement {
 
 class UIProgress extends UIElement {
 
-	constructor(value) {
+	constructor( value ) {
 
-		super(document.createElement('progress'));
+		super( document.createElement( 'progress' ) );
 
 		this.dom.value = value;
 
 	}
 
-	setValue(value) {
+	setValue( value ) {
 
 		this.dom.value = value;
 
@@ -1043,119 +1022,126 @@ class UITabbedPanel extends UIDiv {
 		this.panels = [];
 
 		this.tabsDiv = new UIDiv();
-		this.tabsDiv.setClass('Tabs');
+		this.tabsDiv.setClass( 'Tabs' );
 
 		this.panelsDiv = new UIDiv();
-		this.panelsDiv.setClass('Panels');
+		this.panelsDiv.setClass( 'Panels' );
 
-		this.add(this.tabsDiv);
-		this.add(this.panelsDiv);
+		this.add( this.tabsDiv );
+		this.add( this.panelsDiv );
 
 		this.selected = '';
 
 	}
 
-	select(id) {
+	select( id ) {
 
 		let tab;
 		let panel;
 		const scope = this;
 
 		// Deselect current selection
-		if (this.selected && this.selected.length) {
+		if ( this.selected && this.selected.length ) {
 
-			tab = this.tabs.find(function (item) {
-
-				return item.dom.id === scope.selected;
-
-			});
-			panel = this.panels.find(function (item) {
+			tab = this.tabs.find( function ( item ) {
 
 				return item.dom.id === scope.selected;
 
-			});
+			} );
+			panel = this.panels.find( function ( item ) {
 
-			if (tab) {
+				return item.dom.id === scope.selected;
 
-				tab.removeClass('selected');
+			} );
+
+			if ( tab ) {
+
+				tab.removeClass( 'selected' );
 
 			}
 
-			if (panel) {
+			if ( panel ) {
 
-				panel.setDisplay('none');
+				panel.setDisplay( 'none' );
 
 			}
 
 		}
 
-		tab = this.tabs.find(function (item) {
+		tab = this.tabs.find( function ( item ) {
 
 			return item.dom.id === id;
 
-		});
-		panel = this.panels.find(function (item) {
+		} );
+		panel = this.panels.find( function ( item ) {
 
 			return item.dom.id === id;
 
-		});
+		} );
 
-		if (tab) {
+		if ( tab ) {
 
-			tab.addClass('selected');
+			tab.addClass( 'selected' );
 
 		}
 
-		if (panel) {
+		if ( panel ) {
 
-			panel.setDisplay('');
+			panel.setDisplay( '' );
 
 		}
 
 		this.selected = id;
 
+		// Scrolls to tab
+		if ( tab ) {
+
+			const tabOffsetRight = tab.dom.offsetLeft + tab.dom.offsetWidth;
+			const containerWidth = this.tabsDiv.dom.getBoundingClientRect().width;
+
+			if ( tabOffsetRight > containerWidth ) {
+
+				this.tabsDiv.dom.scrollTo( { left: tabOffsetRight - containerWidth, behavior: 'smooth' } );
+
+			}
+
+			if ( tab.dom.offsetLeft < this.tabsDiv.dom.scrollLeft ) {
+
+				this.tabsDiv.dom.scrollTo( { left: 0, behavior: 'smooth' } );
+
+			}
+
+		}
+
 		return this;
 
 	}
 
-	addTab(id, label, items) {
+	addTab( id, label, items ) {
 
-		const tab = new UITab(label, this);
-		tab.setId(id);
-		this.tabs.push(tab);
-		this.tabsDiv.add(tab);
+		const tab = new UITab( label, this );
+		tab.setId( id );
+		this.tabs.push( tab );
+		this.tabsDiv.add( tab );
 
 		const panel = new UIDiv();
-		panel.setId(id);
-		panel.add(items);
-		panel.setDisplay('none');
-		this.panels.push(panel);
-		this.panelsDiv.add(panel);
+		panel.setId( id );
+		panel.add( items );
+		panel.setDisplay( 'none' );
+		this.panels.push( panel );
+		this.panelsDiv.add( panel );
 
-		this.select(id);
+		this.select( id );
 
-	}
-
-	clear() {
-		// 清除所有标签和面板
-		this.tabsDiv.clear();
-		this.panelsDiv.clear();
-
-		// 重置数组
-		this.tabs = [];
-		this.panels = [];
-
-		// 重置选择
-		this.selected = '';
 	}
 
 }
 
 class UITab extends UIText {
 
-	constructor(text, parent) {
+	constructor( text, parent ) {
 
-		super(text);
+		super( text );
 
 		this.dom.className = 'Tab';
 
@@ -1163,11 +1149,11 @@ class UITab extends UIText {
 
 		const scope = this;
 
-		this.dom.addEventListener('click', function () {
+		this.dom.addEventListener( 'click', function () {
 
-			scope.parent.select(scope.dom.id);
+			scope.parent.select( scope.dom.id );
 
-		});
+		} );
 
 	}
 
@@ -1189,9 +1175,9 @@ class UIListbox extends UIDiv {
 
 	}
 
-	setItems(items) {
+	setItems( items ) {
 
-		if (Array.isArray(items)) {
+		if ( Array.isArray( items ) ) {
 
 			this.items = items;
 
@@ -1201,26 +1187,26 @@ class UIListbox extends UIDiv {
 
 	}
 
-	render() {
+	render( ) {
 
-		while (this.listitems.length) {
+		while ( this.listitems.length ) {
 
-			const item = this.listitems[0];
+			const item = this.listitems[ 0 ];
 
 			item.dom.remove();
 
-			this.listitems.splice(0, 1);
+			this.listitems.splice( 0, 1 );
 
 		}
 
-		for (let i = 0; i < this.items.length; i++) {
+		for ( let i = 0; i < this.items.length; i ++ ) {
 
-			const item = this.items[i];
+			const item = this.items[ i ];
 
-			const listitem = new UIListbox.ListboxItem(this);
-			listitem.setId(item.id || `Listbox-${i}`);
-			listitem.setTextContent(item.name || item.type);
-			this.add(listitem);
+			const listitem = new ListboxItem( this );
+			listitem.setId( item.id || `Listbox-${i}` );
+			listitem.setTextContent( item.name || item.type );
+			this.add( listitem );
 
 		}
 
@@ -1228,19 +1214,19 @@ class UIListbox extends UIDiv {
 
 	add() {
 
-		const items = Array.from(arguments);
+		const items = Array.from( arguments );
 
-		this.listitems = this.listitems.concat(items);
+		this.listitems = this.listitems.concat( items );
 
-		UIElement.prototype.add.apply(this, items);
+		UIElement.prototype.add.apply( this, items );
 
 	}
 
-	selectIndex(index) {
+	selectIndex( index ) {
 
-		if (index >= 0 && index < this.items.length) {
+		if ( index >= 0 && index < this.items.length ) {
 
-			this.setValue(this.listitems[index].getId());
+			this.setValue( this.listitems[ index ].getId() );
 
 		}
 
@@ -1254,19 +1240,19 @@ class UIListbox extends UIDiv {
 
 	}
 
-	setValue(value) {
+	setValue( value ) {
 
-		for (let i = 0; i < this.listitems.length; i++) {
+		for ( let i = 0; i < this.listitems.length; i ++ ) {
 
-			const element = this.listitems[i];
+			const element = this.listitems[ i ];
 
-			if (element.getId() === value) {
+			if ( element.getId() === value ) {
 
-				element.addClass('active');
+				element.addClass( 'active' );
 
 			} else {
 
-				element.removeClass('active');
+				element.removeClass( 'active' );
 
 			}
 
@@ -1274,9 +1260,8 @@ class UIListbox extends UIDiv {
 
 		this.selectedValue = value;
 
-		const changeEvent = document.createEvent('HTMLEvents');
-		changeEvent.initEvent('change', true, true);
-		this.dom.dispatchEvent(changeEvent);
+		const changeEvent = new Event( 'change', { bubbles: true, cancelable: true } );
+		this.dom.dispatchEvent( changeEvent );
 
 	}
 
@@ -1284,7 +1269,7 @@ class UIListbox extends UIDiv {
 
 class ListboxItem extends UIDiv {
 
-	constructor(parent) {
+	constructor( parent ) {
 
 		super();
 
@@ -1296,15 +1281,15 @@ class ListboxItem extends UIDiv {
 
 		function onClick() {
 
-			if (scope.parent) {
+			if ( scope.parent ) {
 
-				scope.parent.setValue(scope.getId());
+				scope.parent.setValue( scope.getId( ) );
 
 			}
 
 		}
 
-		this.dom.addEventListener('click', onClick);
+		this.dom.addEventListener( 'click', onClick );
 
 	}
 

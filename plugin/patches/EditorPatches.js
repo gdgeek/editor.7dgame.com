@@ -2,21 +2,28 @@ import { DialogUtils } from '../utils/DialogUtils.js';
 import { Access } from '../access/Access.js';
 
 /**
- * Language mapping: URL parameter codes → editor config codes.
+ * Language mapping: URL parameter codes → r183 editor config codes.
+ * r183 Strings.js uses short codes: en, zh, ja, ko, fr, fa.
  * Extracted from Editor.js top-level MRPP modification.
  */
 const LANGUAGE_MAPPING = {
-	'zh-CN': 'zh-cn',
-	'en-US': 'en-us',
-	'ja-JP': 'ja-jp',
-	'zh-TW': 'zh-tw',
-	'th-TH': 'th-th'
+	'zh-CN': 'zh',
+	'en-US': 'en',
+	'ja-JP': 'ja',
+	'zh-TW': 'zh',  // r183 has no zh-tw, fall back to zh
+	'th-TH': 'en',  // r183 has no th-th, fall back to en
+	'ko-KR': 'ko',
+	'fr-FR': 'fr'
 };
 
 /**
  * Apply language mapping from URL parameters to editor config.
  * Reads `?language=` from the current URL and sets the corresponding
  * editor config key if a mapping exists.
+ *
+ * NOTE (r183): Config.js already initialises language from navigator.language
+ * using short codes (en/zh/ja/ko/fr/fa). We only need to override when a
+ * ?language= URL param is present.
  */
 function applyLanguageMapping( editor ) {
 
@@ -29,11 +36,17 @@ function applyLanguageMapping( editor ) {
 
 	}
 
+	// MRPP: disable autosave by default (r183 defaults to true)
+	editor.config.setKey( 'autosave', false );
+
 }
 
 /**
  * Register all MRPP custom signals on editor.signals.
  * Uses the global `signals.Signal` constructor (loaded via script tag).
+ *
+ * NOTE (r183): savingStarted and savingFinished are now built-in signals in r183.
+ * We skip them to avoid overwriting existing Signal instances (and their listeners).
  */
 function registerCustomSignals( editor ) {
 
@@ -43,9 +56,10 @@ function registerCustomSignals( editor ) {
 	editor.signals.upload = new Signal();
 	editor.signals.release = new Signal();
 
-	// Saving lifecycle
-	editor.signals.savingStarted = new Signal();
-	editor.signals.savingFinished = new Signal();
+	// Saving lifecycle — savingStarted and savingFinished already exist in r183 Editor,
+	// only add them if not already present to avoid overwriting built-in signals.
+	if ( ! editor.signals.savingStarted ) editor.signals.savingStarted = new Signal();
+	if ( ! editor.signals.savingFinished ) editor.signals.savingFinished = new Signal();
 
 	// Multi-object changes
 	editor.signals.objectsChanged = new Signal();
@@ -80,6 +94,9 @@ function registerCustomSignals( editor ) {
 
 	// Multi-select transform
 	editor.signals.multipleObjectsTransformChanged = new Signal();
+
+	// Screenshot background changed
+	editor.signals.screenshotBackgroundChanged = new Signal();
 
 }
 
@@ -255,12 +272,10 @@ function patchSetScene( editor ) {
  * Monkey-patch editor.addObject to:
  * - Save and restore original object.type (traverse may alter it)
  * - Initialize commands array
- * - Support parent/index parameters for insertion
  * - Sync resource data between window.resources and editor.resources
  *
- * NOTE: Because the original addObject always does `this.scene.add(object)`,
- * and we need to support parent/index, we must fully replace the method
- * while preserving the same traversal + signal logic.
+ * NOTE (r183): The original addObject already supports parent/index parameters,
+ * so we delegate all cases to originalAddObject and only add MRPP pre/post logic.
  */
 function patchAddObject( editor ) {
 
@@ -286,41 +301,8 @@ function patchAddObject( editor ) {
 
 		}
 
-		// If no parent specified, use original method (adds to scene)
-		if ( parent === undefined ) {
-
-			originalAddObject( object );
-
-		} else {
-
-			// We need to replicate the traversal logic from the original,
-			// then add to the specified parent instead of scene.
-			var scope = this;
-			object.traverse( function ( child ) {
-
-				if ( child.geometry !== undefined ) scope.addGeometry( child.geometry );
-				if ( child.material !== undefined ) scope.addMaterial( child.material );
-				scope.addCamera( child );
-				scope.addHelper( child );
-
-			} );
-
-			// Add to specified parent at optional index
-			if ( index !== undefined ) {
-
-				parent.children.splice( index, 0, object );
-				object.parent = parent;
-
-			} else {
-
-				parent.add( object );
-
-			}
-
-			this.signals.objectAdded.dispatch( object );
-			this.signals.sceneGraphChanged.dispatch();
-
-		}
+		// Delegate to original (r183 already handles parent/index natively)
+		originalAddObject( object, parent, index );
 
 		try {
 
@@ -415,23 +397,16 @@ function patchRemoveObject( editor ) {
  * Monkey-patch editor.select to add multiSelect support.
  * In multiSelect mode, objects are toggled in/out of selectedObjects.
  * In single-select mode, selectedObjects is reset to just the selected object.
+ *
+ * NOTE (r183): editor.selector is now a Selector class instance (not a function),
+ * so the old `this.selector(object)` filter pattern has been removed.
+ * r183's editor.select delegates to this.selector.select(object) internally.
  */
 function patchSelect( editor ) {
 
 	const originalSelect = editor.select.bind( editor );
 
 	editor.select = function ( object, multiSelect ) {
-
-		// Apply selector filter (same as original)
-		if ( this.selector != null ) {
-
-			while ( object != null && ! this.selector( object ) ) {
-
-				object = object.parent;
-
-			}
-
-		}
 
 		if ( multiSelect ) {
 

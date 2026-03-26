@@ -18,6 +18,17 @@ const PROJECT_ROOT = path.resolve(process.cwd(), '../../..');
 
 const LANGUAGES = ['en-us', 'zh-cn', 'ja-jp', 'zh-tw', 'th-th'];
 
+// r183 Strings.js uses different language codes than MrppStrings keys.
+// Map MrppStrings key → r183 language code. Languages not in r183 are omitted.
+const MRPP_LANG_TO_R183 = {
+  'en-us': 'en',
+  'zh-cn': 'zh',
+  'ja-jp': 'ja',
+  // 'zh-tw' and 'th-th' are not present in r183 Strings.js
+};
+// Only test languages that r183 actually supports
+const TESTABLE_LANGUAGES = Object.keys(MRPP_LANG_TO_R183);
+
 /**
  * Parse mrppStrings from the source file by evaluating the object literal.
  */
@@ -59,11 +70,12 @@ function loadMergedStrings(mrppStrings) {
   const StringsFn = wrapper(mrppStrings);
 
   const result = {};
-  for (const lang of LANGUAGES) {
+  for (const mrppLang of TESTABLE_LANGUAGES) {
+    const r183Lang = MRPP_LANG_TO_R183[mrppLang];
     const config = {
-      getKey: (k) => (k === 'language' ? lang : undefined),
+      getKey: (k) => (k === 'language' ? r183Lang : undefined),
     };
-    result[lang] = StringsFn(config);
+    result[mrppLang] = StringsFn(config);
   }
   return result;
 }
@@ -72,9 +84,9 @@ describe('Property 2: i18n string completeness', () => {
   const mrppStrings = loadMrppStrings();
   const mergedStrings = loadMergedStrings(mrppStrings);
 
-  // Build all (language, key, expectedValue) pairs
+  // Build all (language, key, expectedValue) pairs — only for r183-supported languages
   const allPairs = [];
-  for (const lang of LANGUAGES) {
+  for (const lang of TESTABLE_LANGUAGES) {
     const langStrings = mrppStrings[lang];
     if (!langStrings) continue;
     for (const key of Object.keys(langStrings)) {

@@ -1,3 +1,4 @@
+import { UIInput, UISelect, UIRow, UIText } from '../../three.js/editor/js/libs/ui.js';
 import { SidebarEvents } from '../ui/sidebar/Sidebar.Events.js';
 import { SidebarScreenshot } from '../ui/sidebar/Sidebar.Screenshot.js';
 import { SidebarMultipleObjects } from '../ui/sidebar/Sidebar.MultipleObjects.js';
@@ -191,8 +192,71 @@ function applySidebarPatches( editor, sidebarContainer ) {
 	const screenshot = new SidebarScreenshot( editor );
 	sidebarContainer.addTab( 'screenshot', strings.getKey( 'sidebar/screenshot' ), screenshot );
 
-	// 6. Ensure 'scene' tab is selected
+	// 6. Inject search/filter UI above the outliner (Bug 1.1)
+	injectOutlinerSearchUI( editor );
+
+	// 7. Filter internal objects from the outliner (Bug 1.2)
+	injectOutlinerFilter( editor );
+
+	// 7b. Replace outliner type icons with MRPP custom type icons
+	injectOutlinerCustomIcons( editor );
+
+	// 8. Hide background/environment/fog rows (not needed in MRPP mode)
+	hideSceneSettingsRows( editor );
+
+	// 9. Ensure 'scene' tab is selected
 	sidebarContainer.select( 'scene' );
+
+}
+
+/**
+ * Properly clear a UITabbedPanel by removing all tabs and panels from both
+ * the DOM and the internal arrays.
+ *
+ * UITabbedPanel.clear() (inherited from UIElement) only removes DOM children
+ * but does NOT reset the tabs[] and panels[] arrays, causing stale state.
+ * This helper resets both.
+ *
+ * @param {object} tabbedPanel - A UITabbedPanel instance
+ */
+function clearTabbedPanel( tabbedPanel ) {
+
+	// Support both real UITabbedPanel (has tabsDiv/panelsDiv properties)
+	// and wrapAsTabbedPanel wrappers (use DOM querySelector)
+	const tabsContainer = tabbedPanel.tabsDiv
+		? tabbedPanel.tabsDiv.dom
+		: tabbedPanel.dom.querySelector( '.Tabs' );
+
+	const panelsContainer = tabbedPanel.panelsDiv
+		? tabbedPanel.panelsDiv.dom
+		: tabbedPanel.dom.querySelector( '.Panels' );
+
+	// Remove all tab DOM elements
+	if ( tabsContainer ) {
+
+		while ( tabsContainer.children.length > 0 ) {
+
+			tabsContainer.removeChild( tabsContainer.firstChild );
+
+		}
+
+	}
+
+	// Remove all panel DOM elements
+	if ( panelsContainer ) {
+
+		while ( panelsContainer.children.length > 0 ) {
+
+			panelsContainer.removeChild( panelsContainer.firstChild );
+
+		}
+
+	}
+
+	// Reset internal arrays and selection state
+	tabbedPanel.tabs = [];
+	tabbedPanel.panels = [];
+	tabbedPanel.selected = '';
 
 }
 
@@ -203,9 +267,12 @@ function applySidebarPatches( editor, sidebarContainer ) {
  * - Create MRPP panel instances (MultipleObjects, Component, Command, Text, Animation)
  * - Wire up objectSelected signal to dynamically add/remove MRPP panels
  *
- * The vanilla SidebarProperties creates a UITabbedPanel with static tabs
- * (object, geometry, material). This patch adds dynamic tab management
- * based on the selected object type.
+ * The vanilla SidebarProperties (r183) creates a UITabbedPanel with static tabs
+ * (objectTab, geometryTab, materialTab, scriptTab). This patch adds dynamic tab
+ * management based on the selected object type.
+ *
+ * Note: In r183, tab IDs use the 'Tab' suffix (objectTab, geometryTab, etc.)
+ * unlike r140 which used plain IDs (object, geometry, etc.).
  *
  * @param {object} editor - The Editor instance
  * @param {object} propertiesContainer - The UITabbedPanel returned by SidebarProperties(editor)
@@ -215,6 +282,87 @@ function applySidebarPropertiesPatches( editor, propertiesContainer ) {
 	const strings = editor.strings;
 	const signals = editor.signals;
 
+	// ── Fix: Remove hidden attribute from properties container ──────────
+	// r183's toggleTabs sets container.setHidden(true) when no object is
+	// selected. In MRPP mode, properties should always be visible (inside
+	// the scene tab). Remove the hidden attribute immediately.
+	if ( propertiesContainer.dom ) {
+
+		propertiesContainer.dom.removeAttribute( 'hidden' );
+
+	}
+
+	// ── Sub-task 3.2: Remove r183 original geometry/material/script tabs ──
+	// r183's SidebarProperties creates four static tabs: objectTab,
+	// geometryTab, materialTab, scriptTab. MRPP dynamically manages tabs
+	// via clearTabbedPanel + addTab. We remove the three non-object tabs
+	// from both the DOM and the wrapper arrays so MRPP fully owns tab state.
+	const r183TabsToRemove = [ 'geometryTab', 'materialTab', 'scriptTab' ];
+
+	for ( const tabId of r183TabsToRemove ) {
+
+		// Remove tab element from wrapper array and DOM
+		for ( let i = propertiesContainer.tabs.length - 1; i >= 0; i -- ) {
+
+			if ( propertiesContainer.tabs[ i ].dom.id === tabId ) {
+
+				const tabDom = propertiesContainer.tabs[ i ].dom;
+				if ( tabDom.parentNode ) tabDom.parentNode.removeChild( tabDom );
+				propertiesContainer.tabs.splice( i, 1 );
+				break;
+
+			}
+
+		}
+
+		// Remove panel element from wrapper array and DOM
+		for ( let i = propertiesContainer.panels.length - 1; i >= 0; i -- ) {
+
+			if ( propertiesContainer.panels[ i ].dom.id === tabId ) {
+
+				const panelDom = propertiesContainer.panels[ i ].dom;
+				if ( panelDom.parentNode ) panelDom.parentNode.removeChild( panelDom );
+				propertiesContainer.panels.splice( i, 1 );
+				break;
+
+			}
+
+		}
+
+	}
+
+	// ── Sub-task 3.3: Neutralize r183's toggleTabs listener ──────────────
+	// r183's SidebarProperties registers a `toggleTabs` function on
+	// signals.objectSelected that shows/hides geometry/material/script tabs
+	// and calls container.select(). This conflicts with MRPP's dynamic tab
+	// management. We remove it by iterating the signal's internal _bindings
+	// array and detaching any objectSelected listener registered before our
+	// MRPP listener (i.e., the ones already present at this point).
+	// The only objectSelected listener from SidebarProperties is toggleTabs.
+	if ( signals.objectSelected._bindings ) {
+
+		const existingBindings = signals.objectSelected._bindings.slice();
+		for ( let i = 0; i < existingBindings.length; i ++ ) {
+
+			const binding = existingBindings[ i ];
+			if ( binding._listener && binding.getListener ) {
+
+				const listener = binding.getListener();
+				const src = listener.toString();
+
+				// Identify toggleTabs by its characteristic references
+				if ( src.indexOf( 'geometryTab' ) !== - 1 || src.indexOf( 'materialTab' ) !== - 1 ) {
+
+					binding.detach();
+
+				}
+
+			}
+
+		}
+
+	}
+
 	// Create MRPP panel instances (once, reused across selections)
 	const multipleObjectsPanel = new SidebarMultipleObjects( editor );
 	const componentPanel = new SidebarComponent( editor );
@@ -223,16 +371,16 @@ function applySidebarPropertiesPatches( editor, propertiesContainer ) {
 	const animationPanel = new SidebarAnimation( editor );
 
 	// Save a reference to the vanilla object tab content.
-	// The vanilla SidebarProperties adds it as addTab('object', ..., objectPanel).
-	// We need to preserve it when rebuilding tabs.
+	// In r183, SidebarProperties uses addTab('objectTab', ..., objectPanel).
 	// We save the actual SidebarObject container DOM element (not the wrapper div)
-	// so it survives clear() + addTab() cycles.
+	// so it survives clearTabbedPanel() + addTab() cycles.
 	let objectContentDom = null;
 	let objectTabLabel = strings.getKey( 'sidebar/properties/object' );
 
+	// r183 uses 'objectTab' as the tab id (not 'object' as in r140)
 	for ( let i = 0; i < propertiesContainer.panels.length; i ++ ) {
 
-		if ( propertiesContainer.panels[ i ].dom.id === 'object' ) {
+		if ( propertiesContainer.panels[ i ].dom.id === 'objectTab' ) {
 
 			// The panel wrapper div contains the SidebarObject container as its first child.
 			// We save a reference to the actual content element.
@@ -244,8 +392,47 @@ function applySidebarPropertiesPatches( editor, propertiesContainer ) {
 
 	}
 
+	// ── Hide the "Export JSON" button from r183's SidebarObject ──────────
+	// MRPP mode does not need per-object JSON export. We hide it each time
+	// the object tab is rebuilt, since the button lives inside the
+	// SidebarObject container which may not be fully rendered at patch time.
+	function hideExportJsonButton() {
+
+		if ( ! objectContentDom ) return;
+
+		// Search in objectContentDom and its parent panel wrapper
+		const searchRoots = [ objectContentDom ];
+		if ( objectContentDom.parentNode ) searchRoots.push( objectContentDom.parentNode );
+
+		for ( const root of searchRoots ) {
+
+			const buttons = root.querySelectorAll( 'button' );
+			for ( let i = 0; i < buttons.length; i ++ ) {
+
+				if ( buttons[ i ].className === 'Button' ) {
+
+					buttons[ i ].style.display = 'none';
+
+				}
+
+			}
+
+		}
+
+	}
+
+	// Try hiding immediately (may work if DOM is ready)
+	hideExportJsonButton();
+
 	// Listen for object selection to dynamically manage tabs
 	signals.objectSelected.add( function ( object ) {
+
+		// Always ensure properties is visible in MRPP mode
+		if ( propertiesContainer.dom ) {
+
+			propertiesContainer.dom.removeAttribute( 'hidden' );
+
+		}
 
 		if ( object !== null ) {
 
@@ -254,7 +441,7 @@ function applySidebarPropertiesPatches( editor, propertiesContainer ) {
 			if ( selectedObjects.length > 1 ) {
 
 				// Multi-select mode: clear all tabs and show multi-objects panel
-				propertiesContainer.clear();
+				clearTabbedPanel( propertiesContainer );
 				propertiesContainer.addTab(
 					'multiobjects',
 					strings.getKey( 'sidebar/properties/multi_object' ),
@@ -265,12 +452,12 @@ function applySidebarPropertiesPatches( editor, propertiesContainer ) {
 			} else {
 
 				// Single-select mode: rebuild with object tab + conditional MRPP tabs
-				propertiesContainer.clear();
+				clearTabbedPanel( propertiesContainer );
 
-				// Re-add the vanilla object tab
+				// Re-add the vanilla object tab (using r183 id 'objectTab')
 				if ( objectContentDom ) {
 
-					propertiesContainer.addTab( 'object', objectTabLabel, objectContentDom );
+					propertiesContainer.addTab( 'objectTab', objectTabLabel, objectContentDom );
 
 				}
 
@@ -339,23 +526,25 @@ function applySidebarPropertiesPatches( editor, propertiesContainer ) {
 
 				}
 
-				// Ensure object tab is selected
-				propertiesContainer.select( 'object' );
+				// Ensure object tab is selected (r183 id: 'objectTab')
+				propertiesContainer.select( 'objectTab' );
+				hideExportJsonButton();
 
 			}
 
 		} else {
 
 			// Deselected: show only the object tab
-			propertiesContainer.clear();
+			clearTabbedPanel( propertiesContainer );
 
 			if ( objectContentDom ) {
 
-				propertiesContainer.addTab( 'object', objectTabLabel, objectContentDom );
+				propertiesContainer.addTab( 'objectTab', objectTabLabel, objectContentDom );
 
 			}
 
-			propertiesContainer.select( 'object' );
+			propertiesContainer.select( 'objectTab' );
+			hideExportJsonButton();
 
 		}
 
@@ -363,4 +552,510 @@ function applySidebarPropertiesPatches( editor, propertiesContainer ) {
 
 }
 
-export { applySidebarPatches, applySidebarPropertiesPatches, getHierarchyLabel };
+/**
+ * Inject search input and filter dropdown above the outliner in MRPP mode.
+ *
+ * Restores the search/filter UI that r140 had but r183's Sidebar.Scene.js
+ * removed. Creates a UIInput for name search and a UISelect for type
+ * filtering above the #outliner element.
+ *
+ * Both filters use AND logic and respect the internal object filter from
+ * injectOutlinerFilter (objects already hidden by that filter stay hidden).
+ *
+ * @param {object} editor - The Editor instance
+ */
+function injectOutlinerSearchUI( editor ) {
+
+	const outlinerDom = document.getElementById( 'outliner' );
+
+	if ( ! outlinerDom ) return;
+
+	const strings = editor.strings;
+
+	// ── Build type filter options using i18n keys ──
+	const filterOptions = {
+		'': strings.getKey( 'sidebar/scene/filter/all' ),
+		'module': strings.getKey( 'sidebar/scene/filter/type/module' ),
+		'point': strings.getKey( 'sidebar/scene/filter/type/point' ),
+		'text': strings.getKey( 'sidebar/scene/filter/type/text' ),
+		'polygen': strings.getKey( 'sidebar/scene/filter/type/polygen' ),
+		'picture': strings.getKey( 'sidebar/scene/filter/type/picture' ),
+		'video': strings.getKey( 'sidebar/scene/filter/type/video' ),
+		'audio': strings.getKey( 'sidebar/scene/filter/type/audio' ),
+		'prototype': strings.getKey( 'sidebar/scene/filter/type/prototype' ),
+	};
+
+	// ── Search + Filter row (side by side) ──
+	const searchFilterRow = new UIRow();
+	searchFilterRow.setClass( 'Row' );
+	searchFilterRow.dom.style.marginBottom = '4px';
+	searchFilterRow.dom.style.display = 'flex';
+	searchFilterRow.dom.style.gap = '4px';
+
+	const searchInput = new UIInput( '' );
+	searchInput.dom.placeholder = strings.getKey( 'sidebar/scene/search_placeholder' );
+	searchInput.dom.style.flex = '1';
+	searchInput.dom.style.boxSizing = 'border-box';
+	searchFilterRow.add( searchInput );
+
+	const filterSelect = new UISelect();
+	filterSelect.setOptions( filterOptions );
+	filterSelect.setValue( '' );
+	filterSelect.dom.style.width = '120px';
+
+	// Only show type filter in meta editor; verse doesn't need it
+	const isMeta = ( editor.type || '' ).toLowerCase() === 'meta';
+
+	if ( isMeta ) {
+
+		searchFilterRow.add( filterSelect );
+
+	} else {
+
+		// Verse: search box takes full width
+		searchInput.dom.style.width = '100%';
+
+	}
+
+	// ── Insert row above the outliner ──
+	const parent = outlinerDom.parentNode;
+
+	if ( parent ) {
+
+		parent.insertBefore( searchFilterRow.dom, outlinerDom );
+
+	}
+
+	// ── Shared filter logic ──
+	function applySearchFilter() {
+
+		const searchText = searchInput.getValue().toLowerCase();
+		const selectedType = filterSelect.getValue(); // '' means all
+		const options = outlinerDom.querySelectorAll( '.option' );
+
+		for ( let i = 0; i < options.length; i ++ ) {
+
+			const option = options[ i ];
+			const id = parseInt( option.value );
+
+			if ( isNaN( id ) ) continue;
+
+			const object = editor.scene.getObjectById( id );
+
+			// Skip objects already hidden by injectOutlinerFilter (internal objects).
+			// We detect this by checking if the object is the camera, scene, or $-prefixed.
+			if ( ! object ) {
+
+				// Could be the camera (not in scene graph)
+				if ( editor.camera && editor.camera.id === id ) continue;
+				continue;
+
+			}
+
+			if (
+				object === editor.camera ||
+				object === editor.scene ||
+				( object.name && object.name.charAt( 0 ) === '$' )
+			) {
+
+				// Internal object — leave hidden by injectOutlinerFilter
+				continue;
+
+			}
+
+			let visible = true;
+
+			// Name search filter
+			if ( searchText.length > 0 ) {
+
+				const objectName = ( object.name || '' ).toLowerCase();
+
+				if ( objectName.indexOf( searchText ) === - 1 ) {
+
+					visible = false;
+
+				}
+
+			}
+
+			// Type filter (uses userData.type for MRPP custom types, falls back to object.type)
+			if ( visible && selectedType !== '' ) {
+
+				const objectType = ( object.userData && object.userData.type )
+					? object.userData.type.toLowerCase()
+					: ( object.type || '' ).toLowerCase();
+
+				if ( objectType !== selectedType ) {
+
+					visible = false;
+
+				}
+
+			}
+
+			option.style.display = visible ? '' : 'none';
+
+		}
+
+	}
+
+	// ── Wire up events ──
+	searchInput.onInput( applySearchFilter );
+	filterSelect.onChange( applySearchFilter );
+
+	// Re-apply search/filter after outliner refreshes (MutationObserver)
+	const observer = new MutationObserver( applySearchFilter );
+	observer.observe( outlinerDom, { childList: true } );
+
+}
+
+/**
+ * Filter internal objects from the outliner in MRPP mode.
+ *
+ * r183's Sidebar.Scene refreshUI() lists Camera, Scene root, and all
+ * scene.children (including $lights etc.) without filtering. In r140,
+ * MRPP filtered these out. This function uses a MutationObserver on
+ * #outliner to hide internal objects after each refresh.
+ *
+ * Filter criteria:
+ * - object === editor.camera (the editor camera)
+ * - object === editor.scene (the Scene root node)
+ * - object.name starts with '$' (internal objects like $lights)
+ *
+ * @param {object} editor - The Editor instance
+ */
+function injectOutlinerFilter( editor ) {
+
+	const outlinerDom = document.getElementById( 'outliner' );
+
+	if ( ! outlinerDom ) return;
+
+	function filterOptions() {
+
+		const options = outlinerDom.querySelectorAll( '.option' );
+
+		for ( let i = 0; i < options.length; i ++ ) {
+
+			const option = options[ i ];
+			const id = parseInt( option.value );
+
+			if ( isNaN( id ) ) continue;
+
+			const object = editor.scene.getObjectById( id );
+
+			if ( ! object ) {
+
+				// Also check if this is the camera (camera is not part of scene graph)
+				if ( editor.camera && editor.camera.id === id ) {
+
+					option.style.display = 'none';
+					continue;
+
+				}
+
+				continue;
+
+			}
+
+			if (
+				object === editor.camera ||
+				object === editor.scene ||
+				( object.name && object.name.charAt( 0 ) === '$' )
+			) {
+
+				option.style.display = 'none';
+
+			}
+
+		}
+
+	}
+
+	// Observe childList changes on the outliner to filter after each refreshUI
+	const observer = new MutationObserver( filterOptions );
+
+	observer.observe( outlinerDom, { childList: true } );
+
+	// Run the filter once immediately
+	filterOptions();
+
+}
+
+/**
+ * Hide background, environment, and fog rows from the scene panel.
+ * These are r183 Sidebar.Scene settings not needed in MRPP mode.
+ * Uses label text matching to find and hide the rows + any sub-rows.
+ */
+function hideSceneSettingsRows( editor ) {
+
+	const strings = editor.strings;
+
+	// Labels to hide (row + any following sub-rows until next labeled row)
+	const labelsToHide = [
+		strings.getKey( 'sidebar/scene/background' ),
+		strings.getKey( 'sidebar/scene/environment' ),
+		strings.getKey( 'sidebar/scene/fog' )
+	];
+
+	// Scene panel content is inside #scene (the panel div, not the tab)
+	const scenePanels = document.querySelectorAll( '#scene' );
+	let sceneContent = null;
+
+	for ( let i = 0; i < scenePanels.length; i ++ ) {
+
+		// The panel div (not the tab span)
+		if ( scenePanels[ i ].tagName === 'DIV' ) {
+
+			sceneContent = scenePanels[ i ];
+			break;
+
+		}
+
+	}
+
+	if ( ! sceneContent ) return;
+
+	// Find all .Row elements and hide those matching the labels
+	const rows = sceneContent.querySelectorAll( '.Row' );
+
+	for ( let i = 0; i < rows.length; i ++ ) {
+
+		const row = rows[ i ];
+		const label = row.querySelector( '.Label' );
+
+		if ( label && labelsToHide.indexOf( label.textContent ) !== - 1 ) {
+
+			row.style.display = 'none';
+
+			// Also hide following sub-rows (no Label, indented rows)
+			for ( let j = i + 1; j < rows.length; j ++ ) {
+
+				const nextRow = rows[ j ];
+				const nextLabel = nextRow.querySelector( '.Label' );
+
+				if ( nextLabel ) break; // next labeled row, stop
+
+				nextRow.style.display = 'none';
+
+			}
+
+		}
+
+	}
+
+	// Also hide the UIBreak before background row
+	// (it's a <br> element between outliner and background)
+	const breaks = sceneContent.querySelectorAll( 'br' );
+
+	for ( let i = 0; i < breaks.length; i ++ ) {
+
+		breaks[ i ].style.display = 'none';
+
+	}
+
+}
+
+/**
+ * Replace r183's default outliner type icons with MRPP custom type icons.
+ *
+ * r183's getObjectType() only returns native three.js types (Scene, Camera,
+ * Mesh, Object3D, etc). MRPP objects use userData.type for custom types
+ * (Polygen, Picture, Video, Audio, Point, Text, Module, Entity, etc).
+ *
+ * This function observes the outliner and replaces the CSS class on the
+ * type span to match the MRPP custom type, enabling custom icon styling.
+ *
+ * @param {object} editor - The Editor instance
+ */
+function injectOutlinerCustomIcons( editor ) {
+
+	const outlinerDom = document.getElementById( 'outliner' );
+	if ( ! outlinerDom ) return;
+
+	// Inject CSS for custom MRPP type icons
+	const style = document.createElement( 'style' );
+	style.textContent = `
+		#outliner .type { line-height: 14px; font-size: 11px; }
+		#outliner .type.Scene { color: #807b7b; }
+		#outliner .type.Scene:after { content: '◉'; }
+		#outliner .type.Camera { color: #dd8888; }
+		#outliner .type.Camera:after { content: '⌾'; }
+		#outliner .type.Light { color: #dddd88; }
+		#outliner .type.Light:after { content: '✦'; }
+		#outliner .type.Object3D { color: #aaaaee; }
+		#outliner .type.Object3D:after { content: '◇'; }
+		#outliner .type.Mesh { color: #8888ee; }
+		#outliner .type.Mesh:after { content: '⬢'; }
+		#outliner .type.Module { color: #555555; }
+		#outliner .type.Module:after { content: '⌗'; }
+		#outliner .type.Entity { color: #d0d0d0; }
+		#outliner .type.Entity:after { content: '◇'; }
+		#outliner .type.Point { color: #d0d0d0; }
+		#outliner .type.Point:after { content: '◇'; }
+		#outliner .type.Text { color: #5b74a5; }
+		#outliner .type.Text:after { content: 'T'; font-weight: 600; }
+		#outliner .type.Polygen { color: #74a55b; }
+		#outliner .type.Polygen:after { content: '⬢'; }
+		#outliner .type.Picture { color: #5b8ca5; }
+		#outliner .type.Picture:after { content: '▣'; font-size: 9px; }
+		#outliner .type.Video { color: #a55ba5; }
+		#outliner .type.Video:after { content: '▶'; font-size: 9px; }
+		#outliner .type.Audio { color: #5ba55b; }
+		#outliner .type.Audio:after { content: '♪'; }
+		#outliner .type.Prototype { color: #a5995b; }
+		#outliner .type.Prototype:after { content: '◈'; }
+		#outliner .Geometry, #outliner .Material, #outliner .Script { display: none !important; }
+	`;
+	document.head.appendChild( style );
+
+	function replaceTypeIcons() {
+
+		const options = outlinerDom.querySelectorAll( '.option' );
+
+		for ( let i = 0; i < options.length; i ++ ) {
+
+			const option = options[ i ];
+			const id = parseInt( option.value );
+			if ( isNaN( id ) ) continue;
+
+			const object = editor.scene.getObjectById( id );
+			if ( ! object ) continue;
+
+			// Get MRPP custom type from object.type (MRPP sets type directly on the object)
+			// Fall back to userData.type for compatibility
+			const mrppType = object.type || ( object.userData && object.userData.type ) || '';
+
+			// Skip native three.js types that r183 already handles
+			const nativeTypes = [ 'Scene', 'PerspectiveCamera', 'OrthographicCamera',
+				'AmbientLight', 'DirectionalLight', 'PointLight', 'SpotLight', 'HemisphereLight',
+				'Mesh', 'SkinnedMesh', 'Line', 'LineSegments', 'LineLoop', 'Points',
+				'Group', 'Object3D', 'Bone', 'Sprite', 'LOD' ];
+
+			if ( ! mrppType || nativeTypes.indexOf( mrppType ) !== - 1 ) continue;
+
+			// Capitalize first letter for CSS class name
+			const typeCssClass = mrppType.charAt( 0 ).toUpperCase() + mrppType.slice( 1 ).toLowerCase();
+
+			// Find the type span and replace its class
+			const typeSpan = option.querySelector( '.type' );
+			if ( typeSpan && typeSpan.className !== 'type ' + typeCssClass ) {
+
+				typeSpan.className = 'type ' + typeCssClass;
+
+			}
+
+			// Hide the opener (expand/collapse button) for MRPP custom type objects.
+			// In the old version, these nodes could not be expanded.
+			const opener = option.querySelector( '.opener' );
+			if ( opener ) {
+
+				opener.style.display = 'none';
+
+			}
+
+			// Hide any child options that belong to this object's subtree.
+			// Children appear as subsequent options with greater padding.
+			const myPadding = parseInt( option.style.paddingLeft ) || 0;
+			for ( let j = i + 1; j < options.length; j ++ ) {
+
+				const childOption = options[ j ];
+				const childPadding = parseInt( childOption.style.paddingLeft ) || 0;
+
+				if ( childPadding <= myPadding ) break; // no longer a child
+
+				const childId = parseInt( childOption.value );
+				if ( isNaN( childId ) ) continue;
+
+				const childObj = editor.scene.getObjectById( childId );
+
+				// Only hide children that are internal three.js nodes (not MRPP custom types)
+				const childType = childObj ? childObj.type : '';
+				if ( nativeTypes.indexOf( childType ) !== - 1 || ! childType ) {
+
+					childOption.style.display = 'none';
+
+				}
+
+			}
+
+		}
+
+	}
+
+	const observer = new MutationObserver( replaceTypeIcons );
+	observer.observe( outlinerDom, { childList: true } );
+	replaceTypeIcons();
+
+}
+
+/**
+ * Hide object property rows that MRPP mode does not need:
+ * shadow, frustum culled, render order.
+ */
+function hideObjectPropertyRows( editor ) {
+
+const strings = editor.strings;
+
+const labelsToHide = [
+strings.getKey( 'sidebar/object/shadow' ),
+strings.getKey( 'sidebar/object/frustumcull' ),
+strings.getKey( 'sidebar/object/renderorder' )
+];
+
+function hide() {
+
+const objectPanel = document.getElementById( 'objectTab' );
+if ( ! objectPanel ) return;
+
+const rows = objectPanel.querySelectorAll( '.Row' );
+
+for ( let i = 0; i < rows.length; i ++ ) {
+
+const row = rows[ i ];
+const label = row.querySelector( '.Label' );
+
+if ( label && labelsToHide.indexOf( label.textContent ) !== - 1 ) {
+
+row.style.display = 'none';
+
+}
+
+}
+
+}
+
+editor.signals.objectSelected.add( function () {
+
+Promise.resolve().then( hide );
+
+} );
+
+hide();
+
+}
+
+/**
+ * Hide the autosave checkbox from the menubar status area.
+ */
+function hideAutosaveCheckbox() {
+
+const statusDom = document.querySelector( '.menu.right' );
+if ( ! statusDom ) return;
+
+const labels = statusDom.querySelectorAll( 'label' );
+
+for ( let i = 0; i < labels.length; i ++ ) {
+
+const checkbox = labels[ i ].querySelector( 'input[type="checkbox"]' );
+if ( checkbox ) {
+
+labels[ i ].style.display = 'none';
+break;
+
+}
+
+}
+
+}
+
+export { applySidebarPatches, applySidebarPropertiesPatches, getHierarchyLabel, clearTabbedPanel, injectOutlinerFilter, injectOutlinerSearchUI, injectOutlinerCustomIcons, hideObjectPropertyRows, hideAutosaveCheckbox };

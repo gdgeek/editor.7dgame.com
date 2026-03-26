@@ -4,7 +4,7 @@ import { applyEditorPatches } from '../patches/EditorPatches.js';
 import { applyLoaderPatches } from '../patches/LoaderPatches.js';
 import { applyViewportPatches } from '../patches/ViewportPatches.js';
 import { applyUIThreePatches } from '../patches/UIThreePatches.js';
-import { applySidebarPatches, applySidebarPropertiesPatches } from '../patches/SidebarPatches.js';
+import { applySidebarPatches, applySidebarPropertiesPatches, hideObjectPropertyRows, hideAutosaveCheckbox } from '../patches/SidebarPatches.js';
 import { applyMenubarPatches } from '../patches/MenubarPatches.js';
 
 /**
@@ -246,6 +246,7 @@ function applyDeferredUIPatches( editor ) {
 			// Properties is a UITabbedPanel nested inside the sidebar
 			const propertiesWrapper = wrapAsTabbedPanel( propertiesDom );
 			applySidebarPropertiesPatches( editor, propertiesWrapper );
+			hideObjectPropertyRows( editor );
 
 		}
 
@@ -262,6 +263,90 @@ function applyDeferredUIPatches( editor ) {
 
 		const menubarWrapper = { dom: menubarDom };
 		applyMenubarPatches( editor, menubarWrapper );
+		hideAutosaveCheckbox();
+
+	}
+
+	let animationHidden = false;
+
+	function tryHideAnimation() {
+
+		if ( animationHidden ) return;
+
+		// Check if the animation panel exists yet
+		const animationPanel = document.getElementById( 'animation' );
+		if ( ! animationPanel || animationPanel.parentElement !== document.body ) return;
+
+		animationHidden = true;
+
+		// Inject CSS class with !important to reliably override inline styles
+		// set by Animation.js and AnimationResizer signal handlers.
+		const style = document.createElement( 'style' );
+		style.textContent = '.mrpp-animation-hidden { display: none !important; }';
+		document.head.appendChild( style );
+
+		// Helper: query fresh each time since resizer may be added after animation panel
+		function setAnimationHiddenClass( hidden ) {
+
+			const panel = document.getElementById( 'animation' );
+			if ( panel && panel.parentElement === document.body ) {
+
+				panel.classList.toggle( 'mrpp-animation-hidden', hidden );
+
+			}
+
+			const resizer = document.getElementById( 'animation-resizer' );
+			if ( resizer ) {
+
+				resizer.classList.toggle( 'mrpp-animation-hidden', hidden );
+
+			}
+
+		}
+
+		// Initially hidden
+		setAnimationHiddenClass( true );
+
+		if ( editor.signals && editor.signals.animationPanelChanged ) {
+
+			editor.signals.animationPanelChanged.dispatch( false );
+
+		}
+
+		// Show only when selecting objects with animations, hide otherwise
+		editor.signals.objectSelected.add( function ( object ) {
+
+			const hasAnimations = object !== null &&
+				object.animations && object.animations.length > 0;
+
+			setAnimationHiddenClass( ! hasAnimations );
+
+			if ( ! hasAnimations ) {
+
+				editor.signals.animationPanelChanged.dispatch( false );
+
+			}
+
+		} );
+
+	}
+
+	let viewportPatched = false;
+
+	function tryPatchViewportControls() {
+
+		if ( viewportPatched ) return;
+
+		const viewport = document.getElementById( 'viewport' );
+		if ( ! viewport ) return;
+
+		const selects = viewport.querySelectorAll( 'select' );
+		if ( selects.length < 2 ) return;
+
+		viewportPatched = true;
+
+		// First select is camera, second is shading — hide shading
+		selects[ 1 ].style.display = 'none';
 
 	}
 
@@ -269,8 +354,10 @@ function applyDeferredUIPatches( editor ) {
 
 		tryPatchSidebar();
 		tryPatchMenubar();
+		tryHideAnimation();
+		tryPatchViewportControls();
 
-		if ( sidebarPatched && menubarPatched ) {
+		if ( sidebarPatched && menubarPatched && animationHidden && viewportPatched ) {
 
 			observer.disconnect();
 
@@ -281,7 +368,7 @@ function applyDeferredUIPatches( editor ) {
 	// Try immediately in case elements already exist
 	tryPatchAll();
 
-	if ( sidebarPatched && menubarPatched ) return;
+	if ( sidebarPatched && menubarPatched && animationHidden && viewportPatched ) return;
 
 	// Observe DOM for sidebar/menubar creation
 	const observer = new MutationObserver( function () {

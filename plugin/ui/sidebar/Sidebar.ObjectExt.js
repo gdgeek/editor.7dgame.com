@@ -168,6 +168,16 @@ function injectSidebarObjectExtensions( editor, sidebarObjectContainer ) {
 	const strings = editor.strings;
 	const signals = editor.signals;
 
+	// ── Inject CSS for hiding MRPP-unwanted rows ─────────────────────
+	if ( ! document.getElementById( 'mrpp-hidden-style' ) ) {
+
+		const hiddenStyle = document.createElement( 'style' );
+		hiddenStyle.id = 'mrpp-hidden-style';
+		hiddenStyle.textContent = '.mrpp-hidden { display: none !important; }';
+		document.head.appendChild( hiddenStyle );
+
+	}
+
 	// ── clipboard state ──────────────────────────────────────────────
 
 	const clipboard = { position: null, rotation: null, scale: null };
@@ -1035,28 +1045,83 @@ function injectSidebarObjectExtensions( editor, sidebarObjectContainer ) {
 
 		}
 
+		// ── Hide r183 rows not needed in MRPP mode ──────────────────
+		// Use CSS class with !important to prevent r183's own objectSelected
+		// handler from re-showing these rows after our handler hides them.
+
+		console.log( '[MRPP] allRows count:', allRows.length );
+		console.log( '[MRPP] shadow key:', strings.getKey( 'sidebar/object/shadow' ) );
+		const shadowTest = findRowByLabel( strings.getKey( 'sidebar/object/shadow' ) );
+		console.log( '[MRPP] shadowRow found:', !!shadowTest, shadowTest );
+
+		// UUID row
+		const uuidRow = findRowByLabel( strings.getKey( 'sidebar/object/uuid' ) );
+		if ( uuidRow ) uuidRow.classList.add( 'mrpp-hidden' );
+
+		// Shadow row and sub-rows
+		const shadowRow = findRowByLabel( strings.getKey( 'sidebar/object/shadow' ) );
+		if ( shadowRow ) shadowRow.classList.add( 'mrpp-hidden' );
+
+		const shadowIntensityRow = findRowByLabel( strings.getKey( 'sidebar/object/shadowIntensity' ) );
+		if ( shadowIntensityRow ) shadowIntensityRow.classList.add( 'mrpp-hidden' );
+
+		const shadowBiasRow = findRowByLabel( strings.getKey( 'sidebar/object/shadowBias' ) );
+		if ( shadowBiasRow ) shadowBiasRow.classList.add( 'mrpp-hidden' );
+
+		const shadowNormalBiasRow = findRowByLabel( strings.getKey( 'sidebar/object/shadowNormalBias' ) );
+		if ( shadowNormalBiasRow ) shadowNormalBiasRow.classList.add( 'mrpp-hidden' );
+
+		const shadowRadiusRow = findRowByLabel( strings.getKey( 'sidebar/object/shadowRadius' ) );
+		if ( shadowRadiusRow ) shadowRadiusRow.classList.add( 'mrpp-hidden' );
+
+		// frustumCulled row
+		const frustumCulledRow = findRowByLabel( strings.getKey( 'sidebar/object/frustumcull' ) );
+		if ( frustumCulledRow ) frustumCulledRow.classList.add( 'mrpp-hidden' );
+
+		// renderOrder row
+		const renderOrderRow = findRowByLabel( strings.getKey( 'sidebar/object/renderorder' ) );
+		if ( renderOrderRow ) renderOrderRow.classList.add( 'mrpp-hidden' );
+
+		// Export JSON button (last button in the container)
+		const buttons = sidebarObjectContainer.querySelectorAll( 'button' );
+		if ( buttons.length > 0 ) {
+
+			const lastButton = buttons[ buttons.length - 1 ];
+			if ( lastButton && lastButton.textContent.includes( strings.getKey( 'sidebar/object/export' ) ) ) {
+
+				lastButton.classList.add( 'mrpp-hidden' );
+
+			}
+
+		}
+
 	}
 
 	function applyMrppUIValues( object ) {
 
-		// Localized type
+		// Localized type — use setTimeout(0) to ensure this runs AFTER
+		// r183's own updateUI handler, which sets objectType to object.type
 		const typeLabel = strings.getKey( 'sidebar/object/type' );
 		const typeRow = findRowByLabel( typeLabel );
 
 		if ( typeRow ) {
 
-			// The second span in the type row is the value display
-			const spans = typeRow.querySelectorAll( 'span' );
-			for ( let i = 0; i < spans.length; i ++ ) {
+			setTimeout( function () {
 
-				if ( spans[ i ].textContent.trim() !== typeLabel.trim() ) {
+				// The second span in the type row is the value display
+				const spans = typeRow.querySelectorAll( 'span' );
+				for ( let i = 0; i < spans.length; i ++ ) {
 
-					spans[ i ].textContent = getLocalizedObjectType( object, editor );
-					break;
+					if ( spans[ i ].textContent.trim() !== typeLabel.trim() ) {
+
+						spans[ i ].textContent = getLocalizedObjectType( object, editor );
+						break;
+
+					}
 
 				}
 
-			}
+			}, 0 );
 
 		}
 
