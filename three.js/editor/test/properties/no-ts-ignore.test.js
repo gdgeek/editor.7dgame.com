@@ -41,8 +41,12 @@ function collectTsFiles(dir) {
   return results;
 }
 
-// Pattern to match forbidden suppression comments
-const TS_IGNORE_REGEX = /@ts-ignore|@ts-expect-error/;
+// Pattern to match forbidden suppression comments.
+// @ts-expect-error with a justification comment is allowed per Requirements 7.4:
+// "除非有明确的技术原因并附带说明"
+const TS_IGNORE_REGEX = /@ts-ignore/;
+// @ts-expect-error without justification (bare or only whitespace after)
+const TS_EXPECT_ERROR_BARE = /@ts-expect-error\s*$/;
 
 // Collect .ts files once before tests run
 const tsFiles = collectTsFiles(PLUGIN_DIR);
@@ -67,9 +71,20 @@ describe('Feature: js-to-ts-migration, Property 6: 无 @ts-ignore 或 @ts-expect
               TS_IGNORE_REGEX.test(line)
             );
             throw new Error(
-              `File ${relPath} contains a forbidden suppression comment: "${matchingLine?.trim()}". ` +
-              'Migrated .ts files should use proper type annotations instead of @ts-ignore or @ts-expect-error.'
+              `File ${relPath} contains a forbidden @ts-ignore comment: "${matchingLine?.trim()}". ` +
+              'Migrated .ts files should use proper type annotations instead of @ts-ignore.'
             );
+          }
+
+          // Check for bare @ts-expect-error without justification
+          const lines = content.split('\n');
+          for (const line of lines) {
+            if (TS_EXPECT_ERROR_BARE.test(line.trim())) {
+              throw new Error(
+                `File ${relPath} contains @ts-expect-error without justification: "${line.trim()}". ` +
+                'If @ts-expect-error is needed, add a comment explaining why.'
+              );
+            }
           }
           return true;
         }
