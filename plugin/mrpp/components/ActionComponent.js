@@ -136,3 +136,10 @@ class ActionComponent {
    * @param {object} container - UI 容器
    */
   renderer(container) {
+    this.named(container);
+    this.updateUI();
+  }
+
+}
+
+export { ActionComponent };

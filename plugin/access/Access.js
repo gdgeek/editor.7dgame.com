@@ -8,7 +8,7 @@ export const ROLES = {
 	USER: 'user',
 	GUEST: 'guest'
 };
- 
+
 // 权限定义
 export const ABILITIES = {
 	UI_ADVANCED: 'ui.advanced', // 高级面板
@@ -35,8 +35,6 @@ export const ROLE_ABILITY = {
 	],
 };
 
- 
-
 // --- 2. 逻辑区域 (Manager) ---
 
 export class Access {
@@ -52,7 +50,7 @@ export class Access {
 	get role() {
 		return this.editor.data?.user?.role || ROLES.GUEST;
 	}
-	
+
 	/**
 	 * 权限判断：能不能做某事？
 	 * @param {string} ability - 权限标识符
@@ -64,7 +62,7 @@ export class Access {
 
 		const list = ROLE_ABILITY[this.role] || [];
 		return list.includes(ability);
-	} 
+	}
 
 	/**
 	 * 身份判断：是不是某角色？
@@ -74,7 +72,7 @@ export class Access {
 	is(role) {
 		return this.role === role;
 	}
-    
+
 	/**
 	 * 权重判断：是否包含某角色及以上
 	 * @param {string} role - 角色标识符

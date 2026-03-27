@@ -16,11 +16,11 @@ class RemoveEventCommand extends Command {
 
 
 		this.event = event;
-		if (this.mode == 'input') {
-			this.index = this.editor.scene.events.inputs.findIndex(evt => evt.uuid == this.event.uuid);
+		if (this.mode === 'input') {
+			this.index = this.editor.scene.events.inputs.findIndex(evt => evt.uuid === this.event.uuid);
 
-		} else if (this.mode == 'output' && this.editor.scene.events.outputs) {
-			this.index = this.editor.scene.events.outputs.findIndex(evt => evt.uuid == this.event.uuid);
+		} else if (this.mode === 'output' && this.editor.scene.events.outputs) {
+			this.index = this.editor.scene.events.outputs.findIndex(evt => evt.uuid === this.event.uuid);
 		}
 
 	}

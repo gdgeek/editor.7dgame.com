@@ -533,7 +533,7 @@ function initVerseEditor( editor ) {
 
 		}
 
-		if ( params.action == 'load' ) {
+		if ( params.action === 'load' ) {
 
 			const data = params.data;
 			loader.load( data.data );

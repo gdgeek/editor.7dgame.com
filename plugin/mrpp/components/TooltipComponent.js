@@ -191,6 +191,8 @@ class TooltipComponent {
    * @param {object} container - UI 容器
    */
   renderer(container) {
+    this.refresh(container);
+  }
 }
 
 export { TooltipComponent };
