@@ -1,5 +1,5 @@
 // --- MRPP MODIFICATION START ---
-import { mrppStrings } from '../../../plugin/i18n/MrppStrings.js';
+import { mrppStrings } from '../../../plugin-dist/i18n/MrppStrings.js';
 // --- MRPP MODIFICATION END ---
 
 function Strings( config ) {

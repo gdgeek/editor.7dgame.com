@@ -23,15 +23,15 @@ export { SetUuidCommand } from './SetUuidCommand.js';
 export { SetValueCommand } from './SetValueCommand.js';
 
 // --- MRPP MODIFICATION START ---
-export { AddComponentCommand } from '../../../../plugin/commands/AddComponentCommand.js';
-export { RemoveComponentCommand } from '../../../../plugin/commands/RemoveComponentCommand.js';
-export { SetComponentValueCommand } from '../../../../plugin/commands/SetComponentValueCommand.js';
-export { AddCommandCommand } from '../../../../plugin/commands/AddCommandCommand.js';
-export { RemoveCommandCommand } from '../../../../plugin/commands/RemoveCommandCommand.js';
-export { SetCommandValueCommand } from '../../../../plugin/commands/SetCommandValueCommand.js';
-export { AddEventCommand } from '../../../../plugin/commands/AddEventCommand.js';
-export { RemoveEventCommand } from '../../../../plugin/commands/RemoveEventCommand.js';
-export { SetEventValueCommand } from '../../../../plugin/commands/SetEventValueCommand.js';
-export { MoveMultipleObjectsCommand } from '../../../../plugin/commands/MoveMultipleObjectsCommand.js';
-export { MultiTransformCommand } from '../../../../plugin/commands/MultiTransformCommand.js';
+export { AddComponentCommand } from '../../../../plugin-dist/commands/AddComponentCommand.js';
+export { RemoveComponentCommand } from '../../../../plugin-dist/commands/RemoveComponentCommand.js';
+export { SetComponentValueCommand } from '../../../../plugin-dist/commands/SetComponentValueCommand.js';
+export { AddCommandCommand } from '../../../../plugin-dist/commands/AddCommandCommand.js';
+export { RemoveCommandCommand } from '../../../../plugin-dist/commands/RemoveCommandCommand.js';
+export { SetCommandValueCommand } from '../../../../plugin-dist/commands/SetCommandValueCommand.js';
+export { AddEventCommand } from '../../../../plugin-dist/commands/AddEventCommand.js';
+export { RemoveEventCommand } from '../../../../plugin-dist/commands/RemoveEventCommand.js';
+export { SetEventValueCommand } from '../../../../plugin-dist/commands/SetEventValueCommand.js';
+export { MoveMultipleObjectsCommand } from '../../../../plugin-dist/commands/MoveMultipleObjectsCommand.js';
+export { MultiTransformCommand } from '../../../../plugin-dist/commands/MultiTransformCommand.js';
 // --- MRPP MODIFICATION END ---
