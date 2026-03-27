@@ -5,6 +5,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "devDependencies": {
+    "three-gpu-pathtracer": "^0.0.23",
+    "three-mesh-bvh": "^0.7.4",
     "typescript": "^6.0.2"
   }
 }
