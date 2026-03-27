@@ -85,7 +85,7 @@ function extractRelativeImports(fileContent) {
  */
 function resolveImportPath(fileDir, importPath) {
   const resolvedPath = path.resolve(fileDir, importPath);
-  // If the .js target exists, use it directly
+  // If the target exists, use it directly
   if (fs.existsSync(resolvedPath)) return resolvedPath;
   // tsc bundler mode: .ts files import with .js suffix → try .ts then .d.ts
   if (importPath.endsWith('.js')) {
@@ -93,6 +93,15 @@ function resolveImportPath(fileDir, importPath) {
     if (fs.existsSync(tsPath)) return tsPath;
     const dtsPath = resolvedPath.replace(/\.js$/, '.d.ts');
     if (fs.existsSync(dtsPath)) return dtsPath;
+  }
+  // plugin-dist/ fallback: resolve to plugin/ source when compiled output doesn't exist
+  if (resolvedPath.includes(`${path.sep}plugin-dist${path.sep}`) || resolvedPath.includes('/plugin-dist/')) {
+    const sourcePath = resolvedPath.replace(/plugin-dist/, 'plugin');
+    if (fs.existsSync(sourcePath)) return sourcePath;
+    if (importPath.endsWith('.js')) {
+      const srcTsPath = sourcePath.replace(/\.js$/, '.ts');
+      if (fs.existsSync(srcTsPath)) return srcTsPath;
+    }
   }
   return resolvedPath; // return original for error reporting
 }
