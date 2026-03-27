@@ -62,7 +62,10 @@ export default [
     },
     rules: {
       // 错误检测
-      "no-undef": "error",
+      // no-undef is disabled for TS files — TypeScript compiler handles this,
+      // and ESLint's no-undef doesn't understand TS-native DOM types like
+      // EventListener, CanvasImageSource, etc.
+      "no-undef": "off",
       "no-unused-vars": "off",
       "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
       "no-dupe-keys": "error",
