@@ -39,9 +39,10 @@ function collectAllFiles(dir) {
 }
 
 // ---------------------------------------------------------------------------
-// 迁移前状态：plugin/ 中不存在 .ts 文件（准备阶段の基線検証）
+// 迁移前状态：plugin/ 中不存在 .ts 文件（準備段階の基線検証）
+// 迁移完了後、このテストはスキップされます。
 // ---------------------------------------------------------------------------
-describe('迁移前状态: plugin/ 中不存在 TypeScript 文件', () => {
+describe.skip('迁移前状态: plugin/ 中不存在 TypeScript 文件', () => {
   const allFiles = collectAllFiles(PLUGIN_DIR);
 
   it('should have found files in plugin/', () => {
@@ -85,10 +86,9 @@ describe('迁移前状态: plugin/ 中不存在 TypeScript 文件', () => {
 });
 
 // ---------------------------------------------------------------------------
-// 迁移后状态：plugin/ 中存在 .ts 文件（迁移完了後に有効化）
-// 迁移完成后，将下面的 describe.skip 改为 describe 以启用此测试。
+// 迁移后状态：plugin/ 中存在 .ts 文件（迁移完了後に有効化済み）
 // ---------------------------------------------------------------------------
-describe.skip('迁移后状态: plugin/ 中存在 TypeScript 文件', () => {
+describe('迁移后状态: plugin/ 中存在 TypeScript 文件', () => {
   const allFiles = collectAllFiles(PLUGIN_DIR);
 
   it('should have found files in plugin/', () => {

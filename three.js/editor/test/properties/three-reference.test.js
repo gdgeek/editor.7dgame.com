@@ -16,15 +16,15 @@ import path from 'path';
 const PROJECT_ROOT = path.resolve(process.cwd(), '../../..');
 const PLUGIN_DIR = path.join(PROJECT_ROOT, 'plugin');
 
-function collectJsFiles(dir) {
+function collectSourceFiles(dir) {
   const results = [];
   if (!fs.existsSync(dir)) return results;
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       if (entry.name === 'node_modules' || entry.name === '.git') continue;
-      results.push(...collectJsFiles(full));
-    } else if (entry.isFile() && entry.name.endsWith('.js')) {
+      results.push(...collectSourceFiles(full));
+    } else if (entry.isFile() && (entry.name.endsWith('.js') || entry.name.endsWith('.ts'))) {
       results.push(full);
     }
   }
@@ -51,7 +51,7 @@ function extractThreeImports(content) {
 }
 
 describe('Property 3: three.js reference unchanged', () => {
-  const pluginFiles = collectJsFiles(PLUGIN_DIR);
+  const pluginFiles = collectSourceFiles(PLUGIN_DIR);
 
   // Collect all three.js import entries
   const entries = [];
@@ -66,7 +66,7 @@ describe('Property 3: three.js reference unchanged', () => {
     }
   }
 
-  it('should have found plugin JS files', () => {
+  it('should have found plugin source files', () => {
     expect(pluginFiles.length).toBeGreaterThan(0);
   });
 

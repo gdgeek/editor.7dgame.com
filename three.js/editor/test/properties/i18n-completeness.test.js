@@ -33,13 +33,13 @@ const TESTABLE_LANGUAGES = Object.keys(MRPP_LANG_TO_R183);
  * Parse mrppStrings from the source file by evaluating the object literal.
  */
 function loadMrppStrings() {
-  const filePath = path.join(PROJECT_ROOT, 'plugin/i18n/MrppStrings.js');
+  const filePath = path.join(PROJECT_ROOT, 'plugin/i18n/MrppStrings.ts');
   const content = fs.readFileSync(filePath, 'utf-8');
-  // Transform: `const mrppStrings = { ... }; export { mrppStrings };`
+  // Transform: `const mrppStrings: Record<...> = { ... }; export { mrppStrings };`
   // into a function that returns the object
   const cleaned = content
     .replace(/export\s*\{[^}]*\}\s*;?\s*$/, '')
-    .replace(/^const\s+mrppStrings\s*=\s*/, 'return ');
+    .replace(/^const\s+mrppStrings\s*(?::\s*[^=]+)?\s*=\s*/, 'return ');
   return new Function(cleaned)();
 }
 
