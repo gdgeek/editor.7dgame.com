@@ -1,8 +1,17 @@
+/* global THREE */
+/** @type {typeof import('three')} */
+// eslint-disable-next-line no-unused-vars -- THREE is loaded via import map in the HTML host
+
 import { UIBreak, UIText, UIRow, UIInput, UISelect } from '../../../three.js/editor/js/libs/ui.js';
 import { SetValueCommand } from '../../../three.js/editor/js/commands/SetValueCommand.js';
 
 class GestureCommand {
 
+  /**
+   * @param {object} editor - Editor 实例
+   * @param {import('three').Object3D} object - 目标 3D 对象
+   * @param {object} component - 命令数据对象
+   */
   constructor(editor, object, component) {
     this.editor = editor;
     this.object = object;
@@ -15,6 +24,10 @@ class GestureCommand {
     }
   }
 
+  /**
+   * 创建默认的 Gesture 命令数据。
+   * @returns {object} 命令数据对象
+   */
   static Create() {
     const component = {
       type: 'Gesture',
@@ -27,6 +40,10 @@ class GestureCommand {
     return component;
   }
 
+  /**
+   * 构建命令 UI 并添加到容器中。
+   * @param {object} container - UI 容器
+   */
   named(container) {
     container.add(new UIBreak());
     container.add(new UIBreak());
@@ -117,6 +134,7 @@ class GestureCommand {
     }
   }
 
+  /** 重新加载下拉选项并禁用已使用的手势 */
   reloadOptions() {
     const strings = this.editor.strings;
     const currentValue = this.gestureSelect ? this.gestureSelect.getValue() : '';
@@ -173,6 +191,7 @@ class GestureCommand {
     this.gestureSelect.onChange(this.update.bind(this));
   }
 
+  /** 将 UI 选择值更新到命令数据 */
   update() {
     this.component.parameters.action = this.gestureSelect.getValue();
 
@@ -187,15 +206,17 @@ class GestureCommand {
     this.editor.signals.componentChanged.dispatch(this.component);
   }
 
+  /** 从命令数据同步 UI 显示 */
   updateUI() {
     if (this.uuid) this.uuid.setValue(this.component.parameters.uuid);
     if (this.gestureSelect) this.gestureSelect.setValue(this.component.parameters.action);
   }
 
+  /**
+   * 渲染命令 UI。
+   * @param {object} container - UI 容器
+   */
   renderer(container) {
-    this.named(container);
-    this.updateUI();
-  }
 }
 
 export { GestureCommand };

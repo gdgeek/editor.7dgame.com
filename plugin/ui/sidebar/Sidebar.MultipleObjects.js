@@ -390,6 +390,11 @@ function SidebarMultipleObjects(editor) {
 
 				// 复制components并重新生成UUID
 				if (object.components) {
+					/**
+					 * MRPP 扩展属性：组件数组，附加在 THREE.Object3D 实例上。
+					 * 不属于 three.js 原生类型定义，迁移时需要声明扩展类型。
+					 * @type {Array<{type: string, [key: string]: any}>}
+					 */
 					clonedObject.components = JSON.parse(JSON.stringify(object.components));
 					clonedObject.components.forEach(component => {
 						if (component.parameters && component.parameters.uuid) {
@@ -400,6 +405,11 @@ function SidebarMultipleObjects(editor) {
 
 				// 复制commands并重新生成UUID
 				if (object.commands) {
+					/**
+					 * MRPP 扩展属性：命令数组，附加在 THREE.Object3D 实例上。
+					 * 不属于 three.js 原生类型定义，迁移时需要声明扩展类型。
+					 * @type {Array<{type: string, [key: string]: any}>}
+					 */
 					clonedObject.commands = JSON.parse(JSON.stringify(object.commands));
 					clonedObject.commands.forEach(command => {
 						if (command.parameters && command.parameters.uuid) {

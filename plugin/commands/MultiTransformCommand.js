@@ -1,19 +1,14 @@
 import * as THREE from 'three';
 import { Command } from '../../three.js/editor/js/Command.js';
 
-/**
- * @param editor 编辑器
- * @param objects 被变换的对象数组
- * @param newPositions 新位置映射表 {id: Vector3}
- * @param oldPositions 旧位置映射表 {id: Vector3}
- * @param newRotations 新旋转映射表 {id: Euler}
- * @param oldRotations 旧旋转映射表 {id: Euler}
- * @param newScales 新缩放映射表 {id: Vector3}
- * @param oldScales 旧缩放映射表 {id: Vector3}
- * @constructor
- */
 class MultiTransformCommand extends Command {
 
+	/**
+	 * @param {object} editor - Editor 实例
+	 * @param {Array<import('three').Object3D>} objects - 被变换的对象数组
+	 * @param {string} [type] - 命令类型标识
+	 * @param {string} [name] - 命令显示名称
+	 */
 	constructor(editor, objects, type, name) {
 		super(editor);
 
@@ -38,6 +33,7 @@ class MultiTransformCommand extends Command {
 		this.storeCurrentState();
 	}
 
+	/** 保存当前所有对象的变换信息 */
 	storeCurrentState() {
 		// 保存当前所有对象的变换信息
 		for (let i = 0; i < this.objects.length; i++) {
@@ -60,6 +56,7 @@ class MultiTransformCommand extends Command {
 		}
 	}
 
+	/** 更新新状态为当前对象状态 */
 	updateNewState() {
 		// 更新新状态为当前对象状态
 		for (let i = 0; i < this.objects.length; i++) {
@@ -77,11 +74,13 @@ class MultiTransformCommand extends Command {
 		}
 	}
 
+	/** 执行变换操作（保存当前状态为新状态） */
 	execute() {
 		// 执行时将当前状态保存为新状态
 		this.updateNewState();
 	}
 
+	/** 撤销变换操作（恢复到原来的状态） */
 	undo() {
 		// 恢复到原来的状态
 		for (let i = 0; i < this.objects.length; i++) {
@@ -118,6 +117,7 @@ class MultiTransformCommand extends Command {
 		this.editor.signals.sceneGraphChanged.dispatch();
 	}
 
+	/** 重做变换操作（恢复到新状态） */
 	redo() {
 		// 恢复到新状态
 		for (let i = 0; i < this.objects.length; i++) {

@@ -67,6 +67,11 @@ function SidebarCommand(editor) {
 		// 确保所有对象都有commands属性
 		for (let i = 0; i < selectedObjects.length; i++) {
 			if (selectedObjects[i].commands === undefined) {
+				/**
+				 * MRPP 扩展属性：命令数组，附加在 THREE.Object3D 实例上。
+				 * 不属于 three.js 原生类型定义，迁移时需要声明扩展类型。
+				 * @type {Array<{type: string, [key: string]: any}>}
+				 */
 				selectedObjects[i].commands = [];
 			}
 		}
@@ -169,7 +174,10 @@ function SidebarCommand(editor) {
 				// 首先为所有有效对象添加指令
 				for (let i = 0; i < validObjects.length; i++) {
 					const object = validObjects[i];
-					if (object.commands === undefined) object.commands = [];
+					if (object.commands === undefined) {
+						/** @type {Array<{type: string, [key: string]: any}>} — MRPP 扩展属性：命令数组 */
+						object.commands = [];
+					}
 					const command = CommandContainer.Create(chosenType);
 
 					if (command !== undefined) {

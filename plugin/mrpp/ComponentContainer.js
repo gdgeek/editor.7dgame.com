@@ -9,6 +9,11 @@ import { TooltipComponent } from './components/TooltipComponent.js';
 
 class ComponentContainer {
 
+	/**
+	 * @param {string} type
+	 * @param {object} editor
+	 * @returns {object|undefined}
+	 */
 	static Create( type, editor ) {
 
 		switch ( type.toLowerCase() ) {
@@ -29,6 +34,11 @@ class ComponentContainer {
 
 	}
 
+	/**
+	 * @param {object} editor
+	 * @param {import('three').Object3D} object
+	 * @param {{type: string, [key: string]: any}} component
+	 */
 	constructor( editor, object, component ) {
 
 		this.editor = editor;
@@ -58,6 +68,10 @@ class ComponentContainer {
 
 	}
 
+	/**
+	 * @param {object} container
+	 * @returns {void}
+	 */
 	renderer( container ) {
 
 		const strings = this.editor.strings;

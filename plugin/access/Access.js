@@ -41,6 +41,9 @@ export const ROLE_ABILITY = {
 
 export class Access {
 
+	/**
+	 * @param {object} editor - Editor 实例
+	 */
 	constructor(editor) {
 		this.editor = editor;
 	}
@@ -50,7 +53,11 @@ export class Access {
 		return this.editor.data?.user?.role || ROLES.GUEST;
 	}
 	
-	// 权限判断：能不能做某事？
+	/**
+	 * 权限判断：能不能做某事？
+	 * @param {string} ability - 权限标识符
+	 * @returns {boolean} 是否拥有该权限
+	 */
 	can(ability) {
 		// Root 拥有无限权限
 		if (this.role === ROLES.ROOT) return true;
@@ -59,14 +66,22 @@ export class Access {
 		return list.includes(ability);
 	} 
 
-	// 身份判断：是不是某角色？
+	/**
+	 * 身份判断：是不是某角色？
+	 * @param {string} role - 角色标识符
+	 * @returns {boolean} 是否为该角色
+	 */
 	is(role) {
 		return this.role === role;
 	}
     
-    // 权重判断：是否包含某角色及以上
-    atLeast(role) {
-        const levels = [ROLES.GUEST, ROLES.USER, ROLES.MANAGER, ROLES.ADMIN, ROLES.ROOT];
-        return levels.indexOf(this.role) >= levels.indexOf(role);
-    }
+	/**
+	 * 权重判断：是否包含某角色及以上
+	 * @param {string} role - 角色标识符
+	 * @returns {boolean} 当前角色是否 >= 指定角色
+	 */
+	atLeast(role) {
+		const levels = [ROLES.GUEST, ROLES.USER, ROLES.MANAGER, ROLES.ADMIN, ROLES.ROOT];
+		return levels.indexOf(this.role) >= levels.indexOf(role);
+	}
 }

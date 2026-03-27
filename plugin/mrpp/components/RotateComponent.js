@@ -1,7 +1,16 @@
+/* global THREE */
+/** @type {typeof import('three')} */
+// eslint-disable-next-line no-unused-vars -- THREE is loaded via import map in the HTML host
+
 import { UINumber, UIBreak, UIText, UIRow, UICheckbox, UIButton } from '../../../three.js/editor/js/libs/ui.js';
 import { SetValueCommand } from '../../../three.js/editor/js/commands/SetValueCommand.js';
 class RotateComponent {
 
+  /**
+   * @param {object} editor - Editor 实例
+   * @param {import('three').Object3D} object - 目标 3D 对象
+   * @param {object} component - 组件数据对象
+   */
   constructor(editor, object, component) {
 
     this.editor = editor;
@@ -9,6 +18,10 @@ class RotateComponent {
     this.component = component;
 
   }
+  /**
+   * 创建默认的 Rotate 组件数据。
+   * @returns {object} 组件数据对象
+   */
   static Create() {
     const component = {
       type: 'Rotate',
@@ -21,6 +34,10 @@ class RotateComponent {
     };
     return component;
   }
+  /**
+   * 构建旋转 UI 并添加到容器中。
+   * @param {object} container - UI 容器
+   */
   rotate(container) {
     const strings = this.editor.strings;
     container.add(new UIBreak());
@@ -111,6 +128,7 @@ class RotateComponent {
     buttonRow.add(previewButton);
     container.add(buttonRow);
   }
+  /** 将 UI 输入值更新到组件数据 */
   update() {
 
     const newRotation = new THREE.Euler(
@@ -157,6 +175,7 @@ class RotateComponent {
     }
 
   }
+  /** 从组件数据同步 UI 显示 */
   updateUI() {
 
     this.objectRotationX.setValue(this.component.parameters.speed.x);
@@ -164,11 +183,11 @@ class RotateComponent {
     this.objectRotationZ.setValue(this.component.parameters.speed.z);
 
   }
+  /**
+   * 渲染组件 UI。
+   * @param {object} container - UI 容器
+   */
   renderer(container) {
-
-    this.rotate(container);
-    this.updateUI();
-  }
 
 }
 export { RotateComponent };

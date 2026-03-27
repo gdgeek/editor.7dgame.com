@@ -1,8 +1,17 @@
+/* global THREE */
+/** @type {typeof import('three')} */
+// eslint-disable-next-line no-unused-vars -- THREE is loaded via import map in the HTML host
+
 import { UISelect, UIBreak, UIText, UIRow, UITextArea, UINumber } from '../../../three.js/editor/js/libs/ui.js';
 import { SetValueCommand } from '../../../three.js/editor/js/commands/SetValueCommand.js';
 import { Strings } from '../../../three.js/editor/js/Strings.js';
 
 class TooltipComponent {
+  /**
+   * @param {object} editor - Editor 实例
+   * @param {import('three').Object3D} object - 目标 3D 对象
+   * @param {object} component - 组件数据对象
+   */
   constructor(editor, object, component) {
     this.editor = editor;
     this.object = object;
@@ -33,6 +42,11 @@ class TooltipComponent {
     });
   }
 
+	/**
+	 * 创建默认的 Tooltip 组件数据。
+	 * @param {object} editor - Editor 实例
+	 * @returns {object} 组件数据对象
+	 */
 	static Create(editor) {
 
     const selectedObject = editor.selected;
@@ -71,6 +85,10 @@ class TooltipComponent {
     };
   }
 
+  /**
+   * 构建组件 UI 并添加到容器中。
+   * @param {object} container - UI 容器
+   */
   refresh(container) {
     container.add(new UIBreak());
     container.add(new UIBreak());
@@ -107,16 +125,30 @@ class TooltipComponent {
     container.add(targetRow);
   }
 
+  /**
+   * 获取指定类型的已选 UUID。
+   * @param {string} type - 参数类型键名
+   * @returns {string} UUID 或空字符串
+   */
   getSelectedUUID(type) {
     return this.component.parameters[type]?.uuid || '';
   }
 
+  /**
+   * 更新组件参数值。
+   * @param {string} key - 参数键名
+   * @param {*} value - 新值
+   */
   update(key, value) {
     this.component.parameters[key] = value;
     this.editor.execute(new SetValueCommand(this.editor, this.component.parameters, key, value));
     this.editor.signals.componentChanged.dispatch(this.component);
   }
 
+  /**
+   * 更新目标位置参数。
+   * @param {string} type - 参数类型键名（如 'target'）
+   */
   updatePosition(type) {
     const selectedUUID = this.targetSelect.getValue();
     const currentUUID = this.component.parameters[type]?.uuid || '';
@@ -154,9 +186,11 @@ class TooltipComponent {
     }
   }
 
+  /**
+   * 渲染组件 UI。
+   * @param {object} container - UI 容器
+   */
   renderer(container) {
-    this.refresh(container);
-  }
 }
 
 export { TooltipComponent };

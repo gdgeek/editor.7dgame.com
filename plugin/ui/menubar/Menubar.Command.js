@@ -45,7 +45,14 @@ function MenubarCommand(editor) {
                     // NOTE: 原先会检查重复并跳过已有指令的对象；改为对所有选中对象都添加指令（允许重复）
                     for (let i = 0; i < selectedObjects.length; i++) {
                         const object = selectedObjects[i];
-                        if (object.commands === undefined) object.commands = [];
+                        if (object.commands === undefined) {
+                            /**
+                             * MRPP 扩展属性：命令数组，附加在 THREE.Object3D 实例上。
+                             * 不属于 three.js 原生类型定义，迁移时需要声明扩展类型。
+                             * @type {Array<{type: string, [key: string]: any}>}
+                             */
+                            object.commands = [];
+                        }
                         const command = CommandContainer.Create(type);
 
                         if (command !== undefined) {

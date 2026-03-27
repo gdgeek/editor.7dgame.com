@@ -1,9 +1,18 @@
+/* global THREE */
+/** @type {typeof import('three')} */
+// eslint-disable-next-line no-unused-vars -- THREE is loaded via import map in the HTML host
+
 import { UISelect, UIBreak, UIText, UIRow, UIInput } from '../../../three.js/editor/js/libs/ui.js';
 
 import { SetValueCommand } from '../../../three.js/editor/js/commands/SetValueCommand.js';
 import { MultiCmdsCommand } from '../../../three.js/editor/js/commands/MultiCmdsCommand.js';
 class TriggerComponent {
 
+  /**
+   * @param {object} editor - Editor 实例
+   * @param {import('three').Object3D} object - 目标 3D 对象
+   * @param {object} component - 组件数据对象
+   */
   constructor(editor, object, component) {
 
     this.editor = editor;
@@ -19,6 +28,10 @@ class TriggerComponent {
     this.component = component;
 
   }
+  /**
+   * 创建默认的 Trigger 组件数据。
+   * @returns {object} 组件数据对象
+   */
   static Create() {
     const component = {
       type: 'Trigger',
@@ -32,9 +45,11 @@ class TriggerComponent {
   }
 
 
+  /**
+   * 构建组件 UI 并添加到容器中。
+   * @param {object} container - UI 容器
+   */
   refresh(container) {
-
-    container.add(new UIBreak());
     container.add(new UIBreak());
     const strings = this.editor.strings;
     {
@@ -79,6 +94,7 @@ class TriggerComponent {
     }
 
   }
+  /** 将 UI 输入值更新到组件数据 */
   update() {
     const commands = [];
 
@@ -117,9 +133,11 @@ class TriggerComponent {
     this.editor.signals.componentChanged.dispatch(this.component);
 
   }
+  /**
+   * 渲染组件 UI。
+   * @param {object} container - UI 容器
+   */
   renderer(container) {
-
-    this.refresh(container);
     //this.updateUI();
   }
 }

@@ -1,15 +1,14 @@
 import { Command } from '../../three.js/editor/js/Command.js';
 
-/**
- * @param editor Editor
- * @param object THREE.Object3D
- * @param script javascript object
- * @param attributeName string
- * @param newValue string, object
- * @constructor
- */
 class SetComponentValueCommand extends Command {
 
+	/**
+	 * @param {object} editor - Editor 实例
+	 * @param {import('three').Object3D} object - 目标 3D 对象
+	 * @param {object} component - 组件对象
+	 * @param {string} attributeName - 要设置的属性名
+	 * @param {*} newValue - 新属性值
+	 */
 	constructor(editor, object, component, attributeName, newValue) {
 
 		super(editor);
@@ -27,6 +26,7 @@ class SetComponentValueCommand extends Command {
 
 	}
 
+	/** 执行设置组件属性值操作 */
 	execute() {
 
 		this.component[this.attributeName] = this.newValue;
@@ -35,6 +35,7 @@ class SetComponentValueCommand extends Command {
 
 	}
 
+	/** 撤销设置组件属性值操作 */
 	undo() {
 
 		this.component[this.attributeName] = this.oldValue;
@@ -43,12 +44,20 @@ class SetComponentValueCommand extends Command {
 
 	}
 
+	/**
+	 * 合并可更新命令的新值。
+	 * @param {SetComponentValueCommand} cmd - 新的命令实例
+	 */
 	update(cmd) {
 
 		this.newValue = cmd.newValue;
 
 	}
 
+	/**
+	 * 序列化为 JSON。
+	 * @returns {object} JSON 表示
+	 */
 	toJSON() {
 
 		const output = super.toJSON(this);
@@ -63,6 +72,10 @@ class SetComponentValueCommand extends Command {
 
 	}
 
+	/**
+	 * 从 JSON 反序列化。
+	 * @param {object} json - JSON 数据
+	 */
 	fromJSON(json) {
 
 		super.fromJSON(json);

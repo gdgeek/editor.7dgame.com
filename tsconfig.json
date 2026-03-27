@@ -1,0 +1,29 @@
+{
+  // === 基础配置 ===
+  "compilerOptions": {
+    // 允许 TS 编译器处理 .js 文件（渐进式迁移的关键）
+    "allowJs": true,
+    // 初始阶段不对 .js 文件强制类型检查（迁移完成后改为 true）
+    "checkJs": false,
+    // 启用严格模式（迁移后的 .ts 文件立即受益）
+    "strict": true,
+    // 目标 ES2022，匹配浏览器原生 ES modules 环境
+    "target": "ES2022",
+    // ESNext 模块系统
+    "module": "ESNext",
+    // bundler 模块解析（支持 bare specifier）
+    "moduleResolution": "bundler",
+    // 仅做类型检查，不生成输出文件（保持无构建工具约束）
+    "noEmit": true,
+    // 映射 'three' bare specifier 到实际路径
+    "paths": {
+      "three": ["./three.js/build/three.module.js"]
+    },
+    // 基础路径
+    "baseUrl": "."
+  },
+  // 将 plugin/ 纳入编译范围
+  "include": ["plugin/**/*"],
+  // 排除测试和 node_modules
+  "exclude": ["node_modules", "three.js/editor/test/node_modules"]
+}

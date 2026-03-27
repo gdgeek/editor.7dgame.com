@@ -5,12 +5,21 @@ import { SetEventValueCommand } from '../commands/SetEventValueCommand.js';
 class EventContainer {
 
 
+	/**
+	 * @param {object} editor
+	 * @param {{title: string, uuid: string, [key: string]: any}} event
+	 * @param {string} mode
+	 */
 	constructor(editor, event, mode) {
 		this.editor = editor;
 		this.event = event;
 		this.mode = mode;
 	}
 
+	/**
+	 * @param {object} container
+	 * @returns {void}
+	 */
 	renderer(container) {
 		const strings = this.editor.strings;
 

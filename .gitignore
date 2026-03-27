@@ -1,1 +1,6 @@
 .lh
+
+node_modules/
+screenshots/
+three.js-r183.zip
+three.js.backup/

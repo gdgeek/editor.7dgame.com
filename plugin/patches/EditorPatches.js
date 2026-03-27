@@ -1,3 +1,6 @@
+/* global signals */
+// signals 库通过 <script> 标签加载为全局变量，提供 signals.Signal 构造函数
+
 import { DialogUtils } from '../utils/DialogUtils.js';
 import { Access } from '../access/Access.js';
 
@@ -24,6 +27,8 @@ const LANGUAGE_MAPPING = {
  * NOTE (r183): Config.js already initialises language from navigator.language
  * using short codes (en/zh/ja/ko/fr/fa). We only need to override when a
  * ?language= URL param is present.
+ *
+ * @param {object} editor - Editor 实例
  */
 function applyLanguageMapping( editor ) {
 
@@ -47,6 +52,8 @@ function applyLanguageMapping( editor ) {
  *
  * NOTE (r183): savingStarted and savingFinished are now built-in signals in r183.
  * We skip them to avoid overwriting existing Signal instances (and their listeners).
+ *
+ * @param {object} editor - Editor 实例
  */
 function registerCustomSignals( editor ) {
 
@@ -102,6 +109,8 @@ function registerCustomSignals( editor ) {
 
 /**
  * Register all MRPP custom properties on the editor instance.
+ *
+ * @param {object} editor - Editor 实例
  */
 function registerCustomProperties( editor ) {
 
@@ -116,6 +125,8 @@ function registerCustomProperties( editor ) {
 
 /**
  * Register all MRPP custom methods on the editor instance.
+ *
+ * @param {object} editor - Editor 实例
  */
 function registerCustomMethods( editor ) {
 
@@ -236,6 +247,8 @@ function registerCustomMethods( editor ) {
 /**
  * Monkey-patch editor.setScene to initialize commands arrays on all
  * objects in the incoming scene before they are added.
+ *
+ * @param {object} editor - Editor 实例
  */
 function patchSetScene( editor ) {
 
@@ -250,6 +263,11 @@ function patchSetScene( editor ) {
 
 				if ( object.commands === undefined ) {
 
+					/**
+					 * MRPP 扩展属性：命令数组，附加在 THREE.Object3D 实例上。
+					 * 不属于 three.js 原生类型定义，迁移时需要声明扩展类型。
+					 * @type {Array<{type: string, [key: string]: any}>}
+					 */
 					object.commands = [];
 
 				}
@@ -276,6 +294,8 @@ function patchSetScene( editor ) {
  *
  * NOTE (r183): The original addObject already supports parent/index parameters,
  * so we delegate all cases to originalAddObject and only add MRPP pre/post logic.
+ *
+ * @param {object} editor - Editor 实例
  */
 function patchAddObject( editor ) {
 
@@ -291,6 +311,11 @@ function patchAddObject( editor ) {
 			// Initialize commands array
 			if ( object.commands === undefined ) {
 
+				/**
+				 * MRPP 扩展属性：命令数组，附加在 THREE.Object3D 实例上。
+				 * 不属于 three.js 原生类型定义，迁移时需要声明扩展类型。
+				 * @type {Array<{type: string, [key: string]: any}>}
+				 */
 				object.commands = [];
 
 			}
@@ -354,6 +379,8 @@ function patchAddObject( editor ) {
 /**
  * Monkey-patch editor.removeObject to clean up selectedObjects array
  * when an object is removed.
+ *
+ * @param {object} editor - Editor 实例
  */
 function patchRemoveObject( editor ) {
 
@@ -401,6 +428,8 @@ function patchRemoveObject( editor ) {
  * NOTE (r183): editor.selector is now a Selector class instance (not a function),
  * so the old `this.selector(object)` filter pattern has been removed.
  * r183's editor.select delegates to this.selector.select(object) internally.
+ *
+ * @param {object} editor - Editor 实例
  */
 function patchSelect( editor ) {
 
@@ -469,6 +498,8 @@ function patchSelect( editor ) {
 
 /**
  * Monkey-patch editor.clear to also clear the selectedObjects array.
+ *
+ * @param {object} editor - Editor 实例
  */
 function patchClear( editor ) {
 
@@ -496,6 +527,8 @@ function patchClear( editor ) {
 
 /**
  * Monkey-patch editor.fromJSON to save resources from the JSON data.
+ *
+ * @param {object} editor - Editor 实例
  */
 function patchFromJSON( editor ) {
 
@@ -525,6 +558,8 @@ function patchFromJSON( editor ) {
 
 /**
  * Monkey-patch editor.toJSON to include resources in the output.
+ *
+ * @param {object} editor - Editor 实例
  */
 function patchToJSON( editor ) {
 

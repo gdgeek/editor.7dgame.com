@@ -92,15 +92,14 @@ const convertToHttps = (url) => {
 
 class MetaFactory extends Factory {
 
+	/**
+	 * @param {object} editor
+	 */
 	constructor(editor) {
-
-		super();
-
-		this.editor = editor;
-		this.ktx2Loader = null;
-
-
-	}
+	/**
+	 * @param {import('three').Object3D} node
+	 * @returns {Promise<void>}
+	 */
 	async addGizmo(node) {
 
 		return new Promise(resolve => {
@@ -121,6 +120,10 @@ class MetaFactory extends Factory {
 
 	}
 
+	/**
+	 * @param {object} data
+	 * @returns {import('three').Group}
+	 */
 	addModule(data) {
 
 		const node = new THREE.Group();
@@ -151,6 +154,13 @@ class MetaFactory extends Factory {
 		return node;
 
 	}
+	/**
+	 * @param {import('three').Object3D} root
+	 * @param {object} data
+	 * @param {Map<string, object>} resources
+	 * @param {object|null} [editor=null]
+	 * @returns {Promise<void>}
+	 */
 	async readMeta(root, data, resources, editor = null) {
 
 		if (data.children) {
@@ -188,6 +198,10 @@ class MetaFactory extends Factory {
 	}
 
 
+	/**
+	 * @param {string} url
+	 * @returns {Promise<import('three').Mesh>}
+	 */
 	async loadVoxel(url) {
 
 		url = convertToHttps(url);
@@ -214,7 +228,11 @@ class MetaFactory extends Factory {
 
 	}
 
-	// 添加设置模型透明度的辅助方法
+	/**
+	 * @param {import('three').Object3D} object
+	 * @param {number} alpha
+	 * @returns {void}
+	 */
 	setModelTransparency(object, alpha) {
 		object.traverse((child) => {
 			if (child.isMesh) {
@@ -232,7 +250,11 @@ class MetaFactory extends Factory {
 		});
 	}
 
-	// 设置单个材质透明度的辅助方法
+	/**
+	 * @param {import('three').Material} material
+	 * @param {number} alpha
+	 * @returns {import('three').Material}
+	 */
 	cloneMaterialTransparency(material, alpha) {
 		// 克隆材质以避免影响其他使用相同材质的对象
 		const clonedMaterial = material.clone();
@@ -247,6 +269,11 @@ class MetaFactory extends Factory {
 		}
 		return clonedMaterial;
 	}
+	/**
+	 * @param {string} url
+	 * @param {number} [alpha=1]
+	 * @returns {Promise<import('three').Group|null>}
+	 */
 	async loadPolygen(url, alpha = 1) {
 
 		url = convertToHttps(url);
@@ -321,6 +348,11 @@ class MetaFactory extends Factory {
 		});
 
 	}
+	/**
+	 * @param {object} data
+	 * @param {Map<string, object>} resources
+	 * @returns {Promise<import('three').Group|null>}
+	 */
 	async getPolygen(data, resources) {
 
 
@@ -358,6 +390,13 @@ class MetaFactory extends Factory {
 
 	}
 
+	/**
+	 * @param {string} url
+	 * @param {number} width
+	 * @param {number} height
+	 * @param {object} [config={}]
+	 * @returns {Promise<import('three').Mesh>}
+	 */
 	async getPlane(url, width, height, config = {}) {
 		const httpsUrl = convertToHttps(url);
 
@@ -368,6 +407,11 @@ class MetaFactory extends Factory {
 		});
 	}
 
+	/**
+	 * @param {object} data
+	 * @param {Map<string, object>} resources
+	 * @returns {Promise<import('three').Mesh|null>}
+	 */
 	async getPicture(data, resources) {
 		const layout = getResourceLayout(data, resources);
 		if (!layout) return null;
@@ -414,6 +458,11 @@ class MetaFactory extends Factory {
 		return mesh;
 	}
 
+	/**
+	 * @param {object} data
+	 * @param {Map<string, object>} resources
+	 * @returns {Promise<import('three').Mesh|null>}
+	 */
 	async getVideo(data, resources) {
 		const layout = getResourceLayout(data, resources);
 		if (!layout) return null;
@@ -456,6 +505,10 @@ class MetaFactory extends Factory {
 		return mesh;
 	}
 
+	/**
+	 * @param {object} data
+	 * @returns {Promise<import('three').Group>}
+	 */
 	async getPhototype(data) {
 		const entity = new THREE.Group();
 		entity.name = data.parameters.name;
@@ -511,6 +564,11 @@ class MetaFactory extends Factory {
 	*/
 
 	}
+	/**
+	 * @param {object} data
+	 * @param {Map<string, object>} _resources
+	 * @returns {Promise<import('three').Group>}
+	 */
 	async getEntity(data, _resources) {
 
 		const entity = new THREE.Group();
@@ -518,6 +576,11 @@ class MetaFactory extends Factory {
 		return entity;
 
 	}
+	/**
+	 * @param {object} data
+	 * @param {Map<string, object>} _resources
+	 * @returns {Promise<import('three').Mesh>}
+	 */
 	async getText(data, _resources) {
 		const rawParams = data.parameters || {};
 		const PIXEL_SCALE = 0.005;
@@ -577,6 +640,11 @@ class MetaFactory extends Factory {
 	}
 
 
+	/**
+	 * @param {object} data
+	 * @param {Map<string, object>} resources
+	 * @returns {Promise<import('three').Mesh|null>}
+	 */
 	async getVoxel(data, resources) {
 
 
@@ -590,6 +658,11 @@ class MetaFactory extends Factory {
 		return null;
 
 	}
+	/**
+	 * @param {object} data
+	 * @param {Map<string, object>} resources
+	 * @returns {Promise<import('three').Group|null>}
+	 */
 	async getSound(data, resources) {
 
 		if (resources.has(data.parameters.resource.toString())) {
@@ -603,6 +676,11 @@ class MetaFactory extends Factory {
 		return null;
 	}
 
+	/**
+	 * @param {object} data
+	 * @param {Map<string, object>} _resources
+	 * @returns {Promise<import('three').Group>}
+	 */
 	async getEmpty(data, _resources) {
 
 		const entity = new THREE.Group();
@@ -611,6 +689,11 @@ class MetaFactory extends Factory {
 
 	}
 
+	/**
+	 * @param {object} data
+	 * @param {Map<string, object>} resources
+	 * @returns {Promise<import('three').Group|import('three').Mesh|null>}
+	 */
 	async getParticle(data, resources) {
 		// 检查资源是否存在
 		if (resources.has(data.parameters.resource.toString())) {
@@ -670,6 +753,12 @@ class MetaFactory extends Factory {
 		return null;
 	}
 
+	/**
+	 * @param {object} data
+	 * @param {Map<string, object>} resources
+	 * @param {Set<string>} [visited=new Set()]
+	 * @returns {Promise<import('three').Object3D|null>}
+	 */
 	async building(data, resources, visited = new Set()) {
 
 		// 防止循环引用导致的堆栈溢出
@@ -744,8 +833,17 @@ class MetaFactory extends Factory {
 
 		});
 
-		// 设置components和commands
+		/**
+		 * MRPP 扩展属性：组件数组，附加在 THREE.Object3D 实例上。
+		 * 不属于 three.js 原生类型定义，迁移时需要声明扩展类型。
+		 * @type {Array<{type: string, [key: string]: any}>}
+		 */
 		node.components = data.children.components || [];
+		/**
+		 * MRPP 扩展属性：命令数组，附加在 THREE.Object3D 实例上。
+		 * 不属于 three.js 原生类型定义，迁移时需要声明扩展类型。
+		 * @type {Array<{type: string, [key: string]: any}>}
+		 */
 		node.commands = data.children.commands || [];
 
 		node.userData = userData;

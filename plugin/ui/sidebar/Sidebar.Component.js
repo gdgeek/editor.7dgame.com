@@ -80,6 +80,11 @@ function SidebarComponent(editor) {
 		// 确保所有对象都有components属性
 		for (let i = 0; i < selectedObjects.length; i++) {
 			if (selectedObjects[i].components === undefined) {
+				/**
+				 * MRPP 扩展属性：组件数组，附加在 THREE.Object3D 实例上。
+				 * 不属于 three.js 原生类型定义，迁移时需要声明扩展类型。
+				 * @type {Array<{type: string, [key: string]: any}>}
+				 */
 				selectedObjects[i].components = [];
 			}
 		}
@@ -165,6 +170,7 @@ function SidebarComponent(editor) {
 
 						// 确保对象有components属性
 						if (object.components === undefined) {
+							/** @type {Array<{type: string, [key: string]: any}>} — MRPP 扩展属性：组件数组 */
 							object.components = [];
 						}
 
@@ -196,6 +202,7 @@ function SidebarComponent(editor) {
 				for (let i = 0; i < validObjects.length; i++) {
 					const object = validObjects[i];
 					if (object.components === undefined) {
+						/** @type {Array<{type: string, [key: string]: any}>} — MRPP 扩展属性：组件数组 */
 						object.components = [];
 					}
 

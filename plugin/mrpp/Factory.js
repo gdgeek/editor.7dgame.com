@@ -1,8 +1,16 @@
+/* global THREE */
+/** @type {typeof import('three')} */
+// eslint-disable-next-line no-unused-vars -- THREE is loaded via import map in the HTML host
 
 class Factory {
 
 	constructor() {
 	}
+
+	/**
+	 * @param {import('three').Object3D} node
+	 * @returns {void}
+	 */
 	lockNode( node ) {
 
 		node.userData.hidden = true;
@@ -11,6 +19,11 @@ class Factory {
 		} );
 
 	}
+	/**
+	 * @param {import('three').Object3D} node
+	 * @param {{position: {x: number, y: number, z: number}, scale: {x: number, y: number, z: number}, rotate: {x: number, y: number, z: number}}} transform
+	 * @returns {void}
+	 */
 	setTransform( node, transform ) {
 		//alert(JSON.stringify(transform));
 		const p = transform.position;
@@ -26,6 +39,10 @@ class Factory {
 		);
 
 	}
+	/**
+	 * @param {{position: {x: number, y: number, z: number}, scale: {x: number, y: number, z: number}, rotate: {x: number, y: number, z: number}}} transform
+	 * @returns {import('three').Matrix4}
+	 */
 	getMatrix4( transform ) {
 
 		const p = transform.position;
