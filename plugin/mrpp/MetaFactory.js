@@ -96,6 +96,14 @@ class MetaFactory extends Factory {
 	 * @param {object} editor
 	 */
 	constructor(editor) {
+
+		super();
+
+		this.editor = editor;
+		this.ktx2Loader = null;
+
+	}
+
 	/**
 	 * @param {import('three').Object3D} node
 	 * @returns {Promise<void>}

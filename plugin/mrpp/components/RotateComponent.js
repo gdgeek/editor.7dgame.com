@@ -189,5 +189,9 @@ class RotateComponent {
    */
   renderer(container) {
 
+    this.rotate(container);
+    this.updateUI();
+  }
+
 }
 export { RotateComponent };

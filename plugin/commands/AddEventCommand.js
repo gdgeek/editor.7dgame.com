@@ -32,14 +32,14 @@ class AddEventCommand extends Command {
 			this.editor.scene.events = {};
 
 		}
-		if (this.mode == 'input') {
+		if (this.mode === 'input') {
 			if (this.editor.scene.events.inputs === undefined) {
 				this.editor.scene.events.inputs = [];
 			}
 			this.editor.scene.events.inputs.push(this.event);
 			this.editor.signals.eventAdded.dispatch(this.event);
 		}
-		if (this.mode == 'output') {
+		if (this.mode === 'output') {
 			if (this.editor.scene.events.outputs === undefined) {
 				this.editor.scene.events.outputs = [];
 			}
@@ -51,14 +51,14 @@ class AddEventCommand extends Command {
 	/** 撤销添加事件操作 */
 	undo() {
 
-		if (this.mode == 'input') {
+		if (this.mode === 'input') {
 			if (this.editor.scene.events.inputs === undefined) return;
 			const index = this.editor.scene.events.inputs.indexOf(this.event);
 			if (index !== - 1) {
 				this.editor.scene.events.inputs.splice(index, 1);
 				this.editor.signals.eventRemoved.dispatch(this.event);
 			}
-		} else if (this.mode == 'output') {
+		} else if (this.mode === 'output') {
 			if (this.editor.scene.events.outputs === undefined) return;
 			const index = this.editor.scene.events.outputs.indexOf(this.event);
 			if (index !== - 1) {
