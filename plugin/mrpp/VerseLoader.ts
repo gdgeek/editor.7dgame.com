@@ -27,10 +27,21 @@ class VerseLoader {
 
 		// r183: editor.selector is a Selector class instance, not a filter function.
 		// Monkey-patch its select() method to add the hidden/type filter.
+		// When a hidden child (e.g., GLTF mesh inside a polygen) is clicked,
+		// walk up the parent chain to find the nearest selectable entity root.
 		const originalSelectorSelect = editor.selector.select.bind( editor.selector );
 		editor.selector.select = function ( object: THREE.Object3D ) {
 			if ( object && (object as any).userData && (object as any).userData.hidden ) {
-				return; // skip hidden objects
+				// Walk up parent chain to find the entity root (has userData.type)
+				let parent = object.parent;
+				while ( parent ) {
+					if ( (parent as any).userData && (parent as any).userData.type && !(parent as any).userData.hidden ) {
+						// Re-enter select with the parent to also apply the type filter below
+						return editor.selector.select( parent );
+					}
+					parent = parent.parent;
+				}
+				return; // no selectable ancestor found, skip
 			}
 			if ( object && object.type && !types.includes( object.type ) ) {
 				return; // only allow specific types in verse mode
