@@ -1,0 +1,44 @@
+# 任务列表：plugin/ 目录 JS → TS 实际迁移
+
+## 任务
+
+- [x] 1. 基础设施配置
+  - [x] 1.1 更新 tsconfig.json：`noEmit: false`、`outDir: "plugin-dist"`、`rootDir: "plugin"`、`declaration: true`、`sourceMap: true`
+  - [x] 1.2 在项目根目录创建或更新 package.json，添加 `"build": "tsc -p tsconfig.json"` 和 `"typecheck": "tsc --noEmit -p tsconfig.json"` scripts
+  - [x] 1.3 更新 `.gitignore` 添加 `plugin-dist/`
+  - [x] 1.4 创建共享类型定义文件 `plugin/types/mrpp.d.ts`，定义 MrppComponent、MrppCommand、MrppEventIO、MrppObject3D、MrppScene、MrppEditor 接口及全局变量声明（signals、THREE、Window）
+  - [x] 1.5 更新 tsconfig.json 的 `include` 以包含 `plugin/types/**/*.d.ts`
+- [x] 2. 第一批迁移 — 底层文件（无 plugin 内部依赖）
+  - [x] 2.1 迁移 `plugin/utils/` 下 6 个文件：DialogUtils、TextUtils、WebpUtils、ScreenshotUtils、GlobalShortcuts、UnsavedEntityGuard（.js → .ts，JSDoc → 原生类型标注）
+  - [x] 2.2 迁移 `plugin/mrpp/components/` 下 5 个文件：ActionComponent、MovedComponent、RotateComponent、TooltipComponent、TriggerComponent（.js → .ts，移除 `/* global THREE */` 注释，使用 mrpp.d.ts 全局声明）
+  - [x] 2.3 迁移 `plugin/mrpp/commands/` 下 2 个文件：GestureCommand、VoiceCommand（.js → .ts，移除 `/* global THREE */` 注释）
+  - [x] 2.4 验证第一批：运行 `tsc --noEmit` 确认无类型错误
+- [x] 3. 第二批迁移 — 中间层文件
+  - [x] 3.1 迁移 `plugin/mrpp/` 下容器和工厂文件：ComponentContainer、CommandContainer、EventContainer、Factory、MetaFactory、VerseFactory、Builder（.js → .ts）
+  - [x] 3.2 迁移 `plugin/commands/` 下 11 个命令文件：AddCommandCommand、AddComponentCommand、AddEventCommand、RemoveCommandCommand、RemoveComponentCommand、RemoveEventCommand、SetCommandValueCommand、SetComponentValueCommand、SetEventValueCommand、MoveMultipleObjectsCommand、MultiTransformCommand（.js → .ts）
+  - [x] 3.3 迁移 `plugin/access/Access.js` → Access.ts 和 `plugin/i18n/MrppStrings.js` → MrppStrings.ts
+  - [x] 3.4 验证第二批：运行 `tsc --noEmit` 确认无类型错误
+- [x] 4. 第三批迁移 — 上层文件
+  - [x] 4.1 迁移 `plugin/mrpp/` 下 Loader 文件：MetaLoader、VerseLoader、EditorLoader（.js → .ts）
+  - [x] 4.2 迁移 `plugin/patches/` 下 6 个文件：EditorPatches、LoaderPatches、MenubarPatches、SidebarPatches、UIThreePatches、ViewportPatches（.js → .ts，移除 `/* global signals */` 注释）
+  - [x] 4.3 迁移 `plugin/ui/sidebar/` 下 11 个文件和 `plugin/ui/menubar/` 下 9 个文件（.js → .ts，为工厂函数添加参数和返回值类型标注）
+  - [x] 4.4 迁移 `plugin/bootstrap/` 下 2 个文件：meta-bootstrap、verse-bootstrap（.js → .ts）
+  - [x] 4.5 验证第三批：运行 `tsc --noEmit` 确认无类型错误
+- [x] 5. HTML 入口与最终配置
+  - [x] 5.1 更新 `three.js/editor/meta-editor.html` 和 `verse-editor.html` 中的 bootstrap import 路径，从 `../../plugin/bootstrap/xxx.js` 改为 `../../plugin-dist/bootstrap/xxx.js`
+  - [x] 5.2 更新 tsconfig.json 最终配置：移除 `allowJs: true`，更新 `include` 为 `["plugin/**/*.ts", "plugin/types/**/*.d.ts"]`
+  - [x] 5.3 运行 `tsc -p tsconfig.json` 完整编译，验证 `plugin-dist/` 输出正确
+- [x] 6. 测试更新与验证
+  - [x] 6.1 更新 `import-paths.test.js`：修改文件收集函数以同时扫描 `.ts` 文件，更新 import 路径解析逻辑
+  - [x] 6.2 更新 `three-reference.test.js`：修改文件收集函数以扫描 `.ts` 文件
+  - [x] 6.3 更新 `i18n-completeness.test.js`：更新 MrppStrings 文件路径为 `.ts`
+  - [x] 6.4 更新 `typescript-migration.test.js`：启用"迁移后状态"测试（移除 `describe.skip`），移除或跳过"迁移前状态"测试
+  - [x] 6.5 运行 `npm test` 验证所有现有属性测试通过
+- [x] 7. 新增属性测试
+  - [x] 7.1 [PBT] Property 1: 所有迁移目标文件均为 .ts — 随机采样迁移目标清单，验证 .ts 文件存在且 .js 不存在
+  - [x] 7.2 [PBT] Property 2: plugin-dist/ 镜像 plugin/ 目录结构 — 随机采样 plugin/ 中的 .ts 文件，验证 plugin-dist/ 中对应 .js 存在
+  - [x] 7.3 [PBT] Property 3: 所有 .ts 文件的 import 路径使用 .js 后缀 — 随机采样 .ts 文件中的 import 语句，验证路径以 .js 结尾
+  - [x] 7.4 [PBT] Property 4: 导出接口名称不变 — 随机采样 .ts 文件，比较 export 名称与基线快照
+  - [x] 7.5 [PBT] Property 5: 无遗留全局声明注释 — 随机采样 .ts 文件，验证不含 `/* global */` 注释
+  - [x] 7.6 [PBT] Property 6: 无 @ts-ignore 或 @ts-expect-error — 随机采样 .ts 文件，验证不含禁止的注释
+  - [x] 7.7 [PBT] Property 7: three.js/editor/js/ 目录未被修改 — 随机采样 editor/js/ 文件，验证无 .ts 文件存在

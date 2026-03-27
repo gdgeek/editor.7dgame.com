@@ -25,12 +25,15 @@ const EXCLUDE_FILES = new Set(['acorn.js']);
 // Known pre-existing broken imports unrelated to the MRPP migration
 const KNOWN_BROKEN_IMPORTS = new Set([
   'plugin/mrpp/EditorLoader.js::./SceneCreater.js', // SceneCreater.js never existed in the repo
+  'plugin/mrpp/EditorLoader.ts::./SceneCreater.js', // SceneCreater.js never existed in the repo (TS migration)
 ]);
 
 /**
- * Recursively collect all .js files under a directory.
+ * Recursively collect source files under a directory.
+ * @param {string} dir - Directory to scan
+ * @param {string[]} extensions - File extensions to include (e.g. ['.js', '.ts'])
  */
-function collectJsFiles(dir) {
+function collectSourceFiles(dir, extensions = ['.js']) {
   const results = [];
   if (!fs.existsSync(dir)) return results;
 
@@ -39,8 +42,8 @@ function collectJsFiles(dir) {
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       if (SKIP_DIRS.has(entry.name)) continue;
-      results.push(...collectJsFiles(fullPath));
-    } else if (entry.isFile() && entry.name.endsWith('.js')) {
+      results.push(...collectSourceFiles(fullPath, extensions));
+    } else if (entry.isFile() && extensions.some(ext => entry.name.endsWith(ext))) {
       if (EXCLUDE_FILES.has(entry.name)) continue;
       results.push(fullPath);
     }
@@ -75,17 +78,37 @@ function extractRelativeImports(fileContent) {
 }
 
 /**
+ * Resolve an import path, handling tsc bundler mode where .ts files
+ * import with .js suffix that resolves to .ts source files.
+ * Also handles .d.ts type declaration files.
+ * Returns the resolved path that actually exists (or the original if none exists).
+ */
+function resolveImportPath(fileDir, importPath) {
+  const resolvedPath = path.resolve(fileDir, importPath);
+  // If the .js target exists, use it directly
+  if (fs.existsSync(resolvedPath)) return resolvedPath;
+  // tsc bundler mode: .ts files import with .js suffix → try .ts then .d.ts
+  if (importPath.endsWith('.js')) {
+    const tsPath = resolvedPath.replace(/\.js$/, '.ts');
+    if (fs.existsSync(tsPath)) return tsPath;
+    const dtsPath = resolvedPath.replace(/\.js$/, '.d.ts');
+    if (fs.existsSync(dtsPath)) return dtsPath;
+  }
+  return resolvedPath; // return original for error reporting
+}
+
+/**
  * Build a list of { file, importPath, resolvedPath } for all relative imports.
  */
-function collectAllImportEntries(jsFiles) {
+function collectAllImportEntries(sourceFiles) {
   const entries = [];
-  for (const filePath of jsFiles) {
+  for (const filePath of sourceFiles) {
     const content = fs.readFileSync(filePath, 'utf-8');
     const relativeImports = extractRelativeImports(content);
     const fileDir = path.dirname(filePath);
 
     for (const importPath of relativeImports) {
-      const resolvedPath = path.resolve(fileDir, importPath);
+      const resolvedPath = resolveImportPath(fileDir, importPath);
       entries.push({
         file: path.relative(PROJECT_ROOT, filePath),
         importPath,
@@ -97,19 +120,19 @@ function collectAllImportEntries(jsFiles) {
 }
 
 describe('Property 1: Import path validity', () => {
-  // Collect all JS files from plugin/ and three.js/editor/js/
+  // Collect source files: .ts files from plugin/, .js files from three.js/editor/js/
   const pluginDir = path.join(PROJECT_ROOT, 'plugin');
   const editorJsDir = path.join(PROJECT_ROOT, 'three.js', 'editor', 'js');
 
-  const pluginFiles = collectJsFiles(pluginDir);
-  const editorJsFiles = collectJsFiles(editorJsDir);
-  const allJsFiles = [...pluginFiles, ...editorJsFiles];
+  const pluginFiles = collectSourceFiles(pluginDir, ['.js', '.ts']);
+  const editorJsFiles = collectSourceFiles(editorJsDir, ['.js']);
+  const allSourceFiles = [...pluginFiles, ...editorJsFiles];
 
   // Pre-compute all import entries
-  const allImportEntries = collectAllImportEntries(allJsFiles);
+  const allImportEntries = collectAllImportEntries(allSourceFiles);
 
-  it('should have found JS files to test', () => {
-    expect(allJsFiles.length).toBeGreaterThan(0);
+  it('should have found source files to test', () => {
+    expect(allSourceFiles.length).toBeGreaterThan(0);
     expect(allImportEntries.length).toBeGreaterThan(0);
   });
 
