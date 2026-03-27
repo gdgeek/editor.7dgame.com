@@ -1,14 +1,13 @@
 import { Command } from '../../three.js/editor/js/Command.js';
 
-/**
- * @param editor Editor
- * @param objects Array<THREE.Object3D> 选中的对象数组
- * @param newParent THREE.Object3D 新的父级对象
- * @param newBefore THREE.Object3D 在此对象之前插入（可选）
- * @constructor
- */
 class MoveMultipleObjectsCommand extends Command {
 
+	/**
+	 * @param {object} editor - Editor 实例
+	 * @param {Array<import('three').Object3D>} objects - 选中的对象数组
+	 * @param {import('three').Object3D} newParent - 新的父级对象
+	 * @param {import('three').Object3D} [newBefore] - 在此对象之前插入（可选）
+	 */
 	constructor( editor, objects, newParent, newBefore ) {
 
 		super( editor );
@@ -53,6 +52,7 @@ class MoveMultipleObjectsCommand extends Command {
 		}
 	}
 
+	/** 执行移动多个对象操作 */
 	execute() {
 		// 先从原来的父对象中移除所有选中对象
 		for (let i = 0; i < this.objects.length; i++) {
@@ -79,6 +79,7 @@ class MoveMultipleObjectsCommand extends Command {
 		this.editor.signals.sceneGraphChanged.dispatch();
 	}
 
+	/** 撤销移动多个对象操作 */
 	undo() {
 		// 从新父对象中移除所有选中对象
 		for (let i = 0; i < this.objects.length; i++) {
@@ -103,6 +104,10 @@ class MoveMultipleObjectsCommand extends Command {
 		this.editor.signals.sceneGraphChanged.dispatch();
 	}
 
+	/**
+	 * 序列化为 JSON。
+	 * @returns {object} JSON 表示
+	 */
 	toJSON() {
 		const output = super.toJSON(this);
 
@@ -115,6 +120,10 @@ class MoveMultipleObjectsCommand extends Command {
 		return output;
 	}
 
+	/**
+	 * 从 JSON 反序列化。
+	 * @param {object} json - JSON 数据
+	 */
 	fromJSON(json) {
 		super.fromJSON(json);
 

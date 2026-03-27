@@ -189,7 +189,9 @@ function MenubarReplace( editor ) {
                             if ( typeof sortingOrder !== 'undefined' ) node.userData.sortingOrder = sortingOrder;
 							if (typeof loop !== 'undefined') node.userData.loop = loop;
 
+							/** @type {Array<{type: string, [key: string]: any}>} — MRPP 扩展属性：组件数组 */
 							node.components = components;
+							/** @type {Array<{type: string, [key: string]: any}>} — MRPP 扩展属性：命令数组 */
 							node.commands = commands;
 
 							// 将需要保留的子节点添加到新对象

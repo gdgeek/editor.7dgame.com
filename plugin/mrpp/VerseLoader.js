@@ -1,56 +1,83 @@
 import * as THREE from 'three';
 import { MetaFactory } from './MetaFactory.js';
 
-function VerseLoader(editor) {
+class VerseLoader {
 
-	const types = ['Module'];
-	this.json = null;
-	this.isLoading = true;
-	this.loadingPromises = [];
+	/**
+	 * @param {object} editor - Editor 実例
+	 */
+	constructor(editor) {
 
-	editor.renderer = new THREE.WebGLRenderer();
-	const factory = new MetaFactory(editor);
-	const self = this;
+		this.editor = editor;
+		const types = ['Module'];
+		this.types = types;
+		this.json = null;
+		this.isLoading = true;
+		this.loadingPromises = [];
 
-	// r183: editor.selector is a Selector class instance, not a filter function.
-	// Monkey-patch its select() method to add the hidden/type filter.
-	const originalSelectorSelect = editor.selector.select.bind( editor.selector );
-	editor.selector.select = function ( object ) {
-		if ( object && object.userData && object.userData.hidden ) {
-			return; // skip hidden objects
-		}
-		if ( object && object.type && !types.includes( object.type ) ) {
-			return; // only allow specific types in verse mode
-		}
-		return originalSelectorSelect( object );
-	};
+		editor.renderer = new THREE.WebGLRenderer();
+		this.factory = new MetaFactory(editor);
+
+		// r183: editor.selector is a Selector class instance, not a filter function.
+		// Monkey-patch its select() method to add the hidden/type filter.
+		const originalSelectorSelect = editor.selector.select.bind( editor.selector );
+		editor.selector.select = function ( object ) {
+			if ( object && object.userData && object.userData.hidden ) {
+				return; // skip hidden objects
+			}
+			if ( object && object.type && !types.includes( object.type ) ) {
+				return; // only allow specific types in verse mode
+			}
+			return originalSelectorSelect( object );
+		};
 
 
-	editor.signals.upload.add(function () {
-		self.save();
-	});
+		editor.signals.upload.add(() => {
+			this.save();
+		});
 
-	editor.signals.release.add(function () {
-		self.publish();
-	});
+		editor.signals.release.add(() => {
+			this.publish();
+		});
 
-	this.getVerse = async function () {
-		return this.write(editor.scene);
-	};
-	this.isChanged = function (json) {
+		editor.signals.savingStarted.dispatch();
+	}
+
+	/**
+	 * @returns {Promise<object>} 序列化後の verse データ
+	 */
+	async getVerse() {
+		return this.write(this.editor.scene);
+	}
+
+	/**
+	 * @param {string} json - JSON 文字列
+	 * @returns {boolean} 前回保存した JSON と異なるかどうか
+	 */
+	isChanged(json) {
 		if (this.json === null) return false;
 		return this.json !== json;
-	};
-	this.changed = async function () {
+	}
+
+	/**
+	 * @returns {Promise<boolean>} 現在のシーンに未保存の変更があるかどうか
+	 */
+	async changed() {
 		const verse = await this.getVerse();
 		return this.isChanged(JSON.stringify({ verse }));
-	};
+	}
 
-	this.getLoadingStatus = function() {
+	/**
+	 * @returns {boolean} ロード中かどうか
+	 */
+	getLoadingStatus() {
 		return this.isLoading;
-	};
+	}
 
-	this.save = async function () {
+	/**
+	 * @returns {Promise<void>}
+	 */
+	async save() {
 		if (this.isLoading) {
 			console.warn('Cannot save while modules are still loading');
 			return;
@@ -61,20 +88,23 @@ function VerseLoader(editor) {
 		const json = JSON.stringify(data);
 		const changed = this.isChanged(json);
 		if (changed) {
-			editor.signals.messageSend.dispatch({
+			this.editor.signals.messageSend.dispatch({
 				action: 'save-verse',
 				data
 			});
 			this.json = json;
 		} else {
 			// console.warn('No changes detected, sending save-verse-none');
-			editor.signals.messageSend.dispatch({
+			this.editor.signals.messageSend.dispatch({
 				action: 'save-verse-none'
 			});
 		}
-	};
+	}
 
-	this.publish = async function () {
+	/**
+	 * @returns {Promise<void>}
+	 */
+	async publish() {
 		if (this.isLoading) {
 			console.warn('Cannot publish while modules are still loading');
 			return;
@@ -84,14 +114,21 @@ function VerseLoader(editor) {
 		const data = { verse };
 		const json = JSON.stringify(data);
 
-		editor.signals.messageSend.dispatch({
+		this.editor.signals.messageSend.dispatch({
 			action: "release-verse",
 			data,
 		});
 		this.json = json;
-	};
+	}
 
-	this.compareObjectsAndPrintDifferences = function (obj1, obj2, path = '', tolerance = 0.0001) {
+	/**
+	 * @param {object} obj1 - 比較対象のオブジェクト 1
+	 * @param {object} obj2 - 比較対象のオブジェクト 2
+	 * @param {string} [path=''] - 現在のプロパティパス（再帰用）
+	 * @param {number} [tolerance=0.0001] - 数値比較の許容誤差
+	 * @returns {void}
+	 */
+	compareObjectsAndPrintDifferences(obj1, obj2, path = '', tolerance = 0.0001) {
 
 		if (obj1 == null || obj2 == null) {
 
@@ -111,7 +148,7 @@ function VerseLoader(editor) {
 
 			if (typeof val1 === 'object' && typeof val2 === 'object') {
 
-				self.compareObjectsAndPrintDifferences(val1, val2, currentPath);
+				this.compareObjectsAndPrintDifferences(val1, val2, currentPath);
 
 			} else if (typeof val1 === 'number' && typeof val2 === 'number') {
 
@@ -145,11 +182,15 @@ function VerseLoader(editor) {
 
 		}
 
-	};
+	}
 
-	this.writeData = function (node) {
+	/**
+	 * @param {import('three').Object3D} node - シーンノード
+	 * @returns {object | null} シリアライズされたモジュールデータ、対象外の場合は null
+	 */
+	writeData(node) {
 
-		if (!types.includes(node.type)) {
+		if (!this.types.includes(node.type)) {
 
 			return null;
 
@@ -192,9 +233,13 @@ function VerseLoader(editor) {
 		data.parameters.active = node.visible;
 		return data;
 
-	};
+	}
 
-	this.write = async function (root) {
+	/**
+	 * @param {import('three').Scene} root - シーンルートノード
+	 * @returns {Promise<object>} シリアライズされた Verse データ
+	 */
+	async write(root) {
 
 		const data = {};
 		data.type = 'Verse';
@@ -220,9 +265,16 @@ function VerseLoader(editor) {
 		data.children = { modules };
 		return data;
 
-	};
+	}
 
-	this.read = async function (root, data, resources, metas) {
+	/**
+	 * @param {import('three').Scene} root - シーンルートノード
+	 * @param {object} data - verse データオブジェクト
+	 * @param {Map<string, object>} resources - リソースマップ
+	 * @param {Map<string, object>} metas - メタデータマップ
+	 * @returns {Promise<void>}
+	 */
+	async read(root, data, resources, metas) {
 		return new Promise(async (resolve, reject) => {
 			try {
 		root.uuid = data.parameters.uuid;
@@ -245,18 +297,18 @@ function VerseLoader(editor) {
 					moduleResolve();
 					return;
 				}
-				const node = factory.addModule(item);
+				const node = this.factory.addModule(item);
 				node.userData.custom = meta.custom;
 				root.add(node);
-				editor.signals.sceneGraphChanged.dispatch();
+				this.editor.signals.sceneGraphChanged.dispatch();
 
 				if (meta && meta.data && meta.custom !== 0) {
-					await factory.readMeta(node, meta.data, resources);
-					editor.signals.sceneGraphChanged.dispatch();
+					await this.factory.readMeta(node, meta.data, resources);
+					this.editor.signals.sceneGraphChanged.dispatch();
 				}
 
-				await factory.addGizmo(node);
-				editor.signals.sceneGraphChanged.dispatch();
+				await this.factory.addGizmo(node);
+				this.editor.signals.sceneGraphChanged.dispatch();
 								moduleResolve();
 							} catch (error) {
 								console.error('Error loading module:', error);
@@ -275,27 +327,34 @@ function VerseLoader(editor) {
 				reject(err);
 			}
 		});
-	};
+	}
 
-	this.clear = async function () {
+	/**
+	 * @returns {Promise<void>}
+	 */
+	async clear() {
 		this.scene.clear();
-	};
+	}
 
-	this.load = async function (verse) {
+	/**
+	 * @param {object} verse - ロードする verse データ（data、resources、metas フィールドを含む）
+	 * @returns {Promise<void>}
+	 */
+	async load(verse) {
 		this.isLoading = true;
 		this.loadingPromises = [];
 
-		editor.signals.savingStarted.dispatch();
+		this.editor.signals.savingStarted.dispatch();
 
-		let scene = editor.scene;
+		let scene = this.editor.scene;
 		if (scene == null) {
 			scene = new THREE.Scene();
 			scene.name = 'Scene';
-			editor.setScene(scene);
+			this.editor.setScene(scene);
 		}
 
-		editor.signals.sceneGraphChanged.dispatch();
-		let lights = editor.scene.getObjectByName('$lights');
+		this.editor.signals.sceneGraphChanged.dispatch();
+		let lights = this.editor.scene.getObjectByName('$lights');
 		if (lights == null) {
 			lights = new THREE.Group();
 			lights.name = '$lights';
@@ -312,16 +371,16 @@ function VerseLoader(editor) {
 			light3.name = 'light3';
 			lights.add(light3);
 			scene.add(lights);
-			factory.lockNode(lights);
-			editor.signals.sceneGraphChanged.dispatch();
+			this.factory.lockNode(lights);
+			this.editor.signals.sceneGraphChanged.dispatch();
 		}
 
-		const root = editor.scene;
+		const root = this.editor.scene;
 
 		if (verse.data !== null) {
 			const data = verse.data;
-			if (typeof self.data !== 'undefined') {
-				await this.removeNode(self.data, data);
+			if (typeof this.data !== 'undefined') {
+				await this.removeNode(this.data, data);
 			}
 
 			const resources = new Map();
@@ -339,28 +398,27 @@ function VerseLoader(editor) {
 
 			Promise.all(this.loadingPromises).then(async () => {
 				this.isLoading = false;
-				editor.signals.savingFinished.dispatch();
+				this.editor.signals.savingFinished.dispatch();
 
 			const copy = await this.write(root);
-			self.compareObjectsAndPrintDifferences(data, copy);
+			this.compareObjectsAndPrintDifferences(data, copy);
 
-			editor.signals.sceneGraphChanged.dispatch();
+			this.editor.signals.sceneGraphChanged.dispatch();
 		this.json = JSON.stringify({ verse: await this.write(root) });
 
 				// console.warn('All modules loaded successfully');
 			}).catch(error => {
 				console.error('Error loading modules:', error);
 				this.isLoading = false;
-				editor.signals.savingFinished.dispatch();
+				this.editor.signals.savingFinished.dispatch();
 			});
 		} else {
 			this.isLoading = false;
-			editor.signals.savingFinished.dispatch();
+			this.editor.signals.savingFinished.dispatch();
 			this.json = JSON.stringify({ verse: await this.write(root) });
 		}
-	};
+	}
 
-	editor.signals.savingStarted.dispatch();
 }
 
 export { VerseLoader };

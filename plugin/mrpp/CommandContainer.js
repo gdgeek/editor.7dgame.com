@@ -6,6 +6,10 @@ import { GestureCommand } from './commands/GestureCommand.js';
 
 class CommandContainer {
 
+	/**
+	 * @param {string} type
+	 * @returns {object|undefined}
+	 */
 	static Create(type) {
 		switch (type.toLowerCase()) {
 			case 'voice':
@@ -15,6 +19,11 @@ class CommandContainer {
 		}
 	}
 
+	/**
+	 * @param {object} editor
+	 * @param {import('three').Object3D} object
+	 * @param {{type: string, [key: string]: any}} command
+	 */
 	constructor(editor, object, command) {
 		this.editor = editor;
 		this.object = object;
@@ -32,6 +41,10 @@ class CommandContainer {
 		}
 	}
 
+	/**
+	 * @param {object} container
+	 * @returns {void}
+	 */
 	renderer(container) {
 		const strings = this.editor.strings;
 		const localizedType = strings.getKey(`sidebar/command/select/${this.command.type.toLowerCase()}`) || this.command.type;

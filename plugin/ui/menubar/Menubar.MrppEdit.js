@@ -46,6 +46,11 @@ function copyComponentsWithNewUUIDs( source, target ) {
 
 	if ( source.components ) {
 
+		/**
+		 * MRPP 扩展属性：组件数组，附加在 THREE.Object3D 实例上。
+		 * 不属于 three.js 原生类型定义，迁移时需要声明扩展类型。
+		 * @type {Array<{type: string, [key: string]: any}>}
+		 */
 		target.components = JSON.parse( JSON.stringify( source.components ) );
 		target.components.forEach( component => {
 
@@ -73,6 +78,11 @@ function copyComponentsWithNewUUIDs( source, target ) {
 
 	if ( source.commands ) {
 
+		/**
+		 * MRPP 扩展属性：命令数组，附加在 THREE.Object3D 实例上。
+		 * 不属于 three.js 原生类型定义，迁移时需要声明扩展类型。
+		 * @type {Array<{type: string, [key: string]: any}>}
+		 */
 		target.commands = JSON.parse( JSON.stringify( source.commands ) );
 		target.commands.forEach( command => {
 
@@ -351,7 +361,9 @@ function injectMrppEditMenu( editor, editMenuOptions ) {
 		if ( typeof sortingOrder !== 'undefined' ) node.userData.sortingOrder = sortingOrder;
 		if ( typeof loop !== 'undefined' ) node.userData.loop = loop;
 
+		/** @type {Array<{type: string, [key: string]: any}>} — MRPP 扩展属性：组件数组 */
 		node.components = components;
+		/** @type {Array<{type: string, [key: string]: any}>} — MRPP 扩展属性：命令数组 */
 		node.commands = commands;
 
 		childrenToKeep.forEach( child => {

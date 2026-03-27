@@ -1,3 +1,7 @@
+/* global THREE */
+/** @type {typeof import('three')} */
+// eslint-disable-next-line no-unused-vars -- THREE is loaded via import map in the HTML host
+
 import { UIPanel, UIBreak, UIButton, UIDiv, UIText, UIRow, UISelect, UIInput } from '../../../three.js/editor/js/libs/ui.js';
 
 function SidebarAnimation(editor) {

@@ -1,79 +1,112 @@
 import * as THREE from 'three';
 import { MetaFactory } from './MetaFactory.js';
 //import { SceneBuilder } from './SceneBuilder.js'
-function MetaLoader(editor) {
+class MetaLoader {
 
-	this.json = null;
-	this.isLoading = true;
-	this.loadingPromises = [];
-	// r183: editor.selector is a Selector class instance, not a filter function.
-	// Monkey-patch its select() method to add the hidden-object filter.
-	const originalSelectorSelect = editor.selector.select.bind( editor.selector );
-	editor.selector.select = function ( object ) {
-		if ( object && object.userData && object.userData.hidden ) {
-			return; // skip hidden objects
-		}
-		return originalSelectorSelect( object );
-	};
+	/**
+	 * @param {object} editor - Editor 实例
+	 */
+	constructor(editor) {
 
-	const self = this;
+		this.editor = editor;
+		this.json = null;
+		this.isLoading = true;
+		this.loadingPromises = [];
+		// r183: editor.selector is a Selector class instance, not a filter function.
+		// Monkey-patch its select() method to add the hidden-object filter.
+		const originalSelectorSelect = editor.selector.select.bind( editor.selector );
+		editor.selector.select = function ( object ) {
+			if ( object && object.userData && object.userData.hidden ) {
+				return; // skip hidden objects
+			}
+			return originalSelectorSelect( object );
+		};
 
-	this.getMeta = async function () {
-		return this.write(editor.scene);
-	};
-	this.isChanged = function (json) {
+		editor.signals.upload.add(() => {
+			this.save();
+		});
+
+		//const builder = new SceneBuilder(editor)
+		editor.renderer = new THREE.WebGLRenderer();
+		this.factory = new MetaFactory(editor);
+
+		editor.signals.savingStarted.dispatch();
+	}
+
+	/**
+	 * @returns {Promise<object>} 序列化后的 meta 数据
+	 */
+	async getMeta() {
+		return this.write(this.editor.scene);
+	}
+
+	/**
+	 * @param {string} json - JSON 字符串
+	 * @returns {boolean} 是否与上次保存的 JSON 不同
+	 */
+	isChanged(json) {
 		if (this.json === null) return false;
 		return this.json !== json;
-	};
+	}
 
-	this.changed = async function () {
+	/**
+	 * @returns {Promise<boolean>} 当前场景是否有未保存的变更
+	 */
+	async changed() {
 		const meta = await this.getMeta();
-		return this.isChanged(JSON.stringify({  meta, events: editor.scene.events }));
-	};
+		return this.isChanged(JSON.stringify({  meta, events: this.editor.scene.events }));
+	}
 
-	this.save = async function () {
+	/**
+	 * @returns {Promise<void>}
+	 */
+	async save() {
 		if (this.isLoading) {
 			console.warn('Cannot save while models are still loading');
 			return;
 		}
 
 		const meta = await this.getMeta();
-		const data = { meta, events: editor.scene.events };
+		const data = { meta, events: this.editor.scene.events };
 		const json = JSON.stringify(data);
 		const changed = this.isChanged(json);
 
 		if (changed) {
-			editor.signals.messageSend.dispatch({
+			this.editor.signals.messageSend.dispatch({
 				action: 'save-meta',
 				data
 			});
 			this.json = json;
 		} else {
-			editor.signals.messageSend.dispatch({
+			this.editor.signals.messageSend.dispatch({
 				action: 'save-meta-none'
 			});
 		}
-	};
+	}
 
-	this.getLoadingStatus = function() {
+	/**
+	 * @returns {boolean} 是否正在加载中
+	 */
+	getLoadingStatus() {
 		return this.isLoading;
-	};
+	}
 
-	this.initLoading = function() {
+	/**
+	 * @returns {void}
+	 */
+	initLoading() {
 		this.isLoading = true;
-		editor.signals.savingStarted.dispatch();
-	};
+		this.editor.signals.savingStarted.dispatch();
+	}
 
-	editor.signals.upload.add(function () {
-		self.save();
-	});
-
-
-	//const builder = new SceneBuilder(editor)
-	editor.renderer = new THREE.WebGLRenderer();
-	const factory = new MetaFactory(editor);
-
-	this.compareObjectsAndPrintDifferences = function (obj1, obj2, path = '', tolerance = 0.0001) {
+	/**
+	 * @param {object} obj1 - 比較対象のオブジェクト 1
+	 * @param {object} obj2 - 比較対象のオブジェクト 2
+	 * @param {string} [path=''] - 当前属性路径（递归用）
+	 * @param {number} [tolerance=0.0001] - 数值比较容差
+	 * @returns {void}
+	 */
+	compareObjectsAndPrintDifferences(obj1, obj2, path = '', tolerance = 0.0001) {
 
 		if (obj1 == null || obj2 == null) {
 
@@ -93,7 +126,7 @@ function MetaLoader(editor) {
 
 			if (typeof val1 === 'object' && typeof val2 === 'object') {
 
-				self.compareObjectsAndPrintDifferences(val1, val2, currentPath);
+				this.compareObjectsAndPrintDifferences(val1, val2, currentPath);
 
 			} else if (typeof val1 === 'number' && typeof val2 === 'number') {
 
@@ -127,9 +160,13 @@ function MetaLoader(editor) {
 
 		}
 
-	};
+	}
 
-	this.writeEntity = function (node) {
+	/**
+	 * @param {import('three').Object3D} node - 场景节点
+	 * @returns {object | null} 序列化后的实体对象，若节点无 type 则返回 null
+	 */
+	writeEntity(node) {
 
 		if (node.userData.type === undefined) {
 
@@ -164,10 +201,23 @@ function MetaLoader(editor) {
 		entity.parameters.active = node.visible;
 
 
-		entity.children = { 'entities': [], 'components': node.components, 'commands': node.commands };
-		node.children.forEach(child => {
+		/**
+		 * MRPP 扩展属性：组件数组，附加在 THREE.Object3D 实例上。
+		 * 不属于 three.js 原生类型定义，迁移时需要声明扩展类型。
+		 * @type {Array<{type: string, [key: string]: any}>}
+		 */
+		// node.components
 
-			const ce = self.writeEntity(child);
+		/**
+		 * MRPP 扩展属性：命令数组，附加在 THREE.Object3D 实例上。
+		 * @type {Array<{type: string, [key: string]: any}>}
+		 */
+		// node.commands
+
+		entity.children = { 'entities': [], 'components': node.components, 'commands': node.commands };
+		node.children.forEach((child) => {
+
+			const ce = this.writeEntity(child);
 			if (ce != null) {
 
 				entity.children.entities.push(ce);
@@ -200,17 +250,21 @@ function MetaLoader(editor) {
 		//console.error(entity)
 		return entity;
 
-	};
+	}
 
-	this.write = async function (root) {
+	/**
+	 * @param {import('three').Scene} root - 场景根节点
+	 * @returns {Promise<object>} 序列化后的 MetaRoot 数据
+	 */
+	async write(root) {
 
 		const data = {};
 		data.type = 'MetaRoot';
 		data.parameters = { 'uuid': root.uuid };
 		const entities = [];
 		data.children = { 'entities': [], 'addons': [] };
-		root.children.forEach(node => {
-			const entity = self.writeEntity(node);
+		root.children.forEach((node) => {
+			const entity = this.writeEntity(node);
 			if (entity != null) {
 				entities.push(entity);
 			}
@@ -218,22 +272,33 @@ function MetaLoader(editor) {
 		data.children.entities = entities;
 		return data;
 
-	};
+	}
 
-
-	this.clear = async function () {
+	/**
+	 * @returns {Promise<void>}
+	 */
+	async clear() {
 		this.editor.clear();
-	};
+	}
 
-	this.load = async function (meta) {
+	/**
+	 * @param {object} meta - 加载的 meta 数据（包含 data、resources、events 等字段）
+	 * @returns {Promise<void>}
+	 */
+	async load(meta) {
 
-		let scene = editor.scene;
+		let scene = this.editor.scene;
 		if (!scene) {
 			scene = new THREE.Scene();
 			scene.name = 'Scene';
-			editor.setScene(scene);
+			this.editor.setScene(scene);
 		}
 
+		/**
+		 * MRPP 扩展属性：事件对象，附加在 THREE.Scene 实例上。
+		 * 不属于 three.js 原生类型定义，迁移时需要声明扩展类型。
+		 * @type {{inputs: Array<{title: string, uuid: string}>, outputs: Array<{title: string, uuid: string}>}}
+		 */
 		if (!meta.events) {
 
 			scene.events = { inputs: [], outputs: [] };
@@ -248,10 +313,10 @@ function MetaLoader(editor) {
 		this.isLoading = true;
 		this.loadingPromises = [];
 
-		editor.signals.savingStarted.dispatch();
+		this.editor.signals.savingStarted.dispatch();
 
-		editor.signals.sceneGraphChanged.dispatch();
-		let lights = editor.scene.getObjectByName('$lights');
+		this.editor.signals.sceneGraphChanged.dispatch();
+		let lights = this.editor.scene.getObjectByName('$lights');
 		if (lights == null) {
 
 			lights = new THREE.Group();
@@ -269,12 +334,12 @@ function MetaLoader(editor) {
 			light3.name = 'light3';
 			lights.add(light3);
 			scene.add(lights);
-			factory.lockNode(lights);
-			editor.signals.sceneGraphChanged.dispatch();
+			this.factory.lockNode(lights);
+			this.editor.signals.sceneGraphChanged.dispatch();
 
 		}
 
-		const root = editor.scene;
+		const root = this.editor.scene;
 
 
 		if (meta.data) {
@@ -288,35 +353,34 @@ function MetaLoader(editor) {
 			});
 
 			root.uuid = data.parameters.uuid;
-			const loadPromise = factory.readMeta(root, data, resources, editor);
+			const loadPromise = this.factory.readMeta(root, data, resources, this.editor);
 			this.loadingPromises.push(loadPromise);
 
 			Promise.all(this.loadingPromises).then(async () => {
 				this.isLoading = false;
-				editor.signals.savingFinished.dispatch();
-				editor.signals.sceneGraphChanged.dispatch();
+				this.editor.signals.savingFinished.dispatch();
+				this.editor.signals.sceneGraphChanged.dispatch();
 
 				const metaData = await this.write(root);
-				this.json = JSON.stringify({ meta: metaData, events: editor.scene.events });
+				this.json = JSON.stringify({ meta: metaData, events: this.editor.scene.events });
 				// console.warn('All models loaded successfully');
 			}).catch(error => {
 				console.error('Error loading models:', error);
 				this.isLoading = false;
-				editor.signals.savingFinished.dispatch();
+				this.editor.signals.savingFinished.dispatch();
 			});
 
-			editor.signals.sceneGraphChanged.dispatch();
+			this.editor.signals.sceneGraphChanged.dispatch();
 
 		} else {
 			this.isLoading = false;
-			editor.signals.savingFinished.dispatch();
+			this.editor.signals.savingFinished.dispatch();
 
 			const metaData = await this.write(root);
-			this.json = JSON.stringify({ meta: metaData, events: editor.scene.events });
+			this.json = JSON.stringify({ meta: metaData, events: this.editor.scene.events });
 		}
-	};
+	}
 
-	editor.signals.savingStarted.dispatch();
 }
 
 export { MetaLoader };

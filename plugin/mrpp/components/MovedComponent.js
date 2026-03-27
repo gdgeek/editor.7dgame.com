@@ -1,8 +1,17 @@
+/* global THREE */
+/** @type {typeof import('three')} */
+// eslint-disable-next-line no-unused-vars -- THREE is loaded via import map in the HTML host
+
 import { UIBreak, UICheckbox, UIText, UIRow, UIInput } from '../../../three.js/editor/js/libs/ui.js';
 
 import { SetValueCommand } from '../../../three.js/editor/js/commands/SetValueCommand.js';
 
 class MovedComponent {
+  /**
+   * @param {object} editor - Editor 实例
+   * @param {import('three').Object3D} object - 目标 3D 对象
+   * @param {object} component - 组件数据对象
+   */
   constructor(editor, object, component) {
     this.editor = editor;
     this.object = object;
@@ -10,6 +19,10 @@ class MovedComponent {
     this.actionInput = null; // 添加对action输入框的引用
   }
 
+  /**
+   * 创建默认的 Moved 组件数据。
+   * @returns {object} 组件数据对象
+   */
   static Create() {
     const component = {
       type: 'Moved',
@@ -28,6 +41,10 @@ class MovedComponent {
     return component;
   }
 
+  /**
+   * 构建组件 UI 并添加到容器中。
+   * @param {object} container - UI 容器
+   */
   refresh(container) {
     container.add(new UIBreak());
     container.add(new UIBreak());
@@ -117,6 +134,13 @@ class MovedComponent {
 
   }
 
+  /**
+   * 磁力触发 UI 构建方法。
+   * @param {object} container - UI 容器
+   * @param {boolean} magneticValue - 磁力开关值
+   * @param {string} action - 动作名称
+   * @returns {object} 容器
+   */
   // 磁力触发方法
   magneticTrigger(container, magneticValue, action) {
     const strings = this.editor.strings;
@@ -230,6 +254,7 @@ class MovedComponent {
     return container;
   } */
 
+  /** 更新组件数据 */
   // 更新数据
   update() {
     const action = this.actionInput ? this.actionInput.getValue() : '';
@@ -245,6 +270,7 @@ class MovedComponent {
     this.editor.signals.componentChanged.dispatch(this.component);
   }
 
+  /** 从组件数据同步 UI 显示 */
   // 更新UI显示
   updateUI() {
     this.uuid.setValue(this.component.parameters.uuid);
@@ -255,11 +281,11 @@ class MovedComponent {
     }
   }
 
+  /**
+   * 渲染组件 UI。
+   * @param {object} container - UI 容器
+   */
   renderer(container) {
-    this.refresh(container);
-    this.updateUI();
-    //console.log('MovedComponent:',this.component.parameters);
-  }
 }
 
 export { MovedComponent };

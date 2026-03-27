@@ -1,3 +1,7 @@
+/* global THREE */
+/** @type {typeof import('three')} */
+// eslint-disable-next-line no-unused-vars -- THREE is loaded via import map in the HTML host
+
 import { UIPanel, UIText, UIButton, UIRow, UIInput, UIHorizontalRule } from '../../../three.js/editor/js/libs/ui.js';
 import { AddEventCommand } from '../../commands/AddEventCommand.js';
 import { EventContainer } from '../../mrpp/EventContainer.js';
@@ -61,6 +65,11 @@ function SidebarEvents(editor) {
 		outputSection.clear();
 
 		if (editor.scene.events === undefined) {
+			/**
+			 * MRPP 扩展属性：事件对象，附加在 THREE.Scene 实例上。
+			 * 不属于 three.js 原生类型定义，迁移时需要声明扩展类型。
+			 * @type {{inputs: Array<{title: string, uuid: string}>, outputs: Array<{title: string, uuid: string}>}}
+			 */
 			editor.scene.events = { inputs: [], outputs: [] };
 		}
 

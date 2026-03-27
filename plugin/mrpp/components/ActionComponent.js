@@ -1,15 +1,28 @@
+/* global THREE */
+/** @type {typeof import('three')} */
+// eslint-disable-next-line no-unused-vars -- THREE is loaded via import map in the HTML host
+
 import { UIBreak, UIText, UIRow, UICheckbox, UIInput } from '../../../three.js/editor/js/libs/ui.js';
 import { SetValueCommand } from '../../../three.js/editor/js/commands/SetValueCommand.js';
 import { ROLES } from '../../access/Access.js';
 
 class ActionComponent {
 
+  /**
+   * @param {object} editor - Editor 实例
+   * @param {import('three').Object3D} object - 目标 3D 对象
+   * @param {object} component - 组件数据对象
+   */
   constructor(editor, object, component) {
     this.editor = editor;
     this.object = object;
     this.component = component;
   }
 
+  /**
+   * 创建默认的 Action 组件数据。
+   * @returns {object} 组件数据对象
+   */
   static Create() {
     const component = {
       type: 'Action',
@@ -23,6 +36,10 @@ class ActionComponent {
     return component;
   }
 
+  /**
+   * 构建组件 UI 并添加到容器中。
+   * @param {object} container - UI 容器
+   */
   named(container) {
     container.add(new UIBreak());
     container.add(new UIBreak());
@@ -75,6 +92,7 @@ class ActionComponent {
 
   }
 
+  /** 更新 mode 参数到组件数据 */
   updateMode() {
     const modeArray = [];
     if (this.modePinch && this.modePinch.getValue()) modeArray.push('pinch');
@@ -90,6 +108,7 @@ class ActionComponent {
     this.editor.signals.componentChanged.dispatch(this.component);
   }
 
+  /** 更新 action 参数到组件数据 */
   updateAction() {
     const action = this.action.getValue();
     const command = new SetValueCommand(
@@ -102,6 +121,7 @@ class ActionComponent {
     this.editor.signals.componentChanged.dispatch(this.component);
   }
 
+  /** 从组件数据同步 UI 显示 */
   updateUI() {
     this.uuid.setValue(this.component.parameters.uuid);
     this.action.setValue(this.component.parameters.action);
@@ -111,11 +131,8 @@ class ActionComponent {
     if (this.modeTouch) this.modeTouch.setValue(modeArray.includes('touch'));
   }
 
+  /**
+   * 渲染组件 UI。
+   * @param {object} container - UI 容器
+   */
   renderer(container) {
-    this.named(container);
-    this.updateUI();
-  }
-
-}
-
-export { ActionComponent };

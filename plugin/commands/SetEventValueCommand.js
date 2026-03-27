@@ -2,6 +2,13 @@ import { Command } from '../../three.js/editor/js/Command.js';
 
 class SetEventValueCommand extends Command {
 
+	/**
+	 * @param {object} editor - Editor 实例
+	 * @param {object} event - 事件对象
+	 * @param {string} mode - 事件模式（'input' 或 'output'）
+	 * @param {string} attributeName - 要设置的属性名
+	 * @param {*} newValue - 新属性值
+	 */
 	constructor(editor, event, mode, attributeName, newValue) {
 
 		super(editor);
@@ -21,6 +28,10 @@ class SetEventValueCommand extends Command {
 
 	}
 
+	/**
+	 * 获取当前模式对应的事件列表。
+	 * @returns {Array<object>} 事件列表
+	 */
 	getEventList() {
 
 		if (this.editor.scene.events === undefined) return [];
@@ -31,12 +42,17 @@ class SetEventValueCommand extends Command {
 
 	}
 
+	/**
+	 * 获取当前事件在列表中的索引。
+	 * @returns {number} 事件索引
+	 */
 	getEventIndex() {
 
 		return this.getEventList().findIndex((item) => item && this.event && item.uuid === this.event.uuid);
 
 	}
 
+	/** 执行设置事件属性值操作 */
 	execute() {
 
 		if (this.event === undefined) return;
@@ -46,6 +62,7 @@ class SetEventValueCommand extends Command {
 
 	}
 
+	/** 撤销设置事件属性值操作 */
 	undo() {
 
 		if (this.event === undefined) return;
@@ -55,12 +72,20 @@ class SetEventValueCommand extends Command {
 
 	}
 
+	/**
+	 * 合并可更新命令的新值。
+	 * @param {SetEventValueCommand} cmd - 新的命令实例
+	 */
 	update(cmd) {
 
 		this.newValue = cmd.newValue;
 
 	}
 
+	/**
+	 * 序列化为 JSON。
+	 * @returns {object} JSON 表示
+	 */
 	toJSON() {
 
 		const output = super.toJSON(this);
@@ -76,6 +101,10 @@ class SetEventValueCommand extends Command {
 
 	}
 
+	/**
+	 * 从 JSON 反序列化。
+	 * @param {object} json - JSON 数据
+	 */
 	fromJSON(json) {
 
 		super.fromJSON(json);
