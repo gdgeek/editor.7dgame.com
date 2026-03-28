@@ -988,10 +988,8 @@ function hideObjectPropertyRows( editor: MrppEditor ): void {
 
 	function hide(): void {
 
-		const objectPanel = document.getElementById( 'objectTab' );
-		if ( ! objectPanel ) return;
-
-		const rows = objectPanel.querySelectorAll( '.Row' );
+		// r183: no #objectTab id — search all .Row elements with .Label children
+		const rows = document.querySelectorAll( '.Row' );
 
 		for ( let i = 0; i < rows.length; i ++ ) {
 
@@ -1023,13 +1021,19 @@ function hideObjectPropertyRows( editor: MrppEditor ): void {
  */
 function hideAutosaveCheckbox(): void {
 
-	const statusDom = document.querySelector( '.menu.right' ) as HTMLElement | null;
+	const statusDom = document.querySelector( '.menu.right' );
 	if ( ! statusDom ) return;
 
-	// Hide all children (autosave checkbox + version text)
+	// Hide only the autosave checkbox (first child), keep version text visible
 	for ( let i = 0; i < statusDom.children.length; i ++ ) {
 
-		( statusDom.children[ i ] as HTMLElement ).style.display = 'none';
+		const child = statusDom.children[ i ] as HTMLElement;
+		// UIBoolean (autosave) contains an input checkbox; version UIText does not
+		if ( child.querySelector( 'input' ) ) {
+
+			child.style.display = 'none';
+
+		}
 
 	}
 
