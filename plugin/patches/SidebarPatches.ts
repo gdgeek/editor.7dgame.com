@@ -1023,20 +1023,13 @@ function hideObjectPropertyRows( editor: MrppEditor ): void {
  */
 function hideAutosaveCheckbox(): void {
 
-	const statusDom = document.querySelector( '.menu.right' );
+	const statusDom = document.querySelector( '.menu.right' ) as HTMLElement | null;
 	if ( ! statusDom ) return;
 
-	const labels = statusDom.querySelectorAll( 'label' );
+	// Hide all children (autosave checkbox + version text)
+	for ( let i = 0; i < statusDom.children.length; i ++ ) {
 
-	for ( let i = 0; i < labels.length; i ++ ) {
-
-		const checkbox = labels[ i ].querySelector( 'input[type="checkbox"]' );
-		if ( checkbox ) {
-
-			(labels[ i ] as HTMLElement).style.display = 'none';
-			break;
-
-		}
+		( statusDom.children[ i ] as HTMLElement ).style.display = 'none';
 
 	}
 
