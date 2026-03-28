@@ -1,0 +1,17 @@
+{
+  "enabled": true,
+  "name": "TS 保存后自动构建",
+  "description": "保存 plugin/ 目录下的 .ts 文件后，自动运行 npm run build，将 TypeScript 编译到 plugin-dist/",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "plugin/**/*.ts"
+    ]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "npm run build",
+    "timeout": 60
+  }
+}

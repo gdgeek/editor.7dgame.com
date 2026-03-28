@@ -1156,4 +1156,345 @@ function injectSidebarObjectExtensions( editor: any, sidebarObjectContainer: HTM
 
 }
 
-export { injectSidebarObjectExtensions, getLocalizedObjectType };
+// ── JSON Tree Viewer ─────────────────────────────────────────────────
+
+/**
+ * Inject a read-only visual JSON tree viewer to replace the plain textarea
+ * used for userData display. The textarea is hidden; the tree viewer is
+ * inserted next to the label and kept in sync via objectSelected /
+ * objectChanged signals.
+ *
+ * Does NOT depend on a pre-existing container reference — it searches
+ * document-wide on each objectSelected so it works regardless of when
+ * the DOM is ready.
+ */
+function injectUserDataJsonViewer( editor: any ): void {
+
+	const strings = editor.strings;
+	const signals = editor.signals;
+
+	// Inject viewer styles once
+	if ( ! document.getElementById( 'mrpp-json-viewer-style' ) ) {
+
+		const style = document.createElement( 'style' );
+		style.id = 'mrpp-json-viewer-style';
+		style.textContent = `
+.mrpp-json-viewer {
+	font-family: monospace;
+	font-size: 11px;
+	line-height: 1.6;
+	border-radius: 3px;
+	padding: 4px 6px;
+	max-height: 200px;
+	overflow-y: auto;
+	width: 150px;
+	box-sizing: border-box;
+	user-select: text;
+	/* light mode */
+	color: #333;
+	background: #f5f5f5;
+	border: 1px solid #ccc;
+}
+.mrpp-json-viewer .jv-toggle {
+	cursor: pointer;
+	font-size: 10px;
+	margin-right: 2px;
+	user-select: none;
+	color: #999;
+}
+.mrpp-json-viewer .jv-key   { color: #0070c1; }
+.mrpp-json-viewer .jv-str   { color: #a31515; }
+.mrpp-json-viewer .jv-num   { color: #098658; }
+.mrpp-json-viewer .jv-bool  { color: #0000ff; }
+.mrpp-json-viewer .jv-null  { color: #0000ff; }
+.mrpp-json-viewer .jv-brace { color: #555; }
+.mrpp-json-viewer .jv-children { margin-left: 12px; }
+.mrpp-json-viewer .jv-collapsed { display: none; }
+.mrpp-json-viewer .jv-line { display: flex; flex-wrap: nowrap; white-space: nowrap; }
+@media (prefers-color-scheme: dark) {
+	.mrpp-json-viewer {
+		color: #ccc;
+		background: #1e1e1e;
+		border-color: #444;
+	}
+	.mrpp-json-viewer .jv-toggle { color: #888; }
+	.mrpp-json-viewer .jv-key   { color: #9cdcfe; }
+	.mrpp-json-viewer .jv-str   { color: #ce9178; }
+	.mrpp-json-viewer .jv-num   { color: #b5cea8; }
+	.mrpp-json-viewer .jv-bool  { color: #569cd6; }
+	.mrpp-json-viewer .jv-null  { color: #569cd6; }
+	.mrpp-json-viewer .jv-brace { color: #888; }
+}
+		`;
+		document.head.appendChild( style );
+
+	}
+
+	// ── Build tree DOM ───────────────────────────────────────────────
+
+	function escapeHtml( s: string ): string {
+
+		return s.replace( /&/g, '&amp;' ).replace( /</g, '&lt;' ).replace( />/g, '&gt;' );
+
+	}
+
+	function buildNode( value: any, depth: number ): HTMLElement {
+
+		const wrapper = document.createElement( 'span' );
+
+		if ( value === null ) {
+
+			const n = document.createElement( 'span' );
+			n.className = 'jv-null';
+			n.textContent = 'null';
+			wrapper.appendChild( n );
+			return wrapper;
+
+		}
+
+		if ( typeof value === 'boolean' ) {
+
+			const n = document.createElement( 'span' );
+			n.className = 'jv-bool';
+			n.textContent = String( value );
+			wrapper.appendChild( n );
+			return wrapper;
+
+		}
+
+		if ( typeof value === 'number' ) {
+
+			const n = document.createElement( 'span' );
+			n.className = 'jv-num';
+			n.textContent = String( value );
+			wrapper.appendChild( n );
+			return wrapper;
+
+		}
+
+		if ( typeof value === 'string' ) {
+
+			const n = document.createElement( 'span' );
+			n.className = 'jv-str';
+			n.textContent = '"' + escapeHtml( value ) + '"';
+			wrapper.appendChild( n );
+			return wrapper;
+
+		}
+
+		if ( Array.isArray( value ) ) {
+
+			if ( value.length === 0 ) {
+
+				const n = document.createElement( 'span' );
+				n.className = 'jv-brace';
+				n.textContent = '[]';
+				wrapper.appendChild( n );
+				return wrapper;
+
+			}
+
+			const toggle = document.createElement( 'span' );
+			toggle.className = 'jv-toggle';
+			toggle.textContent = '▸';
+
+			const open = document.createElement( 'span' );
+			open.className = 'jv-brace';
+			open.textContent = '[';
+
+			const children = document.createElement( 'div' );
+			children.className = 'jv-children jv-collapsed';
+
+			value.forEach( ( item: any, idx: number ) => {
+
+				const line = document.createElement( 'div' );
+				line.className = 'jv-line';
+				const keySpan = document.createElement( 'span' );
+				keySpan.className = 'jv-key';
+				keySpan.textContent = idx + ': ';
+				line.appendChild( keySpan );
+				line.appendChild( buildNode( item, depth + 1 ) );
+				children.appendChild( line );
+
+			} );
+
+			const close = document.createElement( 'span' );
+			close.className = 'jv-brace';
+			close.textContent = ']';
+
+			toggle.addEventListener( 'click', function () {
+
+				const collapsed = children.classList.toggle( 'jv-collapsed' );
+				toggle.textContent = collapsed ? '▸' : '▾';
+
+			} );
+
+			wrapper.appendChild( toggle );
+			wrapper.appendChild( open );
+			wrapper.appendChild( children );
+			wrapper.appendChild( close );
+			return wrapper;
+
+		}
+
+		if ( typeof value === 'object' ) {
+
+			const keys = Object.keys( value );
+
+			if ( keys.length === 0 ) {
+
+				const n = document.createElement( 'span' );
+				n.className = 'jv-brace';
+				n.textContent = '{}';
+				wrapper.appendChild( n );
+				return wrapper;
+
+			}
+
+			const toggle = document.createElement( 'span' );
+			toggle.className = 'jv-toggle';
+			toggle.textContent = '▸';
+
+			const open = document.createElement( 'span' );
+			open.className = 'jv-brace';
+			open.textContent = '{';
+
+			const children = document.createElement( 'div' );
+			children.className = 'jv-children jv-collapsed';
+
+			keys.forEach( ( key: string ) => {
+
+				const line = document.createElement( 'div' );
+				line.className = 'jv-line';
+				const keySpan = document.createElement( 'span' );
+				keySpan.className = 'jv-key';
+				keySpan.textContent = '"' + key + '": ';
+				line.appendChild( keySpan );
+				line.appendChild( buildNode( value[ key ], depth + 1 ) );
+				children.appendChild( line );
+
+			} );
+
+			const close = document.createElement( 'span' );
+			close.className = 'jv-brace';
+			close.textContent = '}';
+
+			toggle.addEventListener( 'click', function () {
+
+				const collapsed = children.classList.toggle( 'jv-collapsed' );
+				toggle.textContent = collapsed ? '▸' : '▾';
+
+			} );
+
+			wrapper.appendChild( toggle );
+			wrapper.appendChild( open );
+			wrapper.appendChild( children );
+			wrapper.appendChild( close );
+			return wrapper;
+
+		}
+
+		// fallback
+		wrapper.textContent = String( value );
+		return wrapper;
+
+	}
+
+	// ── Find the userData row ────────────────────────────────────────
+
+	const userDataLabel = strings.getKey( 'sidebar/object/userdata' );
+
+	function findUserDataRow(): Element | null {
+
+		const rows = document.querySelectorAll( '.Row' );
+		for ( let i = 0; i < rows.length; i ++ ) {
+
+			const spans = rows[ i ].querySelectorAll( 'span' );
+			for ( let j = 0; j < spans.length; j ++ ) {
+
+				if ( spans[ j ].textContent!.trim() === userDataLabel.trim() ) return rows[ i ];
+
+			}
+
+		}
+
+		return null;
+
+	}
+
+	// ── Create the viewer element ────────────────────────────────────
+
+	const viewer = document.createElement( 'div' );
+	viewer.className = 'mrpp-json-viewer';
+
+	function renderViewer( data: any ): void {
+
+		while ( viewer.firstChild ) viewer.removeChild( viewer.firstChild );
+
+		if ( data === null || data === undefined || Object.keys( data ).length === 0 ) {
+
+			const empty = document.createElement( 'span' );
+			empty.className = 'jv-brace';
+			empty.textContent = '{}';
+			viewer.appendChild( empty );
+			return;
+
+		}
+
+		viewer.appendChild( buildNode( data, 0 ) );
+
+	}
+
+	// ── Inject viewer into the row, hide textarea ────────────────────
+
+	function injectIntoRow(): void {
+
+		const row = findUserDataRow();
+		if ( ! row ) return;
+
+		// Already injected?
+		if ( row.contains( viewer ) ) return;
+
+		// Hide the original textarea
+		const textarea = row.querySelector( 'textarea' );
+		if ( textarea ) ( textarea as HTMLElement ).style.display = 'none';
+
+		row.appendChild( viewer );
+
+	}
+
+	// ── Sync on selection / change ───────────────────────────────────
+
+	function syncViewer( object: any ): void {
+
+		injectIntoRow();
+		renderViewer( object ? object.userData : null );
+
+	}
+
+	signals.objectSelected.add( function ( object: any ) {
+
+		setTimeout( function () { syncViewer( object ); }, 0 );
+
+	} );
+
+	signals.objectChanged.add( function ( object: any ) {
+
+		if ( object !== editor.selected ) return;
+		syncViewer( object );
+
+	} );
+
+	signals.refreshSidebarObject3D.add( function ( object: any ) {
+
+		if ( object !== editor.selected ) return;
+		syncViewer( object );
+
+	} );
+
+	// Initial inject attempt (in case an object is already selected)
+	setTimeout( injectIntoRow, 200 );
+
+}
+
+export { injectSidebarObjectExtensions, injectUserDataJsonViewer, getLocalizedObjectType };

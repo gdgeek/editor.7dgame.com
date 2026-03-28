@@ -86,7 +86,7 @@ const EXPORT_BASELINE = {
   'plugin/ui/sidebar/Sidebar.Media.ts': ['SidebarMedia'],
   'plugin/ui/sidebar/Sidebar.Meta.ts': ['SidebarMeta'],
   'plugin/ui/sidebar/Sidebar.MultipleObjects.ts': ['SidebarMultipleObjects'],
-  'plugin/ui/sidebar/Sidebar.ObjectExt.ts': ['getLocalizedObjectType', 'injectSidebarObjectExtensions'],
+  'plugin/ui/sidebar/Sidebar.ObjectExt.ts': ['getLocalizedObjectType', 'injectSidebarObjectExtensions', 'injectUserDataJsonViewer'],
   'plugin/ui/sidebar/Sidebar.Screenshot.ts': ['SidebarScreenshot'],
   'plugin/ui/sidebar/Sidebar.Text.ts': ['SidebarText'],
   'plugin/utils/DialogUtils.ts': ['DialogUtils'],

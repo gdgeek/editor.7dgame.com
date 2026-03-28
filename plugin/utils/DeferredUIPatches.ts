@@ -1,5 +1,6 @@
 import { applySidebarPatches, applySidebarPropertiesPatches, hideObjectPropertyRows, hideAutosaveCheckbox } from '../patches/SidebarPatches.js';
 import { applyMenubarPatches } from '../patches/MenubarPatches.js';
+import { injectSidebarObjectExtensions, injectUserDataJsonViewer } from '../ui/sidebar/Sidebar.ObjectExt.js';
 import type { MrppEditor } from '../types/mrpp.js';
 
 interface TabObj {
@@ -258,7 +259,25 @@ export function applyDeferredUIPatches( editor: MrppEditor ): void {
 			applySidebarPropertiesPatches( editor, propertiesWrapper );
 			hideObjectPropertyRows( editor );
 
+			// Inject MRPP extensions into the SidebarObject container.
+			// objectContentDom may not exist yet at this point (addTab is called
+			// dynamically on objectSelected), so we defer to objectSelected signal
+			// inside injectSidebarObjectExtensions itself.
+			const objectTabPanel = propertiesDom.querySelector( '#objectTab' ) as HTMLElement | null;
+			const objectContentDom = objectTabPanel
+				? ( objectTabPanel.firstElementChild as HTMLElement || objectTabPanel )
+				: null;
+
+			if ( objectContentDom ) {
+
+				injectSidebarObjectExtensions( editor, objectContentDom );
+
+			}
+
 		}
+
+		// JSON viewer searches document-wide on each objectSelected — no container needed.
+		injectUserDataJsonViewer( editor );
 
 	}
 
