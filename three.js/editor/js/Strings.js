@@ -2528,7 +2528,11 @@ function Strings( config ) {
 
 		getKey: function ( key ) {
 
-			return values[ language ][ key ] || '???';
+			// Read language dynamically so that post-construction config
+			// changes (e.g. MRPP URL-parameter mapping) take effect.
+			const lang = config.getKey( 'language' ) || language;
+
+			return ( values[ lang ] || values[ language ] || values[ 'en' ] )[ key ] || '???';
 
 		}
 
