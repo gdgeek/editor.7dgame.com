@@ -1168,235 +1168,80 @@ function injectSidebarObjectExtensions( editor: any, sidebarObjectContainer: HTM
  * document-wide on each objectSelected so it works regardless of when
  * the DOM is ready.
  */
+const READONLY_KEYS = new Set( [ 'type', 'resource', 'meta_id', 'draggable' ] );
+
 function injectUserDataJsonViewer( editor: any ): void {
 
 	const strings = editor.strings;
 	const signals = editor.signals;
 
-	// Inject viewer styles once
-	if ( ! document.getElementById( 'mrpp-json-viewer-style' ) ) {
+	// ── Inject styles once ───────────────────────────────────────────
+	if ( ! document.getElementById( 'mrpp-ud-table-style' ) ) {
 
 		const style = document.createElement( 'style' );
-		style.id = 'mrpp-json-viewer-style';
+		style.id = 'mrpp-ud-table-style';
 		style.textContent = `
-.mrpp-json-viewer {
+.mrpp-ud-table {
 	font-family: monospace;
 	font-size: 11px;
-	line-height: 1.6;
-	border-radius: 3px;
-	padding: 4px 6px;
-	max-height: 200px;
-	overflow-y: auto;
-	width: 150px;
-	box-sizing: border-box;
-	user-select: text;
-	/* light mode */
-	color: #333;
-	background: #f5f5f5;
-	border: 1px solid #ccc;
+	border-collapse: collapse;
+	width: 160px;
+	margin-top: 2px;
 }
-.mrpp-json-viewer .jv-toggle {
-	cursor: pointer;
-	font-size: 10px;
-	margin-right: 2px;
+.mrpp-ud-table td {
+	padding: 1px 3px;
+	vertical-align: middle;
+}
+.mrpp-ud-table .ud-key {
+	color: #0070c1;
+	white-space: nowrap;
+	padding-right: 6px;
 	user-select: none;
-	color: #999;
 }
-.mrpp-json-viewer .jv-key   { color: #0070c1; }
-.mrpp-json-viewer .jv-str   { color: #a31515; }
-.mrpp-json-viewer .jv-num   { color: #098658; }
-.mrpp-json-viewer .jv-bool  { color: #0000ff; }
-.mrpp-json-viewer .jv-null  { color: #0000ff; }
-.mrpp-json-viewer .jv-brace { color: #555; }
-.mrpp-json-viewer .jv-children { margin-left: 12px; }
-.mrpp-json-viewer .jv-collapsed { display: none; }
-.mrpp-json-viewer .jv-line { display: flex; flex-wrap: nowrap; white-space: nowrap; }
+.mrpp-ud-table .ud-val-readonly {
+	opacity: 0.55;
+	cursor: not-allowed;
+	font-style: italic;
+}
+.mrpp-ud-table .ud-val-json {
+	color: #888;
+	font-size: 10px;
+	max-width: 100px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.mrpp-ud-input {
+	font-family: monospace;
+	font-size: 11px;
+	border: 1px solid #ccc;
+	border-radius: 2px;
+	padding: 0 3px;
+	height: 17px;
+	width: 90px;
+	box-sizing: border-box;
+	background: #fff;
+	color: #333;
+}
+.mrpp-ud-input[type="number"] { width: 65px; color: #098658; }
+.mrpp-ud-select {
+	font-family: monospace;
+	font-size: 11px;
+	border: 1px solid #ccc;
+	border-radius: 2px;
+	height: 19px;
+	background: #fff;
+	color: #0000ff;
+}
 @media (prefers-color-scheme: dark) {
-	.mrpp-json-viewer {
-		color: #ccc;
-		background: #1e1e1e;
-		border-color: #444;
-	}
-	.mrpp-json-viewer .jv-toggle { color: #888; }
-	.mrpp-json-viewer .jv-key   { color: #9cdcfe; }
-	.mrpp-json-viewer .jv-str   { color: #ce9178; }
-	.mrpp-json-viewer .jv-num   { color: #b5cea8; }
-	.mrpp-json-viewer .jv-bool  { color: #569cd6; }
-	.mrpp-json-viewer .jv-null  { color: #569cd6; }
-	.mrpp-json-viewer .jv-brace { color: #888; }
+	.mrpp-ud-table .ud-key { color: #9cdcfe; }
+	.mrpp-ud-input { background: #2d2d2d; border-color: #555; color: #ccc; }
+	.mrpp-ud-input[type="number"] { color: #b5cea8; }
+	.mrpp-ud-select { background: #2d2d2d; border-color: #555; color: #569cd6; }
+	.mrpp-ud-table .ud-val-json { color: #666; }
 }
 		`;
 		document.head.appendChild( style );
-
-	}
-
-	// ── Build tree DOM ───────────────────────────────────────────────
-
-	function escapeHtml( s: string ): string {
-
-		return s.replace( /&/g, '&amp;' ).replace( /</g, '&lt;' ).replace( />/g, '&gt;' );
-
-	}
-
-	function buildNode( value: any, depth: number ): HTMLElement {
-
-		const wrapper = document.createElement( 'span' );
-
-		if ( value === null ) {
-
-			const n = document.createElement( 'span' );
-			n.className = 'jv-null';
-			n.textContent = 'null';
-			wrapper.appendChild( n );
-			return wrapper;
-
-		}
-
-		if ( typeof value === 'boolean' ) {
-
-			const n = document.createElement( 'span' );
-			n.className = 'jv-bool';
-			n.textContent = String( value );
-			wrapper.appendChild( n );
-			return wrapper;
-
-		}
-
-		if ( typeof value === 'number' ) {
-
-			const n = document.createElement( 'span' );
-			n.className = 'jv-num';
-			n.textContent = String( value );
-			wrapper.appendChild( n );
-			return wrapper;
-
-		}
-
-		if ( typeof value === 'string' ) {
-
-			const n = document.createElement( 'span' );
-			n.className = 'jv-str';
-			n.textContent = '"' + escapeHtml( value ) + '"';
-			wrapper.appendChild( n );
-			return wrapper;
-
-		}
-
-		if ( Array.isArray( value ) ) {
-
-			if ( value.length === 0 ) {
-
-				const n = document.createElement( 'span' );
-				n.className = 'jv-brace';
-				n.textContent = '[]';
-				wrapper.appendChild( n );
-				return wrapper;
-
-			}
-
-			const toggle = document.createElement( 'span' );
-			toggle.className = 'jv-toggle';
-			toggle.textContent = '▸';
-
-			const open = document.createElement( 'span' );
-			open.className = 'jv-brace';
-			open.textContent = '[';
-
-			const children = document.createElement( 'div' );
-			children.className = 'jv-children jv-collapsed';
-
-			value.forEach( ( item: any, idx: number ) => {
-
-				const line = document.createElement( 'div' );
-				line.className = 'jv-line';
-				const keySpan = document.createElement( 'span' );
-				keySpan.className = 'jv-key';
-				keySpan.textContent = idx + ': ';
-				line.appendChild( keySpan );
-				line.appendChild( buildNode( item, depth + 1 ) );
-				children.appendChild( line );
-
-			} );
-
-			const close = document.createElement( 'span' );
-			close.className = 'jv-brace';
-			close.textContent = ']';
-
-			toggle.addEventListener( 'click', function () {
-
-				const collapsed = children.classList.toggle( 'jv-collapsed' );
-				toggle.textContent = collapsed ? '▸' : '▾';
-
-			} );
-
-			wrapper.appendChild( toggle );
-			wrapper.appendChild( open );
-			wrapper.appendChild( children );
-			wrapper.appendChild( close );
-			return wrapper;
-
-		}
-
-		if ( typeof value === 'object' ) {
-
-			const keys = Object.keys( value );
-
-			if ( keys.length === 0 ) {
-
-				const n = document.createElement( 'span' );
-				n.className = 'jv-brace';
-				n.textContent = '{}';
-				wrapper.appendChild( n );
-				return wrapper;
-
-			}
-
-			const toggle = document.createElement( 'span' );
-			toggle.className = 'jv-toggle';
-			toggle.textContent = '▸';
-
-			const open = document.createElement( 'span' );
-			open.className = 'jv-brace';
-			open.textContent = '{';
-
-			const children = document.createElement( 'div' );
-			children.className = 'jv-children jv-collapsed';
-
-			keys.forEach( ( key: string ) => {
-
-				const line = document.createElement( 'div' );
-				line.className = 'jv-line';
-				const keySpan = document.createElement( 'span' );
-				keySpan.className = 'jv-key';
-				keySpan.textContent = '"' + key + '": ';
-				line.appendChild( keySpan );
-				line.appendChild( buildNode( value[ key ], depth + 1 ) );
-				children.appendChild( line );
-
-			} );
-
-			const close = document.createElement( 'span' );
-			close.className = 'jv-brace';
-			close.textContent = '}';
-
-			toggle.addEventListener( 'click', function () {
-
-				const collapsed = children.classList.toggle( 'jv-collapsed' );
-				toggle.textContent = collapsed ? '▸' : '▾';
-
-			} );
-
-			wrapper.appendChild( toggle );
-			wrapper.appendChild( open );
-			wrapper.appendChild( children );
-			wrapper.appendChild( close );
-			return wrapper;
-
-		}
-
-		// fallback
-		wrapper.textContent = String( value );
-		return wrapper;
 
 	}
 
@@ -1422,77 +1267,195 @@ function injectUserDataJsonViewer( editor: any ): void {
 
 	}
 
-	// ── Create the viewer element ────────────────────────────────────
+	// ── Build value cell ─────────────────────────────────────────────
 
-	const viewer = document.createElement( 'div' );
-	viewer.className = 'mrpp-json-viewer';
+	function buildValueCell( key: string, value: any, data: any ): HTMLTableCellElement {
 
-	function renderViewer( data: any ): void {
+		const td = document.createElement( 'td' );
+		const readonly = READONLY_KEYS.has( key );
 
-		while ( viewer.firstChild ) viewer.removeChild( viewer.firstChild );
+		if ( readonly ) {
 
-		if ( data === null || data === undefined || Object.keys( data ).length === 0 ) {
+			const span = document.createElement( 'span' );
+			span.className = 'ud-val-readonly';
+			span.textContent = String( value );
+			td.appendChild( span );
+			return td;
 
-			const empty = document.createElement( 'span' );
-			empty.className = 'jv-brace';
-			empty.textContent = '{}';
-			viewer.appendChild( empty );
+		}
+
+		// null
+		if ( value === null ) {
+
+			const span = document.createElement( 'span' );
+			span.className = 'ud-val-readonly';
+			span.textContent = 'null';
+			td.appendChild( span );
+			return td;
+
+		}
+
+		// boolean → <select>
+		if ( typeof value === 'boolean' ) {
+
+			const sel = document.createElement( 'select' );
+			sel.className = 'mrpp-ud-select';
+			[ 'true', 'false' ].forEach( v => {
+
+				const opt = document.createElement( 'option' );
+				opt.value = v;
+				opt.textContent = v;
+				if ( String( value ) === v ) opt.selected = true;
+				sel.appendChild( opt );
+
+			} );
+			sel.addEventListener( 'change', function () {
+
+				data[ key ] = sel.value === 'true';
+				if ( editor.selected ) editor.signals.objectChanged.dispatch( editor.selected );
+
+			} );
+			td.appendChild( sel );
+			return td;
+
+		}
+
+		// number → <input type="number">
+		if ( typeof value === 'number' ) {
+
+			const inp = document.createElement( 'input' );
+			inp.type = 'number';
+			inp.className = 'mrpp-ud-input';
+			inp.value = String( value );
+			inp.addEventListener( 'change', function () {
+
+				const parsed = parseFloat( inp.value );
+				if ( ! isNaN( parsed ) ) {
+
+					data[ key ] = parsed;
+					if ( editor.selected ) editor.signals.objectChanged.dispatch( editor.selected );
+
+				}
+
+			} );
+			td.appendChild( inp );
+			return td;
+
+		}
+
+		// string → <input type="text">
+		if ( typeof value === 'string' ) {
+
+			const inp = document.createElement( 'input' );
+			inp.type = 'text';
+			inp.className = 'mrpp-ud-input';
+			inp.value = value;
+			inp.addEventListener( 'change', function () {
+
+				data[ key ] = inp.value;
+				if ( editor.selected ) editor.signals.objectChanged.dispatch( editor.selected );
+
+			} );
+			td.appendChild( inp );
+			return td;
+
+		}
+
+		// object / array → show compact JSON, not editable inline
+		const span = document.createElement( 'span' );
+		span.className = 'ud-val-json';
+		span.title = JSON.stringify( value, null, 2 );
+		span.textContent = JSON.stringify( value );
+		td.appendChild( span );
+		return td;
+
+	}
+
+	// ── Create the table element ─────────────────────────────────────
+
+	const table = document.createElement( 'table' );
+	table.className = 'mrpp-ud-table';
+
+	function renderTable( data: any ): void {
+
+		while ( table.firstChild ) table.removeChild( table.firstChild );
+
+		if ( ! data || typeof data !== 'object' || Object.keys( data ).length === 0 ) {
+
+			const tr = document.createElement( 'tr' );
+			const td = document.createElement( 'td' );
+			td.colSpan = 2;
+			td.style.color = '#999';
+			td.textContent = '{}';
+			tr.appendChild( td );
+			table.appendChild( tr );
 			return;
 
 		}
 
-		viewer.appendChild( buildNode( data, 0 ) );
+		Object.keys( data ).forEach( key => {
+
+			// Hide readonly fields — they are system-managed and not user-editable
+			if ( READONLY_KEYS.has( key ) ) return;
+
+			const tr = document.createElement( 'tr' );
+
+			const tdKey = document.createElement( 'td' );
+			tdKey.className = 'ud-key';
+			tdKey.textContent = key;
+			tr.appendChild( tdKey );
+
+			tr.appendChild( buildValueCell( key, data[ key ], data ) );
+			table.appendChild( tr );
+
+		} );
 
 	}
 
-	// ── Inject viewer into the row, hide textarea ────────────────────
+	// ── Inject table into the row, hide textarea ─────────────────────
 
 	function injectIntoRow(): void {
 
 		const row = findUserDataRow();
 		if ( ! row ) return;
+		if ( row.contains( table ) ) return;
 
-		// Already injected?
-		if ( row.contains( viewer ) ) return;
-
-		// Hide the original textarea
 		const textarea = row.querySelector( 'textarea' );
 		if ( textarea ) ( textarea as HTMLElement ).style.display = 'none';
 
-		row.appendChild( viewer );
+		row.appendChild( table );
 
 	}
 
 	// ── Sync on selection / change ───────────────────────────────────
 
-	function syncViewer( object: any ): void {
+	function syncTable( object: any ): void {
 
 		injectIntoRow();
-		renderViewer( object ? object.userData : null );
+		renderTable( object ? object.userData : null );
 
 	}
 
 	signals.objectSelected.add( function ( object: any ) {
 
-		setTimeout( function () { syncViewer( object ); }, 0 );
+		setTimeout( function () { syncTable( object ); }, 0 );
 
 	} );
 
 	signals.objectChanged.add( function ( object: any ) {
 
 		if ( object !== editor.selected ) return;
-		syncViewer( object );
+		syncTable( object );
 
 	} );
 
 	signals.refreshSidebarObject3D.add( function ( object: any ) {
 
 		if ( object !== editor.selected ) return;
-		syncViewer( object );
+		syncTable( object );
 
 	} );
 
-	// Initial inject attempt (in case an object is already selected)
 	setTimeout( injectIntoRow, 200 );
 
 }
