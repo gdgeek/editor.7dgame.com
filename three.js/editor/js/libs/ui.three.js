@@ -390,8 +390,13 @@ class UIOutliner extends UIDiv {
 			if ( this === currentDrag ) return;
 
 			const area = event.offsetY / this.clientHeight;
+			const reorderOnly = scope.reorderOnly === true;
 
-			if ( area < 0.25 ) {
+			if ( reorderOnly ) {
+
+				this.className = area < 0.5 ? 'option dragTop' : 'option dragBottom';
+
+			} else if ( area < 0.25 ) {
 
 				this.className = 'option dragTop';
 
@@ -423,8 +428,39 @@ class UIOutliner extends UIDiv {
 
 			const scene = scope.scene;
 			const object = scene.getObjectById( currentDrag.value );
+			const reorderOnly = scope.reorderOnly === true;
 
 			const area = event.offsetY / this.clientHeight;
+
+			if ( reorderOnly ) {
+
+				const targetObject = scene.getObjectById( this.value );
+				if ( object === undefined || object === null || targetObject === undefined || targetObject === null ) return;
+				if ( object.parent !== targetObject.parent ) return;
+
+				if ( area < 0.5 ) {
+
+					moveObject( object, object.parent, targetObject );
+
+				} else {
+
+					let nextObject = null;
+					const siblings = targetObject.parent.children;
+					const targetIndex = siblings.indexOf( targetObject );
+
+					if ( targetIndex !== - 1 && targetIndex + 1 < siblings.length ) {
+
+						nextObject = siblings[ targetIndex + 1 ];
+
+					}
+
+					moveObject( object, object.parent, nextObject );
+
+				}
+
+				return;
+
+			}
 
 			if ( area < 0.25 ) {
 

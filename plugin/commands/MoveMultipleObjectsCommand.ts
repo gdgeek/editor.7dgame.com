@@ -52,6 +52,17 @@ class MoveMultipleObjectsCommand extends Command {
 	}
 
 	execute(): void {
+		const reorderOnly = !! ( this.editor.type && this.editor.type.toLowerCase() === 'verse' );
+		if ( reorderOnly ) {
+
+			for ( let i = 0; i < this.oldParents.length; i ++ ) {
+
+				if ( this.oldParents[ i ] !== this.newParent ) return;
+
+			}
+
+		}
+
 		// 先从原来的父对象中移除所有选中对象
 		for (let i = 0; i < this.objects.length; i++) {
 			const object = this.objects[i];

@@ -43,6 +43,9 @@ class MoveObjectCommand extends Command {
 
 	execute() {
 
+		const reorderOnly = !! ( this.editor.type && this.editor.type.toLowerCase() === 'verse' );
+		if ( reorderOnly && this.oldParent !== this.newParent ) return;
+
 		this.oldParent.remove( this.object );
 
 		const children = this.newParent.children;

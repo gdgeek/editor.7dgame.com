@@ -7,14 +7,72 @@ function SidebarScene( editor ) {
 
 	const signals = editor.signals;
 	const strings = editor.strings;
+	const isSceneEditor = !! ( editor.type && editor.type.toLowerCase() === 'verse' );
 
 	const container = new UIPanel();
 	container.setBorderTop( '0' );
-	container.setPaddingTop( '20px' );
+	container.setPaddingTop( '10px' );
 
 	// outliner
 
 	const nodeStates = new WeakMap();
+	const nativeTypes = new Set( [
+		'Scene', 'PerspectiveCamera', 'OrthographicCamera',
+		'AmbientLight', 'DirectionalLight', 'PointLight', 'SpotLight', 'HemisphereLight',
+		'Mesh', 'SkinnedMesh', 'Line', 'LineSegments', 'LineLoop', 'Points',
+		'Group', 'Object3D', 'Bone', 'Sprite', 'LOD'
+	] );
+
+	function hasDisplayableChildren( object ) {
+
+		if ( isSceneEditor ) return false;
+
+		return object.children.some( function ( child ) {
+
+			if ( ! child ) return false;
+			if ( child.userData && child.userData.hidden === true ) return false;
+			if ( child.name && child.name.charAt( 0 ) === '$' ) return false;
+
+			const childType = child.type || '';
+
+			if ( ! childType || nativeTypes.has( childType ) ) return false;
+
+			return true;
+
+		} );
+
+	}
+
+	function buildOpener( object ) {
+
+		if ( nodeStates.has( object ) === false ) return null;
+
+		const canExpand = hasDisplayableChildren( object );
+		const state = nodeStates.get( object );
+
+		const opener = document.createElement( 'span' );
+		opener.classList.add( 'opener' );
+
+		if ( canExpand ) {
+
+			opener.classList.add( state ? 'open' : 'closed' );
+
+			opener.addEventListener( 'click', function () {
+
+				nodeStates.set( object, nodeStates.get( object ) === false ); // toggle
+				refreshUI();
+
+			} );
+
+		} else {
+
+			opener.classList.add( 'empty' );
+
+		}
+
+		return opener;
+
+	}
 
 	function buildOption( object, draggable ) {
 
@@ -27,25 +85,9 @@ function SidebarScene( editor ) {
 
 		if ( nodeStates.has( object ) ) {
 
-			const state = nodeStates.get( object );
+			const opener = buildOpener( object );
 
-			const opener = document.createElement( 'span' );
-			opener.classList.add( 'opener' );
-
-			if ( object.children.length > 0 ) {
-
-				opener.classList.add( state ? 'open' : 'closed' );
-
-			}
-
-			opener.addEventListener( 'click', function () {
-
-				nodeStates.set( object, nodeStates.get( object ) === false ); // toggle
-				refreshUI();
-
-			} );
-
-			option.insertBefore( opener, option.firstChild );
+			if ( opener ) option.insertBefore( opener, option.firstChild );
 
 		}
 
@@ -86,6 +128,34 @@ function SidebarScene( editor ) {
 
 	function getObjectType( object ) {
 
+		const rawType = ( object.userData && object.userData.type ) || object.type || '';
+		const normalizedType = String( rawType ).toLowerCase();
+		const customTypeMap = {
+			module: 'Module',
+			entity: 'Entity',
+			point: 'Point',
+			text: 'Text',
+			polygen: 'Polygen',
+			voxel: 'Voxel',
+			picture: 'Picture',
+			video: 'Video',
+			audio: 'Audio',
+			sound: 'Audio',
+			prototype: 'Prototype'
+		};
+
+		if ( isSceneEditor && normalizedType === 'module' ) {
+
+			return 'Entity';
+
+		}
+
+		if ( customTypeMap[ normalizedType ] ) {
+
+			return customTypeMap[ normalizedType ];
+
+		}
+
 		if ( object.isScene ) return 'Scene';
 		if ( object.isCamera ) return 'Camera';
 		if ( object.isLight ) return 'Light';
@@ -99,7 +169,7 @@ function SidebarScene( editor ) {
 
 	function buildHTML( object ) {
 
-		let html = `<span class="type ${ getObjectType( object ) }"></span> ${ escapeHTML( object.name ) }`;
+		let html = `<span class="type ${ getObjectType( object ) }"></span>${ escapeHTML( object.name ) }`;
 
 		if ( object.isMesh ) {
 
@@ -131,6 +201,7 @@ function SidebarScene( editor ) {
 
 	const outliner = new UIOutliner( editor );
 	outliner.setId( 'outliner' );
+	outliner.reorderOnly = !! ( editor.type && editor.type.toLowerCase() === 'verse' );
 	outliner.onChange( function () {
 
 		ignoreObjectSelectedSignal = true;
@@ -398,6 +469,8 @@ function SidebarScene( editor ) {
 				option.style.paddingLeft = ( pad * 18 ) + 'px';
 				options.push( option );
 
+				if ( isSceneEditor ) continue;
+
 				if ( nodeStates.get( object ) === true ) {
 
 					addObjects( object.children, pad + 1 );
@@ -513,11 +586,15 @@ function SidebarScene( editor ) {
 
 			if ( option.value === object.id ) {
 
-				const openerElement = option.querySelector( ':scope > .opener' );
+				option.innerHTML = buildHTML( object );
 
-				const openerHTML = openerElement ? openerElement.outerHTML : '';
+				const openerElement = buildOpener( object );
 
-				option.innerHTML = openerHTML + buildHTML( object );
+				if ( openerElement ) {
+
+					option.insertBefore( openerElement, option.firstChild );
+
+				}
 
 				return;
 

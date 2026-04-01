@@ -855,6 +855,9 @@ function injectOutlinerCustomIcons( editor: MrppEditor ): void {
 
 	const outlinerDom = document.getElementById( 'outliner' );
 	if ( ! outlinerDom ) return;
+	const isSceneEditor = !! ( editor.type && editor.type.toLowerCase() === 'verse' );
+
+	outlinerDom.classList.toggle( 'mrpp-scene-outliner', isSceneEditor );
 
 	// Inject CSS for custom MRPP type icons
 	const style = document.createElement( 'style' );
@@ -874,12 +877,26 @@ function injectOutlinerCustomIcons( editor: MrppEditor ): void {
 		#outliner .type.Module:after { content: '⌗'; }
 		#outliner .type.Entity { color: #d0d0d0; }
 		#outliner .type.Entity:after { content: '◇'; }
+		#outliner.mrpp-scene-outliner .type.Entity { color: transparent; }
+		#outliner.mrpp-scene-outliner .type.Entity:after {
+			content: '';
+			display: inline-block;
+			width: 9px;
+			height: 9px;
+			vertical-align: middle;
+			background-repeat: no-repeat;
+			background-position: center;
+			background-size: contain;
+			background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%236a7f9c' d='M192 104.8c0-9.2-5.8-17.3-13.2-22.8C167.2 73.3 160 61.3 160 48c0-26.5 28.7-48 64-48s64 21.5 64 48c0 13.3-7.2 25.3-18.8 34c-7.4 5.5-13.2 13.6-13.2 22.8c0 12.8 10.4 23.2 23.2 23.2l56.8 0c26.5 0 48 21.5 48 48l0 56.8c0 12.8 10.4 23.2 23.2 23.2c9.2 0 17.3-5.8 22.8-13.2c8.7-11.6 20.7-18.8 34-18.8c26.5 0 48 28.7 48 64s-21.5 64-48 64c-13.3 0-25.3-7.2-34-18.8c-5.5-7.4-13.6-13.2-22.8-13.2c-12.8 0-23.2 10.4-23.2 23.2L384 464c0 26.5-21.5 48-48 48l-56.8 0c-12.8 0-23.2-10.4-23.2-23.2c0-9.2 5.8-17.3 13.2-22.8c11.6-8.7 18.8-20.7 18.8-34c0-26.5-28.7-48-64-48s-64 21.5-64 48c0 13.3 7.2 25.3 18.8 34c7.4 5.5 13.2 13.6 13.2 22.8c0 12.8-10.4 23.2-23.2 23.2L48 512c-26.5 0-48-21.5-48-48L0 343.2C0 330.4 10.4 320 23.2 320c9.2 0 17.3 5.8 22.8 13.2C54.7 344.8 66.7 352 80 352c26.5 0 48-28.7 48-64s-21.5-64-48-64c-13.3 0-25.3 7.2-34 18.8C40.5 250.2 32.4 256 23.2 256C10.4 256 0 245.6 0 232.8L0 176c0-26.5 21.5-48 48-48l120.8 0c12.8 0 23.2-10.4 23.2-23.2z'/%3E%3C/svg%3E");
+		}
 		#outliner .type.Point { color: #d0d0d0; }
 		#outliner .type.Point:after { content: '◇'; }
 		#outliner .type.Text { color: #5b74a5; }
 		#outliner .type.Text:after { content: 'T'; font-weight: 600; }
 		#outliner .type.Polygen { color: #74a55b; }
 		#outliner .type.Polygen:after { content: '⬢'; }
+		#outliner .type.Voxel { color: #74a55b; }
+		#outliner .type.Voxel:after { content: '⬢'; }
 		#outliner .type.Picture { color: #5b8ca5; }
 		#outliner .type.Picture:after { content: '▣'; font-size: 9px; }
 		#outliner .type.Video { color: #a55ba5; }
@@ -891,6 +908,34 @@ function injectOutlinerCustomIcons( editor: MrppEditor ): void {
 		#outliner .Geometry, #outliner .Material, #outliner .Script { display: none !important; }
 	`;
 	document.head.appendChild( style );
+
+	function getMrppTypeClass( object: any ): string {
+
+		const rawType = ( object.userData && ( object.userData as any ).type ) || object.type || '';
+		const normalizedType = String( rawType ).toLowerCase();
+		const customTypeMap: Record<string, string> = {
+			module: 'Module',
+			entity: 'Entity',
+			point: 'Point',
+			text: 'Text',
+			polygen: 'Polygen',
+			voxel: 'Voxel',
+			picture: 'Picture',
+			video: 'Video',
+			audio: 'Audio',
+			sound: 'Audio',
+			prototype: 'Prototype'
+		};
+
+		if ( isSceneEditor && normalizedType === 'module' ) {
+
+			return 'Entity';
+
+		}
+
+		return customTypeMap[ normalizedType ] || '';
+
+	}
 
 	function replaceTypeIcons(): void {
 
@@ -905,35 +950,19 @@ function injectOutlinerCustomIcons( editor: MrppEditor ): void {
 			const object = editor.scene.getObjectById( id );
 			if ( ! object ) continue;
 
-			// Get MRPP custom type from object.type (MRPP sets type directly on the object)
-			// Fall back to userData.type for compatibility
-			const mrppType = object.type || ( object.userData && (object.userData as any).type ) || '';
-
-			// Skip native three.js types that r183 already handles
 			const nativeTypes = [ 'Scene', 'PerspectiveCamera', 'OrthographicCamera',
 				'AmbientLight', 'DirectionalLight', 'PointLight', 'SpotLight', 'HemisphereLight',
 				'Mesh', 'SkinnedMesh', 'Line', 'LineSegments', 'LineLoop', 'Points',
 				'Group', 'Object3D', 'Bone', 'Sprite', 'LOD' ];
+			const typeCssClass = getMrppTypeClass( object );
 
-			if ( ! mrppType || nativeTypes.indexOf( mrppType ) !== - 1 ) continue;
-
-			// Capitalize first letter for CSS class name
-			const typeCssClass = mrppType.charAt( 0 ).toUpperCase() + mrppType.slice( 1 ).toLowerCase();
+			if ( ! typeCssClass ) continue;
 
 			// Find the type span and replace its class
 			const typeSpan = option.querySelector( '.type' );
 			if ( typeSpan && typeSpan.className !== 'type ' + typeCssClass ) {
 
 				typeSpan.className = 'type ' + typeCssClass;
-
-			}
-
-			// Hide the opener (expand/collapse button) for MRPP custom type objects.
-			// In the old version, these nodes could not be expanded.
-			const opener = option.querySelector( '.opener' ) as HTMLElement | null;
-			if ( opener ) {
-
-				opener.style.display = 'none';
 
 			}
 
@@ -967,7 +996,7 @@ function injectOutlinerCustomIcons( editor: MrppEditor ): void {
 	}
 
 	const observer = new MutationObserver( replaceTypeIcons );
-	observer.observe( outlinerDom, { childList: true } );
+	observer.observe( outlinerDom, { childList: true, subtree: true } );
 	replaceTypeIcons();
 
 }
