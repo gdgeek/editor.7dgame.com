@@ -15,6 +15,16 @@ function getLocalizedObjectType( object, editor ) {
 	const strings = editor.strings;
 	const rawType = ( object.userData && object.userData.type ) || object.type || '';
 	const normalizedType = String( rawType ).toLowerCase();
+	const normalizedName = String( object && object.name ? object.name : '' ).trim();
+	const isPointLikeName = /^Point(?:\s*\(\d+\))?$/i.test( normalizedName );
+	const isSceneEntity = !! ( editor.type && editor.type.toLowerCase() === 'verse' && object && object.userData && object.userData.meta_id != null );
+
+	if ( isPointLikeName && ! isSceneEntity ) {
+
+		const localizedPointType = strings.getKey( 'sidebar/object/type_value/point' );
+		if ( localizedPointType !== '???' ) return localizedPointType;
+
+	}
 
 	if ( editor.type && editor.type.toLowerCase() === 'verse' && normalizedType === 'module' ) {
 
@@ -839,6 +849,16 @@ function SidebarObject( editor ) {
 	let transformBorder = createTransformBorder();
 	let spacerRow = null;
 
+	const clearTransformHoverArtifacts = function () {
+
+		removeAllEventListeners();
+		const overlay = container.dom.querySelector( '.transform-area-overlay' );
+		if ( overlay ) overlay.remove();
+		const legacyHoverArea = container.dom.querySelector( '.transform-hover-area' );
+		if ( legacyHoverArea ) legacyHoverArea.remove();
+
+	};
+
 	const updateBorderPosition = function () {
 
 		if ( ! objectPositionRow.dom || ! objectScaleRow.dom ) return;
@@ -905,7 +925,7 @@ function SidebarObject( editor ) {
 		transformCopyButton.dom.style.display = 'inline-flex';
 		transformPasteButton.dom.style.display = 'inline-flex';
 		transformResetButton.dom.style.display = 'inline-flex';
-		transformBorder.style.display = 'block';
+		transformBorder.style.display = 'none';
 		updateBorderPosition();
 		getSpacerRow().setDisplay( '' );
 
@@ -913,6 +933,7 @@ function SidebarObject( editor ) {
 
 	function hideTransformActions() {
 
+		clearTransformHoverArtifacts();
 		transformActionsRow.setDisplay( 'none' );
 		transformBorder.style.display = 'none';
 		if ( spacerRow ) spacerRow.setDisplay( 'none' );
@@ -1512,11 +1533,11 @@ function SidebarObject( editor ) {
 			objectScaleRow.setDisplay( '' );
 			objectResetRow.setDisplay( 'none' );
 			objectResetRow.dom.style.display = 'none';
-			hideTransformActions();
+			clearTransformHoverArtifacts();
 			requestAnimationFrame( function () {
 
 				updateBorderPosition();
-				createHoverArea();
+				showTransformActions();
 
 			} );
 
@@ -1545,6 +1566,7 @@ function SidebarObject( editor ) {
 		} else {
 
 			container.setDisplay( 'none' );
+			hideTransformActions();
 			hideSignalPopup();
 
 		}

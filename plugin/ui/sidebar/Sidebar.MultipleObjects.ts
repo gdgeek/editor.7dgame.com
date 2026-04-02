@@ -723,12 +723,10 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 	positionResetButton.dom.appendChild(positionResetIcon);
 	positionResetButton.dom.title = strings.getKey('sidebar/object/resetPosition');
 
-	// 默认隐藏复制粘贴按钮
 	positionCopyButton.dom.style.display = 'none';
 	positionPasteButton.dom.style.display = 'none';
 	positionResetButton.dom.style.display = 'none';
 
-	// 添加鼠标悬停事件
 	multipleObjectsPositionRow.dom.addEventListener('mouseenter', function () {
 		positionCopyButton.dom.style.display = 'inline-flex';
 		positionPasteButton.dom.style.display = 'inline-flex';
@@ -850,12 +848,10 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 	rotationResetButton.dom.appendChild(rotationResetIcon);
 	rotationResetButton.dom.title = strings.getKey('sidebar/object/resetRotation');
 
-	// 默认隐藏复制粘贴按钮
 	rotationCopyButton.dom.style.display = 'none';
 	rotationPasteButton.dom.style.display = 'none';
 	rotationResetButton.dom.style.display = 'none';
 
-	// 添加鼠标悬停事件
 	multipleObjectsRotationRow.dom.addEventListener('mouseenter', function () {
 		rotationCopyButton.dom.style.display = 'inline-flex';
 		rotationPasteButton.dom.style.display = 'inline-flex';
@@ -980,12 +976,10 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 	scaleResetButton.dom.appendChild(scaleResetIcon);
 	scaleResetButton.dom.title = strings.getKey('sidebar/object/resetScale');
 
-	// 默认隐藏复制粘贴按钮
 	scaleCopyButton.dom.style.display = 'none';
 	scalePasteButton.dom.style.display = 'none';
 	scaleResetButton.dom.style.display = 'none';
 
-	// 添加鼠标悬停事件
 	multipleObjectsScaleRow.dom.addEventListener('mouseenter', function () {
 		scaleCopyButton.dom.style.display = 'inline-flex';
 		scalePasteButton.dom.style.display = 'inline-flex';
@@ -1199,6 +1193,18 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 	// 创建并获取边框元素
 	let transformBorder = createTransformBorder();
 
+	const clearTransformHoverArtifacts = function () {
+		removeAllEventListeners();
+		const overlay = container.dom.querySelector('.transform-area-overlay');
+		if (overlay && overlay.parentElement) {
+			overlay.parentElement.removeChild(overlay);
+		}
+		const legacyHoverArea = container.dom.querySelector('.transform-hover-area');
+		if (legacyHoverArea && legacyHoverArea.parentElement) {
+			legacyHoverArea.parentElement.removeChild(legacyHoverArea);
+		}
+	};
+
 	// 更新边框位置和大小
 	const updateBorderPosition = function () {
 		if (!multipleObjectsPositionRow.dom || !multipleObjectsScaleRow.dom) return;
@@ -1266,7 +1272,7 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 		transformCopyButton.dom.style.display = 'inline-flex';
 		transformPasteButton.dom.style.display = 'inline-flex';
 		transformResetButton.dom.style.display = 'inline-flex';
-		transformBorder.style.display = 'block';
+		transformBorder.style.display = 'none';
 		updateBorderPosition();
 
 		// 显示间隙空白行
@@ -1275,6 +1281,7 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 
 	// 隐藏变换操作和边框
 	const hideTransformActions = function () {
+		clearTransformHoverArtifacts();
 		transformActionsRow.setDisplay('none');
 		transformBorder.style.display = 'none';
 
@@ -1849,13 +1856,15 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 
 				// 延迟执行以确保DOM已更新
 				setTimeout(function () {
-					createHoverArea();
 					transformBorder = createTransformBorder();
+					showTransformActions();
 				}, 100);
 			} else {
+				hideTransformActions();
 				container.setDisplay('none');
 			}
 		} else {
+			hideTransformActions();
 			container.setDisplay('none');
 		}
 	});

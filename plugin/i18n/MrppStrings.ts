@@ -119,7 +119,7 @@ const mrppStrings: Record<string, Record<string, string>> = {
 
 		'sidebar/object/type_value/module': 'Module',
 		'sidebar/object/type_value/entity': 'Entity',
-		'sidebar/object/type_value/point': 'Point',
+		'sidebar/object/type_value/point': 'Empty',
 		'sidebar/object/type_value/text': 'Text',
 		'sidebar/object/type_value/polygen': 'Polygen',
 		'sidebar/object/type_value/picture': 'Picture',
@@ -397,7 +397,7 @@ const mrppStrings: Record<string, Record<string, string>> = {
 
 		'sidebar/object/type_value/module': '模块',
 		'sidebar/object/type_value/entity': '实体',
-		'sidebar/object/type_value/point': '点位',
+		'sidebar/object/type_value/point': '空节点',
 		'sidebar/object/type_value/text': '文字',
 		'sidebar/object/type_value/polygen': '模型',
 		'sidebar/object/type_value/picture': '图片',
@@ -672,7 +672,7 @@ const mrppStrings: Record<string, Record<string, string>> = {
 
 		'sidebar/object/type_value/module': 'モジュール',
 		'sidebar/object/type_value/entity': 'エンティティ',
-		'sidebar/object/type_value/point': 'ポイント',
+		'sidebar/object/type_value/point': '空ノード',
 		'sidebar/object/type_value/text': 'テキスト',
 		'sidebar/object/type_value/polygen': 'ポリゴン',
 		'sidebar/object/type_value/picture': '画像',
@@ -938,7 +938,7 @@ const mrppStrings: Record<string, Record<string, string>> = {
 
 		"sidebar/object/type_value/module": "模組",
 		"sidebar/object/type_value/entity": "實體",
-		"sidebar/object/type_value/point": "點位",
+		"sidebar/object/type_value/point": "空節點",
 		"sidebar/object/type_value/text": "文字",
 		"sidebar/object/type_value/polygen": "模型",
 		"sidebar/object/type_value/picture": "圖片",
@@ -1205,7 +1205,7 @@ const mrppStrings: Record<string, Record<string, string>> = {
 
 		"sidebar/object/type_value/module": "โมดูล",
 		"sidebar/object/type_value/entity": "เอนทิตี",
-		"sidebar/object/type_value/point": "จุด",
+		"sidebar/object/type_value/point": "โหนดว่าง",
 		"sidebar/object/type_value/text": "ข้อความ",
 		"sidebar/object/type_value/polygen": "โมเดล",
 		"sidebar/object/type_value/picture": "รูปภาพ",
