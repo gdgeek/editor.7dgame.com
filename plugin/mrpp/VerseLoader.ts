@@ -280,6 +280,7 @@ class VerseLoader {
 				}
 				const node = this.factory.addModule(item);
 				(node as any).userData.custom = (meta as any).custom;
+				(node as any).metaEvents = meta.events || { inputs: [], outputs: [] };
 				root.add(node);
 				this.editor.signals.sceneGraphChanged.dispatch();
 
@@ -332,15 +333,15 @@ class VerseLoader {
 		if (lights == null) {
 			lights = new THREE.Group();
 			lights.name = '$lights';
-			const light1 = new THREE.DirectionalLight(0xffffff, 0.5);
+			const light1 = new THREE.DirectionalLight(0xffffff, 0.1);
 			(light1 as any).position.set(- 0.5, 0, 0.7);
 			light1.name = 'light1';
 			lights.add(light1);
-			const light2 = new THREE.AmbientLight(0xffffff, 0.5);
+			const light2 = new THREE.AmbientLight(0xffffff, 0.1);
 
 			light2.name = 'light2';
 			lights.add(light2);
-			const light3 = new THREE.PointLight(0xffffff, 1);
+			const light3 = new THREE.PointLight(0xffffff, 0.1);
 			(light3 as any).position.set(0, 0, 0);
 			light3.name = 'light3';
 			lights.add(light3);
@@ -364,8 +365,16 @@ class VerseLoader {
 			});
 
 			const metas = new Map<string, any>();
+			if (!this.editor.data) {
+				this.editor.data = {};
+			}
+			this.editor.data.metaEventsById = new Map<string, any>();
 			verse.metas.forEach((item: any) => {
 				metas.set(item.id.toString(), item);
+				this.editor.data.metaEventsById.set(
+					item.id.toString(),
+					item.events || { inputs: [], outputs: [] }
+				);
 			});
 
 			const loadPromise = this.read(root, data, resources, metas);

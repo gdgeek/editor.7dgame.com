@@ -1,4 +1,4 @@
-import { UIPanel, UIRow, UIHorizontalRule } from './libs/ui.js';
+import { UIPanel, UIRow, UIHorizontalRule, UIText } from './libs/ui.js';
 import { FileLoader } from 'three';
 
 function MenubarFile( editor ) {
@@ -168,6 +168,7 @@ function MenubarFile( editor ) {
 	option = new UIRow()
 		.addClass( 'option' )
 		.setTextContent( strings.getKey( 'menubar/file/save' ) )
+		.add( new UIText( 'CTRL+S' ).setClass( 'key' ) )
 		.onClick( function () {
 
 			const json = editor.toJSON();

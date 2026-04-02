@@ -270,15 +270,15 @@ class MetaLoader {
 
 			lights = new THREE.Group();
 			lights.name = '$lights';
-			const light1 = new THREE.DirectionalLight(0xffffff, 0.5);
+			const light1 = new THREE.DirectionalLight(0xffffff, 0.1);
 			(light1 as any).position.set(- 0.5, 0, 0.7);
 			light1.name = 'light1';
 			lights.add(light1);
-			const light2 = new THREE.AmbientLight(0xffffff, 0.5);
+			const light2 = new THREE.AmbientLight(0xffffff, 0.1);
 
 			light2.name = 'light2';
 			lights.add(light2);
-			const light3 = new THREE.PointLight(0xffffff, 1);
+			const light3 = new THREE.PointLight(0xffffff, 0.1);
 			(light3 as any).position.set(0, 0, 0);
 			light3.name = 'light3';
 			lights.add(light3);

@@ -76,6 +76,50 @@ function Viewport( editor ) {
 	let objectRotationOnDown = null;
 	let objectScaleOnDown = null;
 
+	function getSelectionState() {
+
+		const selectedObjects = Array.isArray( editor.selectedObjects ) ? editor.selectedObjects.filter( Boolean ) : [];
+		const isMultiSelection = selectedObjects.length > 1;
+		const singleSelectedObject = isMultiSelection ? null : ( editor.selected !== null && editor.selected !== scene && editor.selected !== camera ? editor.selected : null );
+
+		return { selectedObjects, isMultiSelection, singleSelectedObject };
+
+	}
+
+	function updateSelectionBoxForObjects( selectedObjects ) {
+
+		if ( ! selectedObjects || selectedObjects.length === 0 ) {
+
+			selectionBox.visible = false;
+			return;
+
+		}
+
+		if ( selectedObjects.length === 1 ) {
+
+			box.setFromObject( selectedObjects[ 0 ], true );
+
+		} else if ( typeof editor.computeMultiSelectionBoundingBox === 'function' ) {
+
+			box.copy( editor.computeMultiSelectionBoundingBox( selectedObjects ) );
+
+		} else {
+
+			box.makeEmpty();
+
+			for ( let i = 0; i < selectedObjects.length; i ++ ) {
+
+				const currentBox = new THREE.Box3().setFromObject( selectedObjects[ i ], true );
+				box.union( currentBox );
+
+			}
+
+		}
+
+		selectionBox.visible = box.isEmpty() === false;
+
+	}
+
 	const transformControls = new TransformControls( camera );
 	transformControls.addEventListener( 'axis-changed', function () {
 
@@ -91,6 +135,18 @@ function Viewport( editor ) {
 
 		const object = transformControls.object;
 
+		if ( editor._viewportPatch && typeof editor._viewportPatch.handleMultiSelectMouseDown === 'function' ) {
+
+			const handled = editor._viewportPatch.handleMultiSelectMouseDown( transformControls );
+			if ( handled === true ) {
+
+				controls.enabled = false;
+				return;
+
+			}
+
+		}
+
 		objectPositionOnDown = object.position.clone();
 		objectRotationOnDown = object.rotation.clone();
 		objectScaleOnDown = object.scale.clone();
@@ -101,6 +157,18 @@ function Viewport( editor ) {
 	transformControls.addEventListener( 'mouseUp', function () {
 
 		const object = transformControls.object;
+
+		if ( editor._viewportPatch && typeof editor._viewportPatch.handleMultiSelectMouseUp === 'function' ) {
+
+			const handled = editor._viewportPatch.handleMultiSelectMouseUp( transformControls, SetPositionCommand, SetRotationCommand, SetScaleCommand );
+			if ( handled === true ) {
+
+				controls.enabled = true;
+				return;
+
+			}
+
+		}
 
 		if ( object !== undefined ) {
 
@@ -439,17 +507,22 @@ function Viewport( editor ) {
 		selectionBox.visible = false;
 		transformControls.detach();
 
-		if ( object !== null && object !== scene && object !== camera ) {
+		const { selectedObjects, isMultiSelection, singleSelectedObject } = getSelectionState();
 
-			box.setFromObject( object, true );
+		if ( isMultiSelection ) {
 
-			if ( box.isEmpty() === false ) {
+			updateSelectionBoxForObjects( selectedObjects );
 
-				selectionBox.visible = true;
+			if ( editor.multiSelectGroup ) {
+
+				transformControls.attach( editor.multiSelectGroup );
 
 			}
 
-			transformControls.attach( object );
+		} else if ( singleSelectedObject !== null ) {
+
+			updateSelectionBoxForObjects( [ singleSelectedObject ] );
+			transformControls.attach( singleSelectedObject );
 
 		}
 
@@ -477,6 +550,16 @@ function Viewport( editor ) {
 	} );
 
 	signals.objectChanged.add( function ( object ) {
+
+		if ( object === editor.multiSelectGroup ) {
+
+			const selectedObjects = Array.isArray( editor.selectedObjects ) ? editor.selectedObjects.filter( Boolean ) : [];
+			updateSelectionBoxForObjects( selectedObjects );
+			initPT();
+			render();
+			return;
+
+		}
 
 		if ( editor.selected === object ) {
 
@@ -826,10 +909,22 @@ function Viewport( editor ) {
 			mixer.update( delta );
 			needsUpdate = true;
 
-			if ( editor.selected !== null ) {
+			const { selectedObjects, isMultiSelection, singleSelectedObject } = getSelectionState();
 
-				editor.selected.updateWorldMatrix( false, true ); // avoid frame late effect for certain skinned meshes (e.g. Michelle.glb)
-				selectionBox.box.setFromObject( editor.selected, true ); // selection box should reflect current animation state
+			if ( isMultiSelection ) {
+
+				for ( let i = 0; i < selectedObjects.length; i ++ ) {
+
+					selectedObjects[ i ].updateWorldMatrix( false, true );
+
+				}
+
+				updateSelectionBoxForObjects( selectedObjects );
+
+			} else if ( singleSelectedObject !== null ) {
+
+				singleSelectedObject.updateWorldMatrix( false, true ); // avoid frame late effect for certain skinned meshes
+				selectionBox.box.setFromObject( singleSelectedObject, true ); // selection box should reflect current animation state
 
 			}
 

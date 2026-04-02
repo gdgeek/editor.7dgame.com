@@ -161,13 +161,19 @@ hr {
 
 /* outliner */
 
+#outliner {
+	min-height: 265px;
+}
+
 #outliner .opener {
 	display: inline-block;
 	width: 14px;
 	height: 14px;
-	margin: 0px 4px;
+	margin: 0 6px 0 0;
 	vertical-align: top;
 	text-align: center;
+	cursor: pointer;
+	flex: 0 0 14px;
 }
 
 	#outliner .opener.open:after {
@@ -176,6 +182,10 @@ hr {
 
 	#outliner .opener.closed:after {
 		content: '+';
+	}
+
+	#outliner .opener.empty:after {
+		content: '';
 	}
 
 #outliner .option {
@@ -204,10 +214,15 @@ hr {
 
 #outliner .type {
 	display: inline-block;
-	width: 14px;
+	width: 12px;
 	height: 14px;
 	color: #ddd;
 	text-align: center;
+	line-height: 14px;
+	vertical-align: middle;
+	position: relative;
+	top: -1px;
+	margin-right: 1px;
 }
 
 #outliner .type:after {
@@ -558,6 +573,15 @@ hr {
 
 	}
 
+#properties > .Tabs .Tab {
+	display: inline-block;
+	min-width: 50px;
+	padding-left: 10px;
+	padding-right: 10px;
+	text-align: center;
+	box-sizing: border-box;
+}
+
 #tabs {
 	background-color: #ddd;
 	border-top: 1px solid #ccc;
@@ -622,12 +646,24 @@ hr {
 		white-space: nowrap;
 	}
 
+	#outliner .option .opener + .type {
+		margin-left: 0;
+	}
+
 	.Outliner .option:hover {
 		background-color: rgba(0,0,0,0.02);
 	}
 
 	.Outliner .option.active {
-		background-color: rgba(0,0,0,0.04);
+		background-color: #d9e7fb;
+		color: #304a6e;
+		font-weight: 600;
+		box-shadow: inset 2px 0 0 #5b8def;
+	}
+
+	.Outliner .option.multi-selected {
+		background-color: #e8f0fc;
+		color: #3b5378;
 	}
 
 

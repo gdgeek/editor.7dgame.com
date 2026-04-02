@@ -7,14 +7,72 @@ function SidebarScene( editor ) {
 
 	const signals = editor.signals;
 	const strings = editor.strings;
+	const isSceneEditor = !! ( editor.type && editor.type.toLowerCase() === 'verse' );
 
 	const container = new UIPanel();
 	container.setBorderTop( '0' );
-	container.setPaddingTop( '20px' );
+	container.setPaddingTop( '10px' );
 
 	// outliner
 
 	const nodeStates = new WeakMap();
+	const nativeTypes = new Set( [
+		'Scene', 'PerspectiveCamera', 'OrthographicCamera',
+		'AmbientLight', 'DirectionalLight', 'PointLight', 'SpotLight', 'HemisphereLight',
+		'Mesh', 'SkinnedMesh', 'Line', 'LineSegments', 'LineLoop', 'Points',
+		'Group', 'Object3D', 'Bone', 'Sprite', 'LOD'
+	] );
+
+	function hasDisplayableChildren( object ) {
+
+		if ( isSceneEditor ) return false;
+
+		return object.children.some( function ( child ) {
+
+			if ( ! child ) return false;
+			if ( child.userData && child.userData.hidden === true ) return false;
+			if ( child.name && child.name.charAt( 0 ) === '$' ) return false;
+
+			const childType = child.type || '';
+
+			if ( ! childType || nativeTypes.has( childType ) ) return false;
+
+			return true;
+
+		} );
+
+	}
+
+	function buildOpener( object ) {
+
+		if ( nodeStates.has( object ) === false ) return null;
+
+		const canExpand = hasDisplayableChildren( object );
+		const state = nodeStates.get( object );
+
+		const opener = document.createElement( 'span' );
+		opener.classList.add( 'opener' );
+
+		if ( canExpand ) {
+
+			opener.classList.add( state ? 'open' : 'closed' );
+
+			opener.addEventListener( 'click', function () {
+
+				nodeStates.set( object, nodeStates.get( object ) === false ); // toggle
+				refreshUI();
+
+			} );
+
+		} else {
+
+			opener.classList.add( 'empty' );
+
+		}
+
+		return opener;
+
+	}
 
 	function buildOption( object, draggable ) {
 
@@ -27,25 +85,9 @@ function SidebarScene( editor ) {
 
 		if ( nodeStates.has( object ) ) {
 
-			const state = nodeStates.get( object );
+			const opener = buildOpener( object );
 
-			const opener = document.createElement( 'span' );
-			opener.classList.add( 'opener' );
-
-			if ( object.children.length > 0 ) {
-
-				opener.classList.add( state ? 'open' : 'closed' );
-
-			}
-
-			opener.addEventListener( 'click', function () {
-
-				nodeStates.set( object, nodeStates.get( object ) === false ); // toggle
-				refreshUI();
-
-			} );
-
-			option.insertBefore( opener, option.firstChild );
+			if ( opener ) option.insertBefore( opener, option.firstChild );
 
 		}
 
@@ -86,6 +128,34 @@ function SidebarScene( editor ) {
 
 	function getObjectType( object ) {
 
+		const rawType = ( object.userData && object.userData.type ) || object.type || '';
+		const normalizedType = String( rawType ).toLowerCase();
+		const customTypeMap = {
+			module: 'Module',
+			entity: 'Entity',
+			point: 'Point',
+			text: 'Text',
+			polygen: 'Polygen',
+			voxel: 'Voxel',
+			picture: 'Picture',
+			video: 'Video',
+			audio: 'Audio',
+			sound: 'Audio',
+			prototype: 'Prototype'
+		};
+
+		if ( isSceneEditor && normalizedType === 'module' ) {
+
+			return 'Entity';
+
+		}
+
+		if ( customTypeMap[ normalizedType ] ) {
+
+			return customTypeMap[ normalizedType ];
+
+		}
+
 		if ( object.isScene ) return 'Scene';
 		if ( object.isCamera ) return 'Camera';
 		if ( object.isLight ) return 'Light';
@@ -97,9 +167,16 @@ function SidebarScene( editor ) {
 
 	}
 
+	function getDisplayName( object ) {
+
+		const name = String( object?.name || '' );
+		return name.replace( /\s*\[(polygen|picture|video|sound|audio|text|point|prototype|entity|module)\]\s*$/i, '' );
+
+	}
+
 	function buildHTML( object ) {
 
-		let html = `<span class="type ${ getObjectType( object ) }"></span> ${ escapeHTML( object.name ) }`;
+		let html = `<span class="type ${ getObjectType( object ) }"></span>${ escapeHTML( getDisplayName( object ) ) }`;
 
 		if ( object.isMesh ) {
 
@@ -117,6 +194,39 @@ function SidebarScene( editor ) {
 
 	}
 
+	function syncOutlinerSelection() {
+
+		const selectedObjects = Array.isArray( editor.selectedObjects ) ? editor.selectedObjects.filter( Boolean ) : [];
+
+		if ( selectedObjects && selectedObjects.length > 1 ) {
+
+			if ( outliner.clearSelection ) outliner.clearSelection();
+			outliner.setValue( null );
+
+			for ( let i = 0; i < selectedObjects.length; i ++ ) {
+
+				outliner.setValue( selectedObjects[ i ].id, i > 0 );
+
+			}
+
+			return;
+
+		}
+
+		if ( editor.selected !== null ) {
+
+			if ( outliner.clearSelection ) outliner.clearSelection();
+			outliner.setValue( editor.selected.id );
+
+		} else {
+
+			if ( outliner.clearSelection ) outliner.clearSelection();
+			outliner.setValue( null );
+
+		}
+
+	}
+
 	function getScript( uuid ) {
 
 		if ( editor.scripts[ uuid ] === undefined ) return '';
@@ -131,11 +241,63 @@ function SidebarScene( editor ) {
 
 	const outliner = new UIOutliner( editor );
 	outliner.setId( 'outliner' );
+	outliner.dom.addEventListener( 'click', function ( event ) {
+
+		const target = event.target;
+
+		if ( target instanceof Element && target.closest( '.option' ) ) return;
+
+		if ( target === outliner.dom || ( target instanceof Element && outliner.dom.contains( target ) ) ) {
+
+			editor.clearSelection();
+
+		}
+
+	} );
+	outliner.reorderOnly = !! ( editor.type && editor.type.toLowerCase() === 'verse' );
 	outliner.onChange( function () {
 
 		ignoreObjectSelectedSignal = true;
 
-		editor.selectById( parseInt( outliner.getValue() ) );
+		const selectedValues = outliner.getValues ? outliner.getValues() : [];
+
+		if ( selectedValues.length > 1 ) {
+
+			const selectedObjects = [];
+
+			for ( let i = 0; i < selectedValues.length; i ++ ) {
+
+				const objectId = parseInt( selectedValues[ i ] );
+				if ( isNaN( objectId ) ) continue;
+
+				const object = editor.scene.getObjectById( objectId ) ||
+					( editor.camera && editor.camera.id === objectId ? editor.camera : null );
+
+				if ( object && selectedObjects.indexOf( object ) === - 1 ) {
+
+					selectedObjects.push( object );
+
+				}
+
+			}
+
+			editor.selectedObjects.length = 0;
+
+			for ( let i = 0; i < selectedObjects.length; i ++ ) {
+
+				editor.selectedObjects.push( selectedObjects[ i ] );
+
+			}
+
+			editor.selected = selectedObjects.length > 0 ? selectedObjects[ selectedObjects.length - 1 ] : null;
+			editor.config.setKey( 'selected', editor.selected ? editor.selected.uuid : null );
+			editor.signals.objectSelected.dispatch( editor.selected );
+
+		} else {
+
+			editor.selectById( parseInt( outliner.getValue() ) );
+
+		}
 
 		ignoreObjectSelectedSignal = false;
 
@@ -398,6 +560,8 @@ function SidebarScene( editor ) {
 				option.style.paddingLeft = ( pad * 18 ) + 'px';
 				options.push( option );
 
+				if ( isSceneEditor ) continue;
+
 				if ( nodeStates.get( object ) === true ) {
 
 					addObjects( object.children, pad + 1 );
@@ -409,12 +573,7 @@ function SidebarScene( editor ) {
 		} )( scene.children, 0 );
 
 		outliner.setOptions( options );
-
-		if ( editor.selected !== null ) {
-
-			outliner.setValue( editor.selected.id );
-
-		}
+		syncOutlinerSelection();
 
 		backgroundType.setValue( editor.backgroundType );
 
@@ -513,11 +672,15 @@ function SidebarScene( editor ) {
 
 			if ( option.value === object.id ) {
 
-				const openerElement = option.querySelector( ':scope > .opener' );
+				option.innerHTML = buildHTML( object );
 
-				const openerHTML = openerElement ? openerElement.outerHTML : '';
+				const openerElement = buildOpener( object );
 
-				option.innerHTML = openerHTML + buildHTML( object );
+				if ( openerElement ) {
+
+					option.insertBefore( openerElement, option.firstChild );
+
+				}
 
 				return;
 
@@ -564,11 +727,11 @@ function SidebarScene( editor ) {
 
 			if ( needsRefresh ) refreshUI();
 
-			outliner.setValue( object.id );
+			syncOutlinerSelection();
 
 		} else {
 
-			outliner.setValue( null );
+			syncOutlinerSelection();
 
 		}
 

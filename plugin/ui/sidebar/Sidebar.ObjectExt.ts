@@ -450,6 +450,7 @@ function injectSidebarObjectExtensions( editor: any, sidebarObjectContainer: HTM
 	objectResetRow.add( resetPositionButton );
 	objectResetRow.add( resetRotationButton );
 	objectResetRow.add( resetScaleButton );
+	objectResetRow.setDisplay( 'none' );
 
 	// Insert the reset row after the scale row
 	if ( objectScaleRow && objectScaleRow.nextSibling ) {
@@ -655,6 +656,23 @@ function injectSidebarObjectExtensions( editor: any, sidebarObjectContainer: HTM
 
 	}
 
+	function syncTransformActionsVisibilityForSelection( object: any ): void {
+
+		const selectedObjects = editor.getSelectedObjects ? editor.getSelectedObjects() : [];
+		const isSingleSelection = !! object && selectedObjects.length === 1;
+
+		if ( ! isSingleSelection ) {
+
+			objectResetRow.setDisplay( 'none' );
+			hideTransformActions();
+			return;
+
+		}
+
+		objectResetRow.setDisplay( '' );
+
+	}
+
 	function createHoverArea() {
 
 		const oldHoverArea = sidebarObjectContainer.querySelector( '.transform-area-overlay' );
@@ -817,6 +835,7 @@ function injectSidebarObjectExtensions( editor: any, sidebarObjectContainer: HTM
 
 			createHoverArea();
 			transformBorder = createTransformBorder();
+			syncTransformActionsVisibilityForSelection( editor.selected );
 
 		}, 100 );
 
@@ -976,6 +995,8 @@ function injectSidebarObjectExtensions( editor: any, sidebarObjectContainer: HTM
 
 		}
 
+		syncTransformActionsVisibilityForSelection( object );
+
 	} );
 
 	signals.objectChanged.add( function ( object: any ) {
@@ -989,8 +1010,11 @@ function injectSidebarObjectExtensions( editor: any, sidebarObjectContainer: HTM
 
 		if ( object !== editor.selected ) return;
 		applyMrppUIValues( object );
+		syncTransformActionsVisibilityForSelection( object );
 
 	} );
+
+	hideTransformActions();
 
 	function applyMrppRowVisibility( object: any ) {
 

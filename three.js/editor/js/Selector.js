@@ -107,6 +107,17 @@ class Selector {
 		}
 
 		this.editor.selected = object;
+		if ( Array.isArray( this.editor.selectedObjects ) ) {
+
+			this.editor.selectedObjects.length = 0;
+
+			if ( object !== null ) {
+
+				this.editor.selectedObjects.push( object );
+
+			}
+
+		}
 		this.editor.config.setKey( 'selected', uuid );
 
 		this.signals.objectSelected.dispatch( object );

@@ -5,6 +5,7 @@ import { UIRow, UIHorizontalRule } from '../../../three.js/editor/js/libs/ui.js'
 
 import { AddObjectCommand } from '../../../three.js/editor/js/commands/AddObjectCommand.js';
 import { RemoveObjectCommand } from '../../../three.js/editor/js/commands/RemoveObjectCommand.js';
+import { MultiCmdsCommand } from '../../../three.js/editor/js/commands/MultiCmdsCommand.js';
 import { MetaFactory } from '../../mrpp/MetaFactory.js';
 import { Builder } from '../../mrpp/Builder.js';
 
@@ -150,6 +151,7 @@ function injectMrppEditMenu( editor: any, editMenuOptions: any ): void {
 
 	// Clipboard for copy / paste
 	let copiedObjects: any[] = [];
+	let contextMenuVisible = false;
 
 	// ── divider (shown only when an object is selected) ──
 
@@ -159,10 +161,7 @@ function injectMrppEditMenu( editor: any, editMenuOptions: any ): void {
 
 	// ── Clone ────────────────────────────────────────────
 
-	const cloneOption = new UIRow();
-	cloneOption.setClass( 'option' );
-	cloneOption.setTextContent( strings.getKey( 'menubar/edit/clone' ) );
-	cloneOption.onClick( function () {
+	function cloneSelected() {
 
 		const selectedObjects = editor.getSelectedObjects();
 		if ( selectedObjects.length === 0 ) return;
@@ -199,7 +198,8 @@ function injectMrppEditMenu( editor: any, editMenuOptions: any ): void {
 
 			cmd.execute = function () {
 
-				editor.addObject( object, parent );
+				const insertIndex = parent ? parent.children.indexOf( original ) + 1 : undefined;
+				editor.addObject( object, parent, insertIndex );
 				clonedObjects.push( object );
 
 				if ( clonedObjects.length === selectedObjects.length ) {
@@ -228,6 +228,44 @@ function injectMrppEditMenu( editor: any, editMenuOptions: any ): void {
 			editor.execute( cmd );
 
 		}
+
+	}
+
+	function deleteSelectedAsBatch() {
+
+		const selectedObjects = editor.getSelectedObjects().filter( function ( object: any ) {
+
+			return object !== null && object.parent !== null;
+
+		} );
+
+		if ( selectedObjects.length === 0 ) return;
+
+		if ( selectedObjects.length === 1 ) {
+
+			editor.execute( new RemoveObjectCommand( editor, selectedObjects[ 0 ] ) );
+			return;
+
+		}
+
+		const commands = [];
+
+		for ( let i = selectedObjects.length - 1; i >= 0; i -- ) {
+
+			commands.push( new RemoveObjectCommand( editor, selectedObjects[ i ] ) );
+
+		}
+
+		editor.execute( new MultiCmdsCommand( editor, commands ) );
+
+	}
+
+	const cloneOption = new UIRow();
+	cloneOption.setClass( 'option' );
+	cloneOption.setTextContent( strings.getKey( 'menubar/edit/clone' ) );
+	cloneOption.onClick( function () {
+
+		cloneSelected();
 
 	} );
 	cloneOption.dom.style.display = 'none';
@@ -275,6 +313,7 @@ function injectMrppEditMenu( editor: any, editMenuOptions: any ): void {
 		const rotation = selected.rotation.clone();
 		const scale = selected.scale.clone();
 		const parent = selected.parent;
+		const index = parent ? parent.children.indexOf( selected ) : undefined;
 		const uuid = selected.uuid;
 		const name = selected.name;
 		const visible = selected.visible;
@@ -344,7 +383,7 @@ function injectMrppEditMenu( editor: any, editMenuOptions: any ): void {
 		const cmd = new AddObjectCommand( editor, node );
 		cmd.execute = function () {
 
-			editor.addObject( node, parent );
+			editor.addObject( node, parent, index );
 			editor.select( node );
 
 		};
@@ -383,26 +422,173 @@ function injectMrppEditMenu( editor: any, editMenuOptions: any ): void {
 	deleteOption.setTextContent( strings.getKey( 'menubar/edit/delete' ) );
 	deleteOption.onClick( function () {
 
-		const selectedObjects = editor.getSelectedObjects();
-
-		if ( selectedObjects.length > 0 ) {
-
-			for ( let i = selectedObjects.length - 1; i >= 0; i -- ) {
-
-				const object = selectedObjects[ i ];
-				if ( object !== null && object.parent !== null ) {
-
-					editor.execute( new RemoveObjectCommand( editor, object ) );
-
-				}
-
-			}
-
-		}
+		deleteSelectedAsBatch();
 
 	} );
 	deleteOption.dom.style.display = 'none';
 	editMenuOptions.add( deleteOption );
+
+	// ── Context menu (copy / replace / delete) ──────────
+
+	const contextMenu = document.createElement( 'div' );
+	contextMenu.style.position = 'fixed';
+	contextMenu.style.display = 'none';
+	contextMenu.style.minWidth = '118px';
+	contextMenu.style.padding = '8px 0';
+	contextMenu.style.background = '#fff';
+	contextMenu.style.border = '1px solid rgba(0, 0, 0, 0.08)';
+	contextMenu.style.borderRadius = '8px';
+	contextMenu.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.16)';
+	contextMenu.style.zIndex = '9999';
+	contextMenu.style.userSelect = 'none';
+
+	function hideContextMenu(): void {
+
+		contextMenu.style.display = 'none';
+		contextMenuVisible = false;
+
+	}
+
+	function createContextMenuItem( label: string, onClick: () => void ): HTMLDivElement {
+
+		const item = document.createElement( 'div' );
+		item.textContent = label;
+		item.style.padding = '8px 16px';
+		item.style.fontSize = '14px';
+		item.style.lineHeight = '20px';
+		item.style.color = '#444';
+		item.style.cursor = 'pointer';
+
+		item.addEventListener( 'mouseenter', function () {
+
+			item.style.background = '#f5f5f5';
+
+		} );
+
+		item.addEventListener( 'mouseleave', function () {
+
+			item.style.background = 'transparent';
+
+		} );
+
+		item.addEventListener( 'click', function ( event ) {
+
+			event.preventDefault();
+			event.stopPropagation();
+			hideContextMenu();
+			onClick();
+
+		} );
+
+		return item;
+
+	}
+
+	const contextCopyItem = createContextMenuItem( strings.getKey( 'menubar/edit/clone' ), function () {
+
+		cloneSelected();
+
+	} );
+
+	const contextReplaceItem = createContextMenuItem( strings.getKey( 'menubar/replace' ), function () {
+
+		replaceOption.dom.click();
+
+	} );
+
+	const contextDeleteItem = createContextMenuItem( strings.getKey( 'menubar/edit/delete' ), function () {
+
+		deleteOption.dom.click();
+
+	} );
+
+	contextMenu.appendChild( contextCopyItem );
+	contextMenu.appendChild( contextReplaceItem );
+	contextMenu.appendChild( contextDeleteItem );
+	document.body.appendChild( contextMenu );
+
+	function updateContextMenuItems(): void {
+
+		const hasSelection = cachedSelectedObjects.length > 0;
+		contextCopyItem.style.display = hasSelection ? '' : 'none';
+		contextDeleteItem.style.display = hasSelection ? '' : 'none';
+		contextReplaceItem.style.display = hasSelection && selectedObjectType ? '' : 'none';
+
+	}
+
+	function showContextMenu( x: number, y: number ): void {
+
+		updateContextMenuItems();
+
+		if ( cachedSelectedObjects.length === 0 ) return;
+
+		contextMenu.style.display = 'block';
+		contextMenu.style.left = '0px';
+		contextMenu.style.top = '0px';
+
+		const { innerWidth, innerHeight } = window;
+		const rect = contextMenu.getBoundingClientRect();
+		const left = Math.min( x, Math.max( 8, innerWidth - rect.width - 8 ) );
+		const top = Math.min( y, Math.max( 8, innerHeight - rect.height - 8 ) );
+
+		contextMenu.style.left = `${ left }px`;
+		contextMenu.style.top = `${ top }px`;
+		contextMenuVisible = true;
+
+	}
+
+	function isContextMenuTarget( target: EventTarget | null ): boolean {
+
+		if ( ! ( target instanceof Element ) ) return false;
+		if ( target.closest( 'input, textarea, select, [contenteditable=""], [contenteditable="true"], .CodeMirror' ) ) return false;
+
+		return !! target.closest( '#viewport, #sidebar, #resizer' );
+
+	}
+
+	document.addEventListener( 'contextmenu', function ( event ) {
+
+		cachedSelectedObjects = editor.getSelectedObjects();
+
+		if ( cachedSelectedObjects.length === 0 ) {
+
+			hideContextMenu();
+			return;
+
+		}
+
+		if ( isContextMenuTarget( event.target ) === false ) return;
+
+		event.preventDefault();
+		event.stopPropagation();
+
+		showContextMenu( event.clientX, event.clientY );
+
+	}, true );
+
+	document.addEventListener( 'pointerdown', function ( event ) {
+
+		if ( contextMenuVisible === false ) return;
+		if ( event.target instanceof Element && contextMenu.contains( event.target ) ) return;
+		hideContextMenu();
+
+	}, true );
+
+	document.addEventListener( 'scroll', function () {
+
+		if ( contextMenuVisible ) hideContextMenu();
+
+	}, true );
+
+	document.addEventListener( 'keydown', function ( event ) {
+
+		if ( event.key === 'Escape' && contextMenuVisible ) {
+
+			hideContextMenu();
+
+		}
+
+	}, true );
 
 	// ── Selection state → show / hide menu items ─────────
 
@@ -417,6 +603,7 @@ function injectMrppEditMenu( editor: any, editMenuOptions: any ): void {
 			cloneOption.dom.style.display = 'none';
 			deleteOption.dom.style.display = 'none';
 			replaceOption.dom.style.display = 'none';
+			hideContextMenu();
 			return;
 
 		}
@@ -427,6 +614,7 @@ function injectMrppEditMenu( editor: any, editMenuOptions: any ): void {
 
 		selectedObjectType = detectReplaceableType( object );
 		replaceOption.dom.style.display = selectedObjectType ? '' : 'none';
+		updateContextMenuItems();
 
 	} );
 
@@ -544,22 +732,7 @@ function injectMrppEditMenu( editor: any, editMenuOptions: any ): void {
 			event.preventDefault();
 			event.stopPropagation();
 
-			const objectsToDeleteNow = [ ...cachedSelectedObjects ];
-
-			if ( objectsToDeleteNow.length > 0 ) {
-
-				for ( let i = objectsToDeleteNow.length - 1; i >= 0; i -- ) {
-
-					const object = objectsToDeleteNow[ i ];
-					if ( object !== null && object.parent !== null ) {
-
-						editor.execute( new RemoveObjectCommand( editor, object ) );
-
-					}
-
-				}
-
-			}
+			deleteSelectedAsBatch();
 
 		}
 
