@@ -609,7 +609,10 @@ function SidebarObject( editor ) {
 	const objectTransformAxisHeaderRow = new UIRow();
 	objectTransformAxisHeaderRow.setMarginTop( '4px' );
 	objectTransformAxisHeaderRow.setMarginBottom( '4px' );
-	const objectTransformAxisSpacer = new UIText( '' ).setWidth( '90px' );
+	const objectTransformLabelText = strings.getKey( 'sidebar/object/transform' ) !== '???'
+		? strings.getKey( 'sidebar/object/transform' )
+		: '变换';
+	const objectTransformAxisLabel = new UIText( objectTransformLabelText ).setWidth( '90px' );
 	const objectTransformAxisX = new UIText( 'X' ).setWidth( '40px' ).setTextAlign( 'center' );
 	const objectTransformAxisY = new UIText( 'Y' ).setWidth( '40px' ).setTextAlign( 'center' );
 	const objectTransformAxisZ = new UIText( 'Z' ).setWidth( '40px' ).setTextAlign( 'center' );
@@ -619,7 +622,7 @@ function SidebarObject( editor ) {
 	objectTransformAxisX.dom.style.fontSize = '11px';
 	objectTransformAxisY.dom.style.fontSize = '11px';
 	objectTransformAxisZ.dom.style.fontSize = '11px';
-	objectTransformAxisHeaderRow.add( objectTransformAxisSpacer, objectTransformAxisX, objectTransformAxisY, objectTransformAxisZ );
+	objectTransformAxisHeaderRow.add( objectTransformAxisLabel, objectTransformAxisX, objectTransformAxisY, objectTransformAxisZ );
 	container.add( objectTransformAxisHeaderRow );
 
 	const objectPositionRow = new UIRow();

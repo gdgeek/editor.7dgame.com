@@ -504,11 +504,18 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 			if (selectedObjects.length === 0) return;
 
 			const objectsToDelete = [...selectedObjects];
+			const commands = [];
 			for (let i = objectsToDelete.length - 1; i >= 0; i--) {
 				const object = objectsToDelete[i];
 				if (object !== null && object.parent !== null) {
-					editor.execute(new RemoveObjectCommand(editor, object));
+					commands.push(new RemoveObjectCommand(editor, object));
 				}
+			}
+
+			if (commands.length === 1) {
+				editor.execute(commands[0]);
+			} else if (commands.length > 1) {
+				editor.execute(new (MultiCmdsCommand as any)(editor, commands, 'Delete Objects', '批量删除对象'));
 			}
 
 			editor.showNotification(strings.getKey('sidebar/multi_objects/delete_success'));

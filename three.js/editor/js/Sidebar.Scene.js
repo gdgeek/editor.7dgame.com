@@ -196,10 +196,11 @@ function SidebarScene( editor ) {
 
 	function syncOutlinerSelection() {
 
-		const selectedObjects = editor.getSelectedObjects ? editor.getSelectedObjects() : [];
+		const selectedObjects = Array.isArray( editor.selectedObjects ) ? editor.selectedObjects.filter( Boolean ) : [];
 
 		if ( selectedObjects && selectedObjects.length > 1 ) {
 
+			if ( outliner.clearSelection ) outliner.clearSelection();
 			outliner.setValue( null );
 
 			for ( let i = 0; i < selectedObjects.length; i ++ ) {
@@ -214,10 +215,12 @@ function SidebarScene( editor ) {
 
 		if ( editor.selected !== null ) {
 
+			if ( outliner.clearSelection ) outliner.clearSelection();
 			outliner.setValue( editor.selected.id );
 
 		} else {
 
+			if ( outliner.clearSelection ) outliner.clearSelection();
 			outliner.setValue( null );
 
 		}
@@ -238,6 +241,19 @@ function SidebarScene( editor ) {
 
 	const outliner = new UIOutliner( editor );
 	outliner.setId( 'outliner' );
+	outliner.dom.addEventListener( 'click', function ( event ) {
+
+		const target = event.target;
+
+		if ( target instanceof Element && target.closest( '.option' ) ) return;
+
+		if ( target === outliner.dom || ( target instanceof Element && outliner.dom.contains( target ) ) ) {
+
+			editor.clearSelection();
+
+		}
+
+	} );
 	outliner.reorderOnly = !! ( editor.type && editor.type.toLowerCase() === 'verse' );
 	outliner.onChange( function () {
 

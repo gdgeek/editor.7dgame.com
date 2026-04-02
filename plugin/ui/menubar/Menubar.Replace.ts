@@ -143,6 +143,7 @@ function MenubarReplace( editor: any ): InstanceType<typeof UIPanel> {
 							const rotation = selected.rotation.clone();
 							const scale = selected.scale.clone();
 							const parent = selected.parent;
+							const index = parent ? parent.children.indexOf( selected ) : undefined;
 							const uuid = selected.uuid;
 							const name = selected.name;
 							const visible = selected.visible;
@@ -200,7 +201,7 @@ function MenubarReplace( editor: any ): InstanceType<typeof UIPanel> {
 							const cmd = new AddObjectCommand( editor, node );
 
 							cmd.execute = function() {
-								editor.addObject(node, parent);
+								editor.addObject(node, parent, index);
 								editor.select(node);
 							};
 							// 执行修改后的命令

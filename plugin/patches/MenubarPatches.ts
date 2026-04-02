@@ -124,7 +124,8 @@ function applyMenubarPatches( editor: MrppEditor, menubarContainer: any ): void 
 				for ( let j = 0; j < items.length; j ++ ) {
 
 					const item = items[ j ];
-					if ( item.textContent!.trim() !== saveLabel ) {
+					const itemText = item.textContent!.trim();
+					if ( itemText !== saveLabel && itemText.startsWith( saveLabel ) === false ) {
 
 						optionsEl.removeChild( item );
 
