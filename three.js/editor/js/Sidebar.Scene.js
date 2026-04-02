@@ -167,9 +167,16 @@ function SidebarScene( editor ) {
 
 	}
 
+	function getDisplayName( object ) {
+
+		const name = String( object?.name || '' );
+		return name.replace( /\s*\[(polygen|picture|video|sound|audio|text|point|prototype|entity|module)\]\s*$/i, '' );
+
+	}
+
 	function buildHTML( object ) {
 
-		let html = `<span class="type ${ getObjectType( object ) }"></span>${ escapeHTML( object.name ) }`;
+		let html = `<span class="type ${ getObjectType( object ) }"></span>${ escapeHTML( getDisplayName( object ) ) }`;
 
 		if ( object.isMesh ) {
 
@@ -184,6 +191,36 @@ function SidebarScene( editor ) {
 		html += getScript( object.uuid );
 
 		return html;
+
+	}
+
+	function syncOutlinerSelection() {
+
+		const selectedObjects = editor.getSelectedObjects ? editor.getSelectedObjects() : [];
+
+		if ( selectedObjects && selectedObjects.length > 1 ) {
+
+			outliner.setValue( null );
+
+			for ( let i = 0; i < selectedObjects.length; i ++ ) {
+
+				outliner.setValue( selectedObjects[ i ].id, i > 0 );
+
+			}
+
+			return;
+
+		}
+
+		if ( editor.selected !== null ) {
+
+			outliner.setValue( editor.selected.id );
+
+		} else {
+
+			outliner.setValue( null );
+
+		}
 
 	}
 
@@ -206,7 +243,45 @@ function SidebarScene( editor ) {
 
 		ignoreObjectSelectedSignal = true;
 
-		editor.selectById( parseInt( outliner.getValue() ) );
+		const selectedValues = outliner.getValues ? outliner.getValues() : [];
+
+		if ( selectedValues.length > 1 ) {
+
+			const selectedObjects = [];
+
+			for ( let i = 0; i < selectedValues.length; i ++ ) {
+
+				const objectId = parseInt( selectedValues[ i ] );
+				if ( isNaN( objectId ) ) continue;
+
+				const object = editor.scene.getObjectById( objectId ) ||
+					( editor.camera && editor.camera.id === objectId ? editor.camera : null );
+
+				if ( object && selectedObjects.indexOf( object ) === - 1 ) {
+
+					selectedObjects.push( object );
+
+				}
+
+			}
+
+			editor.selectedObjects.length = 0;
+
+			for ( let i = 0; i < selectedObjects.length; i ++ ) {
+
+				editor.selectedObjects.push( selectedObjects[ i ] );
+
+			}
+
+			editor.selected = selectedObjects.length > 0 ? selectedObjects[ selectedObjects.length - 1 ] : null;
+			editor.config.setKey( 'selected', editor.selected ? editor.selected.uuid : null );
+			editor.signals.objectSelected.dispatch( editor.selected );
+
+		} else {
+
+			editor.selectById( parseInt( outliner.getValue() ) );
+
+		}
 
 		ignoreObjectSelectedSignal = false;
 
@@ -482,12 +557,7 @@ function SidebarScene( editor ) {
 		} )( scene.children, 0 );
 
 		outliner.setOptions( options );
-
-		if ( editor.selected !== null ) {
-
-			outliner.setValue( editor.selected.id );
-
-		}
+		syncOutlinerSelection();
 
 		backgroundType.setValue( editor.backgroundType );
 
@@ -641,11 +711,11 @@ function SidebarScene( editor ) {
 
 			if ( needsRefresh ) refreshUI();
 
-			outliner.setValue( object.id );
+			syncOutlinerSelection();
 
 		} else {
 
-			outliner.setValue( null );
+			syncOutlinerSelection();
 
 		}
 

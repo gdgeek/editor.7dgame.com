@@ -559,18 +559,63 @@ function injectOutlinerSearchUI( editor: MrppEditor ): void {
 	if ( ! outlinerDom ) return;
 
 	const strings = editor.strings;
+	const typePrefix = strings.getKey( 'sidebar/scene/filter/type_prefix' );
+	const componentPrefix = strings.getKey( 'sidebar/scene/filter/component_prefix' );
+
+	function formatFilterLabel( prefix: string, label: string ): string {
+
+		return `${ prefix }：${ label }`;
+
+	}
+
+	function getFilterObjectType( object: any ): string {
+
+		const rawType = ( object.userData && ( object.userData as any ).type ) || object.type || '';
+		const normalizedType = String( rawType ).toLowerCase();
+		const objectName = String( object.name || '' ).trim().toLowerCase();
+
+		if ( normalizedType === 'sound' ) return 'audio';
+		if ( normalizedType === 'entity' && /^point(?:\s*\(\d+\))?$/.test( objectName ) ) return 'point';
+
+		return normalizedType;
+
+	}
+
+	function hasFilterComponent( object: any, componentType: string ): boolean {
+
+		const components = Array.isArray( object.components )
+			? object.components
+			: Array.isArray( object.userData && ( object.userData as any ).components )
+				? ( object.userData as any ).components
+				: [];
+
+		for ( let i = 0; i < components.length; i ++ ) {
+
+			const currentType = String( components[ i ] && components[ i ].type || '' ).toLowerCase();
+
+			if ( currentType === componentType ) return true;
+
+		}
+
+		return false;
+
+	}
 
 	// ── Build type filter options using i18n keys ──
 	const filterOptions: Record<string, string> = {
 		'': strings.getKey( 'sidebar/scene/filter/all' ),
-		'module': strings.getKey( 'sidebar/scene/filter/type/module' ),
-		'point': strings.getKey( 'sidebar/scene/filter/type/point' ),
-		'text': strings.getKey( 'sidebar/scene/filter/type/text' ),
-		'polygen': strings.getKey( 'sidebar/scene/filter/type/polygen' ),
-		'picture': strings.getKey( 'sidebar/scene/filter/type/picture' ),
-		'video': strings.getKey( 'sidebar/scene/filter/type/video' ),
-		'audio': strings.getKey( 'sidebar/scene/filter/type/audio' ),
-		'prototype': strings.getKey( 'sidebar/scene/filter/type/prototype' ),
+		'type:point': formatFilterLabel( typePrefix, strings.getKey( 'sidebar/scene/filter/type/point' ) ),
+		'type:text': formatFilterLabel( typePrefix, strings.getKey( 'sidebar/scene/filter/type/text' ) ),
+		'type:polygen': formatFilterLabel( typePrefix, strings.getKey( 'sidebar/scene/filter/type/polygen' ) ),
+		'type:picture': formatFilterLabel( typePrefix, strings.getKey( 'sidebar/scene/filter/type/picture' ) ),
+		'type:video': formatFilterLabel( typePrefix, strings.getKey( 'sidebar/scene/filter/type/video' ) ),
+		'type:audio': formatFilterLabel( typePrefix, strings.getKey( 'sidebar/scene/filter/type/audio' ) ),
+		'type:prototype': formatFilterLabel( typePrefix, strings.getKey( 'sidebar/scene/filter/type/prototype' ) ),
+		'component:rotate': formatFilterLabel( componentPrefix, strings.getKey( 'sidebar/components/select/rotate' ) ),
+		'component:action': formatFilterLabel( componentPrefix, strings.getKey( 'sidebar/components/select/action' ) ),
+		'component:moved': formatFilterLabel( componentPrefix, strings.getKey( 'sidebar/components/select/moved' ) ),
+		'component:trigger': formatFilterLabel( componentPrefix, strings.getKey( 'sidebar/components/select/trigger' ) ),
+		'component:tooltip': formatFilterLabel( componentPrefix, strings.getKey( 'sidebar/components/select/tooltip' ) ),
 	};
 
 	// ── Search + Filter row (side by side) ──
@@ -666,16 +711,18 @@ function injectOutlinerSearchUI( editor: MrppEditor ): void {
 
 			}
 
-			// Type filter (uses userData.type for MRPP custom types, falls back to object.type)
+			// Type / component filter
 			if ( visible && selectedType !== '' ) {
 
-				const objectType = ( object.userData && (object.userData as any).type )
-					? (object.userData as any).type.toLowerCase()
-					: ( object.type || '' ).toLowerCase();
+				const [ filterKind, filterValue ] = String( selectedType ).split( ':' );
 
-				if ( objectType !== selectedType ) {
+				if ( filterKind === 'type' ) {
 
-					visible = false;
+					visible = getFilterObjectType( object ) === filterValue;
+
+				} else if ( filterKind === 'component' ) {
+
+					visible = hasFilterComponent( object, filterValue );
 
 				}
 

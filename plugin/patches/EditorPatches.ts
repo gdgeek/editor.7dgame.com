@@ -178,6 +178,12 @@ function registerCustomMethods( editor: MrppEditor ): void {
 	 */
 	editor.getSelectedObjects = function (): any[] {
 
+		if ( Array.isArray( this.selectedObjects ) && this.selectedObjects.length > 1 ) {
+
+			return this.selectedObjects.slice();
+
+		}
+
 		const outlinerElement = document.getElementById( 'outliner' );
 		if ( outlinerElement ) {
 

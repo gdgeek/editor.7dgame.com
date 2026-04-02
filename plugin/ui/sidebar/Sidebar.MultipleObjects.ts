@@ -29,6 +29,10 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 	container.setPaddingTop('20px');
 	container.setDisplay('none');
 
+	const sanitizeObjectName = function (name: any) {
+		return String(name || '').replace(/\s*\[(polygen|picture|video|sound|audio|text|point|prototype|entity|module)\]\s*$/i, '');
+	};
+
 	const styleIconButton = function (button: any) {
 		button.dom.style.display = 'inline-flex';
 		button.dom.style.alignItems = 'center';
@@ -37,10 +41,72 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 	};
 
 	const styleActionIcon = function (icon: any) {
-		icon.style.width = '13px';
-		icon.style.height = '13px';
+		icon.style.width = '15px';
+		icon.style.height = '15px';
 		icon.style.display = 'block';
 		icon.style.margin = '0 auto';
+	};
+
+	const resetSelectedPosition = function () {
+		const selectedObjects = editor.getSelectedObjects();
+		const cmds = selectedObjects.map((obj: any) => {
+			return new SetPositionCommand(editor, obj, new THREE.Vector3(0, 0, 0));
+		});
+		const cmd = new (MultiCmdsCommand as any)(editor, cmds, 'Reset Position', '重置位置');
+		editor.execute(cmd);
+		editor.showNotification(strings.getKey('sidebar/multi_objects/reset_position_success'));
+	};
+
+	const resetSelectedRotation = function () {
+		const selectedObjects = editor.getSelectedObjects();
+		const cmds = selectedObjects.map((obj: any) => {
+			return new SetRotationCommand(editor, obj, new THREE.Euler(0, 0, 0));
+		});
+		const cmd = new (MultiCmdsCommand as any)(editor, cmds, 'Reset Rotation', '重置旋转');
+		editor.execute(cmd);
+		editor.showNotification(strings.getKey('sidebar/multi_objects/reset_rotation_success'));
+	};
+
+	const resetSelectedScale = function () {
+		const selectedObjects = editor.getSelectedObjects();
+		const cmds = selectedObjects.map((obj: any) => {
+			return new SetScaleCommand(editor, obj, new THREE.Vector3(1, 1, 1));
+		});
+		const cmd = new (MultiCmdsCommand as any)(editor, cmds, 'Reset Scale', '重置缩放');
+		editor.execute(cmd);
+		editor.showNotification(strings.getKey('sidebar/multi_objects/reset_scale_success'));
+	};
+
+	const resetSelectedTransform = function () {
+		const selectedObjects = editor.getSelectedObjects();
+		const cmds: any[] = [];
+		selectedObjects.forEach((obj: any) => {
+			cmds.push(new SetPositionCommand(editor, obj, new THREE.Vector3(0, 0, 0)));
+			cmds.push(new SetRotationCommand(editor, obj, new THREE.Euler(0, 0, 0)));
+			cmds.push(new SetScaleCommand(editor, obj, new THREE.Vector3(1, 1, 1)));
+		});
+		const cmd = new (MultiCmdsCommand as any)(editor, cmds, 'Reset Transform', '重置全部变换');
+		editor.execute(cmd);
+		editor.showNotification(strings.getKey('sidebar/object/haveReset'));
+	};
+
+	const clearNumberInput = function (input: any) {
+		input.value = null;
+		input.dom.value = '';
+		(input.dom as HTMLInputElement).placeholder = '-';
+	};
+
+	const setNumberInputValue = function (input: any, value: number) {
+		input.setValue(value);
+		(input.dom as HTMLInputElement).placeholder = '';
+	};
+
+	const getNumberInputValue = function (input: any): number | null {
+		const rawValue = String((input.dom as HTMLInputElement).value || '').trim();
+		if (rawValue === '') return null;
+
+		const value = input.getValue();
+		return Number.isFinite(value) ? value : null;
 	};
 
 	// 多选对象计数
@@ -150,7 +216,7 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 		const hasAnyChange = selectedObjects.some(function (object: any) {
 			const oldPrefix = (object.userData && typeof object.userData.namePrefix === 'string') ? object.userData.namePrefix : '';
 			const oldSuffix = (object.userData && typeof object.userData.nameSuffix === 'string') ? object.userData.nameSuffix : '';
-			const currentName = object.name || '';
+			const currentName = sanitizeObjectName(object.name || '');
 			let baseName = currentName;
 
 			if (oldPrefix && baseName.startsWith(oldPrefix)) {
@@ -198,7 +264,7 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 			const object = objects[i];
 			const oldPrefix = (object.userData && typeof object.userData.namePrefix === 'string') ? object.userData.namePrefix : '';
 			const oldSuffix = (object.userData && typeof object.userData.nameSuffix === 'string') ? object.userData.nameSuffix : '';
-			const currentName = object.name || '';
+			const currentName = sanitizeObjectName(object.name || '');
 			let baseName = currentName;
 
 			if (oldPrefix && baseName.startsWith(oldPrefix)) {
@@ -229,6 +295,8 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 		if (prefix == null) prefix = '';
 		let suffix = suffixRenameInput.getValue();
 		if (suffix == null) suffix = '';
+		prefix = String(prefix);
+		suffix = String(suffix);
 
 		const keepPrefix = hasMixedPrefix && prefix === '-';
 		const keepSuffix = hasMixedSuffix && suffix === '-';
@@ -240,7 +308,7 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 		let suffixChanged = false;
 		for (let i = 0; i < selectedObjects.length; i++) {
 			const object = selectedObjects[i];
-			const currentName = object.name || '';
+			const currentName = sanitizeObjectName(object.name || '');
 			const oldPrefix = (object.userData && typeof object.userData.namePrefix === 'string') ? object.userData.namePrefix : '';
 			const oldSuffix = (object.userData && typeof object.userData.nameSuffix === 'string') ? object.userData.nameSuffix : '';
 
@@ -612,7 +680,7 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 	positionCopyButton.dom.title = strings.getKey('sidebar/multi_objects/copy_position');
 
 	const positionPasteButton = new UIButton('')
-		.setWidth('24px')
+		.setWidth('26px')
 		.onClick(function () {
 			const positionData = localStorage.getItem('multipleObjectsPosition');
 			if (positionData) {
@@ -638,22 +706,43 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 	positionPasteButton.dom.appendChild(positionPasteIcon);
 	positionPasteButton.dom.title = strings.getKey('sidebar/multi_objects/paste_position');
 
+	const positionResetButton = new UIButton('')
+		.setWidth('26px')
+		.onClick(function () {
+			resetSelectedPosition();
+		});
+
+	styleIconButton(positionResetButton);
+	const positionResetIcon = document.createElement('span');
+	positionResetIcon.textContent = '↺';
+	positionResetIcon.style.display = 'block';
+	positionResetIcon.style.margin = '0 auto';
+	positionResetIcon.style.fontSize = '15px';
+	positionResetIcon.style.lineHeight = '1';
+	positionResetIcon.style.color = '#888';
+	positionResetButton.dom.appendChild(positionResetIcon);
+	positionResetButton.dom.title = strings.getKey('sidebar/object/resetPosition');
+
 	// 默认隐藏复制粘贴按钮
 	positionCopyButton.dom.style.display = 'none';
 	positionPasteButton.dom.style.display = 'none';
+	positionResetButton.dom.style.display = 'none';
 
 	// 添加鼠标悬停事件
 	multipleObjectsPositionRow.dom.addEventListener('mouseenter', function () {
 		positionCopyButton.dom.style.display = 'inline-flex';
 		positionPasteButton.dom.style.display = 'inline-flex';
+		positionResetButton.dom.style.display = 'inline-flex';
 	});
 	multipleObjectsPositionRow.dom.addEventListener('mouseleave', function () {
 		positionCopyButton.dom.style.display = 'none';
 		positionPasteButton.dom.style.display = 'none';
+		positionResetButton.dom.style.display = 'none';
 	});
 
 	multipleObjectsPositionRow.add(positionCopyButton);
 	multipleObjectsPositionRow.add(positionPasteButton);
+	multipleObjectsPositionRow.add(positionResetButton);
 
 	container.add(multipleObjectsPositionRow);
 
@@ -690,7 +779,7 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 
 	// 添加旋转复制粘贴按钮
 	const rotationCopyButton = new UIButton('')
-		.setWidth('24px')
+		.setWidth('26px')
 		.onClick(function () {
 			const rotation = new THREE.Vector3(
 				multipleObjectsRotationX.getValue(),
@@ -718,7 +807,7 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 	rotationCopyButton.dom.title = strings.getKey('sidebar/multi_objects/copy_rotation');
 
 	const rotationPasteButton = new UIButton('')
-		.setWidth('24px')
+		.setWidth('26px')
 		.onClick(function () {
 			const rotationData = localStorage.getItem('multipleObjectsRotation');
 			if (rotationData) {
@@ -744,22 +833,43 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 	rotationPasteButton.dom.appendChild(rotationPasteIcon);
 	rotationPasteButton.dom.title = strings.getKey('sidebar/multi_objects/paste_rotation');
 
+	const rotationResetButton = new UIButton('')
+		.setWidth('26px')
+		.onClick(function () {
+			resetSelectedRotation();
+		});
+
+	styleIconButton(rotationResetButton);
+	const rotationResetIcon = document.createElement('span');
+	rotationResetIcon.textContent = '↺';
+	rotationResetIcon.style.display = 'block';
+	rotationResetIcon.style.margin = '0 auto';
+	rotationResetIcon.style.fontSize = '15px';
+	rotationResetIcon.style.lineHeight = '1';
+	rotationResetIcon.style.color = '#888';
+	rotationResetButton.dom.appendChild(rotationResetIcon);
+	rotationResetButton.dom.title = strings.getKey('sidebar/object/resetRotation');
+
 	// 默认隐藏复制粘贴按钮
 	rotationCopyButton.dom.style.display = 'none';
 	rotationPasteButton.dom.style.display = 'none';
+	rotationResetButton.dom.style.display = 'none';
 
 	// 添加鼠标悬停事件
 	multipleObjectsRotationRow.dom.addEventListener('mouseenter', function () {
 		rotationCopyButton.dom.style.display = 'inline-flex';
 		rotationPasteButton.dom.style.display = 'inline-flex';
+		rotationResetButton.dom.style.display = 'inline-flex';
 	});
 	multipleObjectsRotationRow.dom.addEventListener('mouseleave', function () {
 		rotationCopyButton.dom.style.display = 'none';
 		rotationPasteButton.dom.style.display = 'none';
+		rotationResetButton.dom.style.display = 'none';
 	});
 
 	multipleObjectsRotationRow.add(rotationCopyButton);
 	multipleObjectsRotationRow.add(rotationPasteButton);
+	multipleObjectsRotationRow.add(rotationResetButton);
 
 	container.add(multipleObjectsRotationRow);
 
@@ -799,7 +909,7 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 
 	// 添加缩放复制粘贴按钮
 	const scaleCopyButton = new UIButton('')
-		.setWidth('24px')
+		.setWidth('26px')
 		.onClick(function () {
 			const scale = new THREE.Vector3(
 				multipleObjectsScaleX.getValue(),
@@ -827,7 +937,7 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 	scaleCopyButton.dom.title = strings.getKey('sidebar/multi_objects/copy_scale');
 
 	const scalePasteButton = new UIButton('')
-		.setWidth('24px')
+		.setWidth('26px')
 		.onClick(function () {
 			const scaleData = localStorage.getItem('multipleObjectsScale');
 			if (scaleData) {
@@ -853,66 +963,70 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 	scalePasteButton.dom.appendChild(scalePasteIcon);
 	scalePasteButton.dom.title = strings.getKey('sidebar/multi_objects/paste_scale');
 
+	const scaleResetButton = new UIButton('')
+		.setWidth('26px')
+		.onClick(function () {
+			resetSelectedScale();
+		});
+
+	styleIconButton(scaleResetButton);
+	const scaleResetIcon = document.createElement('span');
+	scaleResetIcon.textContent = '↺';
+	scaleResetIcon.style.display = 'block';
+	scaleResetIcon.style.margin = '0 auto';
+	scaleResetIcon.style.fontSize = '15px';
+	scaleResetIcon.style.lineHeight = '1';
+	scaleResetIcon.style.color = '#888';
+	scaleResetButton.dom.appendChild(scaleResetIcon);
+	scaleResetButton.dom.title = strings.getKey('sidebar/object/resetScale');
+
 	// 默认隐藏复制粘贴按钮
 	scaleCopyButton.dom.style.display = 'none';
 	scalePasteButton.dom.style.display = 'none';
+	scaleResetButton.dom.style.display = 'none';
 
 	// 添加鼠标悬停事件
 	multipleObjectsScaleRow.dom.addEventListener('mouseenter', function () {
 		scaleCopyButton.dom.style.display = 'inline-flex';
 		scalePasteButton.dom.style.display = 'inline-flex';
+		scaleResetButton.dom.style.display = 'inline-flex';
 	});
 	multipleObjectsScaleRow.dom.addEventListener('mouseleave', function () {
 		scaleCopyButton.dom.style.display = 'none';
 		scalePasteButton.dom.style.display = 'none';
+		scaleResetButton.dom.style.display = 'none';
 	});
 
 	multipleObjectsScaleRow.add(scaleCopyButton);
 	multipleObjectsScaleRow.add(scalePasteButton);
+	multipleObjectsScaleRow.add(scaleResetButton);
 	multipleObjectsScaleRow.setMarginBottom('8px');
 
 	container.add(multipleObjectsScaleRow);
 
 	// 辅助功能按钮
 	const multipleObjectsActionsRow = new UIRow();
+	multipleObjectsActionsRow.setDisplay('none');
 
 	// 归零位置按钮
 	const resetPositionButton = new UIButton(strings.getKey('sidebar/object/resetPosition'))
 		.setWidth('80px')
 		.onClick(function () {
-			const selectedObjects = editor.getSelectedObjects();
-			const cmds = selectedObjects.map((obj: any) => {
-				return new SetPositionCommand(editor, obj, new THREE.Vector3(0, 0, 0));
-			});
-			const cmd = new (MultiCmdsCommand as any)(editor, cmds, 'Reset Position', '重置位置');
-			editor.execute(cmd);
-			editor.showNotification(strings.getKey('sidebar/multi_objects/reset_position_success'));
+			resetSelectedPosition();
 		});
 
 	// 重置旋转按钮
 	const resetRotationButton = new UIButton(strings.getKey('sidebar/object/resetRotation'))
 		.setWidth('80px')
 		.onClick(function () {
-			const selectedObjects = editor.getSelectedObjects();
-			const cmds = selectedObjects.map((obj: any) => {
-				return new SetRotationCommand(editor, obj, new THREE.Euler(0, 0, 0));
-			});
-			const cmd = new (MultiCmdsCommand as any)(editor, cmds, 'Reset Rotation', '重置旋转');
-			editor.execute(cmd);
-			editor.showNotification(strings.getKey('sidebar/multi_objects/reset_rotation_success'));
+			resetSelectedRotation();
 		});
 
 	// 重置缩放按钮
 	const resetScaleButton = new UIButton(strings.getKey('sidebar/object/resetScale'))
 		.setWidth('80px')
 		.onClick(function () {
-			const selectedObjects = editor.getSelectedObjects();
-			const cmds = selectedObjects.map((obj: any) => {
-				return new SetScaleCommand(editor, obj, new THREE.Vector3(1, 1, 1));
-			});
-			const cmd = new (MultiCmdsCommand as any)(editor, cmds, 'Reset Scale', '重置缩放');
-			editor.execute(cmd);
-			editor.showNotification(strings.getKey('sidebar/multi_objects/reset_scale_success'));
+			resetSelectedScale();
 		});
 
 	multipleObjectsActionsRow.add(resetPositionButton);
@@ -937,7 +1051,7 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 
 	// 全部变换数据复制按钮
 	const transformCopyButton = new UIButton('')
-		.setWidth('24px')
+		.setWidth('26px')
 		.onClick(function () {
 			const positionData = new THREE.Vector3(
 				multipleObjectsPositionX.getValue(),
@@ -989,7 +1103,7 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 	// 全部变换数据粘贴按钮
 	const transformPasteButton = new UIButton('')
 		.setMarginLeft('2px')
-		.setWidth('24px')
+		.setWidth('26px')
 		.onClick(function () {
 			const transformData = localStorage.getItem('multipleObjectsTransform');
 			if (transformData) {
@@ -1033,8 +1147,27 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 	styleActionIcon(transformPasteIcon);
 	transformPasteButton.dom.appendChild(transformPasteIcon);
 
+	const transformResetButton = new UIButton('')
+		.setMarginLeft('2px')
+		.setWidth('26px')
+		.onClick(function () {
+			resetSelectedTransform();
+		});
+
+	transformResetButton.dom.title = strings.getKey('sidebar/object/haveReset');
+	styleIconButton(transformResetButton);
+	const transformResetIcon = document.createElement('span');
+	transformResetIcon.textContent = '↺';
+	transformResetIcon.style.display = 'block';
+	transformResetIcon.style.margin = '0 auto';
+	transformResetIcon.style.fontSize = '15px';
+	transformResetIcon.style.lineHeight = '1';
+	transformResetIcon.style.color = '#888';
+	transformResetButton.dom.appendChild(transformResetIcon);
+
 	transformActionsRow.add(transformCopyButton);
 	transformActionsRow.add(transformPasteButton);
+	transformActionsRow.add(transformResetButton);
 
 	// 默认隐藏全局复制粘贴按钮行
 	transformActionsRow.setDisplay('none');
@@ -1097,10 +1230,8 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 		transformBorder.style.height = (scaleRowBottom - posRowTop + 10) + 'px';
 
 		// 获取辅助功能按钮行的位置
-		const actionsRowBottom = multipleObjectsActionsRow.dom.offsetTop;
-
 		// 更新按钮位置，放在数据区域的下方并水平居中
-		const buttonWidth = transformCopyButton.dom.offsetWidth + transformPasteButton.dom.offsetWidth + 2; // +2是按钮间距
+		const buttonWidth = transformCopyButton.dom.offsetWidth + transformPasteButton.dom.offsetWidth + transformResetButton.dom.offsetWidth + 4;
 		const buttonLeft = dataAreaLeft + (dataAreaWidth - buttonWidth) / 2;
 
 		transformActionsRow.dom.style.position = 'absolute';
@@ -1132,6 +1263,9 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 	// 显示变换操作和边框
 	const showTransformActions = function () {
 		transformActionsRow.setDisplay('');
+		transformCopyButton.dom.style.display = 'inline-flex';
+		transformPasteButton.dom.style.display = 'inline-flex';
+		transformResetButton.dom.style.display = 'inline-flex';
 		transformBorder.style.display = 'block';
 		updateBorderPosition();
 
@@ -1267,7 +1401,8 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 			isMouseInRelevantArea = inOverlayArea || inButtonArea ||
 				transformActionsRow.dom.contains(event.target) ||
 				transformCopyButton.dom.contains(event.target) ||
-				transformPasteButton.dom.contains(event.target);
+				transformPasteButton.dom.contains(event.target) ||
+				transformResetButton.dom.contains(event.target);
 
 			// 根据鼠标位置决定显示或隐藏
 			if (isMouseInRelevantArea) {
@@ -1291,6 +1426,11 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 			safeShowTransformActions();
 		});
 
+		addEventListenerWithRef(transformResetButton.dom, 'mouseenter', function () {
+			isMouseInRelevantArea = true;
+			safeShowTransformActions();
+		});
+
 		// 为按钮行添加事件
 		addEventListenerWithRef(transformActionsRow.dom, 'mouseenter', function () {
 			isMouseInRelevantArea = true;
@@ -1299,7 +1439,7 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 
 		// 在document上添加全局点击事件，用于处理点击按钮后的状态
 		addEventListenerWithRef(document, 'click', function (event: any) {
-			if (transformCopyButton.dom.contains(event.target) || transformPasteButton.dom.contains(event.target)) {
+			if (transformCopyButton.dom.contains(event.target) || transformPasteButton.dom.contains(event.target) || transformResetButton.dom.contains(event.target)) {
 				// 如果点击的是复制或粘贴按钮，保持显示一小段时间后隐藏
 				setTimeout(function () {
 					isMouseInRelevantArea = false;
@@ -1316,9 +1456,9 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 
 		if (!multiSelectGroup) return; // Should exist if we are here?
 
-		const valX = multipleObjectsPositionX.getValue();
-		const valY = multipleObjectsPositionY.getValue();
-		const valZ = multipleObjectsPositionZ.getValue();
+		const valX = getNumberInputValue(multipleObjectsPositionX);
+		const valY = getNumberInputValue(multipleObjectsPositionY);
+		const valZ = getNumberInputValue(multipleObjectsPositionZ);
 
 		const oldPositions = {};
 		let hasPositionChange = false;
@@ -1386,9 +1526,9 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 
 		if (!multiSelectGroup) return;
 
-		const valX = multipleObjectsRotationX.getValue();
-		const valY = multipleObjectsRotationY.getValue();
-		const valZ = multipleObjectsRotationZ.getValue();
+		const valX = getNumberInputValue(multipleObjectsRotationX);
+		const valY = getNumberInputValue(multipleObjectsRotationY);
+		const valZ = getNumberInputValue(multipleObjectsRotationZ);
 
 		const oldRotations = {};
 		let hasRotationChange = false;
@@ -1462,9 +1602,9 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 
 		if (!multiSelectGroup) return;
 
-		const valX = multipleObjectsScaleX.getValue();
-		const valY = multipleObjectsScaleY.getValue();
-		const valZ = multipleObjectsScaleZ.getValue();
+		const valX = getNumberInputValue(multipleObjectsScaleX);
+		const valY = getNumberInputValue(multipleObjectsScaleY);
+		const valZ = getNumberInputValue(multipleObjectsScaleZ);
 
 		const oldScales = {};
 		let hasScaleChange = false;
@@ -1648,87 +1788,42 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 		const posY = checkConsistency('position', 'y');
 		const posZ = checkConsistency('position', 'z');
 
-		if (posX !== null) {
-			multipleObjectsPositionX.setValue(posX);
-			(multipleObjectsPositionX.dom as any).placeholder = '';
-		} else {
-			multipleObjectsPositionX.setValue((null as any));
-			(multipleObjectsPositionX.dom as any).placeholder = '-';
-		}
+		if (posX !== null) setNumberInputValue(multipleObjectsPositionX, posX);
+		else clearNumberInput(multipleObjectsPositionX);
 
-		if (posY !== null) {
-			multipleObjectsPositionY.setValue(posY);
-			(multipleObjectsPositionY.dom as any).placeholder = '';
-		} else {
-			multipleObjectsPositionY.setValue((null as any));
-			(multipleObjectsPositionY.dom as any).placeholder = '-';
-		}
+		if (posY !== null) setNumberInputValue(multipleObjectsPositionY, posY);
+		else clearNumberInput(multipleObjectsPositionY);
 
-		if (posZ !== null) {
-			multipleObjectsPositionZ.setValue(posZ);
-			(multipleObjectsPositionZ.dom as any).placeholder = '';
-		} else {
-			multipleObjectsPositionZ.setValue((null as any));
-			(multipleObjectsPositionZ.dom as any).placeholder = '-';
-		}
+		if (posZ !== null) setNumberInputValue(multipleObjectsPositionZ, posZ);
+		else clearNumberInput(multipleObjectsPositionZ);
 
 		// 旋转 (Euler)
 		const rotX = checkConsistency('rotation', 'x');
 		const rotY = checkConsistency('rotation', 'y');
 		const rotZ = checkConsistency('rotation', 'z');
 
-		if (rotX !== null) {
-			multipleObjectsRotationX.setValue(rotX * THREE.MathUtils.RAD2DEG);
-			(multipleObjectsRotationX.dom as any).placeholder = '';
-		} else {
-			multipleObjectsRotationX.setValue((null as any));
-			(multipleObjectsRotationX.dom as any).placeholder = '-';
-		}
+		if (rotX !== null) setNumberInputValue(multipleObjectsRotationX, rotX * THREE.MathUtils.RAD2DEG);
+		else clearNumberInput(multipleObjectsRotationX);
 
-		if (rotY !== null) {
-			multipleObjectsRotationY.setValue(rotY * THREE.MathUtils.RAD2DEG);
-			(multipleObjectsRotationY.dom as any).placeholder = '';
-		} else {
-			multipleObjectsRotationY.setValue((null as any));
-			(multipleObjectsRotationY.dom as any).placeholder = '-';
-		}
+		if (rotY !== null) setNumberInputValue(multipleObjectsRotationY, rotY * THREE.MathUtils.RAD2DEG);
+		else clearNumberInput(multipleObjectsRotationY);
 
-		if (rotZ !== null) {
-			multipleObjectsRotationZ.setValue(rotZ * THREE.MathUtils.RAD2DEG);
-			(multipleObjectsRotationZ.dom as any).placeholder = '';
-		} else {
-			multipleObjectsRotationZ.setValue((null as any));
-			(multipleObjectsRotationZ.dom as any).placeholder = '-';
-		}
+		if (rotZ !== null) setNumberInputValue(multipleObjectsRotationZ, rotZ * THREE.MathUtils.RAD2DEG);
+		else clearNumberInput(multipleObjectsRotationZ);
 
 		// 缩放
 		const scaleX = checkConsistency('scale', 'x');
 		const scaleY = checkConsistency('scale', 'y');
 		const scaleZ = checkConsistency('scale', 'z');
 
-		if (scaleX !== null) {
-			multipleObjectsScaleX.setValue(scaleX);
-			(multipleObjectsScaleX.dom as any).placeholder = '';
-		} else {
-			multipleObjectsScaleX.setValue((null as any));
-			(multipleObjectsScaleX.dom as any).placeholder = '-';
-		}
+		if (scaleX !== null) setNumberInputValue(multipleObjectsScaleX, scaleX);
+		else clearNumberInput(multipleObjectsScaleX);
 
-		if (scaleY !== null) {
-			multipleObjectsScaleY.setValue(scaleY);
-			(multipleObjectsScaleY.dom as any).placeholder = '';
-		} else {
-			multipleObjectsScaleY.setValue((null as any));
-			(multipleObjectsScaleY.dom as any).placeholder = '-';
-		}
+		if (scaleY !== null) setNumberInputValue(multipleObjectsScaleY, scaleY);
+		else clearNumberInput(multipleObjectsScaleY);
 
-		if (scaleZ !== null) {
-			multipleObjectsScaleZ.setValue(scaleZ);
-			(multipleObjectsScaleZ.dom as any).placeholder = '';
-		} else {
-			multipleObjectsScaleZ.setValue((null as any));
-			(multipleObjectsScaleZ.dom as any).placeholder = '-';
-		}
+		if (scaleZ !== null) setNumberInputValue(multipleObjectsScaleZ, scaleZ);
+		else clearNumberInput(multipleObjectsScaleZ);
 
 		// 检查可见性
 		// 判断逻辑：如果所有对象都可见则为true，如果有任何一个不可见则为false
