@@ -10,17 +10,18 @@ class TriggerComponent {
   object: THREE.Object3D;
   component: MrppComponent;
   list: THREE.Object3D[];
-  uuid!: any;
   action!: any;
   select!: any;
 
   constructor(editor: MrppEditor, object: THREE.Object3D, component: MrppComponent) {
     this.editor = editor;
     const node = editor.scene;
-    const types = ['Voxel', 'Polygen', 'Picture'];
     this.list = [];
     node.traverse((child: THREE.Object3D) => {
-      if (types.includes(child.type) && child.uuid !== object.uuid) {
+      const rawType = ((child as any).userData && (child as any).userData.type) || child.type || '';
+      const normalizedType = String(rawType).toLowerCase();
+      const isColliderTarget = normalizedType === 'voxel' || normalizedType === 'polygen' || normalizedType === 'picture';
+      if (isColliderTarget && child.uuid !== object.uuid) {
         this.list.push(child);
       }
     });
@@ -48,17 +49,8 @@ class TriggerComponent {
    */
   refresh(container: any): void {
     container.add(new UIBreak());
+    container.add(new UIBreak());
     const strings = this.editor.strings;
-    {
-      const row = new UIRow();
-
-      this.uuid = new UIInput().setWidth('150px').setFontSize('12px').setDisabled(true);
-      this.uuid.setValue(this.component.parameters.uuid);
-      row.add(new UIText(strings.getKey('sidebar/geometry/uuid')).setWidth('90px'));
-
-      row.add(this.uuid);
-      container.add(row);
-    }
 
     {
       const row = new UIRow();
@@ -78,7 +70,7 @@ class TriggerComponent {
 
       const options: Record<string, string> = {};
       this.list.forEach(item => {
-        options[item.uuid] = item.name;
+        options[item.uuid] = item.name || item.uuid;
       });
       this.select.setOptions(options);
       this.select.setValue(this.component.parameters.target);
@@ -134,7 +126,7 @@ class TriggerComponent {
    * 渲染组件 UI。
    */
   renderer(container: any): void {
-    //this.updateUI();
+    this.refresh(container);
   }
 }
 export { TriggerComponent };

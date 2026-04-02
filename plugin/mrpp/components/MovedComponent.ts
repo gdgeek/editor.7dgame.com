@@ -9,7 +9,6 @@ class MovedComponent {
   object: THREE.Object3D;
   component: MrppComponent;
   actionInput: any;
-  uuid!: any;
 
   constructor(editor: MrppEditor, object: THREE.Object3D, component: MrppComponent) {
     this.editor = editor;
@@ -47,19 +46,6 @@ class MovedComponent {
     container.add(new UIBreak());
 
     const strings = this.editor.strings;
-    // UUID行
-    {
-      const row = new UIRow();
-
-      this.uuid = new UIInput()
-        .setWidth('150px')
-        .setFontSize('12px')
-        .setDisabled(true);
-      row.add(new UIText(strings.getKey('sidebar/geometry/uuid')).setWidth('90px'));
-      row.add(this.uuid);
-      container.add(row);
-    }
-
     // 可缩放部分
     {
       const row = new UIRow();
@@ -153,8 +139,6 @@ class MovedComponent {
 
   /** 从组件数据同步 UI 显示 */
   updateUI(): void {
-    this.uuid.setValue(this.component.parameters.uuid);
-
     // 更新action输入框的值
     if (this.actionInput) {
       this.actionInput.setValue(this.component.parameters.action || '');

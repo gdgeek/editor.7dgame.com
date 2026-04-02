@@ -6,7 +6,13 @@ import type { MrppEditor, MrppComponent } from '../../types/mrpp.js';
 /** Extended Object3D type with rotation (defined via Object.defineProperties in three.js) and preview state */
 interface RotateObject3D extends THREE.Object3D {
   rotation: THREE.Euler;
-  previewRotate?: { active: boolean; startTime: number; originalRotation: THREE.Euler };
+  previewRotate?: {
+    active: boolean;
+    startTime: number;
+    lastTime: number;
+    originalRotation: THREE.Euler;
+    requestId?: number;
+  };
 }
 
 class RotateComponent {
@@ -39,6 +45,67 @@ class RotateComponent {
       }
     };
     return component;
+  }
+
+  startPreview(): void {
+    this.stopPreview(false, false);
+
+    const state = {
+      active: true,
+      startTime: performance.now(),
+      lastTime: performance.now(),
+      originalRotation: this.object.rotation.clone(),
+      requestId: undefined as number | undefined
+    };
+
+    this.object.previewRotate = state;
+    this.object.rotation.reorder('ZXY');
+
+    const tick = (now: number): void => {
+      const previewState = this.object.previewRotate;
+      if (!previewState || !previewState.active) return;
+
+      const deltaSeconds = Math.max(0, (now - previewState.lastTime) / 1000);
+      previewState.lastTime = now;
+
+      const speed = this.component.parameters.speed || { x: 0, y: 0, z: 0 };
+      this.object.rotation.x += THREE.MathUtils.degToRad(Number(speed.x) || 0) * deltaSeconds;
+      this.object.rotation.y += THREE.MathUtils.degToRad(Number(speed.y) || 0) * deltaSeconds;
+      this.object.rotation.z += THREE.MathUtils.degToRad(Number(speed.z) || 0) * deltaSeconds;
+
+      this.editor.signals.objectChanged.dispatch(this.object);
+
+      if (now - previewState.startTime >= 8000) {
+        this.stopPreview(true, true);
+        return;
+      }
+
+      previewState.requestId = requestAnimationFrame(tick);
+    };
+
+    state.requestId = requestAnimationFrame(tick);
+    this.editor.signals.componentChanged.dispatch(this.component);
+    this.editor.signals.objectChanged.dispatch(this.object);
+  }
+
+  stopPreview(restoreOriginalRotation: boolean = true, refreshComponent: boolean = true): void {
+    const previewState = this.object.previewRotate;
+    if (!previewState) return;
+
+    if (previewState.requestId !== undefined) {
+      cancelAnimationFrame(previewState.requestId);
+    }
+
+    if (restoreOriginalRotation && previewState.originalRotation) {
+      this.object.rotation.copy(previewState.originalRotation);
+    }
+
+    delete this.object.previewRotate;
+
+    this.editor.signals.objectChanged.dispatch(this.object);
+    if (refreshComponent) {
+      this.editor.signals.componentChanged.dispatch(this.component);
+    }
   }
 
   /**
@@ -102,25 +169,10 @@ class RotateComponent {
 
     const buttonRow = new UIRow();
     const previewButton = new UIButton(buttonText).onClick(() => {
-      if (!this.object.previewRotate) {
-        // Start Preview
-        this.object.previewRotate = {
-          active: true,
-          startTime: performance.now(),
-          originalRotation: this.object.rotation.clone()
-        };
-        this.object.rotation.reorder('ZXY');
-        // Force UI update to change button text to 'Stop'
-        this.editor.signals.componentChanged.dispatch(this.component);
+      if (!this.object.previewRotate || !this.object.previewRotate.active) {
+        this.startPreview();
       } else {
-        // Stop Preview Manually
-        const state = this.object.previewRotate;
-        this.object.rotation.copy(state.originalRotation);
-        delete this.object.previewRotate;
-
-        this.editor.signals.objectChanged.dispatch(this.object);
-        // Force UI update to change button text back to 'Preview'
-        this.editor.signals.componentChanged.dispatch(this.component);
+        this.stopPreview(true, true);
       }
     }).setWidth('100%');
 

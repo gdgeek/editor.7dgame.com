@@ -9,7 +9,6 @@ class ActionComponent {
   editor: MrppEditor;
   object: THREE.Object3D;
   component: MrppComponent;
-  uuid!: any;
   action!: any;
   modePinch!: any;
   modeTouch?: any;
@@ -43,15 +42,6 @@ class ActionComponent {
     container.add(new UIBreak());
     container.add(new UIBreak());
     const strings = this.editor.strings;
-
-    // UUID
-    {
-      const row = new UIRow();
-      this.uuid = new UIInput().setWidth('150px').setFontSize('12px').setDisabled(true);
-      row.add(new UIText(strings.getKey('sidebar/geometry/uuid')).setWidth('90px'));
-      row.add(this.uuid);
-      container.add(row);
-    }
 
     // Mode 勾选框
     {
@@ -122,7 +112,6 @@ class ActionComponent {
 
   /** 从组件数据同步 UI 显示 */
   updateUI(): void {
-    this.uuid.setValue(this.component.parameters.uuid);
     this.action.setValue(this.component.parameters.action);
 
     const modeArray = this.component.parameters.mode || [];
