@@ -7,14 +7,16 @@ class ViewHelper extends ViewHelperBase {
 	constructor( editorCamera, container ) {
 
 		super( editorCamera, container.dom );
+		this.setLabels( 'X', 'Y', 'Z' );
+		this.setLabelStyle( '22px Arial', '#ffffff', 14 );
 
-		this.location.top = 30;
+		this.location.top = 4;
 
 		const panel = new UIPanel();
 		panel.setId( 'viewHelper' );
 		panel.setPosition( 'absolute' );
 		panel.setRight( '0px' );
-		panel.setTop( '30px' );
+		panel.setTop( '4px' );
 		panel.setHeight( '128px' );
 		panel.setWidth( '128px' );
 

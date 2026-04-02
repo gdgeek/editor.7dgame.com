@@ -606,6 +606,22 @@ function SidebarObject( editor ) {
 
 	}
 
+	const objectTransformAxisHeaderRow = new UIRow();
+	objectTransformAxisHeaderRow.setMarginTop( '4px' );
+	objectTransformAxisHeaderRow.setMarginBottom( '4px' );
+	const objectTransformAxisSpacer = new UIText( '' ).setWidth( '90px' );
+	const objectTransformAxisX = new UIText( 'X' ).setWidth( '40px' ).setTextAlign( 'center' );
+	const objectTransformAxisY = new UIText( 'Y' ).setWidth( '40px' ).setTextAlign( 'center' );
+	const objectTransformAxisZ = new UIText( 'Z' ).setWidth( '40px' ).setTextAlign( 'center' );
+	objectTransformAxisX.dom.style.color = '#ff4466';
+	objectTransformAxisY.dom.style.color = '#4caf50';
+	objectTransformAxisZ.dom.style.color = '#4488ff';
+	objectTransformAxisX.dom.style.fontSize = '11px';
+	objectTransformAxisY.dom.style.fontSize = '11px';
+	objectTransformAxisZ.dom.style.fontSize = '11px';
+	objectTransformAxisHeaderRow.add( objectTransformAxisSpacer, objectTransformAxisX, objectTransformAxisY, objectTransformAxisZ );
+	container.add( objectTransformAxisHeaderRow );
+
 	const objectPositionRow = new UIRow();
 	const objectPositionX = new UINumber().setPrecision( 3 ).setWidth( '40px' ).onChange( update );
 	const objectPositionY = new UINumber().setPrecision( 3 ).setWidth( '40px' ).onChange( update );
@@ -1446,6 +1462,7 @@ function SidebarObject( editor ) {
 
 		objectTypeRow.setDisplay( '' );
 		objectNameRow.setDisplay( '' );
+		objectTransformAxisHeaderRow.setDisplay( '' );
 		objectPositionRow.setDisplay( '' );
 		objectUUIDRow.setDisplay( '' );
 		objectResetRow.setDisplay( 'none' );
@@ -1521,6 +1538,7 @@ function SidebarObject( editor ) {
 
 		if ( object.isLight || ( object.isObject3D && object.userData.targetInverse ) ) {
 
+			objectTransformAxisHeaderRow.setDisplay( 'none' );
 			objectRotationRow.setDisplay( 'none' );
 			objectScaleRow.setDisplay( 'none' );
 			objectResetRow.setDisplay( 'none' );
@@ -1529,6 +1547,7 @@ function SidebarObject( editor ) {
 
 		} else {
 
+			objectTransformAxisHeaderRow.setDisplay( '' );
 			objectRotationRow.setDisplay( '' );
 			objectScaleRow.setDisplay( '' );
 			objectResetRow.setDisplay( 'none' );

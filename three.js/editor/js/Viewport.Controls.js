@@ -1,4 +1,4 @@
-import { UIPanel, UISelect } from './libs/ui.js';
+import { UIPanel } from './libs/ui.js';
 
 function ViewportControls( editor ) {
 
@@ -9,16 +9,12 @@ function ViewportControls( editor ) {
 	container.setRight( '10px' );
 	container.setTop( '10px' );
 
-	// camera
+	signals.editorCleared.add( function () {
 
-	const cameraSelect = new UISelect();
-	cameraSelect.setMarginRight( '10px' );
-	cameraSelect.onChange( function () {
-
-		editor.setViewportCamera( this.getValue() );
+		editor.setViewportCamera( editor.camera.uuid );
+		editor.setViewportShading( 'solid' );
 
 	} );
-	container.add( cameraSelect );
 
 	signals.cameraAdded.add( update );
 	signals.cameraRemoved.add( update );
@@ -26,67 +22,24 @@ function ViewportControls( editor ) {
 
 		if ( object.isCamera ) {
 
-			updateCameraList();
+			update();
 
 		}
-
-	} );
-
-	// shading
-
-	const shadingSelect = new UISelect();
-	shadingSelect.setOptions( { 'realistic': 'realistic', 'solid': 'solid', 'normals': 'normals', 'wireframe': 'wireframe' } );
-	shadingSelect.setValue( 'solid' );
-	shadingSelect.onChange( function () {
-
-		editor.setViewportShading( this.getValue() );
-
-	} );
-	container.add( shadingSelect );
-
-	signals.editorCleared.add( function () {
-
-		editor.setViewportCamera( editor.camera.uuid );
-
-		shadingSelect.setValue( 'solid' );
-		editor.setViewportShading( shadingSelect.getValue() );
 
 	} );
 
 	signals.cameraResetted.add( update );
 
 	update();
+	editor.setViewportShading( 'solid' );
 
 	//
 
-	function updateCameraList() {
-
-		const options = {};
-
-		const cameras = editor.cameras;
-
-		for ( const key in cameras ) {
-
-			const camera = cameras[ key ];
-			options[ camera.uuid ] = camera.name;
-
-		}
-
-		cameraSelect.setOptions( options );
-
-		const selectedCamera = ( editor.viewportCamera.uuid in options )
-			? editor.viewportCamera
-			: editor.camera;
-
-		cameraSelect.setValue( selectedCamera.uuid );
-
-		return selectedCamera;
-
-	}
-
 	function update() {
 
-		const selectedCamera = updateCameraList();
+		const cameras = editor.cameras;
+		const hasViewportCamera = editor.viewportCamera && editor.viewportCamera.uuid in cameras;
+		const selectedCamera = hasViewportCamera ? editor.viewportCamera : editor.camera;
 		editor.setViewportCamera( selectedCamera.uuid );
 
 	}

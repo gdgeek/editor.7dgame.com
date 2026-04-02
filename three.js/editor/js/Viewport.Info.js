@@ -9,33 +9,36 @@ function ViewportInfo( editor ) {
 	container.setId( 'info' );
 	container.setPosition( 'absolute' );
 	container.setLeft( '10px' );
-	container.setBottom( '50px' );
+	container.setBottom( '10px' );
 	container.setFontSize( '12px' );
 	container.setColor( '#fff' );
-	container.setTextTransform( 'lowercase' );
+	container.setTextTransform( 'none' );
 
-	const objectsText = new UIText( '0' ).setTextAlign( 'right' ).setWidth( '60px' ).setMarginRight( '6px' );
-	const verticesText = new UIText( '0' ).setTextAlign( 'right' ).setWidth( '60px' ).setMarginRight( '6px' );
-	const trianglesText = new UIText( '0' ).setTextAlign( 'right' ).setWidth( '60px' ).setMarginRight( '6px' );
-	const frametimeText = new UIText( '0' ).setTextAlign( 'right' ).setWidth( '60px' ).setMarginRight( '6px' );
-	const samplesText = new UIText( '0' ).setTextAlign( 'right' ).setWidth( '60px' ).setMarginRight( '6px' ).setHidden( true );
+	const objectsLabelText = new UIText( strings.getKey( 'viewport/info/objects' ) ).setWidth( '48px' ).setTextAlign( 'left' ).setMarginRight( '6px' );
+	const verticesLabelText = new UIText( strings.getKey( 'viewport/info/vertices' ) ).setWidth( '48px' ).setTextAlign( 'left' ).setMarginRight( '6px' );
+	const trianglesLabelText = new UIText( strings.getKey( 'viewport/info/triangles' ) ).setWidth( '48px' ).setTextAlign( 'left' ).setMarginRight( '6px' );
+	const frametimeLabelText = new UIText( strings.getKey( 'viewport/info/rendertime' ) ).setWidth( '48px' ).setTextAlign( 'left' ).setMarginRight( '6px' );
+	const samplesLabelText = new UIText( strings.getKey( 'viewport/info/samples' ) ).setWidth( '48px' ).setTextAlign( 'left' ).setMarginRight( '6px' ).setHidden( true );
 
-	const objectsUnitText = new UIText( strings.getKey( 'viewport/info/objects' ) );
-	const verticesUnitText = new UIText( strings.getKey( 'viewport/info/vertices' ) );
-	const trianglesUnitText = new UIText( strings.getKey( 'viewport/info/triangles' ) );
-	const samplesUnitText = new UIText( strings.getKey( 'viewport/info/samples' ) ).setHidden( true );
+	const objectsText = new UIText( '0' ).setTextAlign( 'left' ).setWidth( '90px' );
+	const verticesText = new UIText( '0' ).setTextAlign( 'left' ).setWidth( '90px' );
+	const trianglesText = new UIText( '0' ).setTextAlign( 'left' ).setWidth( '90px' );
+	const frametimeText = new UIText( '0' ).setTextAlign( 'left' ).setWidth( '90px' );
+	const samplesText = new UIText( '0' ).setTextAlign( 'left' ).setWidth( '90px' ).setHidden( true );
 
-	container.add( objectsText, objectsUnitText, new UIBreak() );
-	container.add( verticesText, verticesUnitText, new UIBreak() );
-	container.add( trianglesText, trianglesUnitText, new UIBreak() );
-	container.add( frametimeText, new UIText( strings.getKey( 'viewport/info/rendertime' ) ), new UIBreak() );
-	container.add( samplesText, samplesUnitText, new UIBreak() );
+	container.add( objectsLabelText, objectsText, new UIBreak() );
+	container.add( verticesLabelText, verticesText, new UIBreak() );
+	container.add( trianglesLabelText, trianglesText, new UIBreak() );
+	container.add( frametimeLabelText, frametimeText, new UIBreak() );
+	container.add( samplesLabelText, samplesText, new UIBreak() );
 
 	signals.objectAdded.add( update );
 	signals.objectRemoved.add( update );
 	signals.objectChanged.add( update );
 	signals.geometryChanged.add( update );
+	signals.sceneGraphChanged.add( update );
 	signals.sceneRendered.add( updateFrametime );
+	signals.objectSelected.add( update );
 
 	//
 
@@ -43,67 +46,123 @@ function ViewportInfo( editor ) {
 
 	//
 
-	function update() {
+	function collectStats( root ) {
 
-		const scene = editor.scene;
+		let objects = 0;
+		let vertices = 0;
+		let triangles = 0;
 
-		let objects = 0, vertices = 0, triangles = 0;
+		if ( ! root ) return { objects, vertices, triangles };
 
-		for ( let i = 0, l = scene.children.length; i < l; i ++ ) {
+		root.traverseVisible( function ( object ) {
 
-			const object = scene.children[ i ];
+			objects ++;
 
-			object.traverseVisible( function ( object ) {
+			if ( object.isMesh || object.isPoints ) {
 
-				objects ++;
+				const geometry = object.geometry;
+				if ( ! geometry || ! geometry.attributes ) return;
 
-				if ( object.isMesh || object.isPoints ) {
+				const positionAttribute = geometry.attributes.position;
 
-					const geometry = object.geometry;
-					const positionAttribute = geometry.attributes.position;
+				if ( positionAttribute !== undefined && positionAttribute !== null ) {
 
-					// update counts only if vertex data are defined
+					vertices += positionAttribute.count;
 
-					if ( positionAttribute !== undefined && positionAttribute !== null ) {
+				}
 
-						vertices += positionAttribute.count;
+				if ( object.isMesh ) {
 
-					}
+					if ( geometry.index !== null ) {
 
-					if ( object.isMesh ) {
+						triangles += geometry.index.count / 3;
 
-						if ( geometry.index !== null ) {
+					} else if ( positionAttribute !== undefined && positionAttribute !== null ) {
 
-							triangles += geometry.index.count / 3;
-
-						} else if ( positionAttribute !== undefined && positionAttribute !== null ) {
-
-							triangles += positionAttribute.count / 3;
-
-						}
+						triangles += positionAttribute.count / 3;
 
 					}
 
 				}
 
-			} );
+			}
+
+		} );
+
+		return { objects, vertices, triangles };
+
+	}
+
+	function getSceneObjects() {
+
+		return editor.scene.children.filter( function ( object ) {
+
+			if ( ! object ) return false;
+			if ( object.userData && object.userData.hidden === true ) return false;
+			if ( object.name && object.name.charAt( 0 ) === '$' ) return false;
+
+			return true;
+
+		} );
+
+	}
+
+	function getTopLevelSceneObject( object ) {
+
+		if ( ! object || object === editor.scene || object === editor.camera ) return null;
+
+		let target = object;
+
+		while ( target.parent && target.parent !== editor.scene ) {
+
+			target = target.parent;
 
 		}
 
-		objectsText.setValue( editor.utils.formatNumber( objects ) );
-		verticesText.setValue( editor.utils.formatNumber( vertices ) );
-		trianglesText.setValue( editor.utils.formatNumber( triangles ) );
+		return target.parent === editor.scene ? target : null;
 
-		const pluralRules = new Intl.PluralRules( editor.config.getKey( 'language' ) );
+	}
 
-		const objectsStringKey = ( pluralRules.select( objects ) === 'one' ) ? 'viewport/info/object' : 'viewport/info/objects';
-		objectsUnitText.setValue( strings.getKey( objectsStringKey ) );
+	function update() {
 
-		const verticesStringKey = ( pluralRules.select( vertices ) === 'one' ) ? 'viewport/info/vertex' : 'viewport/info/vertices';
-		verticesUnitText.setValue( strings.getKey( verticesStringKey ) );
+		const sceneObjects = getSceneObjects();
+		const sceneStats = collectStats( editor.scene );
+		const internalSelectedObjects = Array.isArray( editor.selectedObjects ) ? editor.selectedObjects : [];
+		let selected = null;
 
-		const trianglesStringKey = ( pluralRules.select( triangles ) === 'one' ) ? 'viewport/info/triangle' : 'viewport/info/triangles';
-		trianglesUnitText.setValue( strings.getKey( trianglesStringKey ) );
+		if ( internalSelectedObjects.length === 1 ) {
+
+			selected = internalSelectedObjects[ 0 ];
+
+		} else if ( internalSelectedObjects.length === 0 && editor.selected && editor.selected !== editor.scene && editor.selected !== editor.camera ) {
+
+			selected = editor.selected;
+
+		}
+
+		const selectedTopLevel = getTopLevelSceneObject( selected );
+		const hasSingleSelection = selectedTopLevel !== null;
+		const selectedStats = hasSingleSelection ? collectStats( selectedTopLevel ) : null;
+
+		if ( hasSingleSelection ) {
+
+			objectsText.setValue(
+				editor.utils.formatNumber( 1 ) + ' / ' + editor.utils.formatNumber( sceneObjects.length )
+			);
+			verticesText.setValue(
+				editor.utils.formatNumber( selectedStats.vertices ) + ' / ' + editor.utils.formatNumber( sceneStats.vertices )
+			);
+			trianglesText.setValue(
+				editor.utils.formatNumber( selectedStats.triangles ) + ' / ' + editor.utils.formatNumber( sceneStats.triangles )
+			);
+
+		} else {
+
+			objectsText.setValue( editor.utils.formatNumber( sceneObjects.length ) );
+			verticesText.setValue( editor.utils.formatNumber( sceneStats.vertices ) );
+			trianglesText.setValue( editor.utils.formatNumber( sceneStats.triangles ) );
+
+		}
 
 	}
 
@@ -122,7 +181,7 @@ function ViewportInfo( editor ) {
 		samplesText.setValue( samples );
 
 		const samplesStringKey = ( pluralRules.select( samples ) === 'one' ) ? 'viewport/info/sample' : 'viewport/info/samples';
-		samplesUnitText.setValue( strings.getKey( samplesStringKey ) );
+		samplesLabelText.setValue( strings.getKey( samplesStringKey ) );
 
 	} );
 
@@ -131,11 +190,13 @@ function ViewportInfo( editor ) {
 		const isRealisticShading = ( editor.viewportShading === 'realistic' );
 
 		samplesText.setHidden( ! isRealisticShading );
-		samplesUnitText.setHidden( ! isRealisticShading );
+		samplesLabelText.setHidden( ! isRealisticShading );
 
-		container.setBottom( isRealisticShading ? '62px' : '50px' );
+		container.setBottom( isRealisticShading ? '22px' : '10px' );
 
 	} );
+
+	update();
 
 	return container;
 
