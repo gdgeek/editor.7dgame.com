@@ -88,6 +88,7 @@ function Editor() {
 
 		viewportCameraChanged: new Signal(),
 		viewportShadingChanged: new Signal(),
+		viewportRedrawRequested: new Signal(),
 
 		intersectionsDetected: new Signal(),
 

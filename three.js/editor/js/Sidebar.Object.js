@@ -110,6 +110,71 @@ function isMediaType( object ) {
 
 }
 
+function getMediaObjectType( object ) {
+
+	if ( ! object ) return null;
+
+	if ( object.userData && object.userData.type ) {
+
+		const type = String( object.userData.type ).toLowerCase();
+		if ( type === 'video' ) return 'video';
+		if ( type === 'sound' || type === 'audio' ) return 'audio';
+		if ( type === 'particle' ) {
+
+			if ( object.userData.isVideo ) return 'video';
+			if ( object.userData.isAudio ) return 'audio';
+
+		}
+
+	}
+
+	if ( object.name ) {
+
+		const name = String( object.name ).toLowerCase();
+		if ( name.includes( '[video]' ) || name.endsWith( '.mp4' ) || name.endsWith( '.mov' ) || name.endsWith( '.webm' ) ) return 'video';
+		if ( name.includes( '[sound]' ) || name.includes( '[audio]' ) || name.endsWith( '.mp3' ) || name.endsWith( '.wav' ) || name.endsWith( '.ogg' ) ) return 'audio';
+
+	}
+
+	return null;
+
+}
+
+function getMediaObjectUrl( object, editor = null ) {
+
+	if ( ! object || ! object.userData ) return '';
+
+	if ( object.userData.src ) return object.userData.src;
+	if ( object.userData.audioUrl ) return object.userData.audioUrl;
+	if ( object.userData.videoUrl ) return object.userData.videoUrl;
+
+	const resourceId = object.userData.resource != null ? object.userData.resource : object.userData.resourceId;
+	const resources = editor && editor.data && editor.data.resources;
+	if ( resourceId != null && Array.isArray( resources ) ) {
+
+		const resource = resources.find( function ( item ) {
+
+			return String( item.id ) === String( resourceId );
+
+		} );
+
+		if ( resource ) {
+
+			const mediaType = getMediaObjectType( object );
+			const fileUrl = resource.file && resource.file.url ? resource.file.url : '';
+			const imageUrl = resource.image && resource.image.url ? resource.image.url : '';
+
+			if ( mediaType === 'video' ) return fileUrl || imageUrl || '';
+			if ( mediaType === 'audio' ) return fileUrl || imageUrl || '';
+
+		}
+
+	}
+
+	return '';
+
+}
+
 function isPictureType( object ) {
 
 	if ( ! object ) return false;
@@ -358,6 +423,9 @@ function SidebarObject( editor ) {
 	let signalPopupResizeHandler = null;
 	let currentInputSignalLabels = [];
 	let currentOutputSignalLabels = [];
+	const mediaPreviewPlayers = new Map();
+	let activeMediaPreviewObject = null;
+	let mediaPreviewRenderFrame = null;
 
 	function removeAllEventListeners() {
 
@@ -513,6 +581,313 @@ function SidebarObject( editor ) {
 		document.addEventListener( 'mousedown', signalPopupOutsideHandler, true );
 		window.addEventListener( 'resize', signalPopupResizeHandler );
 		window.addEventListener( 'scroll', signalPopupResizeHandler, true );
+
+	}
+
+	function formatMediaTime( seconds ) {
+
+		if ( ! Number.isFinite( seconds ) || seconds < 0 ) return '00:00';
+
+		const totalSeconds = Math.floor( seconds );
+		const minutes = Math.floor( totalSeconds / 60 );
+		const remainder = totalSeconds % 60;
+
+		return String( minutes ).padStart( 2, '0' ) + ':' + String( remainder ).padStart( 2, '0' );
+
+	}
+
+	function getMediaPreviewPlayer( object ) {
+
+		if ( ! object ) return null;
+
+		const mediaType = getMediaObjectType( object );
+		const mediaUrl = getMediaObjectUrl( object, editor );
+		if ( ! mediaType || ! mediaUrl ) return null;
+
+		let player = mediaPreviewPlayers.get( object.uuid );
+
+		if ( player && player.url === mediaUrl && player.type === mediaType ) {
+
+			return player;
+
+		}
+
+		if ( player ) {
+
+			try {
+
+				player.element.pause();
+
+			} catch ( _error ) {}
+
+			player.element.remove();
+			mediaPreviewPlayers.delete( object.uuid );
+
+		}
+
+		const mediaElement = document.createElement( mediaType === 'video' ? 'video' : 'audio' );
+		mediaElement.crossOrigin = 'anonymous';
+		mediaElement.preload = 'auto';
+		mediaElement.loop = !! ( object.userData && object.userData.loop );
+		mediaElement.style.display = 'none';
+		mediaElement.src = mediaUrl;
+		document.body.appendChild( mediaElement );
+
+		player = {
+			type: mediaType,
+			url: mediaUrl,
+			element: mediaElement,
+			texture: mediaType === 'video' ? new THREE.VideoTexture( mediaElement ) : null,
+			originalMaps: [],
+			textureApplied: false
+		};
+
+		if ( player.texture ) {
+
+			player.texture.minFilter = THREE.LinearFilter;
+			player.texture.magFilter = THREE.LinearFilter;
+			player.texture.generateMipmaps = false;
+			player.texture.needsUpdate = true;
+
+		}
+
+		const syncPreviewUI = function () {
+
+			if ( activeMediaPreviewObject === object && editor.selected === object ) {
+
+				updateMediaPreviewUI( object );
+
+			}
+
+		};
+
+		mediaElement.addEventListener( 'timeupdate', syncPreviewUI );
+		mediaElement.addEventListener( 'loadedmetadata', syncPreviewUI );
+		mediaElement.addEventListener( 'play', syncPreviewUI );
+		mediaElement.addEventListener( 'pause', syncPreviewUI );
+		mediaElement.addEventListener( 'ended', function () {
+
+			if ( mediaType === 'video' ) {
+
+				stopMediaPreviewRenderLoop();
+				restoreVideoPreviewTexture( object, player );
+
+			}
+
+			if ( activeMediaPreviewObject === object ) activeMediaPreviewObject = null;
+			syncPreviewUI();
+
+		} );
+
+		mediaPreviewPlayers.set( object.uuid, player );
+		return player;
+
+	}
+
+	function stopMediaPreviewRenderLoop() {
+
+		if ( mediaPreviewRenderFrame !== null ) {
+
+			cancelAnimationFrame( mediaPreviewRenderFrame );
+			mediaPreviewRenderFrame = null;
+
+		}
+
+	}
+
+	function startMediaPreviewRenderLoop() {
+
+		stopMediaPreviewRenderLoop();
+
+		const tick = function () {
+
+			const object = activeMediaPreviewObject;
+			if ( ! object ) {
+
+				mediaPreviewRenderFrame = null;
+				return;
+
+			}
+
+			const player = mediaPreviewPlayers.get( object.uuid );
+			if ( ! player || player.type !== 'video' || player.element.paused || player.element.ended ) {
+
+				mediaPreviewRenderFrame = null;
+				return;
+
+			}
+
+			if ( player.texture ) player.texture.needsUpdate = true;
+			editor.signals.viewportRedrawRequested.dispatch();
+			mediaPreviewRenderFrame = requestAnimationFrame( tick );
+
+		};
+
+		mediaPreviewRenderFrame = requestAnimationFrame( tick );
+
+	}
+
+	function applyVideoPreviewTexture( object, player ) {
+
+		if ( ! player || player.type !== 'video' || player.textureApplied ) return;
+
+		player.originalMaps = [];
+		object.traverse( function ( child ) {
+
+			if ( ! child.material ) return;
+
+			const materials = Array.isArray( child.material ) ? child.material : [ child.material ];
+			for ( let i = 0; i < materials.length; i ++ ) {
+
+				const material = materials[ i ];
+				if ( ! material || ! ( 'map' in material ) ) continue;
+
+				player.originalMaps.push( { material, map: material.map || null } );
+				material.map = player.texture;
+				material.needsUpdate = true;
+
+			}
+
+		} );
+
+		player.textureApplied = true;
+
+	}
+
+	function restoreVideoPreviewTexture( object, player ) {
+
+		if ( ! player || player.type !== 'video' || ! player.textureApplied ) return;
+
+		for ( let i = 0; i < player.originalMaps.length; i ++ ) {
+
+			const entry = player.originalMaps[ i ];
+			entry.material.map = entry.map;
+			entry.material.needsUpdate = true;
+
+		}
+
+		player.originalMaps = [];
+		player.textureApplied = false;
+		editor.signals.sceneGraphChanged.dispatch();
+
+	}
+
+	function stopMediaPreview( object ) {
+
+		if ( ! object ) return;
+
+		const player = mediaPreviewPlayers.get( object.uuid );
+		if ( ! player ) return;
+
+		try {
+
+			player.element.pause();
+			player.element.currentTime = 0;
+
+		} catch ( _error ) {}
+
+		if ( player.type === 'video' ) {
+
+			restoreVideoPreviewTexture( object, player );
+
+		}
+
+		if ( activeMediaPreviewObject === object ) activeMediaPreviewObject = null;
+		stopMediaPreviewRenderLoop();
+		editor.signals.sceneGraphChanged.dispatch();
+		updateMediaPreviewUI( object );
+
+	}
+
+	function pauseMediaPreview( object ) {
+
+		if ( ! object ) return;
+
+		const player = getMediaPreviewPlayer( object );
+		if ( ! player ) return;
+
+		try {
+
+			player.element.pause();
+
+		} catch ( _error ) {}
+
+		stopMediaPreviewRenderLoop();
+		editor.signals.sceneGraphChanged.dispatch();
+		updateMediaPreviewUI( object );
+
+	}
+
+	function playMediaPreview( object ) {
+
+		if ( ! object ) return;
+
+		if ( activeMediaPreviewObject && activeMediaPreviewObject !== object ) {
+
+			stopMediaPreview( activeMediaPreviewObject );
+
+		}
+
+		const player = getMediaPreviewPlayer( object );
+		if ( ! player ) return;
+
+		player.element.loop = !! ( object.userData && object.userData.loop );
+
+		if ( player.type === 'video' ) {
+
+			applyVideoPreviewTexture( object, player );
+
+		}
+
+		activeMediaPreviewObject = object;
+
+		player.element.play().then( function () {
+
+			if ( player.type === 'video' ) startMediaPreviewRenderLoop();
+			updateMediaPreviewUI( object );
+			editor.signals.sceneGraphChanged.dispatch();
+
+		} ).catch( function () {} );
+
+	}
+
+	function updateMediaPreviewUI( object ) {
+
+		const selectedObject = editor.selected;
+		const isCurrentMedia = !! ( object && selectedObject === object && isMediaType( object ) );
+
+		objectMediaPreviewRow.setDisplay( isCurrentMedia ? '' : 'none' );
+		objectMediaPreviewProgressRow.setDisplay( isCurrentMedia ? '' : 'none' );
+
+		if ( ! isCurrentMedia ) {
+
+			objectMediaPreviewProgress.max = '0';
+			objectMediaPreviewProgress.value = '0';
+			objectMediaPreviewTime.textContent = '00:00 / 00:00';
+			return;
+
+		}
+
+		const player = getMediaPreviewPlayer( object );
+		if ( ! player ) {
+
+			objectMediaPreviewProgress.max = '0';
+			objectMediaPreviewProgress.value = '0';
+			objectMediaPreviewTime.textContent = '00:00 / 00:00';
+			return;
+
+		}
+
+		const duration = Number.isFinite( player.element.duration ) ? player.element.duration : 0;
+		const currentTime = Number.isFinite( player.element.currentTime ) ? player.element.currentTime : 0;
+
+		objectMediaPreviewProgress.max = String( duration || 0 );
+		objectMediaPreviewProgress.value = String( Math.min( currentTime, duration || currentTime || 0 ) );
+		objectMediaPreviewTime.textContent = formatMediaTime( currentTime ) + ' / ' + formatMediaTime( duration );
+
+		objectMediaPreviewPlay.button.style.opacity = player.element.paused ? '1' : '0.65';
+		objectMediaPreviewPause.button.style.opacity = player.element.paused ? '0.65' : '1';
+		objectMediaPreviewStop.button.style.opacity = currentTime > 0 || ! player.element.paused ? '1' : '0.65';
 
 	}
 
@@ -1212,6 +1587,85 @@ function SidebarObject( editor ) {
 	objectLoopRow.add( objectLoop );
 	container.add( objectLoopRow );
 
+	const objectMediaPreviewRow = new UIRow();
+	const objectMediaPreviewActions = new UIDiv();
+	objectMediaPreviewActions.dom.style.display = 'inline-flex';
+	objectMediaPreviewActions.dom.style.alignItems = 'center';
+	objectMediaPreviewActions.dom.style.gap = '6px';
+
+	const objectMediaPreviewPlay = createTextActionButtonControl( strings.getKey( 'sidebar/media/play' ), '44px', function () {
+
+		if ( editor.selected ) playMediaPreview( editor.selected );
+
+	} );
+	const objectMediaPreviewPause = createTextActionButtonControl( strings.getKey( 'sidebar/media/pause' ), '44px', function () {
+
+		if ( editor.selected ) pauseMediaPreview( editor.selected );
+
+	} );
+	const stopLabel = strings.getKey( 'sidebar/animations/stop' ) !== '???' ? strings.getKey( 'sidebar/animations/stop' ) : '停止';
+	const objectMediaPreviewStop = createTextActionButtonControl( stopLabel, '44px', function () {
+
+		if ( editor.selected ) stopMediaPreview( editor.selected );
+
+	} );
+	objectMediaPreviewActions.add(
+		objectMediaPreviewPlay.wrapper,
+		objectMediaPreviewPause.wrapper,
+		objectMediaPreviewStop.wrapper
+	);
+	objectMediaPreviewRow.add( new UIText( strings.getKey( 'sidebar/media/preview' ) ).setWidth( '90px' ) );
+	objectMediaPreviewRow.add( objectMediaPreviewActions );
+	objectMediaPreviewRow.setDisplay( 'none' );
+	container.add( objectMediaPreviewRow );
+
+	const objectMediaPreviewProgressRow = new UIRow();
+	const objectMediaPreviewProgressLabel = new UIText( '' ).setWidth( '90px' );
+	const objectMediaPreviewProgressWrap = new UIDiv();
+	objectMediaPreviewProgressWrap.dom.style.display = 'inline-flex';
+	objectMediaPreviewProgressWrap.dom.style.alignItems = 'center';
+	objectMediaPreviewProgressWrap.dom.style.gap = '8px';
+	objectMediaPreviewProgressWrap.dom.style.width = '190px';
+	objectMediaPreviewProgressWrap.dom.style.maxWidth = '190px';
+	const objectMediaPreviewProgress = document.createElement( 'input' );
+	objectMediaPreviewProgress.type = 'range';
+	objectMediaPreviewProgress.min = '0';
+	objectMediaPreviewProgress.max = '0';
+	objectMediaPreviewProgress.step = '0.01';
+	objectMediaPreviewProgress.value = '0';
+	objectMediaPreviewProgress.style.flex = '1 1 auto';
+	objectMediaPreviewProgress.style.width = '120px';
+	objectMediaPreviewProgress.style.margin = '0';
+	objectMediaPreviewProgress.style.accentColor = '#5f8dd3';
+	const objectMediaPreviewTime = document.createElement( 'span' );
+	objectMediaPreviewTime.textContent = '00:00 / 00:00';
+	objectMediaPreviewTime.style.fontSize = '11px';
+	objectMediaPreviewTime.style.color = '#777';
+	objectMediaPreviewTime.style.whiteSpace = 'nowrap';
+	objectMediaPreviewProgressWrap.dom.appendChild( objectMediaPreviewProgress );
+	objectMediaPreviewProgressWrap.dom.appendChild( objectMediaPreviewTime );
+	objectMediaPreviewProgressRow.add( objectMediaPreviewProgressLabel );
+	objectMediaPreviewProgressRow.add( objectMediaPreviewProgressWrap );
+	objectMediaPreviewProgressRow.setDisplay( 'none' );
+	container.add( objectMediaPreviewProgressRow );
+
+	objectMediaPreviewProgress.addEventListener( 'input', function () {
+
+		if ( ! editor.selected ) return;
+
+		const player = getMediaPreviewPlayer( editor.selected );
+		if ( ! player ) return;
+
+		const nextTime = Number( objectMediaPreviewProgress.value );
+		if ( Number.isFinite( nextTime ) ) {
+
+			player.element.currentTime = nextTime;
+			updateMediaPreviewUI( editor.selected );
+
+		}
+
+	} );
+
 	const objectSortingRow = new UIRow();
 	const objectSorting = new UISelect().onChange( update );
 	objectSorting.setOptions( Object.fromEntries( [ 0, 1, 2 ].map( i => [ i, String( i ) ] ) ) );
@@ -1455,6 +1909,9 @@ function SidebarObject( editor ) {
 
 			}
 
+			const player = mediaPreviewPlayers.get( object.uuid );
+			if ( player ) player.element.loop = objectLoop.getValue();
+
 		}
 
 	}
@@ -1517,10 +1974,13 @@ function SidebarObject( editor ) {
 		}
 
 		objectLoopRow.setDisplay( isMediaType( object ) ? '' : 'none' );
+		objectMediaPreviewRow.setDisplay( isMediaType( object ) ? '' : 'none' );
+		objectMediaPreviewProgressRow.setDisplay( isMediaType( object ) ? '' : 'none' );
 		objectSortingRow.setDisplay( isPictureType( object ) ? '' : 'none' );
 		objectInputSignalsRow.setDisplay( isSceneEntity ? '' : 'none' );
 		objectOutputSignalsRow.setDisplay( isSceneEntity ? '' : 'none' );
 		if ( ! isSceneEntity ) hideSignalPopup();
+		if ( activeMediaPreviewObject && activeMediaPreviewObject !== object ) stopMediaPreview( activeMediaPreviewObject );
 
 		if ( object && object.type && typeof object.type === 'string' && object.type.toLowerCase() === 'module' ) {
 
@@ -1590,6 +2050,7 @@ function SidebarObject( editor ) {
 			container.setDisplay( 'none' );
 			hideTransformActions();
 			hideSignalPopup();
+			if ( activeMediaPreviewObject ) stopMediaPreview( activeMediaPreviewObject );
 
 		}
 
@@ -1696,6 +2157,7 @@ function SidebarObject( editor ) {
 
 		}
 
+		updateMediaPreviewUI( object );
 		updateTransformRows( object );
 
 	}

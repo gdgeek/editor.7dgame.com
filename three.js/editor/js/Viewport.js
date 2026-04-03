@@ -811,6 +811,12 @@ function Viewport( editor ) {
 
 	} );
 
+	signals.viewportRedrawRequested.add( function () {
+
+		render();
+
+	} );
+
 	//
 
 	signals.windowResize.add( function () {
