@@ -97,6 +97,36 @@ function copyComponentsWithNewUUIDs( source: any, target: any ): void {
 
 }
 
+function copyHierarchyDataWithNewUUIDs( source: any, target: any ): void {
+
+	if ( ! source || ! target ) return;
+
+	if ( source.type ) {
+
+		target.type = source.type;
+
+	}
+
+	if ( source.animations && source.animations.length > 0 ) {
+
+		target.animations = source.animations.map( ( clip: any ) => clip.clone() );
+
+	}
+
+	copyComponentsWithNewUUIDs( source, target );
+
+	const sourceChildren = Array.isArray( source.children ) ? source.children : [];
+	const targetChildren = Array.isArray( target.children ) ? target.children : [];
+	const childCount = Math.min( sourceChildren.length, targetChildren.length );
+
+	for ( let i = 0; i < childCount; i ++ ) {
+
+		copyHierarchyDataWithNewUUIDs( sourceChildren[ i ], targetChildren[ i ] );
+
+	}
+
+}
+
 function detectReplaceableType( object: any ): string {
 
 	if ( ! object ) return '';
@@ -176,22 +206,7 @@ function injectMrppEditMenu( editor: any, editMenuOptions: any ): void {
 			const original = object;
 			object = cloneObject( original );
 
-			// Preserve custom type
-			if ( original.type ) {
-
-				object.type = original.type;
-
-			}
-
-			// Copy animations (Three.js clone() doesn't copy them)
-			if ( original.animations && original.animations.length > 0 ) {
-
-				object.animations = original.animations.map( (clip: any) => clip.clone() );
-
-			}
-
-			// Deep-copy components & commands with fresh UUIDs
-			copyComponentsWithNewUUIDs( original, object );
+			copyHierarchyDataWithNewUUIDs( original, object );
 
 			const parent = original.parent;
 			const cmd = new AddObjectCommand( editor, object );
@@ -651,19 +666,7 @@ function injectMrppEditMenu( editor: any, editMenuOptions: any ): void {
 			const copiedObject = copiedObjects[ i ];
 			const object = cloneObject( copiedObject );
 
-			if ( copiedObject.type ) {
-
-				object.type = copiedObject.type;
-
-			}
-
-			if ( copiedObject.animations && copiedObject.animations.length > 0 ) {
-
-				object.animations = copiedObject.animations.map( (clip: any) => clip.clone() );
-
-			}
-
-			copyComponentsWithNewUUIDs( copiedObject, object );
+			copyHierarchyDataWithNewUUIDs( copiedObject, object );
 
 			editor.execute( new AddObjectCommand( editor, object ) );
 			newObjects.push( object );

@@ -430,6 +430,62 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 		return source.clone();
 	}
 
+	function copyComponentsWithNewUUIDs(source: any, target: any) {
+		if (source.components) {
+			target.components = JSON.parse(JSON.stringify(source.components));
+			target.components.forEach((component: any) => {
+				if (component.parameters && component.parameters.uuid) {
+					component.parameters.uuid = THREE.MathUtils.generateUUID();
+				}
+				if (component.parameters && component.parameters.options) {
+					Object.keys(component.parameters.options).forEach((key) => {
+						const newUuid = THREE.MathUtils.generateUUID();
+						component.parameters.options[newUuid] = component.parameters.options[key];
+						delete component.parameters.options[key];
+					});
+				}
+			});
+		}
+
+		if (source.commands) {
+			target.commands = JSON.parse(JSON.stringify(source.commands));
+			target.commands.forEach((command: any) => {
+				if (command.parameters && command.parameters.uuid) {
+					command.parameters.uuid = THREE.MathUtils.generateUUID();
+				}
+				if (command.parameters && command.parameters.options) {
+					Object.keys(command.parameters.options).forEach((key) => {
+						const newUuid = THREE.MathUtils.generateUUID();
+						command.parameters.options[newUuid] = command.parameters.options[key];
+						delete command.parameters.options[key];
+					});
+				}
+			});
+		}
+	}
+
+	function copyHierarchyDataWithNewUUIDs(source: any, target: any) {
+		if (!source || !target) return;
+
+		if (source.type) {
+			target.type = source.type;
+		}
+
+		if (source.animations && source.animations.length > 0) {
+			target.animations = source.animations.map((clip: any) => clip.clone());
+		}
+
+		copyComponentsWithNewUUIDs(source, target);
+
+		const sourceChildren = Array.isArray(source.children) ? source.children : [];
+		const targetChildren = Array.isArray(target.children) ? target.children : [];
+		const childCount = Math.min(sourceChildren.length, targetChildren.length);
+
+		for (let i = 0; i < childCount; i++) {
+			copyHierarchyDataWithNewUUIDs(sourceChildren[i], targetChildren[i]);
+		}
+	}
+
 	// 拷贝全部按钮
 	const cloneAllButton = new UIButton(strings.getKey('sidebar/multi_objects/clone_all'))
 		.setWidth('80px')
@@ -445,41 +501,13 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 				if (object === null || object.parent === null) continue;
 
 				const clonedObject = cloneObject(object);
-
-				// 保持原始type
-				if (object.type) {
-					clonedObject.type = object.type;
-				}
-
-				// 复制animations数组
-				if (object.animations && object.animations.length > 0) {
-					clonedObject.animations = object.animations.map((clip: any) => clip.clone());
-				}
-
-				// 复制components并重新生成UUID
-				if (object.components) {
-					clonedObject.components = JSON.parse(JSON.stringify(object.components));
-					clonedObject.components.forEach((component: any) => {
-						if (component.parameters && component.parameters.uuid) {
-							component.parameters.uuid = THREE.MathUtils.generateUUID();
-						}
-					});
-				}
-
-				// 复制commands并重新生成UUID
-				if (object.commands) {
-					clonedObject.commands = JSON.parse(JSON.stringify(object.commands));
-					clonedObject.commands.forEach((command: any) => {
-						if (command.parameters && command.parameters.uuid) {
-							command.parameters.uuid = THREE.MathUtils.generateUUID();
-						}
-					});
-				}
+				copyHierarchyDataWithNewUUIDs(object, clonedObject);
 
 				const parent = object.parent;
 				const cmd = new AddObjectCommand(editor, clonedObject);
 				cmd.execute = function () {
-					editor.addObject(clonedObject, parent);
+					const insertIndex = parent ? parent.children.indexOf(object) + 1 : undefined;
+					editor.addObject(clonedObject, parent, insertIndex);
 					clonedObjects.push(clonedObject);
 
 					if (clonedObjects.length === objectsToCopy.length) {
