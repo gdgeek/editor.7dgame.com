@@ -691,6 +691,36 @@ hr {
 	color: #888;
 }
 
+#sidebar .mrpp-events-section {
+	background: #e7e7e7;
+	border: 1px solid #d4d4d4;
+	border-radius: 8px;
+}
+
+#sidebar .mrpp-events-add-row .Input,
+#sidebar .mrpp-event-item .Input {
+	background: #ffffff;
+	border: 1px solid transparent;
+	color: #666;
+}
+
+#sidebar .mrpp-events-add-row .Input::placeholder {
+	color: #7a7a7a;
+}
+
+#sidebar .mrpp-event-item {
+	background: transparent;
+	border-radius: 0;
+}
+
+#sidebar .mrpp-event-item + .mrpp-event-item {
+	margin-top: 6px;
+}
+
+#sidebar .mrpp-events-button {
+	min-width: 48px;
+}
+
 /* */
 
 @media all and ( max-width: 600px ) {
@@ -908,6 +938,26 @@ hr {
 
 	.Listbox .ListboxItem.active {
 		background-color: rgba(21,60,94,1);
+	}
+
+	#sidebar .mrpp-events-section {
+		background: #1b1b1b;
+		border-color: #222;
+	}
+
+	#sidebar .mrpp-events-add-row .Input,
+	#sidebar .mrpp-event-item .Input {
+		background: #222;
+		border-color: #222;
+		color: #bbb;
+	}
+
+	#sidebar .mrpp-events-add-row .Input::placeholder {
+		color: #777;
+	}
+
+	#sidebar .mrpp-event-item {
+		background: transparent;
 	}
 
 }

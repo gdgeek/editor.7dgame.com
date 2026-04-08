@@ -251,6 +251,7 @@ function Viewport( editor ) {
 	const onDownPosition = new THREE.Vector2();
 	const onUpPosition = new THREE.Vector2();
 	const onDoubleClickPosition = new THREE.Vector2();
+	let pointerButton = 0;
 
 	function getMousePosition( dom, x, y ) {
 
@@ -260,6 +261,8 @@ function Viewport( editor ) {
 	}
 
 	function handleClick() {
+
+		if ( pointerButton !== 0 ) return;
 
 		if ( onDownPosition.distanceTo( onUpPosition ) === 0 ) {
 
@@ -278,6 +281,7 @@ function Viewport( editor ) {
 
 		if ( event.target !== renderer.domElement ) return;
 
+		pointerButton = event.button;
 		const array = getMousePosition( container.dom, event.clientX, event.clientY );
 		onDownPosition.fromArray( array );
 
@@ -287,6 +291,7 @@ function Viewport( editor ) {
 
 	function onMouseUp( event ) {
 
+		pointerButton = event.button;
 		const array = getMousePosition( container.dom, event.clientX, event.clientY );
 		onUpPosition.fromArray( array );
 

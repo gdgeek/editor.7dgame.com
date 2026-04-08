@@ -552,12 +552,65 @@ function injectMrppEditMenu( editor: any, editMenuOptions: any ): void {
 
 	}
 
-	function isContextMenuTarget( target: EventTarget | null ): boolean {
+	function isEditorContextArea( target: Element ): boolean {
+
+		return !! target.closest( '#viewport, #sidebar, #resizer, #menubar' );
+
+	}
+
+	function isContextMenuTarget( event: MouseEvent ): boolean {
+
+		const target = event.target;
 
 		if ( ! ( target instanceof Element ) ) return false;
 		if ( target.closest( 'input, textarea, select, [contenteditable=""], [contenteditable="true"], .CodeMirror' ) ) return false;
 
-		return !! target.closest( '#viewport, #sidebar, #resizer' );
+		const outlinerOption = target.closest( '#outliner .option' );
+		if ( outlinerOption ) {
+
+			return outlinerOption.classList.contains( 'active' );
+
+		}
+
+		const viewport = target.closest( '#viewport' );
+		if ( viewport ) {
+
+			const viewportRect = ( viewport as HTMLElement ).getBoundingClientRect();
+			const point = {
+				x: ( event.clientX - viewportRect.left ) / viewportRect.width,
+				y: ( event.clientY - viewportRect.top ) / viewportRect.height
+			};
+			const intersects = editor.selector.getPointerIntersects( point, editor.viewportCamera || editor.camera );
+			if ( intersects.length === 0 ) return false;
+
+			const selectedObjects = editor.getSelectedObjects();
+			const selectedSet = new Set( selectedObjects.map( function ( item: any ) {
+
+				return item && item.uuid;
+
+			} ).filter( Boolean ) );
+
+			for ( let i = 0; i < intersects.length; i ++ ) {
+
+				let object = intersects[ i ].object as any;
+				while ( object && object.userData && object.userData.object !== undefined ) {
+
+					object = object.userData.object;
+
+				}
+
+				while ( object ) {
+
+					if ( selectedSet.has( object.uuid ) ) return true;
+					object = object.parent;
+
+				}
+
+			}
+
+		}
+
+		return false;
 
 	}
 
@@ -572,10 +625,22 @@ function injectMrppEditMenu( editor: any, editMenuOptions: any ): void {
 
 		}
 
-		if ( isContextMenuTarget( event.target ) === false ) return;
+		const target = event.target;
+		const inEditorArea = target instanceof Element && isEditorContextArea( target );
 
-		event.preventDefault();
-		event.stopPropagation();
+		if ( inEditorArea ) {
+
+			event.preventDefault();
+			event.stopPropagation();
+
+		}
+
+		if ( isContextMenuTarget( event ) === false ) {
+
+			hideContextMenu();
+			return;
+
+		}
 
 		showContextMenu( event.clientX, event.clientY );
 
