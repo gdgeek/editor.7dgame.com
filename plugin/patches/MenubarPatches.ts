@@ -108,6 +108,7 @@ function applyMenubarPatches( editor: MrppEditor, menubarContainer: any ): void 
 
 	const fileMenuTitle = strings.getKey( 'menubar/file' );
 	const saveLabel = strings.getKey( 'menubar/file/save' );
+	const publishLabel = strings.getKey( 'sidebar/project/app/publish' );
 	const updatedChildren = Array.from( menubarDom.children );
 
 	for ( let i = 0; i < updatedChildren.length; i ++ ) {
@@ -125,11 +126,13 @@ function applyMenubarPatches( editor: MrppEditor, menubarContainer: any ): void 
 
 					const item = items[ j ];
 					const itemText = item.textContent!.trim();
-					if ( itemText !== saveLabel && itemText.startsWith( saveLabel ) === false ) {
+					const isSaveItem = itemText === saveLabel || itemText.startsWith( saveLabel );
+					const isPublishItem = itemText === publishLabel || itemText.startsWith( publishLabel );
+					if ( isSaveItem === false && isPublishItem === false ) {
 
 						optionsEl.removeChild( item );
 
-					} else {
+					} else if ( isSaveItem ) {
 
 						// Rewire save button to use editor.save() (MRPP save flow)
 						// instead of r183's default toJSON + download behavior
@@ -142,6 +145,28 @@ function applyMenubarPatches( editor: MrppEditor, menubarContainer: any ): void 
 						optionsEl.replaceChild( newSave, item );
 
 					}
+
+				}
+
+				const editorType = ( editor.type || '' ).toLowerCase();
+				const needsPublishItem = editorType === 'verse' && !! ( editor.signals && ( editor.signals as any ).release );
+				const hasPublishItem = Array.from( optionsEl.children ).some( function ( child ) {
+
+					return ( child.textContent || '' ).trim().startsWith( publishLabel );
+
+				} );
+
+				if ( needsPublishItem && hasPublishItem === false ) {
+
+					const publishOption = document.createElement( 'div' );
+					publishOption.className = 'option';
+					publishOption.textContent = publishLabel;
+					publishOption.addEventListener( 'click', function () {
+
+						( editor.signals as any ).release.dispatch();
+
+					} );
+					optionsEl.appendChild( publishOption );
 
 				}
 
