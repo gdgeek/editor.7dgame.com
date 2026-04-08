@@ -1080,10 +1080,28 @@ function SidebarObject( editor ) {
 	const objectScaleX = new UINumber( 1 ).setPrecision( 3 ).setWidth( '40px' ).onChange( update );
 	const objectScaleY = new UINumber( 1 ).setPrecision( 3 ).setWidth( '40px' ).onChange( update );
 	const objectScaleZ = new UINumber( 1 ).setPrecision( 3 ).setWidth( '40px' ).onChange( update );
+	function getConstrainedScaleVector( object, x = objectScaleX.getValue(), y = objectScaleY.getValue(), z = objectScaleZ.getValue() ) {
+
+		return new THREE.Vector3( x, y, isPictureType( object ) ? 1 : z );
+
+	}
+
+	function updatePictureScaleConstraint( object ) {
+
+		const locked = !! object && isPictureType( object );
+		objectScaleZ.setDisabled( locked );
+		objectScaleZ.dom.style.opacity = locked ? '0.7' : '1';
+		objectScaleZ.dom.style.cursor = locked ? 'not-allowed' : '';
+		objectScaleZ.dom.title = locked ? 'Z scale is fixed to 1 for pictures' : '';
+
+		if ( locked ) objectScaleZ.setValue( 1 );
+
+	}
+
 	const scaleButtons = createPropertyClipboardButtons(
 		'scale',
-		() => new THREE.Vector3( objectScaleX.getValue(), objectScaleY.getValue(), objectScaleZ.getValue() ),
-		( data ) => editor.execute( new SetScaleCommand( editor, editor.selected, data.clone() ) ),
+		() => getConstrainedScaleVector( editor.selected ),
+		( data ) => editor.execute( new SetScaleCommand( editor, editor.selected, getConstrainedScaleVector( editor.selected, data.x, data.y, data.z ) ) ),
 		strings.getKey( 'sidebar/multi_objects/copy_scale_success' ),
 		strings.getKey( 'sidebar/multi_objects/paste_scale_success' ),
 		() => {
@@ -1171,7 +1189,7 @@ function SidebarObject( editor ) {
 			objectRotationY.getValue() * THREE.MathUtils.DEG2RAD,
 			objectRotationZ.getValue() * THREE.MathUtils.DEG2RAD
 		);
-		clipboard.scale = new THREE.Vector3( objectScaleX.getValue(), objectScaleY.getValue(), objectScaleZ.getValue() );
+		clipboard.scale = getConstrainedScaleVector( editor.selected );
 		editor.showNotification( strings.getKey( 'sidebar/multi_objects/copy_transform_success' ) );
 
 	} );
@@ -1187,7 +1205,7 @@ function SidebarObject( editor ) {
 		if ( editor.selected === null ) return;
 		if ( clipboard.position !== null ) editor.execute( new SetPositionCommand( editor, editor.selected, clipboard.position.clone() ) );
 		if ( clipboard.rotation !== null ) editor.execute( new SetRotationCommand( editor, editor.selected, clipboard.rotation.clone() ) );
-		if ( clipboard.scale !== null ) editor.execute( new SetScaleCommand( editor, editor.selected, clipboard.scale.clone() ) );
+		if ( clipboard.scale !== null ) editor.execute( new SetScaleCommand( editor, editor.selected, getConstrainedScaleVector( editor.selected, clipboard.scale.x, clipboard.scale.y, clipboard.scale.z ) ) );
 		editor.showNotification( strings.getKey( 'sidebar/multi_objects/paste_transform_success' ) );
 
 	} );
@@ -1748,7 +1766,7 @@ function SidebarObject( editor ) {
 
 		}
 
-		const newScale = new THREE.Vector3( objectScaleX.getValue(), objectScaleY.getValue(), objectScaleZ.getValue() );
+		const newScale = getConstrainedScaleVector( object );
 		if ( object.scale.distanceTo( newScale ) >= 0.01 ) editor.execute( new SetScaleCommand( editor, object, newScale ) );
 
 		if ( object.fov !== undefined && Math.abs( object.fov - objectFov.getValue() ) >= 0.01 ) {
@@ -1979,6 +1997,7 @@ function SidebarObject( editor ) {
 		objectSortingRow.setDisplay( isPictureType( object ) ? '' : 'none' );
 		objectInputSignalsRow.setDisplay( isSceneEntity ? '' : 'none' );
 		objectOutputSignalsRow.setDisplay( isSceneEntity ? '' : 'none' );
+		updatePictureScaleConstraint( object );
 		if ( ! isSceneEntity ) hideSignalPopup();
 		if ( activeMediaPreviewObject && activeMediaPreviewObject !== object ) stopMediaPreview( activeMediaPreviewObject );
 
@@ -2086,7 +2105,14 @@ function SidebarObject( editor ) {
 
 		objectScaleX.setValue( object.scale.x );
 		objectScaleY.setValue( object.scale.y );
-		objectScaleZ.setValue( object.scale.z );
+		objectScaleZ.setValue( isPictureType( object ) ? 1 : object.scale.z );
+		updatePictureScaleConstraint( object );
+
+		if ( isPictureType( object ) && Math.abs( object.scale.z - 1 ) >= 0.001 ) {
+
+			editor.execute( new SetScaleCommand( editor, object, new THREE.Vector3( object.scale.x, object.scale.y, 1 ) ) );
+
+		}
 
 		if ( object.fov !== undefined ) objectFov.setValue( object.fov );
 		if ( object.left !== undefined ) objectLeft.setValue( object.left );

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import * as SkeletonUtils from '../../../three.js/examples/jsm/utils/SkeletonUtils.js';
 
-import { UIRow, UIHorizontalRule } from '../../../three.js/editor/js/libs/ui.js';
+import { UIRow, UIHorizontalRule, UIText } from '../../../three.js/editor/js/libs/ui.js';
 
 import { AddObjectCommand } from '../../../three.js/editor/js/commands/AddObjectCommand.js';
 import { RemoveObjectCommand } from '../../../three.js/editor/js/commands/RemoveObjectCommand.js';
@@ -164,6 +164,7 @@ function injectMrppEditMenu( editor: any, editMenuOptions: any ): void {
 	const strings = editor.strings;
 	const factory = new MetaFactory( editor );
 	const builder = new Builder();
+	const IS_MAC = navigator.platform.toUpperCase().indexOf( 'MAC' ) >= 0;
 
 	// Share the global resources map (created by MrppAdd or here)
 	const resources = window.resources || new Map();
@@ -278,6 +279,7 @@ function injectMrppEditMenu( editor: any, editMenuOptions: any ): void {
 	const cloneOption = new UIRow();
 	cloneOption.setClass( 'option' );
 	cloneOption.setTextContent( strings.getKey( 'menubar/edit/clone' ) );
+	cloneOption.add( new UIText( IS_MAC ? 'CMD+D' : 'CTRL+D' ).setClass( 'key' ) );
 	cloneOption.onClick( function () {
 
 		cloneSelected();
@@ -411,6 +413,7 @@ function injectMrppEditMenu( editor: any, editMenuOptions: any ): void {
 	const replaceOption = new UIRow();
 	replaceOption.setClass( 'option' );
 	replaceOption.setTextContent( strings.getKey( 'menubar/replace' ) );
+	replaceOption.add( new UIText( IS_MAC ? 'CMD+R' : 'CTRL+R' ).setClass( 'key' ) );
 	replaceOption.onClick( function () {
 
 		const selected = editor.selected;
@@ -435,6 +438,7 @@ function injectMrppEditMenu( editor: any, editMenuOptions: any ): void {
 	const deleteOption = new UIRow();
 	deleteOption.setClass( 'option' );
 	deleteOption.setTextContent( strings.getKey( 'menubar/edit/delete' ) );
+	deleteOption.add( new UIText( 'DEL' ).setClass( 'key' ) );
 	deleteOption.onClick( function () {
 
 		deleteSelectedAsBatch();
@@ -757,18 +761,22 @@ function injectMrppEditMenu( editor: any, editMenuOptions: any ): void {
 
 	document.addEventListener( 'keydown', function ( event ) {
 
+		if ( event.isComposing ) return;
+
 		const activeElement = document.activeElement;
 		const isInputActive = activeElement && (
 			activeElement.tagName === 'INPUT' ||
 			activeElement.tagName === 'TEXTAREA' ||
+			activeElement.tagName === 'SELECT' ||
 			(activeElement as any).isContentEditable
 		);
 
 		const isCtrlOrCmd = event.ctrlKey || event.metaKey;
+		const key = typeof event.key === 'string' ? event.key.toLowerCase() : '';
 
-		if ( isCtrlOrCmd ) {
+		if ( isCtrlOrCmd && ! event.altKey && ! event.shiftKey ) {
 
-			switch ( event.key.toLowerCase() ) {
+			switch ( key ) {
 
 				case 'c':
 					if ( ! isInputActive ) {
@@ -785,6 +793,28 @@ function injectMrppEditMenu( editor: any, editMenuOptions: any ): void {
 
 						event.preventDefault();
 						pasteSelected();
+
+					}
+
+					break;
+
+				case 'd':
+					if ( ! isInputActive ) {
+
+						event.preventDefault();
+						event.stopPropagation();
+						cloneSelected();
+
+					}
+
+					break;
+
+				case 'r':
+					if ( ! isInputActive && selectedObjectType ) {
+
+						event.preventDefault();
+						event.stopPropagation();
+						replaceOption.dom.click();
 
 					}
 
