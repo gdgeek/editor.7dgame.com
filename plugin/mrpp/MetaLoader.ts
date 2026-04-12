@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { MetaFactory } from './MetaFactory.js';
+import { prepareMetaLoadState } from './prepareMetaLoadState.js';
 import type { MrppEditor, MrppObject3D, MrppScene } from '../types/mrpp.js';
 
 class MetaLoader {
@@ -248,6 +249,9 @@ class MetaLoader {
 			scene.name = 'Scene';
 			this.editor.setScene(scene);
 		}
+
+		prepareMetaLoadState(this.editor);
+		scene = this.editor.scene;
 
 		if (!meta.events) {
 
