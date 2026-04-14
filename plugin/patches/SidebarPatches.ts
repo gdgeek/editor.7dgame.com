@@ -456,22 +456,7 @@ function applySidebarPropertiesPatches( editor: MrppEditor, propertiesContainer:
 
 					const objectType = object.type ? object.type.toLowerCase() : '';
 
-					// Check for animations
-					const hasAnimations =
-						( object.animations && object.animations.length > 0 ) ||
-						( object.userData && object.userData.animations &&
-							object.userData.animations.length > 0 );
-
-					if ( hasAnimations ) {
-
-						propertiesContainer.addTab(
-							'animation',
-							strings.getKey( 'sidebar/animations' ),
-							animationPanel.container
-						);
-						animationPanel.update( object );
-
-					}
+					// Animation preview is temporarily hidden.
 
 					if ( editor.type && editor.type.toLowerCase() === 'meta' ) {
 
