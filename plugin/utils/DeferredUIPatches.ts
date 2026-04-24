@@ -295,7 +295,11 @@ export function applyDeferredUIPatches( editor: MrppEditor ): void {
 		// Inject CSS class with !important to reliably override inline styles
 		// set by Animation.js and AnimationResizer signal handlers.
 		const style = document.createElement( 'style' );
-		style.textContent = '.mrpp-animation-hidden { display: none !important; }';
+		style.textContent = [
+			'.mrpp-animation-hidden { display: none !important; }',
+			'body.mrpp-animation-panel-disabled #viewport { bottom: 0 !important; }',
+			'body.mrpp-animation-panel-disabled #toolbar { bottom: 20px !important; }'
+		].join( '\n' );
 		document.head.appendChild( style );
 
 		// Helper: query fresh each time since resizer may be added after animation panel
@@ -320,27 +324,22 @@ export function applyDeferredUIPatches( editor: MrppEditor ): void {
 		// Initially hidden
 		setAnimationHiddenClass( true );
 
-		if ( editor.signals && editor.signals.animationPanelChanged ) {
+		function keepAnimationPanelHidden(): void {
+
+			setAnimationHiddenClass( true );
+			document.body.classList.add( 'mrpp-animation-panel-disabled' );
 
 			editor.signals.animationPanelChanged.dispatch( false );
 
 		}
 
-		// Show only when selecting objects with animations, hide otherwise
-		editor.signals.objectSelected.add( function ( object: any ) {
-
-			const hasAnimations = object !== null &&
-				object.animations && object.animations.length > 0;
-
-			setAnimationHiddenClass( ! hasAnimations );
-
-			if ( ! hasAnimations ) {
-
-				editor.signals.animationPanelChanged.dispatch( false );
-
-			}
-
-		} );
+		// The animation preview now lives in the object properties panel, so the
+		// original bottom animation panel should stay hidden and release space.
+		keepAnimationPanelHidden();
+		editor.signals.objectSelected.add( keepAnimationPanelHidden );
+		editor.signals.objectAdded.add( keepAnimationPanelHidden );
+		editor.signals.objectRemoved.add( keepAnimationPanelHidden );
+		editor.signals.editorCleared.add( keepAnimationPanelHidden );
 
 	}
 

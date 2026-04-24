@@ -426,6 +426,11 @@ function SidebarObject( editor ) {
 	const mediaPreviewPlayers = new Map();
 	let activeMediaPreviewObject = null;
 	let mediaPreviewRenderFrame = null;
+	const animationPreviewStates = new Map();
+	const animationPreviewClipCache = new Map();
+	let activeAnimationPreviewObject = null;
+	let animationPreviewFrame = null;
+	let animationPreviewSelectSignature = '';
 
 	function removeAllEventListeners() {
 
@@ -888,6 +893,337 @@ function SidebarObject( editor ) {
 		objectMediaPreviewPlay.button.style.opacity = player.element.paused ? '1' : '0.65';
 		objectMediaPreviewPause.button.style.opacity = player.element.paused ? '0.65' : '1';
 		objectMediaPreviewStop.button.style.opacity = currentTime > 0 || ! player.element.paused ? '1' : '0.65';
+
+	}
+
+	function formatAnimationTime( seconds ) {
+
+		if ( ! Number.isFinite( seconds ) || seconds < 0 ) return '0.00';
+
+		return seconds.toFixed( 2 );
+
+	}
+
+	function getAnimationPreviewClips( object ) {
+
+		const sourceAnimations = object && Array.isArray( object.animations ) && object.animations.length > 0
+			? object.animations
+			: object && object.userData && Array.isArray( object.userData.animations )
+				? object.userData.animations
+				: [];
+		const cached = object ? animationPreviewClipCache.get( object.uuid ) : null;
+		if ( cached && cached.source === sourceAnimations && cached.length === sourceAnimations.length ) {
+
+			return cached.clips;
+
+		}
+
+		const clips = [];
+
+		for ( let i = 0; i < sourceAnimations.length; i ++ ) {
+
+			const animation = sourceAnimations[ i ];
+
+			if ( animation instanceof THREE.AnimationClip ) {
+
+				clips.push( animation );
+
+			} else {
+
+				try {
+
+					clips.push( THREE.AnimationClip.parse( animation ) );
+
+				} catch ( _error ) {}
+
+			}
+
+		}
+
+		if ( object ) {
+
+			animationPreviewClipCache.set( object.uuid, {
+				source: sourceAnimations,
+				length: sourceAnimations.length,
+				clips
+			} );
+
+		}
+
+		return clips;
+
+	}
+
+	function hasAnimationPreview( object ) {
+
+		return getAnimationPreviewClips( object ).length > 0;
+
+	}
+
+	function getAnimationPreviewState( object ) {
+
+		if ( ! animationPreviewStates.has( object.uuid ) ) {
+
+			animationPreviewStates.set( object.uuid, {
+				currentAction: null,
+				currentClip: null,
+				clipIndex: 0,
+				isPlaying: false
+			} );
+
+		}
+
+		return animationPreviewStates.get( object.uuid );
+
+	}
+
+	function stopAnimationPreviewFrame() {
+
+		if ( animationPreviewFrame !== null ) {
+
+			cancelAnimationFrame( animationPreviewFrame );
+			animationPreviewFrame = null;
+
+		}
+
+	}
+
+	function setAnimationButtonActiveState( action ) {
+
+		const state = editor.selected ? getAnimationPreviewState( editor.selected ) : null;
+		const isPlaying = !! ( state && state.isPlaying );
+		const currentTime = action ? action.time : 0;
+
+		objectAnimationPreviewPlay.button.style.opacity = isPlaying ? '0.65' : '1';
+		objectAnimationPreviewPause.button.style.opacity = isPlaying ? '1' : '0.65';
+		objectAnimationPreviewStop.button.style.opacity = currentTime > 0 || isPlaying ? '1' : '0.65';
+
+	}
+
+	function getSelectedAnimationPreviewClip( object ) {
+
+		const clips = getAnimationPreviewClips( object );
+		if ( clips.length === 0 ) return { clips, clip: null, index: - 1 };
+
+		const selectedIndex = Number( objectAnimationPreviewSelect.getValue() );
+		const index = Number.isFinite( selectedIndex )
+			? Math.max( 0, Math.min( clips.length - 1, selectedIndex ) )
+			: 0;
+
+		return { clips, clip: clips[ index ], index };
+
+	}
+
+	function refreshAnimationPreviewSelect( object ) {
+
+		const clips = getAnimationPreviewClips( object );
+		if ( clips.length === 0 ) {
+
+			if ( animationPreviewSelectSignature !== 'none' ) {
+
+				objectAnimationPreviewSelect.setOptions( { none: '无动画' } );
+				animationPreviewSelectSignature = 'none';
+
+			}
+			objectAnimationPreviewSelect.setValue( 'none' );
+			return clips;
+
+		}
+
+		const options = {};
+		const signatureParts = [ object.uuid ];
+		for ( let i = 0; i < clips.length; i ++ ) {
+
+			options[ i ] = clips[ i ].name || ( 'Animation ' + ( i + 1 ) );
+			signatureParts.push( options[ i ], String( clips[ i ].duration ) );
+
+		}
+		const signature = signatureParts.join( '|' );
+
+		const state = getAnimationPreviewState( object );
+		const index = Math.max( 0, Math.min( clips.length - 1, state.clipIndex || 0 ) );
+
+		if ( signature !== animationPreviewSelectSignature ) {
+
+			objectAnimationPreviewSelect.setOptions( options );
+			animationPreviewSelectSignature = signature;
+
+		}
+		objectAnimationPreviewSelect.setValue( String( index ) );
+
+		return clips;
+
+	}
+
+	function getAnimationPreviewAction( object ) {
+
+		const selectedClip = getSelectedAnimationPreviewClip( object );
+		const clip = selectedClip.clip;
+		if ( ! clip ) return null;
+
+		const state = getAnimationPreviewState( object );
+		if ( state.currentAction && state.currentClip === clip ) return state.currentAction;
+
+		if ( state.currentAction ) state.currentAction.stop();
+
+		state.currentClip = clip;
+		state.clipIndex = selectedClip.index;
+		state.currentAction = editor.mixer.clipAction( clip, object );
+
+		return state.currentAction;
+
+	}
+
+	function updateAnimationPreviewUI( object ) {
+
+		const selectedObject = editor.selected;
+		const isCurrentAnimation = !! ( object && selectedObject === object && hasAnimationPreview( object ) );
+
+		objectAnimationPreviewSelectRow.setDisplay( isCurrentAnimation ? '' : 'none' );
+		objectAnimationPreviewControlsRow.setDisplay( isCurrentAnimation ? '' : 'none' );
+		objectAnimationPreviewProgressRow.setDisplay( isCurrentAnimation ? '' : 'none' );
+
+		if ( ! isCurrentAnimation ) {
+
+			objectAnimationPreviewProgress.max = '0';
+			objectAnimationPreviewProgress.value = '0';
+			objectAnimationPreviewTime.textContent = '0.00 / 0.00';
+			setAnimationButtonActiveState( null );
+			return;
+
+		}
+
+		refreshAnimationPreviewSelect( object );
+
+		const action = getAnimationPreviewAction( object );
+		if ( ! action ) return;
+
+		const duration = action.getClip().duration || 0;
+		const currentTime = Math.max( 0, Math.min( Number.isFinite( action.time ) ? action.time : 0, duration || 0 ) );
+
+		objectAnimationPreviewProgress.max = String( duration || 0 );
+		objectAnimationPreviewProgress.value = String( duration > 0 ? currentTime : 0 );
+		objectAnimationPreviewProgress.disabled = duration <= 0;
+		objectAnimationPreviewTime.textContent = formatAnimationTime( currentTime ) + ' / ' + formatAnimationTime( duration );
+		setAnimationButtonActiveState( action );
+
+	}
+
+	function startAnimationPreviewFrame( object ) {
+
+		stopAnimationPreviewFrame();
+
+		const tick = function () {
+
+			if ( activeAnimationPreviewObject !== object || editor.selected !== object ) {
+
+				animationPreviewFrame = null;
+				return;
+
+			}
+
+			const state = getAnimationPreviewState( object );
+			const action = state.currentAction;
+
+			if ( ! state.isPlaying || ! action || action.paused || ! action.isRunning() ) {
+
+				state.isPlaying = false;
+				updateAnimationPreviewUI( object );
+				animationPreviewFrame = null;
+				return;
+
+			}
+
+			updateAnimationPreviewUI( object );
+			animationPreviewFrame = requestAnimationFrame( tick );
+
+		};
+
+		animationPreviewFrame = requestAnimationFrame( tick );
+
+	}
+
+	function stopAnimationPreview( object ) {
+
+		if ( ! object ) return;
+
+		const state = getAnimationPreviewState( object );
+		if ( state.currentAction ) state.currentAction.stop();
+		state.isPlaying = false;
+
+		if ( activeAnimationPreviewObject === object ) activeAnimationPreviewObject = null;
+		stopAnimationPreviewFrame();
+		editor.mixer.update( 0 );
+		editor.signals.viewportRedrawRequested.dispatch();
+		updateAnimationPreviewUI( object );
+
+	}
+
+	function pauseAnimationPreview( object ) {
+
+		if ( ! object ) return;
+
+		const action = getAnimationPreviewAction( object );
+		const state = getAnimationPreviewState( object );
+		if ( action ) action.paused = true;
+		state.isPlaying = false;
+		stopAnimationPreviewFrame();
+		updateAnimationPreviewUI( object );
+
+	}
+
+	function playAnimationPreview( object ) {
+
+		if ( ! object ) return;
+
+		if ( activeAnimationPreviewObject && activeAnimationPreviewObject !== object ) {
+
+			stopAnimationPreview( activeAnimationPreviewObject );
+
+		}
+
+		const action = getAnimationPreviewAction( object );
+		if ( ! action || action.getClip().duration <= 0 ) return;
+
+		if ( action.paused ) {
+
+			action.paused = false;
+
+		} else if ( ! action.isRunning() ) {
+
+			action.reset();
+			action.play();
+
+		}
+
+		const state = getAnimationPreviewState( object );
+		state.isPlaying = true;
+		activeAnimationPreviewObject = object;
+		updateAnimationPreviewUI( object );
+		startAnimationPreviewFrame( object );
+
+	}
+
+	function seekAnimationPreview( object, time ) {
+
+		if ( ! object || ! Number.isFinite( time ) ) return;
+
+		const action = getAnimationPreviewAction( object );
+		if ( ! action || action.getClip().duration <= 0 ) return;
+
+		const state = getAnimationPreviewState( object );
+		const wasPlaying = state.isPlaying && action.isRunning() && action.paused === false;
+
+		action.play();
+		action.time = Math.max( 0, Math.min( time, action.getClip().duration ) );
+		action.paused = ! wasPlaying;
+		state.isPlaying = wasPlaying;
+		editor.mixer.update( 0 );
+		editor.signals.viewportRedrawRequested.dispatch();
+		updateAnimationPreviewUI( object );
+
+		if ( wasPlaying ) startAnimationPreviewFrame( object );
+		else stopAnimationPreviewFrame();
 
 	}
 
@@ -1599,6 +1935,107 @@ function SidebarObject( editor ) {
 	objectResetRow.setDisplay( 'none' );
 	container.add( objectVisibleRow );
 
+	const stopLabel = strings.getKey( 'sidebar/animations/stop' ) !== '???' ? strings.getKey( 'sidebar/animations/stop' ) : '停止';
+	const objectAnimationPreviewSelectRow = new UIRow();
+	const objectAnimationPreviewSelect = new UISelect().setWidth( '190px' );
+	objectAnimationPreviewSelectRow.add( new UIText( strings.getKey( 'sidebar/animations/preview' ) ).setWidth( '90px' ) );
+	objectAnimationPreviewSelectRow.add( objectAnimationPreviewSelect );
+	objectAnimationPreviewSelectRow.setDisplay( 'none' );
+	container.add( objectAnimationPreviewSelectRow );
+
+	const objectAnimationPreviewControlsRow = new UIRow();
+	const objectAnimationPreviewActions = new UIDiv();
+	objectAnimationPreviewActions.dom.style.display = 'inline-flex';
+	objectAnimationPreviewActions.dom.style.alignItems = 'center';
+	objectAnimationPreviewActions.dom.style.gap = '6px';
+	const objectAnimationPreviewPlay = createTextActionButtonControl( strings.getKey( 'sidebar/animations/play' ), '44px', function () {
+
+		if ( editor.selected ) playAnimationPreview( editor.selected );
+
+	} );
+	const objectAnimationPreviewPause = createTextActionButtonControl( strings.getKey( 'sidebar/animations/pause' ), '44px', function () {
+
+		if ( editor.selected ) pauseAnimationPreview( editor.selected );
+
+	} );
+	const objectAnimationPreviewStop = createTextActionButtonControl( stopLabel, '44px', function () {
+
+		if ( editor.selected ) stopAnimationPreview( editor.selected );
+
+	} );
+	objectAnimationPreviewActions.add(
+		objectAnimationPreviewPlay.wrapper,
+		objectAnimationPreviewPause.wrapper,
+		objectAnimationPreviewStop.wrapper
+	);
+	objectAnimationPreviewControlsRow.add( new UIText( '' ).setWidth( '90px' ) );
+	objectAnimationPreviewControlsRow.add( objectAnimationPreviewActions );
+	objectAnimationPreviewControlsRow.setDisplay( 'none' );
+	container.add( objectAnimationPreviewControlsRow );
+
+	const objectAnimationPreviewProgressRow = new UIRow();
+	const objectAnimationPreviewProgressWrap = new UIDiv();
+	objectAnimationPreviewProgressWrap.dom.style.display = 'inline-flex';
+	objectAnimationPreviewProgressWrap.dom.style.alignItems = 'center';
+	objectAnimationPreviewProgressWrap.dom.style.gap = '8px';
+	objectAnimationPreviewProgressWrap.dom.style.width = '190px';
+	objectAnimationPreviewProgressWrap.dom.style.maxWidth = '190px';
+	const objectAnimationPreviewProgress = document.createElement( 'input' );
+	objectAnimationPreviewProgress.type = 'range';
+	objectAnimationPreviewProgress.min = '0';
+	objectAnimationPreviewProgress.max = '0';
+	objectAnimationPreviewProgress.step = '0.01';
+	objectAnimationPreviewProgress.value = '0';
+	objectAnimationPreviewProgress.style.flex = '1 1 auto';
+	objectAnimationPreviewProgress.style.width = '120px';
+	objectAnimationPreviewProgress.style.margin = '0';
+	objectAnimationPreviewProgress.style.accentColor = '#5f8dd3';
+	const objectAnimationPreviewTime = document.createElement( 'span' );
+	objectAnimationPreviewTime.textContent = '0.00 / 0.00';
+	objectAnimationPreviewTime.style.fontSize = '11px';
+	objectAnimationPreviewTime.style.color = '#777';
+	objectAnimationPreviewTime.style.whiteSpace = 'nowrap';
+	objectAnimationPreviewProgressWrap.dom.appendChild( objectAnimationPreviewProgress );
+	objectAnimationPreviewProgressWrap.dom.appendChild( objectAnimationPreviewTime );
+	objectAnimationPreviewProgressRow.add( new UIText( '' ).setWidth( '90px' ) );
+	objectAnimationPreviewProgressRow.add( objectAnimationPreviewProgressWrap );
+	objectAnimationPreviewProgressRow.setDisplay( 'none' );
+	container.add( objectAnimationPreviewProgressRow );
+
+	objectAnimationPreviewSelect.onChange( function () {
+
+		const object = editor.selected;
+		if ( ! object ) return;
+
+		const state = getAnimationPreviewState( object );
+		if ( state.currentAction ) state.currentAction.stop();
+		state.currentAction = null;
+		state.currentClip = null;
+		state.clipIndex = Number( objectAnimationPreviewSelect.getValue() ) || 0;
+		state.isPlaying = false;
+		stopAnimationPreviewFrame();
+
+		const action = getAnimationPreviewAction( object );
+		if ( action ) {
+
+			action.play();
+			action.paused = true;
+			action.time = 0;
+			editor.mixer.update( 0 );
+			editor.signals.viewportRedrawRequested.dispatch();
+
+		}
+
+		updateAnimationPreviewUI( object );
+
+	} );
+
+	objectAnimationPreviewProgress.addEventListener( 'input', function () {
+
+		if ( editor.selected ) seekAnimationPreview( editor.selected, Number( objectAnimationPreviewProgress.value ) );
+
+	} );
+
 	const objectLoopRow = new UIRow();
 	const objectLoop = new UICheckbox().onChange( update );
 	objectLoopRow.add( new UIText( strings.getKey( 'sidebar/object/loop' ) ).setWidth( '90px' ) );
@@ -1621,7 +2058,6 @@ function SidebarObject( editor ) {
 		if ( editor.selected ) pauseMediaPreview( editor.selected );
 
 	} );
-	const stopLabel = strings.getKey( 'sidebar/animations/stop' ) !== '???' ? strings.getKey( 'sidebar/animations/stop' ) : '停止';
 	const objectMediaPreviewStop = createTextActionButtonControl( stopLabel, '44px', function () {
 
 		if ( editor.selected ) stopMediaPreview( editor.selected );
@@ -1994,12 +2430,14 @@ function SidebarObject( editor ) {
 		objectLoopRow.setDisplay( isMediaType( object ) ? '' : 'none' );
 		objectMediaPreviewRow.setDisplay( isMediaType( object ) ? '' : 'none' );
 		objectMediaPreviewProgressRow.setDisplay( isMediaType( object ) ? '' : 'none' );
+		updateAnimationPreviewUI( object );
 		objectSortingRow.setDisplay( isPictureType( object ) ? '' : 'none' );
 		objectInputSignalsRow.setDisplay( isSceneEntity ? '' : 'none' );
 		objectOutputSignalsRow.setDisplay( isSceneEntity ? '' : 'none' );
 		updatePictureScaleConstraint( object );
 		if ( ! isSceneEntity ) hideSignalPopup();
 		if ( activeMediaPreviewObject && activeMediaPreviewObject !== object ) stopMediaPreview( activeMediaPreviewObject );
+		if ( activeAnimationPreviewObject && activeAnimationPreviewObject !== object ) stopAnimationPreview( activeAnimationPreviewObject );
 
 		if ( object && object.type && typeof object.type === 'string' && object.type.toLowerCase() === 'module' ) {
 
@@ -2070,6 +2508,7 @@ function SidebarObject( editor ) {
 			hideTransformActions();
 			hideSignalPopup();
 			if ( activeMediaPreviewObject ) stopMediaPreview( activeMediaPreviewObject );
+			if ( activeAnimationPreviewObject ) stopAnimationPreview( activeAnimationPreviewObject );
 
 		}
 
