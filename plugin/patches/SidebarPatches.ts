@@ -5,7 +5,6 @@ import { SidebarMultipleObjects } from '../ui/sidebar/Sidebar.MultipleObjects.js
 import { SidebarComponent } from '../ui/sidebar/Sidebar.Component.js';
 import { SidebarCommand } from '../ui/sidebar/Sidebar.Command.js';
 import { SidebarText } from '../ui/sidebar/Sidebar.Text.js';
-import { SidebarAnimation } from '../ui/sidebar/Sidebar.Animation.js';
 import type { MrppEditor } from '../types/mrpp.js';
 
 /**
@@ -358,7 +357,6 @@ function applySidebarPropertiesPatches( editor: MrppEditor, propertiesContainer:
 	const componentPanel = (SidebarComponent as any)( editor );
 	const commandPanel = (SidebarCommand as any)( editor );
 	const textPanel = (SidebarText as any)( editor );
-	const animationPanel = (SidebarAnimation as any)( editor );
 
 	// Save a reference to the vanilla object tab content.
 	// In r183, SidebarProperties uses addTab('objectTab', ..., objectPanel).
@@ -455,23 +453,6 @@ function applySidebarPropertiesPatches( editor: MrppEditor, propertiesContainer:
 				if ( object !== editor.scene ) {
 
 					const objectType = object.type ? object.type.toLowerCase() : '';
-
-					// Check for animations
-					const hasAnimations =
-						( object.animations && object.animations.length > 0 ) ||
-						( object.userData && object.userData.animations &&
-							object.userData.animations.length > 0 );
-
-					if ( hasAnimations ) {
-
-						propertiesContainer.addTab(
-							'animation',
-							strings.getKey( 'sidebar/animations' ),
-							animationPanel.container
-						);
-						animationPanel.update( object );
-
-					}
 
 					if ( editor.type && editor.type.toLowerCase() === 'meta' ) {
 
