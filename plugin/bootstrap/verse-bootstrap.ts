@@ -1,4 +1,8 @@
 import { VerseLoader } from '../mrpp/VerseLoader.js';
+import {
+	SPACE_REFERENCE_VISIBILITY_ACTION,
+	normalizeSpaceReferenceVisibility
+} from '../mrpp/SpaceReference.js';
 import { initializeGlobalShortcuts } from '../utils/GlobalShortcuts.js';
 import { applyEditorPatches } from '../patches/EditorPatches.js';
 import { applyLoaderPatches } from '../patches/LoaderPatches.js';
@@ -128,6 +132,7 @@ function initVerseEditor( editor: MrppEditor ): void {
 		if ( params.action === 'load' ) {
 
 			const data = params.data;
+			editor.data.space = data.data?.space || null;
 			loader.load( data.data );
 
 			// 保存用户信息
@@ -137,6 +142,14 @@ function initVerseEditor( editor: MrppEditor ): void {
 				console.log( 'Set user role:', editor.data.user.role );
 
 			}
+
+		}
+
+		if ( params.action === SPACE_REFERENCE_VISIBILITY_ACTION ) {
+
+			editor.spaceReference?.setVisible(
+				normalizeSpaceReferenceVisibility( params.data )
+			);
 
 		}
 

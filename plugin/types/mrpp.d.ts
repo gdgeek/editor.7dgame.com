@@ -35,6 +35,7 @@ export interface MrppEditor {
 	data: any;
 	metaLoader?: any;
 	verseLoader?: any;
+	spaceReference?: any;
 	scene: MrppScene;
 	camera: THREE.Camera;
 	selected: THREE.Object3D | null;

@@ -1,5 +1,6 @@
 import { applySidebarPatches, applySidebarPropertiesPatches, hideAutosaveCheckbox } from '../patches/SidebarPatches.js';
 import { applyMenubarPatches } from '../patches/MenubarPatches.js';
+import { installSpaceReferenceControl } from '../ui/SpaceReferenceControl.js';
 import type { MrppEditor } from '../types/mrpp.js';
 
 interface TabObj {
@@ -344,6 +345,7 @@ export function applyDeferredUIPatches( editor: MrppEditor ): void {
 	}
 
 	let viewportPatched = false;
+	let spaceReferenceControlPatched = false;
 
 	function tryPatchViewportControls(): void {
 
@@ -362,14 +364,27 @@ export function applyDeferredUIPatches( editor: MrppEditor ): void {
 
 	}
 
+	function tryPatchSpaceReferenceControl(): void {
+
+		if ( spaceReferenceControlPatched ) return;
+
+		const toolbar = document.getElementById( 'toolbar' );
+		if ( ! toolbar ) return;
+
+		spaceReferenceControlPatched = true;
+		installSpaceReferenceControl( editor );
+
+	}
+
 	function tryPatchAll(): void {
 
 		tryPatchSidebar();
 		tryPatchMenubar();
 		tryHideAnimation();
 		tryPatchViewportControls();
+		tryPatchSpaceReferenceControl();
 
-		if ( sidebarPatched && menubarPatched && animationHidden && viewportPatched ) {
+		if ( sidebarPatched && menubarPatched && animationHidden && viewportPatched && spaceReferenceControlPatched ) {
 
 			observer.disconnect();
 

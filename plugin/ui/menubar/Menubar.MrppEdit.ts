@@ -165,6 +165,7 @@ function injectMrppEditMenu( editor: any, editMenuOptions: any ): void {
 	const factory = new MetaFactory( editor );
 	const builder = new Builder();
 	const IS_MAC = navigator.platform.toUpperCase().indexOf( 'MAC' ) >= 0;
+	const isVerseEditor = ( editor.type || '' ).toLowerCase() === 'verse';
 
 	// Share the global resources map (created by MrppAdd or here)
 	const resources = window.resources || new Map();
@@ -183,6 +184,63 @@ function injectMrppEditMenu( editor: any, editMenuOptions: any ): void {
 	// Clipboard for copy / paste
 	let copiedObjects: any[] = [];
 	let contextMenuVisible = false;
+
+	// ── Bound space visibility ───────────────────────────
+
+	let spaceDivider: any = null;
+	let spaceToggleOption: any = null;
+
+	function updateSpaceToggleOption(): void {
+
+		if ( ! spaceToggleOption ) return;
+
+		const hasSpace = !! ( editor.data && editor.data.space ) ||
+			!! ( editor.spaceReference && editor.spaceReference.hasObject );
+		const isVisible = !! ( editor.spaceReference && editor.spaceReference.isVisible() );
+		spaceToggleOption.setTextContent( strings.getKey( isVisible ? 'menubar/space/hide' : 'menubar/space/show' ) );
+		spaceToggleOption.dom.style.display = hasSpace ? '' : 'none';
+		if ( spaceDivider ) {
+
+			spaceDivider.dom.style.display = hasSpace ? '' : 'none';
+
+		}
+
+	}
+
+	if ( isVerseEditor ) {
+
+		spaceDivider = new UIHorizontalRule();
+		spaceDivider.dom.style.display = 'none';
+		editMenuOptions.add( spaceDivider );
+
+		spaceToggleOption = new UIRow();
+		spaceToggleOption.setClass( 'option' );
+		spaceToggleOption.dom.style.display = 'none';
+		spaceToggleOption.onClick( function () {
+
+			if ( editor.spaceReference ) {
+
+				editor.spaceReference.toggleVisibility();
+				updateSpaceToggleOption();
+
+			}
+
+		} );
+		editMenuOptions.add( spaceToggleOption );
+
+		editor.signals.messageReceive.add( function ( params: any ) {
+
+			if ( params.action === 'load' ) {
+
+				window.setTimeout( updateSpaceToggleOption, 0 );
+
+			}
+
+		} );
+		editor.signals.sceneGraphChanged.add( updateSpaceToggleOption );
+		updateSpaceToggleOption();
+
+	}
 
 	// ── divider (shown only when an object is selected) ──
 

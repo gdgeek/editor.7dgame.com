@@ -737,6 +737,7 @@ function injectOutlinerSearchUI( editor: MrppEditor ): void {
  * - object === editor.camera (the editor camera)
  * - object === editor.scene (the Scene root node)
  * - object.name starts with '$' (internal objects like $lights)
+ * - object.userData.hidden === true (internal helper objects)
  */
 function injectOutlinerFilter( editor: MrppEditor ): void {
 
@@ -774,6 +775,7 @@ function injectOutlinerFilter( editor: MrppEditor ): void {
 			if (
 				object === editor.camera ||
 				object === editor.scene ||
+				( object.userData && object.userData.hidden === true ) ||
 				( object.name && object.name.charAt( 0 ) === '$' )
 			) {
 

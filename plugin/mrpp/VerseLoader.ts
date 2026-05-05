@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { MetaFactory } from './MetaFactory.js';
+import { SpaceReference } from './SpaceReference.js';
 import type { MrppEditor } from '../types/mrpp.js';
 
 class VerseLoader {
@@ -10,6 +11,7 @@ class VerseLoader {
 	isLoading: boolean;
 	loadingPromises: Promise<any>[];
 	factory: MetaFactory;
+	spaceReference: SpaceReference;
 	// dynamic property set in load() — typed loosely for editor API interaction
 	data: any;
 
@@ -24,6 +26,8 @@ class VerseLoader {
 
 		editor.renderer = new THREE.WebGLRenderer();
 		this.factory = new MetaFactory(editor);
+		this.spaceReference = new SpaceReference(editor);
+		editor.spaceReference = this.spaceReference;
 
 		// r183: editor.selector is a Selector class instance, not a filter function.
 		// Monkey-patch its select() method to add the hidden/type filter.
@@ -32,10 +36,12 @@ class VerseLoader {
 		// In verse mode, we also bubble up non-Module types to their Module parent.
 		const originalSelectorSelect = editor.selector.select.bind( editor.selector );
 		editor.selector.select = function ( object: THREE.Object3D ) {
+			if ( object && (object as any).userData?.spaceReference ) return;
 			if ( object && (object as any).userData && (object as any).userData.hidden ) {
 				// Walk up parent chain to find a non-hidden ancestor
 				let parent = object.parent;
 				while ( parent ) {
+					if ( (parent as any).userData?.spaceReference ) return;
 					if ( !(parent as any).userData?.hidden ) {
 						return editor.selector.select( parent );
 					}
@@ -351,6 +357,7 @@ class VerseLoader {
 		}
 
 		const root = this.editor.scene;
+		this.loadingPromises.push(this.spaceReference.load(verse.space));
 
 		if (verse.data !== null) {
 			const data = verse.data;
@@ -396,9 +403,15 @@ class VerseLoader {
 				this.editor.signals.savingFinished.dispatch();
 			});
 		} else {
-			this.isLoading = false;
-			this.editor.signals.savingFinished.dispatch();
-			this.json = JSON.stringify({ verse: await this.write(root) });
+			Promise.all(this.loadingPromises).then(async () => {
+				this.isLoading = false;
+				this.editor.signals.savingFinished.dispatch();
+				this.json = JSON.stringify({ verse: await this.write(root) });
+			}).catch((error: any) => {
+				console.error('Error loading space reference:', error);
+				this.isLoading = false;
+				this.editor.signals.savingFinished.dispatch();
+			});
 		}
 	}
 

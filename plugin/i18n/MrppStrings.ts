@@ -50,6 +50,9 @@ const mrppStrings: Record<string, Record<string, string>> = {
 		'menubar/scene/empty': 'No scenes loaded',
 		'menubar/entity': 'Entity',
 		'menubar/entity/empty': 'No entities loaded',
+		'menubar/space/show': 'Show Space',
+		'menubar/space/hide': 'Hide Space',
+		'space/reference/prefix': 'Using Space',
 
 		'menubar/code': 'Code',
 		'menubar/code/script': 'Script Edit',
@@ -334,6 +337,9 @@ const mrppStrings: Record<string, Record<string, string>> = {
 		'menubar/scene/empty': '暂无已加载场景',
 		'menubar/entity': '实体',
 		'menubar/entity/empty': '暂无已加载实体',
+		'menubar/space/show': '显示空间',
+		'menubar/space/hide': '隐藏空间',
+		'space/reference/prefix': '使用空间',
 
 		'menubar/code': '脚本',
 		'menubar/code/script': '脚本编辑',
@@ -619,6 +625,9 @@ const mrppStrings: Record<string, Record<string, string>> = {
 		'menubar/scene/empty': '読み込み済みシーンなし',
 		'menubar/entity': 'エンティティ',
 		'menubar/entity/empty': '読み込み済みエンティティなし',
+		'menubar/space/show': 'スペースを表示',
+		'menubar/space/hide': 'スペースを非表示',
+		'space/reference/prefix': '使用スペース',
 
 		'menubar/code': 'コーディング',
 		'menubar/code/script': 'スクリプト編集',
@@ -891,6 +900,9 @@ const mrppStrings: Record<string, Record<string, string>> = {
 		"menubar/scene/empty": "尚無已載入場景",
 		"menubar/entity": "實體",
 		"menubar/entity/empty": "尚無已載入實體",
+		"menubar/space/show": "顯示空間",
+		"menubar/space/hide": "隱藏空間",
+		"space/reference/prefix": "使用空間",
 
 		"menubar/code": "指令碼",
 		"menubar/code/script": "指令碼編輯",
@@ -1164,6 +1176,9 @@ const mrppStrings: Record<string, Record<string, string>> = {
 		"menubar/scene/empty": "ยังไม่มีฉากที่โหลด",
 		"menubar/entity": "เอนทิตี",
 		"menubar/entity/empty": "ยังไม่มีเอนทิตีที่โหลด",
+		"menubar/space/show": "แสดงพื้นที่",
+		"menubar/space/hide": "ซ่อนพื้นที่",
+		"space/reference/prefix": "ใช้พื้นที่",
 
 		"menubar/code": "สคริปต์",
 		"menubar/code/script": "แก้ไขสคริปต์",
