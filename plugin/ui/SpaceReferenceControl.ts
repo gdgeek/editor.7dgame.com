@@ -6,6 +6,7 @@ import {
 import type { MrppEditor } from '../types/mrpp.js';
 
 const CONTROL_ID = 'mrpp-space-reference-control';
+export const SPACE_REFERENCE_CONTROL_PARENT_ID = 'toolbar';
 const STYLE_ID = 'mrpp-space-reference-control-style';
 
 function getSpacePrefix( editor: MrppEditor ): string {
@@ -23,25 +24,18 @@ function injectSpaceReferenceControlStyle(): void {
 	style.id = STYLE_ID;
 	style.textContent = `
 		#${ CONTROL_ID } {
-			position: absolute;
-			left: calc(50% - 175px);
-			bottom: 98px;
-			z-index: 25;
 			display: inline-flex;
 			align-items: center;
 			gap: 6px;
-			max-width: min(360px, calc(100% - 420px));
-			min-height: 28px;
-			padding: 3px 6px 3px 10px;
+			max-width: 280px;
+			height: 32px;
+			padding: 0 8px 0 10px;
 			box-sizing: border-box;
 			color: #334155;
 			font: 13px/18px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 			white-space: nowrap;
-			background: rgba(255, 255, 255, 0.92);
-			border: 1px solid rgba(148, 163, 184, 0.45);
-			border-radius: 6px;
-			box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
-			transform: translateX(-50%);
+			background: #fff;
+			border-right: 3px solid #eee;
 		}
 
 		#${ CONTROL_ID }[hidden] {
@@ -50,10 +44,11 @@ function injectSpaceReferenceControlStyle(): void {
 
 		#${ CONTROL_ID }.is-hidden {
 			color: #64748b;
-			background: rgba(255, 255, 255, 0.76);
+			background: rgba(255, 255, 255, 0.72);
 		}
 
 		#${ CONTROL_ID } .space-reference-label {
+			flex: 1 1 auto;
 			min-width: 0;
 			overflow: hidden;
 			text-overflow: ellipsis;
@@ -90,8 +85,7 @@ function injectSpaceReferenceControlStyle(): void {
 
 		@media (max-width: 900px) {
 			#${ CONTROL_ID } {
-				left: 50%;
-				max-width: min(320px, calc(100% - 32px));
+				max-width: 220px;
 			}
 		}
 	`;
@@ -122,8 +116,8 @@ export function installSpaceReferenceControl( editor: MrppEditor ): void {
 
 	if ( document.getElementById( CONTROL_ID ) ) return;
 
-	const toolbar = document.getElementById( 'toolbar' );
-	if ( ! toolbar || ! toolbar.parentElement ) return;
+	const toolbar = document.getElementById( SPACE_REFERENCE_CONTROL_PARENT_ID );
+	if ( ! toolbar ) return;
 
 	injectSpaceReferenceControlStyle();
 
@@ -139,7 +133,7 @@ export function installSpaceReferenceControl( editor: MrppEditor ): void {
 	toggle.className = 'space-reference-toggle';
 	control.appendChild( toggle );
 
-	toolbar.parentElement.appendChild( control );
+	toolbar.insertBefore( control, toolbar.firstChild );
 
 	function update(): void {
 

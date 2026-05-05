@@ -7,6 +7,9 @@ import {
 	getSpaceModelUrl,
 	normalizeSpaceReferenceVisibility
 } from '../plugin-dist/mrpp/SpaceReference.js';
+import {
+	SPACE_REFERENCE_CONTROL_PARENT_ID
+} from '../plugin-dist/ui/SpaceReferenceControl.js';
 
 assert.equal(
 	getSpaceModelUrl( {
@@ -67,4 +70,9 @@ assert.equal(
 assert.equal(
 	formatSpaceReferenceLabel( { name: '   ' }, '使用空间' ),
 	''
+);
+
+assert.equal(
+	SPACE_REFERENCE_CONTROL_PARENT_ID,
+	'toolbar'
 );
