@@ -1,5 +1,4 @@
 import { MenubarScreenshot } from '../ui/menubar/Menubar.Screenshot.js';
-import { MenubarScene } from '../ui/menubar/Menubar.Scene.js';
 import { MenubarGoto } from '../ui/menubar/Menubar.Goto.js';
 import { MenubarEntity } from '../ui/menubar/Menubar.Entity.js';
 import { injectMrppAddMenu } from '../ui/menubar/Menubar.MrppAdd.js';
@@ -62,6 +61,24 @@ function wrapAsUIPanel( dom: HTMLElement ): { dom: HTMLElement; add( element: an
 
 		}
 	};
+
+}
+
+export type MrppAuxiliaryMenuType = 'entity' | 'screenshot' | null;
+
+function normalizeEditorType( editorType: string | null | undefined ): string {
+
+	return ( editorType || '' ).toLowerCase();
+
+}
+
+function getMrppAuxiliaryMenuType( editorType: string | null | undefined ): MrppAuxiliaryMenuType {
+
+	const normalized = normalizeEditorType( editorType );
+
+	if ( normalized === 'meta' ) return null;
+	if ( normalized === 'verse' ) return 'entity';
+	return 'screenshot';
 
 }
 
@@ -178,29 +195,16 @@ function applyMenubarPatches( editor: MrppEditor, menubarContainer: any ): void 
 
 	}
 
-	// ── 1. Add Screenshot / Scene menu ───────────────────
+	// ── 1. Add mode-specific auxiliary menu ──────────────
 
-	const editorType = ( editor.type || '' ).toLowerCase();
+	const auxiliaryMenuType = getMrppAuxiliaryMenuType( editor.type );
 
 	// Find the Status element (last child) so we can insert before it,
 	// keeping the status bar at the far right.
 	// In r183, MenubarStatus uses class 'menu right' (no id attribute).
 	const statusDom = menubarDom.querySelector( '.menu.right' );
 
-	if ( editorType === 'meta' ) {
-
-		const sceneMenu = (MenubarScene as any)( editor );
-		if ( statusDom ) {
-
-			menubarDom.insertBefore( sceneMenu.dom, statusDom );
-
-		} else {
-
-			menubarDom.appendChild( sceneMenu.dom );
-
-		}
-
-	} else if ( editorType === 'verse' ) {
+	if ( auxiliaryMenuType === 'entity' ) {
 
 		const entityMenu = (MenubarEntity as any)( editor );
 		if ( statusDom ) {
@@ -213,7 +217,7 @@ function applyMenubarPatches( editor: MrppEditor, menubarContainer: any ): void 
 
 		}
 
-	} else {
+	} else if ( auxiliaryMenuType === 'screenshot' ) {
 
 		const screenshotMenu = (MenubarScreenshot as any)( editor );
 		if ( statusDom ) {
@@ -304,4 +308,4 @@ function applyMenubarPatches( editor: MrppEditor, menubarContainer: any ): void 
 
 }
 
-export { applyMenubarPatches };
+export { applyMenubarPatches, getMrppAuxiliaryMenuType };
