@@ -925,7 +925,7 @@ function patchUIOutlinerPrototype(): void {
 
 	// ─── Override setValue to support multiSelect parameter ──────────
 
-	proto.setValue = function ( value: any, multiSelect?: boolean ): any {
+	proto.setValue = function ( value: any, multiSelect?: boolean, scrollIntoView?: boolean ): any {
 
 		ensureMultiSelectState( this );
 
@@ -962,7 +962,7 @@ function patchUIOutlinerPrototype(): void {
 
 		} else {
 
-			this._setSelection( [ index ], index, index, true );
+			this._setSelection( [ index ], index, index, scrollIntoView === true );
 
 		}
 

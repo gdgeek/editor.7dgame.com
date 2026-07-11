@@ -298,6 +298,14 @@ class UIInput extends UIElement {
 
 			event.stopPropagation();
 
+			if ( event.code === 'Enter' || event.key === 'Enter' ) {
+
+				event.preventDefault();
+				this.dispatchEvent( new Event( 'change', { bubbles: true, cancelable: true } ) );
+				this.blur();
+
+			}
+
 		} );
 
 		this.setValue( text );
@@ -556,6 +564,7 @@ class UINumber extends UIElement {
 		this.max = Infinity;
 
 		this.precision = 2;
+		this.displayPrecision = null;
 		this.step = 1;
 		this.unit = '';
 		this.nudge = 0.01;
@@ -642,6 +651,8 @@ class UINumber extends UIElement {
 
 			scope.dom.style.backgroundColor = '';
 			scope.dom.style.cursor = '';
+			scope.updateDisplay( scope.precision );
+			scope.dom.select();
 
 		}
 
@@ -649,6 +660,7 @@ class UINumber extends UIElement {
 
 			scope.dom.style.backgroundColor = 'transparent';
 			scope.dom.style.cursor = 'ns-resize';
+			scope.updateDisplay();
 
 		}
 
@@ -704,9 +716,7 @@ class UINumber extends UIElement {
 			if ( value > this.max ) value = this.max;
 
 			this.value = value;
-			this.dom.value = value.toFixed( this.precision );
-
-			if ( this.unit !== '' ) this.dom.value += ' ' + this.unit;
+			this.updateDisplay();
 
 		}
 
@@ -717,6 +727,27 @@ class UINumber extends UIElement {
 	setPrecision( precision ) {
 
 		this.precision = precision;
+
+		return this;
+
+	}
+
+	setDisplayPrecision( precision ) {
+
+		this.displayPrecision = precision;
+		this.updateDisplay();
+
+		return this;
+
+	}
+
+	updateDisplay( precision = this.displayPrecision !== null ? this.displayPrecision : this.precision ) {
+
+		if ( Number.isFinite( this.value ) === false ) return this;
+
+		this.dom.value = this.value.toFixed( precision );
+
+		if ( this.unit !== '' ) this.dom.value += ' ' + this.unit;
 
 		return this;
 

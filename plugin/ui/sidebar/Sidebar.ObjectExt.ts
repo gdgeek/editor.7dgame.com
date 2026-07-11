@@ -59,7 +59,7 @@ function getLocalizedObjectType( object: any, editor: any ): string {
 		sound: 'sidebar/object/type_value/audio',
 		prototype: 'sidebar/object/type_value/prototype',
 		voxel: 'sidebar/object/type_value/voxel',
-		phototype: 'sidebar/object/type_value/phototype',
+		phototype: 'sidebar/object/type_value/prototype',
 		prefab: 'sidebar/object/type_value/prefab'
 	};
 
@@ -1050,7 +1050,9 @@ function injectSidebarObjectExtensions( editor: any, sidebarObjectContainer: HTM
 
 		if ( objectUserDataRow ) {
 
-			(objectUserDataRow as any).style.display = editor.access.can( ABILITIES.UI_ADVANCED ) ? '' : 'none';
+			const rawType = ( object && object.userData && object.userData.type ) || ( object && object.type ) || '';
+			const isPrototype = [ 'prototype', 'phototype' ].includes( String( rawType ).toLowerCase() );
+			(objectUserDataRow as any).style.display = ( isPrototype || editor.access.can( ABILITIES.UI_ADVANCED ) ) ? '' : 'none';
 
 		}
 
@@ -1248,6 +1250,12 @@ function injectUserDataJsonViewer( editor: any ): void {
 	color: #333;
 }
 .mrpp-ud-input[type="number"] { width: 65px; color: #098658; }
+.mrpp-ud-json-input {
+	width: 110px;
+	min-height: 36px;
+	resize: vertical;
+	line-height: 14px;
+}
 .mrpp-ud-select {
 	font-family: monospace;
 	font-size: 11px;
@@ -1381,6 +1389,31 @@ function injectUserDataJsonViewer( editor: any ): void {
 
 			} );
 			td.appendChild( inp );
+			return td;
+
+		}
+
+		if ( key === 'data' && value && typeof value === 'object' ) {
+
+			const textarea = document.createElement( 'textarea' );
+			textarea.className = 'mrpp-ud-input mrpp-ud-json-input';
+			textarea.value = JSON.stringify( value, null, 2 );
+			textarea.addEventListener( 'change', function () {
+
+				try {
+
+					data[ key ] = JSON.parse( textarea.value );
+					textarea.style.borderColor = '#ccc';
+					if ( editor.selected ) editor.signals.objectChanged.dispatch( editor.selected );
+
+				} catch ( error ) {
+
+					textarea.style.borderColor = '#d66';
+
+				}
+
+			} );
+			td.appendChild( textarea );
 			return td;
 
 		}

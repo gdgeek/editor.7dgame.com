@@ -3,6 +3,9 @@ import { MetaFactory } from './MetaFactory.js';
 import { SpaceReference } from './SpaceReference.js';
 import type { MrppEditor } from '../types/mrpp.js';
 
+const hasVerseModules = (verse: any): boolean =>
+	Array.isArray(verse?.children?.modules) && verse.children.modules.length > 0;
+
 class VerseLoader {
 
 	editor: MrppEditor;
@@ -123,6 +126,12 @@ class VerseLoader {
 		}
 
 		const verse = await this.getVerse();
+		if (!hasVerseModules(verse)) {
+			const message = this.editor.strings.getKey('menubar/file/publish_empty') || '场景为空，请先添加实体后再发布。';
+			this.editor.showNotification(message, true);
+			return;
+		}
+
 		const data = { verse };
 		const json = JSON.stringify(data);
 

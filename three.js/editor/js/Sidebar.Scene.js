@@ -141,7 +141,8 @@ function SidebarScene( editor ) {
 			video: 'Video',
 			audio: 'Audio',
 			sound: 'Audio',
-			prototype: 'Prototype'
+			prototype: 'Prototype',
+			phototype: 'Prototype'
 		};
 
 		if ( isSceneEditor && normalizedType === 'module' ) {
@@ -200,23 +201,44 @@ function SidebarScene( editor ) {
 
 		if ( selectedObjects && selectedObjects.length > 1 ) {
 
-			if ( outliner.clearSelection ) outliner.clearSelection();
-			outliner.setValue( null );
+			if ( outliner.setValues ) {
 
-			for ( let i = 0; i < selectedObjects.length; i ++ ) {
+				outliner.setValues(
+					selectedObjects.map( function ( object ) { return object.id; } ),
+					editor.selected ? editor.selected.id : selectedObjects[ selectedObjects.length - 1 ].id
+				);
+				return;
 
-				outliner.setValue( selectedObjects[ i ].id, i > 0 );
+			} else {
+
+				if ( outliner.clearSelection ) outliner.clearSelection();
+				outliner.setValue( null );
+
+				for ( let i = 0; i < selectedObjects.length; i ++ ) {
+
+					outliner.setValue( selectedObjects[ i ].id, i > 0 );
+
+				}
+
+				return;
 
 			}
 
-			return;
 
 		}
 
 		if ( editor.selected !== null ) {
 
-			if ( outliner.clearSelection ) outliner.clearSelection();
-			outliner.setValue( editor.selected.id );
+			if ( outliner.setValues ) {
+
+				outliner.setValues( [ editor.selected.id ], editor.selected.id );
+
+			} else {
+
+				if ( outliner.clearSelection ) outliner.clearSelection();
+				outliner.setValue( editor.selected.id );
+
+			}
 
 		} else {
 

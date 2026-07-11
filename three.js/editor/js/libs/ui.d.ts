@@ -133,6 +133,7 @@ export class UINumber extends UIElement {
 	setValue(value: number): this;
 	setUnit(unit: string): this;
 	setPrecision(precision: number): this;
+	setDisplayPrecision(precision: number): this;
 	setStep(step: number): this;
 	setNudge(nudge: number): this;
 	setRange(min: number, max: number): this;
