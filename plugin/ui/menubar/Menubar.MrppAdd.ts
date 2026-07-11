@@ -35,10 +35,22 @@ function injectMrppAddMenu( editor: MrppEditor, addMenuOptions: any ): void {
 function _injectMetaMode( editor: MrppEditor, options: any, factory: any, builder: any, strings: any, resources: Map<string, any>, resourceMenuItems: Map<string, any> ): void {
 
 	// --- helpers ---
+	const allResourceTypes = [ 'voxel', 'polygen', 'picture', 'video', 'audio', 'particle', 'phototype' ];
+	let lastAvailableResourceTypes: any[] | null = Array.isArray( ( editor as any ).availableResourceTypes )
+		? ( editor as any ).availableResourceTypes
+		: null;
 
 	const updateResourceMenuItems = function ( availableTypes: any ) {
 
 		if ( ! availableTypes || ! Array.isArray( availableTypes ) ) return;
+		if ( availableTypes.length === 0 ) {
+
+			availableTypes = allResourceTypes;
+
+		}
+
+		lastAvailableResourceTypes = availableTypes;
+		( editor as any ).availableResourceTypes = availableTypes;
 
 		// Hide all resource menu items first
 		resourceMenuItems.forEach( ( menuItem ) => {
@@ -48,7 +60,7 @@ function _injectMetaMode( editor: MrppEditor, options: any, factory: any, builde
 		} );
 
 		// Show available ones
-		availableTypes.forEach( type => {
+		availableTypes.forEach( ( type: any ) => {
 
 			const menuItem = resourceMenuItems.get( type );
 			if ( menuItem ) {
@@ -58,6 +70,27 @@ function _injectMetaMode( editor: MrppEditor, options: any, factory: any, builde
 			}
 
 		} );
+
+	};
+
+	const requestAvailableResourceTypes = function () {
+
+		editor.signals.messageSend.dispatch( {
+			action: 'get-available-resource-types'
+		} );
+
+	};
+
+	const ensureResourceMenuItems = function () {
+
+		if ( lastAvailableResourceTypes ) {
+
+			updateResourceMenuItems( lastAvailableResourceTypes );
+			return;
+
+		}
+
+		requestAvailableResourceTypes();
 
 	};
 
@@ -212,7 +245,7 @@ function _injectMetaMode( editor: MrppEditor, options: any, factory: any, builde
 
 	};
 
-	const allPossibleResourceTypes = [ '-', 'voxel', 'polygen', 'picture', 'video', 'audio', 'particle', '-', 'phototype' ];
+	const allPossibleResourceTypes = [ '-', ...allResourceTypes.slice( 0, 6 ), '-', allResourceTypes[ 6 ] ];
 	allPossibleResourceTypes.forEach( type => {
 
 		if ( type === '-' ) {
@@ -228,17 +261,31 @@ function _injectMetaMode( editor: MrppEditor, options: any, factory: any, builde
 
 	} );
 
-	// Request available resource types
-	editor.signals.messageSend.dispatch( {
-		action: 'get-available-resource-types'
-	} );
+	const menuDom = options.dom && options.dom.parentElement;
+	if ( menuDom ) {
 
-	// If editor already has available resource types, update immediately
-	if ( editor.availableResourceTypes ) {
-
-		updateResourceMenuItems( editor.availableResourceTypes );
+		menuDom.addEventListener( 'mouseenter', ensureResourceMenuItems );
+		menuDom.addEventListener( 'click', ensureResourceMenuItems );
 
 	}
+
+	// Request available resource types
+	requestAvailableResourceTypes();
+
+	// If editor already has available resource types, update immediately
+	if ( ( editor as any ).availableResourceTypes ) {
+
+		updateResourceMenuItems( ( editor as any ).availableResourceTypes );
+
+	}
+
+	window.setTimeout( ensureResourceMenuItems, 300 );
+	window.setTimeout( function () {
+
+		if ( lastAvailableResourceTypes ) return;
+		updateResourceMenuItems( allResourceTypes );
+
+	}, 1200 );
 
 }
 

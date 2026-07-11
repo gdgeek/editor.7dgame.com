@@ -32,6 +32,7 @@ function Viewport( editor ) {
 
 	container.add( new ViewportControls( editor ) );
 	container.add( new ViewportInfo( editor ) );
+	container.dom.style.overflow = 'hidden';
 
 	//
 
@@ -65,12 +66,194 @@ function Viewport( editor ) {
 	//
 
 	const box = new THREE.Box3();
+	const dimensionSize = new THREE.Vector3();
+	const dimensionCenter = new THREE.Vector3();
+	const dimensionLabelPosition = new THREE.Vector3();
+	const dimensionScreenPosition = new THREE.Vector3();
+	const dimensionAxisOffset = new THREE.Vector3();
 
 	const selectionBox = new THREE.Box3Helper( box );
 	selectionBox.material.depthTest = false;
 	selectionBox.material.transparent = true;
 	selectionBox.visible = false;
 	sceneHelpers.add( selectionBox );
+
+	function createDimensionLabel( color ) {
+
+		const label = document.createElement( 'div' );
+		label.className = 'viewport-dimension-label';
+		label.style.position = 'absolute';
+		label.style.left = '0';
+		label.style.top = '0';
+		label.style.transform = 'translate(-50%, -50%)';
+		label.style.transformOrigin = 'center center';
+		label.style.padding = '2px 5px';
+		label.style.border = '1px solid ' + color;
+		label.style.borderRadius = '3px';
+		label.style.background = 'rgba(32, 32, 32, 0.72)';
+		label.style.color = '#fff';
+		label.style.fontSize = '12px';
+		label.style.lineHeight = '14px';
+		label.style.whiteSpace = 'nowrap';
+		label.style.pointerEvents = 'none';
+		label.style.zIndex = '20';
+		label.style.display = 'none';
+		container.dom.appendChild( label );
+		return label;
+
+	}
+
+	const dimensionLabels = {
+		x: createDimensionLabel( 'rgba(255, 64, 64, 0.95)' ),
+		y: createDimensionLabel( 'rgba(90, 255, 90, 0.95)' ),
+		z: createDimensionLabel( 'rgba(80, 130, 255, 0.95)' )
+	};
+
+	function hideDimensionLabels() {
+
+		dimensionLabels.x.style.display = 'none';
+		dimensionLabels.y.style.display = 'none';
+		dimensionLabels.z.style.display = 'none';
+
+	}
+
+	function isDimension2DObject( object ) {
+
+		if ( ! object ) return false;
+		const rawType = ( object.userData && object.userData.type ) || object.type || '';
+		const type = String( rawType ).toLowerCase();
+		return [ 'picture', 'video', 'text', 'sprite' ].includes( type );
+
+	}
+
+	function formatDimensionMeters( value ) {
+
+		const normalized = Math.abs( value ) < 0.0005 ? 0 : value;
+		return normalized.toFixed( 3 ) + ' m';
+
+	}
+
+	function getDimensionLabelScale() {
+
+		const width = container.dom.offsetWidth;
+		const height = container.dom.offsetHeight;
+		const corners = [
+			[ box.min.x, box.min.y, box.min.z ],
+			[ box.min.x, box.min.y, box.max.z ],
+			[ box.min.x, box.max.y, box.min.z ],
+			[ box.min.x, box.max.y, box.max.z ],
+			[ box.max.x, box.min.y, box.min.z ],
+			[ box.max.x, box.min.y, box.max.z ],
+			[ box.max.x, box.max.y, box.min.z ],
+			[ box.max.x, box.max.y, box.max.z ]
+		];
+		let minX = Infinity;
+		let minY = Infinity;
+		let maxX = - Infinity;
+		let maxY = - Infinity;
+
+		for ( let i = 0; i < corners.length; i ++ ) {
+
+			dimensionLabelPosition.set( corners[ i ][ 0 ], corners[ i ][ 1 ], corners[ i ][ 2 ] ).project( editor.viewportCamera );
+			if ( dimensionLabelPosition.z < - 1 || dimensionLabelPosition.z > 1 ) continue;
+
+			const screenX = ( dimensionLabelPosition.x * 0.5 + 0.5 ) * width;
+			const screenY = ( - dimensionLabelPosition.y * 0.5 + 0.5 ) * height;
+			minX = Math.min( minX, screenX );
+			minY = Math.min( minY, screenY );
+			maxX = Math.max( maxX, screenX );
+			maxY = Math.max( maxY, screenY );
+
+		}
+
+		if ( minX === Infinity ) return 1;
+
+		const projectedSize = Math.max( maxX - minX, maxY - minY );
+		return Math.min( 1.8, Math.max( 0.55, projectedSize / 240 ) );
+
+	}
+
+	function updateDimensionLabel() {
+
+		const object = editor.selected;
+		const selectedObjects = Array.isArray( editor.selectedObjects ) ? editor.selectedObjects.filter( Boolean ) : [];
+		const shouldShow = object &&
+			object !== scene &&
+			object !== camera &&
+			selectedObjects.length <= 1 &&
+			object.userData &&
+			object.userData.showDimensions !== false &&
+			selectionBox.visible === true &&
+			box.isEmpty() === false;
+
+		if ( ! shouldShow ) {
+
+			hideDimensionLabels();
+			return;
+
+		}
+
+		box.getSize( dimensionSize );
+		box.getCenter( dimensionCenter );
+
+		hideDimensionLabels();
+		const dimensionLabelScale = getDimensionLabelScale();
+
+		function placeDimensionLabel( label, value, worldPosition, screenOffsetX, screenOffsetY ) {
+
+			dimensionLabelPosition.copy( worldPosition ).project( editor.viewportCamera );
+
+			if ( dimensionLabelPosition.z < - 1 || dimensionLabelPosition.z > 1 ) {
+
+				label.style.display = 'none';
+				return;
+
+			}
+
+			const width = container.dom.offsetWidth;
+			const height = container.dom.offsetHeight;
+			dimensionScreenPosition.set(
+				( dimensionLabelPosition.x * 0.5 + 0.5 ) * width + screenOffsetX * dimensionLabelScale,
+				( - dimensionLabelPosition.y * 0.5 + 0.5 ) * height + screenOffsetY * dimensionLabelScale,
+				0
+			);
+
+			label.textContent = formatDimensionMeters( value );
+			label.style.display = 'block';
+			label.style.transform = 'translate(' + dimensionScreenPosition.x + 'px, ' + dimensionScreenPosition.y + 'px) translate(-50%, -50%) scale(' + dimensionLabelScale.toFixed( 3 ) + ')';
+
+		}
+
+		const is2D = isDimension2DObject( object );
+
+		dimensionAxisOffset.set( dimensionCenter.x, box.max.y, box.max.z );
+		placeDimensionLabel( dimensionLabels.x, dimensionSize.x, dimensionAxisOffset, 0, - 10 );
+
+		if ( is2D ) {
+
+			if ( dimensionSize.y >= dimensionSize.z ) {
+
+				dimensionAxisOffset.set( box.max.x, dimensionCenter.y, box.max.z );
+				placeDimensionLabel( dimensionLabels.y, dimensionSize.y, dimensionAxisOffset, 10, 0 );
+
+			} else {
+
+				dimensionAxisOffset.set( box.max.x, box.max.y, dimensionCenter.z );
+				placeDimensionLabel( dimensionLabels.z, dimensionSize.z, dimensionAxisOffset, 10, - 4 );
+
+			}
+
+			return;
+
+		}
+
+		dimensionAxisOffset.set( box.max.x, dimensionCenter.y, box.max.z );
+		placeDimensionLabel( dimensionLabels.y, dimensionSize.y, dimensionAxisOffset, 10, 0 );
+
+		dimensionAxisOffset.set( box.max.x, box.max.y, dimensionCenter.z );
+		placeDimensionLabel( dimensionLabels.z, dimensionSize.z, dimensionAxisOffset, 10, - 4 );
+
+	}
 
 	let objectPositionOnDown = null;
 	let objectRotationOnDown = null;
@@ -1041,6 +1224,7 @@ function Viewport( editor ) {
 
 		endTime = performance.now();
 		editor.signals.sceneRendered.dispatch( endTime - startTime );
+		updateDimensionLabel();
 
 	}
 

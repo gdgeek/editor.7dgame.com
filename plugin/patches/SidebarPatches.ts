@@ -954,7 +954,8 @@ function injectOutlinerCustomIcons( editor: MrppEditor ): void {
 			video: 'Video',
 			audio: 'Audio',
 			sound: 'Audio',
-			prototype: 'Prototype'
+			prototype: 'Prototype',
+			phototype: 'Prototype'
 		};
 
 		if ( isSceneEditor && normalizedType === 'module' ) {

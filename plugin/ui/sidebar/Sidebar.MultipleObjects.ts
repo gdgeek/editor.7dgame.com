@@ -109,6 +109,119 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 		return Number.isFinite(value) ? value : null;
 	};
 
+	const toFiniteNumber = function (value: any, fallback: number): number {
+		const numberValue = Number(value);
+		return Number.isFinite(numberValue) ? numberValue : fallback;
+	};
+
+	const readUnifiedTransformClipboard = function () {
+		const transformData = localStorage.getItem('multipleObjectsTransform');
+		if (!transformData) return null;
+
+		try {
+			const data = JSON.parse(transformData);
+			const selectedGroup = editor.multiSelectGroup;
+			const selectedObjects = editor.getSelectedObjects();
+			const fallbackObject = selectedObjects[0] || null;
+
+			return {
+				position: new THREE.Vector3(
+					toFiniteNumber(data.position?.x, fallbackObject?.position.x ?? selectedGroup?.position.x ?? 0),
+					toFiniteNumber(data.position?.y, fallbackObject?.position.y ?? selectedGroup?.position.y ?? 0),
+					toFiniteNumber(data.position?.z, fallbackObject?.position.z ?? selectedGroup?.position.z ?? 0)
+				),
+				rotation: new THREE.Euler(
+					toFiniteNumber(data.rotation?.x, fallbackObject?.rotation.x != null ? fallbackObject.rotation.x * THREE.MathUtils.RAD2DEG : selectedGroup?.rotation.x ? selectedGroup.rotation.x * THREE.MathUtils.RAD2DEG : 0) * THREE.MathUtils.DEG2RAD,
+					toFiniteNumber(data.rotation?.y, fallbackObject?.rotation.y != null ? fallbackObject.rotation.y * THREE.MathUtils.RAD2DEG : selectedGroup?.rotation.y ? selectedGroup.rotation.y * THREE.MathUtils.RAD2DEG : 0) * THREE.MathUtils.DEG2RAD,
+					toFiniteNumber(data.rotation?.z, fallbackObject?.rotation.z != null ? fallbackObject.rotation.z * THREE.MathUtils.RAD2DEG : selectedGroup?.rotation.z ? selectedGroup.rotation.z * THREE.MathUtils.RAD2DEG : 0) * THREE.MathUtils.DEG2RAD
+				),
+				scale: new THREE.Vector3(
+					toFiniteNumber(data.scale?.x, fallbackObject?.scale.x ?? selectedGroup?.scale.x ?? 1),
+					toFiniteNumber(data.scale?.y, fallbackObject?.scale.y ?? selectedGroup?.scale.y ?? 1),
+					toFiniteNumber(data.scale?.z, fallbackObject?.scale.z ?? selectedGroup?.scale.z ?? 1)
+				)
+			};
+		} catch (e) {
+			console.error('无法读取多选变换剪贴板', e);
+			return null;
+		}
+	};
+
+	const applyUnifiedTransformClipboard = function () {
+		const objects = editor.getSelectedObjects();
+		const multiSelectGroup = editor.multiSelectGroup;
+		const data = readUnifiedTransformClipboard();
+
+		if (!data || objects.length === 0 || !multiSelectGroup) return;
+
+		const multiCommand = new MultiTransformCommand(editor, objects, 'MultiTransformPasteCommand', '粘贴多对象变换');
+
+		for (let i = 0; i < objects.length; i++) {
+			const object = objects[i];
+
+			object.position.copy(data.position);
+			object.rotation.copy(data.rotation);
+			object.scale.copy(data.scale);
+			object.updateMatrixWorld(true);
+		}
+
+		multiSelectGroup.position.copy(data.position);
+		multiSelectGroup.rotation.copy(data.rotation);
+		multiSelectGroup.scale.copy(data.scale);
+
+		for (let i = 0; i < objects.length; i++) {
+			objects[i].userData.offsetFromCenter = objects[i].position.clone().sub(multiSelectGroup.position);
+		}
+
+		isApplyingTransformFromPanel = true;
+
+		try {
+			editor.signals.sceneGraphChanged.dispatch();
+			editor.signals.multipleObjectsTransformChanged.dispatch(multiSelectGroup);
+			editor.execute(multiCommand);
+			updateUIWithoutCommand(objects);
+			editor.showNotification(strings.getKey('sidebar/multi_objects/paste_transform_success'));
+		} finally {
+			isApplyingTransformFromPanel = false;
+		}
+	};
+
+	const writeUnifiedTransformClipboard = function () {
+		const selectedObjects = editor.getSelectedObjects();
+		const fallbackObject = selectedObjects[0];
+		if (!fallbackObject) return false;
+
+		const positionX = getNumberInputValue(multipleObjectsPositionX);
+		const positionY = getNumberInputValue(multipleObjectsPositionY);
+		const positionZ = getNumberInputValue(multipleObjectsPositionZ);
+		const rotationX = getNumberInputValue(multipleObjectsRotationX);
+		const rotationY = getNumberInputValue(multipleObjectsRotationY);
+		const rotationZ = getNumberInputValue(multipleObjectsRotationZ);
+		const scaleX = getNumberInputValue(multipleObjectsScaleX);
+		const scaleY = getNumberInputValue(multipleObjectsScaleY);
+		const scaleZ = getNumberInputValue(multipleObjectsScaleZ);
+
+		localStorage.setItem('multipleObjectsTransform', JSON.stringify({
+			position: {
+				x: positionX ?? fallbackObject.position.x,
+				y: positionY ?? fallbackObject.position.y,
+				z: positionZ ?? fallbackObject.position.z
+			},
+			rotation: {
+				x: rotationX ?? fallbackObject.rotation.x * THREE.MathUtils.RAD2DEG,
+				y: rotationY ?? fallbackObject.rotation.y * THREE.MathUtils.RAD2DEG,
+				z: rotationZ ?? fallbackObject.rotation.z * THREE.MathUtils.RAD2DEG
+			},
+			scale: {
+				x: scaleX ?? fallbackObject.scale.x,
+				y: scaleY ?? fallbackObject.scale.y,
+				z: scaleZ ?? fallbackObject.scale.z
+			}
+		}));
+
+		return true;
+	};
+
 	// 多选对象计数
 	const multipleObjectsCountRow = new UIRow();
 	const multipleObjectsCount = new UIText('');
@@ -654,19 +767,22 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 	// 位置
 	const multipleObjectsPositionRow = new UIRow();
 	const multipleObjectsPositionX = new UINumber()
-		.setPrecision(3)
+		.setPrecision(6)
+		.setDisplayPrecision(3)
 		.setWidth('40px')
 		.onChange(updatePosition);
 	multipleObjectsPositionX.dom.classList.add('axis-x'); // X轴 - 红色
 
 	const multipleObjectsPositionY = new UINumber()
-		.setPrecision(3)
+		.setPrecision(6)
+		.setDisplayPrecision(3)
 		.setWidth('40px')
 		.onChange(updatePosition);
 	multipleObjectsPositionY.dom.classList.add('axis-y'); // Y轴 - 绿色
 
 	const multipleObjectsPositionZ = new UINumber()
-		.setPrecision(3)
+		.setPrecision(6)
+		.setDisplayPrecision(3)
 		.setWidth('40px')
 		.onChange(updatePosition);
 	multipleObjectsPositionZ.dom.classList.add('axis-z'); // Z轴 - 蓝色
@@ -782,19 +898,22 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 	// 旋转
 	const multipleObjectsRotationRow = new UIRow();
 	const multipleObjectsRotationX = new UINumber()
-		.setPrecision(3)
+		.setPrecision(6)
+		.setDisplayPrecision(3)
 		.setWidth('40px')
 		.onChange(updateRotation);
 	multipleObjectsRotationX.dom.classList.add('axis-x'); // X轴 - 红色
 
 	const multipleObjectsRotationY = new UINumber()
-		.setPrecision(3)
+		.setPrecision(6)
+		.setDisplayPrecision(3)
 		.setWidth('40px')
 		.onChange(updateRotation);
 	multipleObjectsRotationY.dom.classList.add('axis-y'); // Y轴 - 绿色
 
 	const multipleObjectsRotationZ = new UINumber()
-		.setPrecision(3)
+		.setPrecision(6)
+		.setDisplayPrecision(3)
 		.setWidth('40px')
 		.onChange(updateRotation);
 	multipleObjectsRotationZ.dom.classList.add('axis-z'); // Z轴 - 蓝色
@@ -907,21 +1026,24 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 	// 缩放
 	const multipleObjectsScaleRow = new UIRow();
 	const multipleObjectsScaleX = new UINumber()
-		.setPrecision(3)
+		.setPrecision(6)
+		.setDisplayPrecision(3)
 		.setWidth('40px')
 		.setValue(1)
 		.onChange(updateScale);
 	multipleObjectsScaleX.dom.classList.add('axis-x'); // X轴 - 红色
 
 	const multipleObjectsScaleY = new UINumber()
-		.setPrecision(3)
+		.setPrecision(6)
+		.setDisplayPrecision(3)
 		.setWidth('40px')
 		.setValue(1)
 		.onChange(updateScale);
 	multipleObjectsScaleY.dom.classList.add('axis-y'); // Y轴 - 绿色
 
 	const multipleObjectsScaleZ = new UINumber()
-		.setPrecision(3)
+		.setPrecision(6)
+		.setDisplayPrecision(3)
 		.setWidth('40px')
 		.setValue(1)
 		.onChange(updateScale);
@@ -1077,47 +1199,24 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 
 	// 添加全部变换数据的复制粘贴行
 	const transformActionsRow = new UIRow();
+	transformActionsRow.dom.style.zIndex = '3';
+	transformActionsRow.dom.style.marginLeft = '90px';
+	transformActionsRow.dom.style.marginTop = '4px';
+	transformActionsRow.dom.style.marginBottom = '6px';
+	transformActionsRow.dom.style.width = '120px';
+	transformActionsRow.dom.style.position = 'static';
+	transformActionsRow.dom.style.display = 'flex';
+	transformActionsRow.dom.style.alignItems = 'center';
+	transformActionsRow.dom.style.justifyContent = 'center';
+	transformActionsRow.dom.style.clear = 'both';
 
 	// 全部变换数据复制按钮
 	const transformCopyButton = new UIButton('')
-		.setWidth('26px')
+		.setWidth('30px')
 		.onClick(function () {
-			const positionData = new THREE.Vector3(
-				multipleObjectsPositionX.getValue(),
-				multipleObjectsPositionY.getValue(),
-				multipleObjectsPositionZ.getValue()
-			);
-			const rotationData = new THREE.Vector3(
-				multipleObjectsRotationX.getValue(),
-				multipleObjectsRotationY.getValue(),
-				multipleObjectsRotationZ.getValue()
-			);
-			const scaleData = new THREE.Vector3(
-				multipleObjectsScaleX.getValue(),
-				multipleObjectsScaleY.getValue(),
-				multipleObjectsScaleZ.getValue()
-			);
-
-			// 更新全局剪贴板
-			localStorage.setItem('multipleObjectsTransform', JSON.stringify({
-				position: {
-					x: positionData.x,
-					y: positionData.y,
-					z: positionData.z
-				},
-				rotation: {
-					x: rotationData.x,
-					y: rotationData.y,
-					z: rotationData.z
-				},
-				scale: {
-					x: scaleData.x,
-					y: scaleData.y,
-					z: scaleData.z
-				}
-			}));
-
-			editor.showNotification(strings.getKey('sidebar/multi_objects/copy_transform_success'));
+			if (writeUnifiedTransformClipboard()) {
+				editor.showNotification(strings.getKey('sidebar/multi_objects/copy_transform_success'));
+			}
 		});
 
 	transformCopyButton.dom.title = strings.getKey('sidebar/multi_objects/copy_transform');
@@ -1127,44 +1226,16 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 	const transformCopyIcon = document.createElement('img');
 	transformCopyIcon.src = 'images/copy.png';
 	styleActionIcon(transformCopyIcon);
+	transformCopyIcon.style.width = '15px';
+	transformCopyIcon.style.height = '15px';
 	transformCopyButton.dom.appendChild(transformCopyIcon);
 
 	// 全部变换数据粘贴按钮
 	const transformPasteButton = new UIButton('')
-		.setMarginLeft('2px')
-		.setWidth('26px')
+		.setMarginLeft('3px')
+		.setWidth('30px')
 		.onClick(function () {
-			const transformData = localStorage.getItem('multipleObjectsTransform');
-			if (transformData) {
-				try {
-					const data = JSON.parse(transformData);
-
-					if (data.position) {
-						multipleObjectsPositionX.setValue(data.position.x);
-						multipleObjectsPositionY.setValue(data.position.y);
-						multipleObjectsPositionZ.setValue(data.position.z);
-						updatePosition();
-					}
-
-					if (data.rotation) {
-						multipleObjectsRotationX.setValue(data.rotation.x);
-						multipleObjectsRotationY.setValue(data.rotation.y);
-						multipleObjectsRotationZ.setValue(data.rotation.z);
-						updateRotation();
-					}
-
-					if (data.scale) {
-						multipleObjectsScaleX.setValue(data.scale.x);
-						multipleObjectsScaleY.setValue(data.scale.y);
-						multipleObjectsScaleZ.setValue(data.scale.z);
-						updateScale();
-					}
-
-					editor.showNotification(strings.getKey('sidebar/multi_objects/paste_transform_success'));
-				} catch (e) {
-					console.error('无法粘贴变换数据', e);
-				}
-			}
+			applyUnifiedTransformClipboard();
 		});
 
 	transformPasteButton.dom.title = strings.getKey('sidebar/multi_objects/paste_transform');
@@ -1174,11 +1245,13 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 	const transformPasteIcon = document.createElement('img');
 	transformPasteIcon.src = 'images/paste.png';
 	styleActionIcon(transformPasteIcon);
+	transformPasteIcon.style.width = '15px';
+	transformPasteIcon.style.height = '15px';
 	transformPasteButton.dom.appendChild(transformPasteIcon);
 
 	const transformResetButton = new UIButton('')
-		.setMarginLeft('2px')
-		.setWidth('26px')
+		.setMarginLeft('3px')
+		.setWidth('30px')
 		.onClick(function () {
 			resetSelectedTransform();
 		});
@@ -1189,10 +1262,13 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 	transformResetIcon.textContent = '↺';
 	transformResetIcon.style.display = 'block';
 	transformResetIcon.style.margin = '0 auto';
-	transformResetIcon.style.fontSize = '15px';
+	transformResetIcon.style.fontSize = '17px';
 	transformResetIcon.style.lineHeight = '1';
 	transformResetIcon.style.color = '#888';
 	transformResetButton.dom.appendChild(transformResetIcon);
+	transformCopyButton.dom.style.height = '20px';
+	transformPasteButton.dom.style.height = '20px';
+	transformResetButton.dom.style.height = '20px';
 
 	transformActionsRow.add(transformCopyButton);
 	transformActionsRow.add(transformPasteButton);
@@ -1201,7 +1277,7 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 	// 默认隐藏全局复制粘贴按钮行
 	transformActionsRow.setDisplay('none');
 
-	container.add(transformActionsRow);
+	container.dom.insertBefore(transformActionsRow.dom, multipleObjectsVisibleRow.dom);
 
 	// 创建变换组边框div
 	const createTransformBorder = function () {
@@ -1270,18 +1346,10 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 		transformBorder.style.width = dataAreaWidth + 'px';
 		transformBorder.style.height = (scaleRowBottom - posRowTop + 10) + 'px';
 
-		// 获取辅助功能按钮行的位置
-		// 更新按钮位置，放在数据区域的下方并水平居中
-		const buttonWidth = transformCopyButton.dom.offsetWidth + transformPasteButton.dom.offsetWidth + transformResetButton.dom.offsetWidth + 4;
-		const buttonLeft = dataAreaLeft + (dataAreaWidth - buttonWidth) / 2;
-
-		transformActionsRow.dom.style.position = 'absolute';
-		transformActionsRow.dom.style.left = buttonLeft + 'px';
-		// 放在变换区域下方
-		const buttonTop = scaleRowBottom + 5;
-
-		// 统一放在下方，与Sidebar.Object.js保持一致
-		transformActionsRow.dom.style.top = buttonTop + 'px';
+		transformActionsRow.dom.style.position = 'static';
+		transformActionsRow.dom.style.left = '';
+		transformActionsRow.dom.style.top = '';
+		transformActionsRow.dom.style.zIndex = '3';
 	};
 
 	// 创建空白间隙行
@@ -1304,14 +1372,12 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 	// 显示变换操作和边框
 	const showTransformActions = function () {
 		transformActionsRow.setDisplay('');
+		transformActionsRow.dom.style.display = 'flex';
 		transformCopyButton.dom.style.display = 'inline-flex';
 		transformPasteButton.dom.style.display = 'inline-flex';
 		transformResetButton.dom.style.display = 'inline-flex';
 		transformBorder.style.display = 'none';
 		updateBorderPosition();
-
-		// 显示间隙空白行
-		getSpacerRow().setDisplay('');
 	};
 
 	// 隐藏变换操作和边框
@@ -1319,11 +1385,6 @@ function SidebarMultipleObjects(editor: any): { container: InstanceType<typeof U
 		clearTransformHoverArtifacts();
 		transformActionsRow.setDisplay('none');
 		transformBorder.style.display = 'none';
-
-		// 隐藏间隙空白行
-		if (spacerRow) {
-			spacerRow.setDisplay('none');
-		}
 	};
 
 	// 存储事件监听器引用，以便稍后移除

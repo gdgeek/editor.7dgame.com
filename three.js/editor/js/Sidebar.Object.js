@@ -61,7 +61,7 @@ function getLocalizedObjectType( object, editor ) {
 		sound: 'sidebar/object/type_value/audio',
 		prototype: 'sidebar/object/type_value/prototype',
 		voxel: 'sidebar/object/type_value/voxel',
-		phototype: 'sidebar/object/type_value/phototype',
+		phototype: 'sidebar/object/type_value/prototype',
 		prefab: 'sidebar/object/type_value/prefab'
 	};
 
@@ -201,6 +201,101 @@ function isPictureType( object ) {
 	}
 
 	return false;
+
+}
+
+function isPrototypeType( object ) {
+
+	if ( ! object ) return false;
+
+	const rawType = ( object.userData && object.userData.type ) || object.type || '';
+	const type = String( rawType ).toLowerCase();
+	return type === 'prototype' || type === 'phototype';
+
+}
+
+function getPrototypeDataValue( object ) {
+
+	if ( ! object || ! object.userData ) return '';
+
+	const data = object.userData.data;
+	if ( data == null ) return '';
+
+	if ( typeof data === 'object' ) {
+
+		if ( data.type != null ) return String( data.type );
+
+		try {
+
+			return JSON.stringify( data );
+
+		} catch ( error ) {
+
+			return '';
+
+		}
+
+	}
+
+	if ( typeof data === 'string' ) {
+
+		try {
+
+			const parsed = JSON.parse( data );
+			if ( parsed && typeof parsed === 'object' && parsed.type != null ) return String( parsed.type );
+
+		} catch ( error ) {
+
+			// Plain string data is still editable as-is.
+
+		}
+
+	}
+
+	return String( data );
+
+}
+
+function setPrototypeDataValue( editor, object, value ) {
+
+	if ( ! object ) return;
+
+	const userData = JSON.parse( JSON.stringify( object.userData || {} ) );
+	const currentData = userData.data;
+
+	if ( currentData && typeof currentData === 'object' && ! Array.isArray( currentData ) ) {
+
+		currentData.type = value;
+
+	} else if ( typeof currentData === 'string' ) {
+
+		try {
+
+			const parsed = JSON.parse( currentData );
+			if ( parsed && typeof parsed === 'object' && ! Array.isArray( parsed ) ) {
+
+				parsed.type = value;
+				userData.data = parsed;
+
+			} else {
+
+				userData.data = { type: value };
+
+			}
+
+		} catch ( error ) {
+
+			userData.data = { type: value };
+
+		}
+
+	} else {
+
+		userData.data = { type: value };
+
+	}
+
+	editor.execute( new SetValueCommand( editor, object, 'userData', userData ) );
 
 }
 
@@ -407,6 +502,7 @@ function SidebarObject( editor ) {
 
 	const strings = editor.strings;
 	const signals = editor.signals;
+	const TRANSFORM_EPSILON = 1e-9;
 
 	const container = new UIPanel();
 	container.setBorderTop( '0' );
@@ -1258,6 +1354,18 @@ function SidebarObject( editor ) {
 	objectNameRow.add( objectName );
 	container.add( objectNameRow );
 
+	const objectPrototypeDataRow = new UIRow();
+	const prototypeDataLabel = strings.getKey( 'sidebar/object/prototype_data' );
+	const objectPrototypeData = new UIInput().setWidth( '150px' ).setFontSize( '12px' ).onChange( function () {
+
+		setPrototypeDataValue( editor, editor.selected, objectPrototypeData.getValue() );
+
+	} );
+	objectPrototypeDataRow.add( new UIText( prototypeDataLabel === '???' ? '数据' : prototypeDataLabel ).setWidth( '90px' ) );
+	objectPrototypeDataRow.add( objectPrototypeData );
+	objectPrototypeDataRow.setDisplay( 'none' );
+	container.add( objectPrototypeDataRow );
+
 	function createPropertyClipboardButtons( propertyName, getValues, applyCommand, copyMessage, pasteMessage, resetAction ) {
 
 		const copyButton = new UIButton( '' ).setWidth( '26px' ).onClick( function () {
@@ -1337,9 +1445,9 @@ function SidebarObject( editor ) {
 	container.add( objectTransformAxisHeaderRow );
 
 	const objectPositionRow = new UIRow();
-	const objectPositionX = new UINumber().setPrecision( 3 ).setWidth( '40px' ).onChange( update );
-	const objectPositionY = new UINumber().setPrecision( 3 ).setWidth( '40px' ).onChange( update );
-	const objectPositionZ = new UINumber().setPrecision( 3 ).setWidth( '40px' ).onChange( update );
+	const objectPositionX = new UINumber().setPrecision( 6 ).setDisplayPrecision( 3 ).setWidth( '40px' ).onChange( update );
+	const objectPositionY = new UINumber().setPrecision( 6 ).setDisplayPrecision( 3 ).setWidth( '40px' ).onChange( update );
+	const objectPositionZ = new UINumber().setPrecision( 6 ).setDisplayPrecision( 3 ).setWidth( '40px' ).onChange( update );
 	const positionButtons = createPropertyClipboardButtons(
 		'position',
 		() => new THREE.Vector3( objectPositionX.getValue(), objectPositionY.getValue(), objectPositionZ.getValue() ),
@@ -1373,9 +1481,9 @@ function SidebarObject( editor ) {
 	container.add( objectPositionRow );
 
 	const objectRotationRow = new UIRow();
-	const objectRotationX = new UINumber().setStep( 10 ).setNudge( 0.1 ).setUnit( '°' ).setWidth( '40px' ).onChange( update );
-	const objectRotationY = new UINumber().setStep( 10 ).setNudge( 0.1 ).setUnit( '°' ).setWidth( '40px' ).onChange( update );
-	const objectRotationZ = new UINumber().setStep( 10 ).setNudge( 0.1 ).setUnit( '°' ).setWidth( '40px' ).onChange( update );
+	const objectRotationX = new UINumber().setPrecision( 6 ).setDisplayPrecision( 3 ).setStep( 10 ).setNudge( 0.1 ).setUnit( '°' ).setWidth( '40px' ).onChange( update );
+	const objectRotationY = new UINumber().setPrecision( 6 ).setDisplayPrecision( 3 ).setStep( 10 ).setNudge( 0.1 ).setUnit( '°' ).setWidth( '40px' ).onChange( update );
+	const objectRotationZ = new UINumber().setPrecision( 6 ).setDisplayPrecision( 3 ).setStep( 10 ).setNudge( 0.1 ).setUnit( '°' ).setWidth( '40px' ).onChange( update );
 	const rotationButtons = createPropertyClipboardButtons(
 		'rotation',
 		() => new THREE.Euler(
@@ -1413,9 +1521,9 @@ function SidebarObject( editor ) {
 	container.add( objectRotationRow );
 
 	const objectScaleRow = new UIRow();
-	const objectScaleX = new UINumber( 1 ).setPrecision( 3 ).setWidth( '40px' ).onChange( update );
-	const objectScaleY = new UINumber( 1 ).setPrecision( 3 ).setWidth( '40px' ).onChange( update );
-	const objectScaleZ = new UINumber( 1 ).setPrecision( 3 ).setWidth( '40px' ).onChange( update );
+	const objectScaleX = new UINumber( 1 ).setPrecision( 6 ).setDisplayPrecision( 3 ).setWidth( '40px' ).onChange( update );
+	const objectScaleY = new UINumber( 1 ).setPrecision( 6 ).setDisplayPrecision( 3 ).setWidth( '40px' ).onChange( update );
+	const objectScaleZ = new UINumber( 1 ).setPrecision( 6 ).setDisplayPrecision( 3 ).setWidth( '40px' ).onChange( update );
 	function getConstrainedScaleVector( object, x = objectScaleX.getValue(), y = objectScaleY.getValue(), z = objectScaleZ.getValue() ) {
 
 		return new THREE.Vector3( x, y, isPictureType( object ) ? 1 : z );
@@ -1516,7 +1624,16 @@ function SidebarObject( editor ) {
 
 	const transformActionsRow = new UIRow();
 	transformActionsRow.dom.style.zIndex = '3';
-	const transformCopyButton = new UIButton( '' ).setWidth( '26px' ).onClick( function () {
+	transformActionsRow.dom.style.marginLeft = '90px';
+	transformActionsRow.dom.style.marginTop = '4px';
+	transformActionsRow.dom.style.marginBottom = '6px';
+	transformActionsRow.dom.style.width = '120px';
+	transformActionsRow.dom.style.position = 'static';
+	transformActionsRow.dom.style.display = 'flex';
+	transformActionsRow.dom.style.alignItems = 'center';
+	transformActionsRow.dom.style.justifyContent = 'center';
+	transformActionsRow.dom.style.clear = 'both';
+	const transformCopyButton = new UIButton( '' ).setWidth( '30px' ).onClick( function () {
 
 		if ( editor.selected === null ) return;
 		clipboard.position = new THREE.Vector3( objectPositionX.getValue(), objectPositionY.getValue(), objectPositionZ.getValue() );
@@ -1526,6 +1643,23 @@ function SidebarObject( editor ) {
 			objectRotationZ.getValue() * THREE.MathUtils.DEG2RAD
 		);
 		clipboard.scale = getConstrainedScaleVector( editor.selected );
+		localStorage.setItem( 'multipleObjectsTransform', JSON.stringify( {
+			position: {
+				x: clipboard.position.x,
+				y: clipboard.position.y,
+				z: clipboard.position.z
+			},
+			rotation: {
+				x: objectRotationX.getValue(),
+				y: objectRotationY.getValue(),
+				z: objectRotationZ.getValue()
+			},
+			scale: {
+				x: clipboard.scale.x,
+				y: clipboard.scale.y,
+				z: clipboard.scale.z
+			}
+		} ) );
 		editor.showNotification( strings.getKey( 'sidebar/multi_objects/copy_transform_success' ) );
 
 	} );
@@ -1534,9 +1668,11 @@ function SidebarObject( editor ) {
 	const transformCopyIcon = document.createElement( 'img' );
 	transformCopyIcon.src = 'images/copy.png';
 	styleActionIcon( transformCopyIcon );
+	transformCopyIcon.style.width = '15px';
+	transformCopyIcon.style.height = '15px';
 	transformCopyButton.dom.appendChild( transformCopyIcon );
 
-	const transformPasteButton = new UIButton( '' ).setMarginLeft( '2px' ).setWidth( '26px' ).onClick( function () {
+	const transformPasteButton = new UIButton( '' ).setMarginLeft( '3px' ).setWidth( '30px' ).onClick( function () {
 
 		if ( editor.selected === null ) return;
 		if ( clipboard.position !== null ) editor.execute( new SetPositionCommand( editor, editor.selected, clipboard.position.clone() ) );
@@ -1550,8 +1686,10 @@ function SidebarObject( editor ) {
 	const transformPasteIcon = document.createElement( 'img' );
 	transformPasteIcon.src = 'images/paste.png';
 	styleActionIcon( transformPasteIcon );
+	transformPasteIcon.style.width = '15px';
+	transformPasteIcon.style.height = '15px';
 	transformPasteButton.dom.appendChild( transformPasteIcon );
-	const transformResetButton = new UIButton( '' ).setMarginLeft( '2px' ).setWidth( '26px' ).onClick( function () {
+	const transformResetButton = new UIButton( '' ).setMarginLeft( '3px' ).setWidth( '30px' ).onClick( function () {
 
 		if ( editor.selected === null ) return;
 		editor.execute( new SetPositionCommand( editor, editor.selected, new THREE.Vector3( 0, 0, 0 ) ) );
@@ -1566,10 +1704,13 @@ function SidebarObject( editor ) {
 	transformResetIcon.textContent = '↺';
 	transformResetIcon.style.display = 'block';
 	transformResetIcon.style.margin = '0 auto';
-	transformResetIcon.style.fontSize = '15px';
+	transformResetIcon.style.fontSize = '17px';
 	transformResetIcon.style.lineHeight = '1';
 	transformResetIcon.style.color = '#888';
 	transformResetButton.dom.appendChild( transformResetIcon );
+	transformCopyButton.dom.style.height = '20px';
+	transformPasteButton.dom.style.height = '20px';
+	transformResetButton.dom.style.height = '20px';
 	transformActionsRow.add( transformCopyButton, transformPasteButton, transformResetButton );
 	transformActionsRow.setDisplay( 'none' );
 	container.add( transformActionsRow );
@@ -1625,13 +1766,9 @@ function SidebarObject( editor ) {
 		transformBorder.style.width = dataAreaWidth + 'px';
 		transformBorder.style.height = ( scaleRowBottom - posRowTop + 10 ) + 'px';
 
-		const buttonWidth = transformCopyButton.dom.offsetWidth + transformPasteButton.dom.offsetWidth + transformResetButton.dom.offsetWidth + 4;
-		const buttonLeft = dataAreaLeft + ( dataAreaWidth - buttonWidth ) / 2;
-		const buttonTop = scaleRowBottom + 5;
-
-		transformActionsRow.dom.style.position = 'absolute';
-		transformActionsRow.dom.style.left = buttonLeft + 'px';
-		transformActionsRow.dom.style.top = buttonTop + 'px';
+		transformActionsRow.dom.style.position = 'static';
+		transformActionsRow.dom.style.left = '';
+		transformActionsRow.dom.style.top = '';
 		transformActionsRow.dom.style.zIndex = '3';
 
 	};
@@ -1670,12 +1807,12 @@ function SidebarObject( editor ) {
 	function showTransformActions() {
 
 		transformActionsRow.setDisplay( '' );
+		transformActionsRow.dom.style.display = 'flex';
 		transformCopyButton.dom.style.display = 'inline-flex';
 		transformPasteButton.dom.style.display = 'inline-flex';
 		transformResetButton.dom.style.display = 'inline-flex';
 		transformBorder.style.display = 'none';
 		updateBorderPosition();
-		getSpacerRow().setDisplay( '' );
 
 	}
 
@@ -1684,7 +1821,6 @@ function SidebarObject( editor ) {
 		clearTransformHoverArtifacts();
 		transformActionsRow.setDisplay( 'none' );
 		transformBorder.style.display = 'none';
-		if ( spacerRow ) spacerRow.setDisplay( 'none' );
 
 	}
 
@@ -1934,6 +2070,13 @@ function SidebarObject( editor ) {
 	}
 	objectResetRow.setDisplay( 'none' );
 	container.add( objectVisibleRow );
+
+	const objectDimensionsRow = new UIRow();
+	const dimensionsLabel = strings.getKey( 'sidebar/object/dimensions' );
+	const objectDimensions = new UICheckbox().onChange( update );
+	objectDimensionsRow.add( new UIText( dimensionsLabel === '???' ? '尺寸标注' : dimensionsLabel ).setWidth( '90px' ) );
+	objectDimensionsRow.add( objectDimensions );
+	container.add( objectDimensionsRow );
 
 	const stopLabel = strings.getKey( 'sidebar/animations/stop' ) !== '???' ? strings.getKey( 'sidebar/animations/stop' ) : '停止';
 	const objectAnimationPreviewSelectRow = new UIRow();
@@ -2189,21 +2332,21 @@ function SidebarObject( editor ) {
 		if ( object === null ) return;
 
 		const newPosition = new THREE.Vector3( objectPositionX.getValue(), objectPositionY.getValue(), objectPositionZ.getValue() );
-		if ( object.position.distanceTo( newPosition ) >= 0.01 ) editor.execute( new SetPositionCommand( editor, object, newPosition ) );
+		if ( object.position.distanceTo( newPosition ) > TRANSFORM_EPSILON ) editor.execute( new SetPositionCommand( editor, object, newPosition ) );
 
 		const newRotation = new THREE.Euler(
 			objectRotationX.getValue() * THREE.MathUtils.DEG2RAD,
 			objectRotationY.getValue() * THREE.MathUtils.DEG2RAD,
 			objectRotationZ.getValue() * THREE.MathUtils.DEG2RAD
 		);
-		if ( new THREE.Vector3().setFromEuler( object.rotation ).distanceTo( new THREE.Vector3().setFromEuler( newRotation ) ) >= 0.01 ) {
+		if ( new THREE.Vector3().setFromEuler( object.rotation ).distanceTo( new THREE.Vector3().setFromEuler( newRotation ) ) > TRANSFORM_EPSILON ) {
 
 			editor.execute( new SetRotationCommand( editor, object, newRotation ) );
 
 		}
 
 		const newScale = getConstrainedScaleVector( object );
-		if ( object.scale.distanceTo( newScale ) >= 0.01 ) editor.execute( new SetScaleCommand( editor, object, newScale ) );
+		if ( object.scale.distanceTo( newScale ) > TRANSFORM_EPSILON ) editor.execute( new SetScaleCommand( editor, object, newScale ) );
 
 		if ( object.fov !== undefined && Math.abs( object.fov - objectFov.getValue() ) >= 0.01 ) {
 
@@ -2302,6 +2445,16 @@ function SidebarObject( editor ) {
 
 		}
 
+		const currentShowDimensions = ! object.userData || object.userData.showDimensions !== false;
+		if ( currentShowDimensions !== objectDimensions.getValue() ) {
+
+			const userData = JSON.parse( JSON.stringify( object.userData || {} ) );
+			userData.showDimensions = objectDimensions.getValue();
+			editor.execute( new SetValueCommand( editor, object, 'userData', userData ) );
+			editor.signals.viewportRedrawRequested.dispatch();
+
+		}
+
 		if ( object.frustumCulled !== objectFrustumCulled.getValue() ) {
 
 			editor.execute( new SetValueCommand( editor, object, 'frustumCulled', objectFrustumCulled.getValue() ) );
@@ -2376,6 +2529,7 @@ function SidebarObject( editor ) {
 
 		objectTypeRow.setDisplay( '' );
 		objectNameRow.setDisplay( '' );
+		objectPrototypeDataRow.setDisplay( isPrototypeType( object ) ? '' : 'none' );
 		objectTransformAxisHeaderRow.setDisplay( '' );
 		objectPositionRow.setDisplay( '' );
 		objectUUIDRow.setDisplay( '' );
@@ -2442,10 +2596,12 @@ function SidebarObject( editor ) {
 		if ( object && object.type && typeof object.type === 'string' && object.type.toLowerCase() === 'module' ) {
 
 			objectVisibleRow.setDisplay( 'none' );
+			objectDimensionsRow.setDisplay( 'none' );
 
 		} else {
 
 			objectVisibleRow.setDisplay( '' );
+			objectDimensionsRow.setDisplay( '' );
 
 		}
 
@@ -2533,6 +2689,7 @@ function SidebarObject( editor ) {
 		objectType.setValue( getLocalizedObjectType( object, editor ) );
 		objectUUID.setValue( object.uuid );
 		objectName.setValue( sanitizeObjectName( object.name ) );
+		objectPrototypeData.setValue( getPrototypeDataValue( object ) );
 
 		objectPositionX.setValue( object.position.x );
 		objectPositionY.setValue( object.position.y );
@@ -2580,6 +2737,7 @@ function SidebarObject( editor ) {
 		}
 
 		objectVisible.setValue( object.visible );
+		objectDimensions.setValue( ! object.userData || object.userData.showDimensions !== false );
 		objectFrustumCulled.setValue( object.frustumCulled );
 		objectRenderOrder.setValue( object.renderOrder );
 
