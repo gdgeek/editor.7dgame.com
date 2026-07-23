@@ -2,6 +2,7 @@ import * as THREE from 'three';
 
 import { UIPanel, UIBreak, UIRow, UIColor, UISelect, UIText, UINumber } from './libs/ui.js';
 import { UIOutliner, UITexture } from './libs/ui.three.js';
+import { createOutlinerFilter, hasDisplayableDescendant } from './OutlinerFilter.js';
 
 function SidebarScene( editor ) {
 
@@ -16,6 +17,8 @@ function SidebarScene( editor ) {
 	// outliner
 
 	const nodeStates = new WeakMap();
+	let outlinerSearchText = '';
+	let outlinerSelectedType = '';
 	const nativeTypes = new Set( [
 		'Scene', 'PerspectiveCamera', 'OrthographicCamera',
 		'AmbientLight', 'DirectionalLight', 'PointLight', 'SpotLight', 'HemisphereLight',
@@ -29,17 +32,15 @@ function SidebarScene( editor ) {
 
 		return object.children.some( function ( child ) {
 
-			if ( ! child ) return false;
-			if ( child.userData && child.userData.hidden === true ) return false;
-			if ( child.name && child.name.charAt( 0 ) === '$' ) return false;
-
-			const childType = child.type || '';
-
-			if ( ! childType || nativeTypes.has( childType ) ) return false;
-
-			return true;
+			return hasDisplayableDescendant( child, nativeTypes );
 
 		} );
+
+	}
+
+	function hasActiveOutlinerFilter() {
+
+		return outlinerSearchText.length > 0 || outlinerSelectedType !== '';
 
 	}
 
@@ -48,7 +49,8 @@ function SidebarScene( editor ) {
 		if ( nodeStates.has( object ) === false ) return null;
 
 		const canExpand = hasDisplayableChildren( object );
-		const state = nodeStates.get( object );
+		const filterActive = hasActiveOutlinerFilter();
+		const state = filterActive ? true : nodeStates.get( object );
 
 		const opener = document.createElement( 'span' );
 		opener.classList.add( 'opener' );
@@ -57,7 +59,7 @@ function SidebarScene( editor ) {
 
 			opener.classList.add( state ? 'open' : 'closed' );
 
-			opener.addEventListener( 'click', function () {
+			if ( filterActive === false ) opener.addEventListener( 'click', function () {
 
 				nodeStates.set( object, nodeStates.get( object ) === false ); // toggle
 				refreshUI();
@@ -263,6 +265,18 @@ function SidebarScene( editor ) {
 
 	const outliner = new UIOutliner( editor );
 	outliner.setId( 'outliner' );
+	outliner.dom.mrppSetFilter = function ( searchText = '', selectedType = '' ) {
+
+		const nextSearchText = String( searchText ).toLowerCase();
+		const nextSelectedType = String( selectedType );
+
+		if ( outlinerSearchText === nextSearchText && outlinerSelectedType === nextSelectedType ) return;
+
+		outlinerSearchText = nextSearchText;
+		outlinerSelectedType = nextSelectedType;
+		refreshUI();
+
+	};
 	outliner.dom.addEventListener( 'click', function ( event ) {
 
 		const target = event.target;
@@ -560,6 +574,7 @@ function SidebarScene( editor ) {
 
 		const camera = editor.camera;
 		const scene = editor.scene;
+		const outlinerFilter = createOutlinerFilter( editor, outlinerSearchText, outlinerSelectedType );
 
 		const options = [];
 
@@ -571,6 +586,8 @@ function SidebarScene( editor ) {
 			for ( let i = 0, l = objects.length; i < l; i ++ ) {
 
 				const object = objects[ i ];
+
+				if ( outlinerFilter.active && ! outlinerFilter.matchesSubtree( object ) ) continue;
 
 				if ( nodeStates.has( object ) === false ) {
 
@@ -584,7 +601,7 @@ function SidebarScene( editor ) {
 
 				if ( isSceneEditor ) continue;
 
-				if ( nodeStates.get( object ) === true ) {
+				if ( outlinerFilter.active || nodeStates.get( object ) === true ) {
 
 					addObjects( object.children, pad + 1 );
 
@@ -685,6 +702,13 @@ function SidebarScene( editor ) {
 	signals.sceneGraphChanged.add( refreshUI );
 
 	signals.objectChanged.add( function ( object ) {
+
+		if ( hasActiveOutlinerFilter() ) {
+
+			refreshUI();
+			return;
+
+		}
 
 		const options = outliner.options;
 

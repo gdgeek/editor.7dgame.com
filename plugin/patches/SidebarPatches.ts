@@ -549,39 +549,6 @@ function injectOutlinerSearchUI( editor: MrppEditor ): void {
 
 	}
 
-	function getFilterObjectType( object: any ): string {
-
-		const rawType = ( object.userData && ( object.userData as any ).type ) || object.type || '';
-		const normalizedType = String( rawType ).toLowerCase();
-		const objectName = String( object.name || '' ).trim().toLowerCase();
-
-		if ( normalizedType === 'sound' ) return 'audio';
-		if ( normalizedType === 'entity' && /^point(?:\s*\(\d+\))?$/.test( objectName ) ) return 'point';
-
-		return normalizedType;
-
-	}
-
-	function hasFilterComponent( object: any, componentType: string ): boolean {
-
-		const components = Array.isArray( object.components )
-			? object.components
-			: Array.isArray( object.userData && ( object.userData as any ).components )
-				? ( object.userData as any ).components
-				: [];
-
-		for ( let i = 0; i < components.length; i ++ ) {
-
-			const currentType = String( components[ i ] && components[ i ].type || '' ).toLowerCase();
-
-			if ( currentType === componentType ) return true;
-
-		}
-
-		return false;
-
-	}
-
 	// ── Build type filter options using i18n keys ──
 	const filterOptions: Record<string, string> = {
 		'': strings.getKey( 'sidebar/scene/filter/all' ),
@@ -645,83 +612,17 @@ function injectOutlinerSearchUI( editor: MrppEditor ): void {
 
 		const searchText = searchInput.getValue().toLowerCase();
 		const selectedType = filterSelect.getValue(); // '' means all
-		const options = outlinerDom!.querySelectorAll( '.option' );
+		const nativeFilter = outlinerDom as HTMLElement & {
+			mrppSetFilter?: ( text: string, type: string ) => void;
+		};
 
-		for ( let i = 0; i < options.length; i ++ ) {
-
-			const option = options[ i ] as HTMLElement;
-			const id = parseInt( (option as any).value );
-
-			if ( isNaN( id ) ) continue;
-
-			const object = editor.scene.getObjectById( id );
-
-			// Skip objects already hidden by injectOutlinerFilter (internal objects).
-			// We detect this by checking if the object is the camera, scene, or $-prefixed.
-			if ( ! object ) {
-
-				// Could be the camera (not in scene graph)
-				if ( editor.camera && (editor.camera as any).id === id ) continue;
-				continue;
-
-			}
-
-			if (
-				object === editor.camera ||
-				object === editor.scene ||
-				( object.name && object.name.charAt( 0 ) === '$' )
-			) {
-
-				// Internal object — leave hidden by injectOutlinerFilter
-				continue;
-
-			}
-
-			let visible = true;
-
-			// Name search filter
-			if ( searchText.length > 0 ) {
-
-				const objectName = ( object.name || '' ).toLowerCase();
-
-				if ( objectName.indexOf( searchText ) === - 1 ) {
-
-					visible = false;
-
-				}
-
-			}
-
-			// Type / component filter
-			if ( visible && selectedType !== '' ) {
-
-				const [ filterKind, filterValue ] = String( selectedType ).split( ':' );
-
-				if ( filterKind === 'type' ) {
-
-					visible = getFilterObjectType( object ) === filterValue;
-
-				} else if ( filterKind === 'component' ) {
-
-					visible = hasFilterComponent( object, filterValue );
-
-				}
-
-			}
-
-			option.style.display = visible ? '' : 'none';
-
-		}
+		nativeFilter.mrppSetFilter?.( searchText, String( selectedType ) );
 
 	}
 
 	// ── Wire up events ──
 	searchInput.onInput( applySearchFilter );
 	filterSelect.onChange( applySearchFilter );
-
-	// Re-apply search/filter after outliner refreshes (MutationObserver)
-	const observer = new MutationObserver( applySearchFilter );
-	observer.observe( outlinerDom, { childList: true } );
 
 }
 
