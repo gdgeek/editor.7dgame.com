@@ -304,10 +304,19 @@ function getSceneEntitySignalGroups( object, editor ) {
 	const emptySignals = { inputs: [], outputs: [] };
 	if ( ! object || ! object.userData || object.userData.meta_id == null ) return emptySignals;
 
+	const metaId = String( object.userData.meta_id );
+	const metaSignalRegistry = editor.data && editor.data.metaSignalRegistry;
+	if ( metaSignalRegistry && typeof metaSignalRegistry.get === 'function' ) {
+
+		const registeredSignals = metaSignalRegistry.get( metaId );
+		if ( registeredSignals ) return registeredSignals;
+
+	}
+
+	// Compatibility fallback for scenes loaded by older editor builds.
 	const directMetaEvents = object.metaEvents || object.userData.meta_events;
 	if ( directMetaEvents ) return directMetaEvents;
 
-	const metaId = String( object.userData.meta_id );
 	const metaEventsById = editor.data && editor.data.metaEventsById;
 
 	if ( metaEventsById ) {
