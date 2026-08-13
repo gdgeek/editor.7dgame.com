@@ -4,6 +4,8 @@
 
 // three.js 主模块
 declare module 'three' {
+	export type EulerOrder = 'XYZ' | 'YZX' | 'ZXY' | 'XZY' | 'YXZ' | 'ZYX';
+
 	export class Object3D {
 		uuid: string;
 		name: string;
@@ -12,6 +14,7 @@ declare module 'three' {
 		children: Object3D[];
 		position: Vector3;
 		rotation: Euler;
+		quaternion: Quaternion;
 		scale: Vector3;
 		matrix: Matrix4;
 		matrixWorld: Matrix4;
@@ -76,11 +79,27 @@ declare module 'three' {
 		x: number;
 		y: number;
 		z: number;
-		order: string;
-		constructor(x?: number, y?: number, z?: number, order?: string);
-		set(x: number, y: number, z: number, order?: string): this;
+		order: EulerOrder;
+		constructor(x?: number, y?: number, z?: number, order?: EulerOrder);
+		set(x: number, y: number, z: number, order?: EulerOrder): this;
 		copy(euler: Euler): this;
 		clone(): Euler;
+		[key: string]: any;
+	}
+
+	export class Quaternion {
+		x: number;
+		y: number;
+		z: number;
+		w: number;
+		constructor(x?: number, y?: number, z?: number, w?: number);
+		set(x: number, y: number, z: number, w: number): this;
+		setFromEuler(euler: Euler, update?: boolean): this;
+		copy(quaternion: Quaternion): this;
+		clone(): Quaternion;
+		multiply(quaternion: Quaternion): this;
+		normalize(): this;
+		angleTo(quaternion: Quaternion): number;
 		[key: string]: any;
 	}
 
