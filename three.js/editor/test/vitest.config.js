@@ -15,7 +15,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      'three': resolve(__dirname, '../../../build/three.module.js'),
+      'three': resolve(__dirname, '../../build/three.module.js'),
     },
   },
 });

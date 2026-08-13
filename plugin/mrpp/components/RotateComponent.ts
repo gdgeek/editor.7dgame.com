@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { UINumber, UIBreak, UIText, UIRow, UICheckbox, UIButton } from '../../../three.js/editor/js/libs/ui.js';
 import { SetValueCommand } from '../../../three.js/editor/js/commands/SetValueCommand.js';
 import type { MrppEditor, MrppComponent } from '../../types/mrpp.js';
+import { applyUnityLocalRotationDelta } from '../UnityRotation.js';
 
 /** Extended Object3D type with rotation (defined via Object.defineProperties in three.js) and preview state */
 interface RotateObject3D extends THREE.Object3D {
@@ -48,18 +49,19 @@ class RotateComponent {
   }
 
   startPreview(): void {
-    this.stopPreview(false, false);
+    // A restarted preview must not make a transient preview pose its new base.
+    this.stopPreview(true, false);
 
+    const startTime = performance.now();
     const state = {
       active: true,
-      startTime: performance.now(),
-      lastTime: performance.now(),
+      startTime,
+      lastTime: startTime,
       originalRotation: this.object.rotation.clone(),
       requestId: undefined as number | undefined
     };
 
     this.object.previewRotate = state;
-    this.object.rotation.reorder('ZXY');
 
     const tick = (now: number): void => {
       const previewState = this.object.previewRotate;
@@ -69,9 +71,7 @@ class RotateComponent {
       previewState.lastTime = now;
 
       const speed = this.component.parameters.speed || { x: 0, y: 0, z: 0 };
-      this.object.rotation.x += THREE.MathUtils.degToRad(Number(speed.x) || 0) * deltaSeconds;
-      this.object.rotation.y += THREE.MathUtils.degToRad(Number(speed.y) || 0) * deltaSeconds;
-      this.object.rotation.z += THREE.MathUtils.degToRad(Number(speed.z) || 0) * deltaSeconds;
+      applyUnityLocalRotationDelta(this.object, speed, deltaSeconds);
 
       this.editor.signals.objectChanged.dispatch(this.object);
 
@@ -97,6 +97,8 @@ class RotateComponent {
     }
 
     if (restoreOriginalRotation && previewState.originalRotation) {
+      // No live reorder is performed during preview, so copying the complete
+      // Euler snapshot restores its exact values, order, and linked quaternion.
       this.object.rotation.copy(previewState.originalRotation);
     }
 
