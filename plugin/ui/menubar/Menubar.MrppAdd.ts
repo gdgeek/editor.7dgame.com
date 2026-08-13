@@ -3,6 +3,7 @@ import { UIRow, UIHorizontalRule } from '../../../three.js/editor/js/libs/ui.js'
 import { AddObjectCommand } from '../../../three.js/editor/js/commands/AddObjectCommand.js';
 import { MetaFactory } from '../../mrpp/MetaFactory.js';
 import { Builder } from '../../mrpp/Builder.js';
+import { ensureMetaSignalRegistry } from '../../mrpp/MetaSignalRegistry.js';
 import type { MrppEditor } from '../../types/mrpp.js';
 
 function injectMrppAddMenu( editor: MrppEditor, addMenuOptions: any ): void {
@@ -298,19 +299,50 @@ function _injectVerseMode( editor: MrppEditor, options: any, factory: any, build
 
 		if ( params.action === 'add-module' ) {
 
-			const data = params.data.data;
-			const setup = params.data.setup;
-			const title = params.data.title;
+			const payload = params.data;
+			const data = payload && payload.data;
+			if (
+				! data ||
+				typeof data !== 'object' ||
+				data.id == null ||
+				! Object.prototype.hasOwnProperty.call( data, 'data' ) ||
+				data.data === undefined
+			) {
 
-			if ( data.resources ) {
-
-				data.resources.forEach( (resource: any) => {
-
-					resources.set( resource.id.toString(), resource );
-
-				} );
+				console.warn( 'Cannot add module: invalid meta payload.', payload );
+				editor.showNotification( strings.getKey( 'menubar/add/metaLoadFailure' ), true );
+				return;
 
 			}
+
+			const signalRegistry = ensureMetaSignalRegistry( editor );
+			const signalDefinition = signalRegistry.validate( data.events );
+			if ( ! signalDefinition.ok || ! signalDefinition.value ) {
+
+				console.warn( `Cannot add module meta_id=${ String( data.id ) }: ${ signalDefinition.reason }` );
+				editor.showNotification( strings.getKey( 'menubar/add/metaLoadFailure' ), true );
+				return;
+
+			}
+
+			const setup = payload.setup;
+			const title = typeof payload.title === 'string' && payload.title.trim() !== ''
+				? payload.title
+				: String( data.title || data.name || 'Module' );
+
+			if ( ! Array.isArray( data.resources ) ) {
+
+				console.warn( `Cannot add module meta_id=${ String( data.id ) }: resources is missing.` );
+				editor.showNotification( strings.getKey( 'menubar/add/metaLoadFailure' ), true );
+				return;
+
+			}
+
+			data.resources.forEach( (resource: any) => {
+
+				if ( resource && resource.id != null ) resources.set( resource.id.toString(), resource );
+
+			} );
 
 			const node = factory.addModule( builder.module( data.id, title ) );
 
@@ -324,6 +356,14 @@ function _injectVerseMode( editor: MrppEditor, options: any, factory: any, build
 			}
 
 			await factory.addGizmo( node );
+			const signalRegistration = signalRegistry.upsert( data.id, signalDefinition.value, false );
+			if ( ! signalRegistration.ok ) {
+
+				console.warn( `Cannot register signals for meta_id=${ String( data.id ) }: ${ signalRegistration.reason }` );
+				editor.showNotification( strings.getKey( 'menubar/add/metaLoadFailure' ), true );
+				return;
+
+			}
 			editor.execute( new AddObjectCommand( editor, node ) );
 
 		}

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { MetaFactory } from './MetaFactory.js';
 import { SpaceReference } from './SpaceReference.js';
+import { ensureMetaSignalRegistry } from './MetaSignalRegistry.js';
 import type { MrppEditor } from '../types/mrpp.js';
 
 const hasVerseModules = (verse: any): boolean =>
@@ -295,7 +296,6 @@ class VerseLoader {
 				}
 				const node = this.factory.addModule(item);
 				(node as any).userData.custom = (meta as any).custom;
-				(node as any).metaEvents = meta.events || { inputs: [], outputs: [] };
 				root.add(node);
 				this.editor.signals.sceneGraphChanged.dispatch();
 
@@ -333,6 +333,13 @@ class VerseLoader {
 	async load(verse: any): Promise<void> {
 		this.isLoading = true;
 		this.loadingPromises = [];
+		const metaSignalRegistry = ensureMetaSignalRegistry( this.editor );
+		const signalErrors = metaSignalRegistry.reset( Array.isArray( verse?.metas ) ? verse.metas : [] );
+		if ( signalErrors.length > 0 ) {
+
+			console.warn( 'Some meta signal definitions could not be loaded:', signalErrors );
+
+		}
 
 		this.editor.signals.savingStarted.dispatch();
 
@@ -381,16 +388,8 @@ class VerseLoader {
 			});
 
 			const metas = new Map<string, any>();
-			if (!this.editor.data) {
-				this.editor.data = {};
-			}
-			this.editor.data.metaEventsById = new Map<string, any>();
 			verse.metas.forEach((item: any) => {
 				metas.set(item.id.toString(), item);
-				this.editor.data.metaEventsById.set(
-					item.id.toString(),
-					item.events || { inputs: [], outputs: [] }
-				);
 			});
 
 			const loadPromise = this.read(root, data, resources, metas);

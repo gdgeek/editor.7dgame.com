@@ -11,6 +11,7 @@ const mrppStrings: Record<string, Record<string, string>> = {
 		'menubar/add/particle': 'Particle',
 		'menubar/add/meta': 'Entity',
 		'menubar/add/prefab': 'Prefab',
+		'menubar/add/metaLoadFailure': 'Entity data could not be loaded. Please select it again and retry.',
 
 		'menubar/replace': 'Replace',
 		'menubar/replace/polygen': 'Polygen',
@@ -301,6 +302,7 @@ const mrppStrings: Record<string, Record<string, string>> = {
 		'menubar/add/particle': '特效',
 		'menubar/add/meta': '实体',
 		'menubar/add/prefab': '预设',
+		'menubar/add/metaLoadFailure': '实体数据读取失败，请重新选择后重试。',
 
 		'menubar/replace': '替换',
 		'menubar/replace/polygen': '模型',
@@ -592,6 +594,7 @@ const mrppStrings: Record<string, Record<string, string>> = {
 		'menubar/add/particle': 'パーティクル',
 		'menubar/add/meta': 'コンポーネント',
 		'menubar/add/prefab': 'プレハブ',
+		'menubar/add/metaLoadFailure': 'エンティティデータを読み込めませんでした。もう一度選択して再試行してください。',
 
 		'menubar/replace': '置換',
 		'menubar/replace/polygen': 'モデル',
@@ -870,6 +873,7 @@ const mrppStrings: Record<string, Record<string, string>> = {
 		"menubar/add/particle": "特效",
 		"menubar/add/meta": "實體",
 		"menubar/add/prefab": "預製件",
+		"menubar/add/metaLoadFailure": "無法讀取實體資料，請重新選擇後再試一次。",
 
 		"menubar/replace": "取代",
 		"menubar/replace/polygen": "模型",
@@ -1149,6 +1153,7 @@ const mrppStrings: Record<string, Record<string, string>> = {
 		"menubar/add/particle": "เอฟเฟกต์",
 		"menubar/add/meta": "เอนทิตี",
 		"menubar/add/prefab": "พรีแฟบ",
+		"menubar/add/metaLoadFailure": "ไม่สามารถโหลดข้อมูลเอนทิตีได้ โปรดเลือกอีกครั้งแล้วลองใหม่",
 
 		"menubar/replace": "แทนที่",
 		"menubar/replace/polygen": "โมเดล",
