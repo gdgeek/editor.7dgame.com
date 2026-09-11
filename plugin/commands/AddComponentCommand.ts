@@ -32,7 +32,7 @@ class AddComponentCommand extends Command {
 
 	undo(): void {
 
-		if ((this.object as any).components[this.object.uuid] === undefined) return;
+		if (this.object.components === undefined) return;
 
 		const index = this.object.components.indexOf(this.component);
 

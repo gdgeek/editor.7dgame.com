@@ -1,5 +1,6 @@
 import type { MessageBridge } from './MessageBridge.js';
 import type { MrppEditor } from '../types/mrpp.js';
+import { getEditorContext, resetEditorContext } from '../webmcp/EditorContext.js';
 
 export interface BridgeHandlersConfig {
 	bridge: MessageBridge;
@@ -12,6 +13,12 @@ export interface BridgeHandlersConfig {
 	getLoaderData: () => Promise<Record<string, unknown>>;
 	/** 保存成功后更新 loader 的 json 快照 */
 	loaderJsonSetter: ( json: string ) => void;
+	/** Additional request handlers keyed by an exact action name. */
+	requestHandlers?: Record<
+		string,
+		( payload: Record<string, unknown> ) =>
+			Record<string, unknown> | Promise<Record<string, unknown>>
+	>;
 }
 
 /**
@@ -60,7 +67,12 @@ export function setupBridgeHandlers( config: BridgeHandlersConfig ): void {
 
 	bridge.onMessage( 'INIT', ( payload: any ) => {
 
+		resetEditorContext( editor );
 		const config = payload.config;
+		if ( ! editor.data ) editor.data = {};
+		editor.data.webMcpHostSessionId = config.hostSessionId;
+		editor.data.saveable = config.saveable !== false;
+		editor.data.id = config.data?.id ?? config.id ?? null;
 
 		// Dispatch to editor.signals.messageReceive so internal components
 		// (loader, menubar, sidebar) receive the data via the existing signal.
@@ -82,9 +94,20 @@ export function setupBridgeHandlers( config: BridgeHandlersConfig ): void {
 
 	// ── 3. REQUEST handler ───────────────────────────────────────────
 
-	bridge.onMessage( 'REQUEST', ( payload: any ) => {
+	bridge.onMessage( 'REQUEST', ( payload: any, message ) => {
 
+		if ( ! payload || typeof payload.action !== 'string' ) return;
 		const action = payload.action;
+		const context = getEditorContext( editor );
+		const respond = ( result: Record<string, unknown> ) => {
+			if ( context.active && context === getEditorContext( editor ) ) bridge.postResponse( { ...result, hostSessionId: payload.hostSessionId }, message.id );
+		};
+		if ( typeof action === 'string' && action.startsWith( 'webmcp-' ) && editor.data.webMcpHostSessionId && payload.hostSessionId !== editor.data.webMcpHostSessionId ) return;
+		if ( action === 'webmcp-get-capabilities' ) {
+			respond( { action, ok: true, protocolVersion: 1, contextGeneration: context.generation,
+				capabilities: Object.keys( config.requestHandlers ?? {} ) } );
+			return;
+		}
 
 		if ( action === 'check-unsaved-changes' ) {
 
@@ -101,7 +124,7 @@ export function setupBridgeHandlers( config: BridgeHandlersConfig ): void {
 
 				}
 
-				bridge.postResponse( {
+				respond( {
 					action: 'check-unsaved-changes',
 					changed: Boolean( changed )
 				} );
@@ -121,7 +144,7 @@ export function setupBridgeHandlers( config: BridgeHandlersConfig ): void {
 
 					if ( ! changed ) {
 
-						bridge.postResponse( {
+						respond( {
 							action: 'save-before-leave',
 							noChange: true
 						} );
@@ -130,16 +153,16 @@ export function setupBridgeHandlers( config: BridgeHandlersConfig ): void {
 					}
 
 					const responsePayload = await getLoaderData();
-					bridge.postResponse( {
+					respond( {
 						action: 'save-before-leave',
 						...responsePayload
 					} );
-					loaderJsonSetter( JSON.stringify( responsePayload ) );
+					if ( context.active && context === getEditorContext( editor ) ) loaderJsonSetter( JSON.stringify( responsePayload ) );
 
 				} catch ( error ) {
 
 					console.error( 'Failed to save before leave:', error );
-					bridge.postResponse( {
+					respond( {
 						action: 'save-before-leave',
 						noChange: true
 					} );
@@ -151,10 +174,42 @@ export function setupBridgeHandlers( config: BridgeHandlersConfig ): void {
 
 		}
 
+		const customHandler = config.requestHandlers && Object.hasOwn( config.requestHandlers, action )
+			? config.requestHandlers[ action ] : undefined;
+		if ( customHandler ) {
+
+			( async () => {
+
+				try {
+
+					const response = await customHandler( payload );
+					respond( { action, ...response } );
+
+				} catch ( error ) {
+
+					respond( {
+						action,
+						ok: false,
+						code: 'HANDLER_ERROR',
+						error: error instanceof Error ? error.message : String( error )
+					} );
+
+				}
+
+			} )();
+			return;
+
+		}
+		if ( typeof action === 'string' && action.startsWith( 'webmcp-' ) ) {
+			respond( { action, ok: false, code: 'UNSUPPORTED_ACTION', error: '编辑器不支持此 WebMCP 操作' } );
+			return;
+		}
+
 		// Other REQUEST actions → dispatch to editor internal signal system
 		editor.signals.messageReceive.dispatch( {
 			action: action,
-			data: payload
+			data: payload,
+			requestId: message.id
 		} );
 
 	} );
@@ -171,6 +226,7 @@ export function setupBridgeHandlers( config: BridgeHandlersConfig ): void {
 
 	bridge.onMessage( 'DESTROY', () => {
 
+		resetEditorContext( editor, false );
 		bridge.destroy();
 
 	} );
