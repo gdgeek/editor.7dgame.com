@@ -2,7 +2,8 @@
   "private": true,
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test:webmcp": "npm run build && node --test --import ./test/register-three.mjs ./test/webmcp.test.mjs"
   },
   "devDependencies": {
     "three-gpu-pathtracer": "^0.0.23",

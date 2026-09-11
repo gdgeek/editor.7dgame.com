@@ -4,6 +4,29 @@ on:
   workflow_call:
 
 jobs:
+  webmcp:
+    name: WebMCP Regression
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install plugin dependencies
+        run: npm ci
+
+      - name: Type check plugin
+        run: npm run typecheck
+
+      - name: Run WebMCP regression tests
+        run: npm run test:webmcp
+
   test:
     runs-on: ubuntu-latest
     

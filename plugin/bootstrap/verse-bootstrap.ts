@@ -12,6 +12,23 @@ import { applyDeferredUIPatches } from '../utils/DeferredUIPatches.js';
 import { MessageBridge } from '../utils/MessageBridge.js';
 import { setupBridgeHandlers } from '../utils/BridgeHandlers.js';
 import type { MrppEditor } from '../types/mrpp.js';
+import { getVerseSceneWebMcpState } from '../webmcp/VerseSceneReadHandlers.js';
+import {
+	completeVerseSceneEntityPlacement,
+	markVerseSceneSaved
+} from '../webmcp/VerseScenePlacementHandlers.js';
+import {
+	completeVerseSceneModuleTransform,
+	stageVerseSceneModuleTransform
+} from '../webmcp/VerseSceneTransformHandlers.js';
+import {
+	completeVerseSceneModuleProperties,
+	stageVerseSceneModuleProperties
+} from '../webmcp/VerseScenePropertyHandlers.js';
+import {
+	completeVerseSceneModuleDeletion,
+	stageVerseSceneModuleDeletion
+} from '../webmcp/VerseSceneDeletionHandlers.js';
 
 
 // ── Verse response action mapping ────────────────────────────────────
@@ -116,6 +133,26 @@ function initVerseEditor( editor: MrppEditor ): void {
 
 			editor.verseLoader.json = json;
 
+		},
+		requestHandlers: {
+			'webmcp-get-scene-state': async () =>
+				getVerseSceneWebMcpState( editor ),
+			'webmcp-complete-scene-entity-placement': async ( payload ) =>
+				completeVerseSceneEntityPlacement( editor, payload ),
+			'webmcp-mark-scene-saved': async ( payload ) =>
+				markVerseSceneSaved( editor, payload ),
+			'webmcp-stage-scene-module-transform': async ( payload ) =>
+				stageVerseSceneModuleTransform( editor, payload ),
+			'webmcp-complete-scene-module-transform': async ( payload ) =>
+				completeVerseSceneModuleTransform( editor, payload ),
+			'webmcp-stage-scene-module-properties': async ( payload ) =>
+				stageVerseSceneModuleProperties( editor, payload ),
+			'webmcp-complete-scene-module-properties': async ( payload ) =>
+				completeVerseSceneModuleProperties( editor, payload ),
+			'webmcp-stage-scene-module-deletion': async ( payload ) =>
+				stageVerseSceneModuleDeletion( editor, payload ),
+			'webmcp-complete-scene-module-deletion': async ( payload ) =>
+				completeVerseSceneModuleDeletion( editor, payload )
 		}
 	} );
 
