@@ -37,6 +37,8 @@ export function setupBridgeHandlers( config: BridgeHandlersConfig ): void {
 
 	const { bridge, editor, responseActions, mapToResponsePayload,
 		getLoaderChanged, getLoaderData, loaderJsonSetter } = config;
+	// PLUGIN_READY only announces the transport. WebMCP needs a completed INIT.
+	let initializedHostSessionId: string | undefined;
 
 	// ── 1. messageSend listener ──────────────────────────────────────
 
@@ -67,10 +69,14 @@ export function setupBridgeHandlers( config: BridgeHandlersConfig ): void {
 
 	bridge.onMessage( 'INIT', ( payload: any ) => {
 
+		initializedHostSessionId = undefined;
 		resetEditorContext( editor );
-		const config = payload.config;
+		const config = payload?.config;
+		if ( ! config || typeof config !== 'object' || Array.isArray( config ) ) return;
 		if ( ! editor.data ) editor.data = {};
-		editor.data.webMcpHostSessionId = config.hostSessionId;
+		const hostSessionId = typeof config.hostSessionId === 'string' && config.hostSessionId.trim()
+			? config.hostSessionId : undefined;
+		editor.data.webMcpHostSessionId = hostSessionId;
 		editor.data.saveable = config.saveable !== false;
 		editor.data.id = config.data?.id ?? config.id ?? null;
 
@@ -90,6 +96,8 @@ export function setupBridgeHandlers( config: BridgeHandlersConfig ): void {
 
 		}
 
+		initializedHostSessionId = hostSessionId;
+
 	} );
 
 	// ── 3. REQUEST handler ───────────────────────────────────────────
@@ -99,10 +107,17 @@ export function setupBridgeHandlers( config: BridgeHandlersConfig ): void {
 		if ( ! payload || typeof payload.action !== 'string' ) return;
 		const action = payload.action;
 		const context = getEditorContext( editor );
+		if ( ! context.active ) return;
 		const respond = ( result: Record<string, unknown> ) => {
 			if ( context.active && context === getEditorContext( editor ) ) bridge.postResponse( { ...result, hostSessionId: payload.hostSessionId }, message.id );
 		};
-		if ( typeof action === 'string' && action.startsWith( 'webmcp-' ) && editor.data.webMcpHostSessionId && payload.hostSessionId !== editor.data.webMcpHostSessionId ) return;
+		if ( action.startsWith( 'webmcp-' ) ) {
+			if ( ! initializedHostSessionId || editor.data?.webMcpHostSessionId !== initializedHostSessionId ) {
+				respond( { action, ok: false, code: 'NOT_INITIALIZED', error: '编辑器尚未完成 INIT 初始化，请稍后重试' } );
+				return;
+			}
+			if ( payload.hostSessionId !== initializedHostSessionId ) return;
+		}
 		if ( action === 'webmcp-get-capabilities' ) {
 			respond( { action, ok: true, protocolVersion: 1, contextGeneration: context.generation,
 				capabilities: Object.keys( config.requestHandlers ?? {} ) } );
@@ -226,6 +241,7 @@ export function setupBridgeHandlers( config: BridgeHandlersConfig ): void {
 
 	bridge.onMessage( 'DESTROY', () => {
 
+		initializedHostSessionId = undefined;
 		resetEditorContext( editor, false );
 		bridge.destroy();
 

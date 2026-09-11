@@ -27,6 +27,8 @@ function genId(): string {
  * - Tracks `lastRequestId` for REQUEST/RESPONSE pairing
  */
 export class MessageBridge {
+  /** Distinguish a reloaded iframe document from a repeated ready notification. */
+  private readonly documentId = genId();
   private handlers = new Map<string, MessageHandler>();
   private parentOrigin: string | null = null;
   private destroyed = false;
@@ -76,7 +78,7 @@ export class MessageBridge {
     this.destroyed = false;
     this.boundHandleMessage = this.handleMessage.bind(this);
     window.addEventListener("message", this.boundHandleMessage);
-    this.postMessage("PLUGIN_READY");
+    this.postMessage("PLUGIN_READY", { documentId: this.documentId });
   }
 
   /** Tear down: remove all event listeners. */
