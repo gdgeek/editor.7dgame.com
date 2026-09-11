@@ -402,7 +402,7 @@ class VOXLoader extends Loader {
 
 				}
 
-				chunk.palette = palette;
+				// RGBA can precede SIZE. Apply the shared palette after reading all models.
 
 			} else if ( id === 'nTRN' ) {
 
