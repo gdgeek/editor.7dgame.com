@@ -28,6 +28,8 @@ function genId(): string {
  */
 export class MessageBridge {
   private handlers = new Map<string, MessageHandler>();
+  private parentOrigin: string | null = null;
+  private destroyed = false;
 
   /** The id of the last received REQUEST, used for RESPONSE pairing. */
   private lastRequestId: string | undefined;
@@ -44,11 +46,12 @@ export class MessageBridge {
 
   /** Send a message to the parent window using the standard envelope format. */
   postMessage(type: string, payload?: Record<string, unknown>): void {
+    if (this.destroyed) return;
     const msg: StandardMessage = { type, id: genId() };
     if (payload !== undefined) {
       msg.payload = payload;
     }
-    window.parent.postMessage(msg, "*");
+    window.parent.postMessage(msg, this.parentOrigin ?? "*");
   }
 
   /**
@@ -56,18 +59,21 @@ export class MessageBridge {
    * An explicit `requestId` can be provided to override the automatic value.
    */
   postResponse(payload: Record<string, unknown>, requestId?: string): void {
+    if (this.destroyed) return;
     const msg: StandardMessage = { type: "RESPONSE", id: genId(), payload };
     const rid = requestId ?? this.lastRequestId;
     if (rid !== undefined) {
       msg.requestId = rid;
     }
-    window.parent.postMessage(msg, "*");
+    window.parent.postMessage(msg, this.parentOrigin ?? "*");
   }
 
   // ── Lifecycle ─────────────────────────────────────────────
 
   /** Initialise: attach the `message` event listener and send PLUGIN_READY. */
   init(): void {
+    if (this.boundHandleMessage) return;
+    this.destroyed = false;
     this.boundHandleMessage = this.handleMessage.bind(this);
     window.addEventListener("message", this.boundHandleMessage);
     this.postMessage("PLUGIN_READY");
@@ -75,6 +81,8 @@ export class MessageBridge {
 
   /** Tear down: remove all event listeners. */
   destroy(): void {
+    this.destroyed = true;
+    this.lastRequestId = undefined;
     if (this.boundHandleMessage) {
       window.removeEventListener("message", this.boundHandleMessage);
       this.boundHandleMessage = null;
@@ -90,9 +98,11 @@ export class MessageBridge {
   private handleMessage(event: MessageEvent): void {
     try {
       if (event.source !== window.parent) return;
+      if (this.parentOrigin && event.origin !== this.parentOrigin) return;
 
       const msg = event.data as StandardMessage;
       if (!msg || typeof msg.type !== "string") return;
+      if (msg.type === 'INIT' && event.origin && event.origin !== 'null') this.parentOrigin = event.origin;
 
       // Track REQUEST id for RESPONSE pairing
       if (msg.type === "REQUEST") {

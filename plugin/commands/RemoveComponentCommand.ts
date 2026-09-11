@@ -27,6 +27,8 @@ class RemoveComponentCommand extends Command {
 	execute(): void {
 
 		if (this.object.components === undefined) return;
+		// Earlier commands in the same batch may have changed the array indices.
+		this.index = this.object.components.indexOf(this.component);
 
 		if (this.index !== - 1) {
 
@@ -39,6 +41,8 @@ class RemoveComponentCommand extends Command {
 	}
 
 	undo(): void {
+
+		if (this.index < 0 || this.object.components?.includes(this.component)) return;
 
 		if (this.object.components === undefined) {
 			this.object.components = [];
