@@ -11,7 +11,7 @@ import { createWebMcpNodeDeletionRequestHandlers } from '../plugin-dist/utils/We
 import { createWebMcpComponentRequestHandlers } from '../plugin-dist/utils/WebMcpComponentHandlers.js';
 import { createWebMcpResourcePlacementRequestHandlers } from '../plugin-dist/utils/WebMcpResourcePlacementHandlers.js';
 import { completeVerseSceneEntityPlacement } from '../plugin-dist/webmcp/VerseScenePlacementHandlers.js';
-import { createVerseSceneVersion } from '../plugin-dist/webmcp/VerseSceneReadHandlers.js';
+import { createVerseSceneVersion, getVerseSceneWebMcpState } from '../plugin-dist/webmcp/VerseSceneReadHandlers.js';
 import { getEntityWebMcpState, markEntitySaved } from '../plugin-dist/webmcp/EntityReadHandlers.js';
 import { MessageBridge } from '../plugin-dist/utils/MessageBridge.js';
 import { setupBridgeHandlers } from '../plugin-dist/utils/BridgeHandlers.js';
@@ -251,10 +251,90 @@ test('native message bridge pins parent origin and stops sending after destroy',
   globalThis.window = { parent, addEventListener: (type, fn) => listeners.set(type, fn), removeEventListener: type => listeners.delete(type) };
   const bridge = new MessageBridge(); let requests = 0;
   bridge.onMessage('REQUEST', () => requests++); bridge.init(); const receive = listeners.get('message');
+  const documentId = outgoing[0].data.payload.documentId;
+  assert.equal(typeof documentId, 'string'); assert.ok(documentId.length > 0);
+  bridge.init(); assert.equal(outgoing.length, 1);
   receive({ source: parent, origin: 'https://host.test', data: { type: 'INIT', id: 'init', payload: {} } });
   receive({ source: parent, origin: 'https://other.test', data: { type: 'REQUEST', id: 'bad' } });
   receive({ source: {}, origin: 'https://host.test', data: { type: 'REQUEST', id: 'bad2' } });
   receive({ source: parent, origin: 'https://host.test', data: { type: 'REQUEST', id: 'good' } });
   assert.equal(requests, 1); bridge.postResponse({ ok: true }, 'good'); assert.equal(outgoing.at(-1).origin, 'https://host.test');
   const before = outgoing.length; bridge.destroy(); bridge.postResponse({ ok: true }, 'late'); assert.equal(outgoing.length, before); assert.equal(listeners.has('message'), false);
+  const reloadedBridge = new MessageBridge(); reloadedBridge.init();
+  assert.notEqual(outgoing.at(-1).data.payload.documentId, documentId); reloadedBridge.destroy();
+});
+
+test('native bridge rejects early WebMCP requests and reads live scene after INIT', async () => {
+  const outgoing = [], listeners = new Map(), errors = [];
+  const parent = { postMessage: (data, origin) => outgoing.push({ data, origin }) };
+  globalThis.window = { parent, addEventListener: (type, fn) => listeners.set(type, fn), removeEventListener: type => listeners.delete(type) };
+  const editor = editorFixture(); editor.data = undefined;
+  const verse = { children: { modules: [{ type: 'Module', parameters: { title: 'scene 2321' } }] } };
+  let reads = 0, writes = 0, loadSession;
+  editor.verseLoader = { json: null, getVerse: async () => { reads++; return verse; }, getLoadingStatus: () => false };
+  editor.signals.messageReceive.dispatch = event => { if (event.action === 'load') loadSession = editor.data.webMcpHostSessionId; };
+  const bridge = new MessageBridge();
+  setupBridgeHandlers({ bridge, editor, responseActions: new Set(), mapToResponsePayload: () => ({}), getLoaderChanged: async () => false, getLoaderData: async () => ({}), loaderJsonSetter() {}, requestHandlers: {
+    'webmcp-get-scene-state': () => getVerseSceneWebMcpState(editor),
+    'webmcp-write': () => { writes++; return { ok: true }; }
+  } });
+  bridge.init();
+  const send = (type, id, payload) => {
+    const oldError = console.error; console.error = error => errors.push(error);
+    try { listeners.get('message')?.({ source: parent, origin: 'https://host.test', data: { type, id, payload } }); }
+    finally { console.error = oldError; }
+  };
+  try {
+    for (const action of ['webmcp-get-capabilities', 'webmcp-get-scene-state', 'webmcp-write']) {
+      send('REQUEST', action, { action, hostSessionId: 'early' });
+      const response = outgoing.at(-1).data;
+      assert.equal(response.type, 'RESPONSE');
+      assert.equal(response.requestId, action);
+      assert.equal(response.payload.hostSessionId, 'early');
+      assert.equal(response.payload.code, 'NOT_INITIALIZED');
+      assert.equal(response.payload.ok, false);
+    }
+    assert.equal(editor.data, undefined); assert.equal(reads, 0); assert.equal(writes, 0);
+    // A legacy INIT still loads the editor but cannot authorize WebMCP.
+    send('INIT', 'legacy', { config: { id: 2321 } });
+    send('REQUEST', 'legacy-read', { action: 'webmcp-get-scene-state' });
+    assert.equal(outgoing.at(-1).data.payload.code, 'NOT_INITIALIZED'); assert.equal(reads, 0);
+    send('INIT', 'init', { config: { id: 2321, hostSessionId: 'current' } });
+    assert.equal(loadSession, 'current');
+    send('REQUEST', 'stale-write', { action: 'webmcp-write', hostSessionId: 'early' });
+    send('REQUEST', 'no-session-write', { action: 'webmcp-write' });
+    send('REQUEST', 'read', { action: 'webmcp-get-scene-state', hostSessionId: 'current' });
+    await new Promise(resolve => setImmediate(resolve));
+    const response = outgoing.at(-1);
+    assert.equal(response.origin, 'https://host.test');
+    assert.equal(response.data.requestId, 'read');
+    assert.equal(response.data.payload.hostSessionId, 'current');
+    assert.equal(response.data.payload.ok, true);
+    assert.deepEqual(response.data.payload.verse, verse);
+    assert.equal(reads, 1); assert.equal(writes, 0);
+    send('DESTROY', 'destroy', {});
+    send('REQUEST', 'late-write', { action: 'webmcp-write', hostSessionId: 'current' });
+    assert.equal(writes, 0); assert.deepEqual(errors, []);
+  } finally { bridge.destroy(); }
+});
+
+test('invalid INIT and lost editor data never authorize WebMCP from a previous session', async () => {
+  const editor = editorFixture(), handlers = new Map(), responses = []; let calls = 0;
+  const bridge = { onMessage: (name, handler) => handlers.set(name, handler), postResponse: payload => responses.push(payload), postMessage() {}, destroy() {} };
+  setupBridgeHandlers({ bridge, editor, responseActions: new Set(), mapToResponsePayload: () => ({}), getLoaderChanged: async () => false, getLoaderData: async () => ({}), loaderJsonSetter() {}, requestHandlers: {
+    'webmcp-write': () => { calls++; return { ok: true }; }
+  } });
+  for (const invalid of [undefined, {}, { config: [] }, { config: {} }, { config: { hostSessionId: '' } }, { config: { hostSessionId: ' ' } }, { config: { hostSessionId: 42 } }]) {
+    handlers.get('INIT')({ config: { hostSessionId: 'valid' } });
+    handlers.get('INIT')(invalid);
+    handlers.get('REQUEST')({ action: 'webmcp-write', hostSessionId: 'valid' }, { id: 'blocked' });
+    assert.equal(responses.at(-1).code, 'NOT_INITIALIZED');
+  }
+  handlers.get('INIT')({ config: { hostSessionId: 'valid' } });
+  editor.data = undefined;
+  handlers.get('REQUEST')({ action: 'webmcp-write', hostSessionId: 'valid' }, { id: 'lost-data' });
+  assert.equal(responses.at(-1).code, 'NOT_INITIALIZED'); assert.equal(calls, 0);
+  handlers.get('INIT')({ config: { hostSessionId: 'new' } });
+  handlers.get('REQUEST')({ action: 'webmcp-write', hostSessionId: 'new' }, { id: 'recovered' });
+  await Promise.resolve(); assert.equal(responses.at(-1).ok, true); assert.equal(calls, 1);
 });
