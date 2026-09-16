@@ -12,7 +12,7 @@ export async function getEntityWebMcpState( editor: MrppEditor ): Promise<Record
 	return {
 		ok: true, meta, events, entityId: editor.data?.id ?? null,
 		entityVersion: contentVersion( snapshot ), changed: loader.json !== null && loader.json !== JSON.stringify( snapshot ),
-		loading: Boolean( loader.getLoadingStatus?.() ), source: 'live-editor', contextGeneration: context.generation
+		loading: Boolean( loader.getLoadingStatus?.() ), loadProgress: loader.getLoadingProgress?.() ?? null, source: 'live-editor', contextGeneration: context.generation
 	};
 }
 
