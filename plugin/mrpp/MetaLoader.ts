@@ -1,3 +1,4 @@
+import { EditorLoadProgress } from './EditorLoadProgress.js';
 import * as THREE from 'three';
 import { MetaFactory } from './MetaFactory.js';
 import { prepareMetaLoadState } from './prepareMetaLoadState.js';
@@ -9,6 +10,7 @@ class MetaLoader {
 	json: string | null;
 	isLoading: boolean;
 	loadingPromises: Promise<any>[];
+	private loadProgress: EditorLoadProgress | null = null;
 	factory: MetaFactory;
 
 	constructor(editor: MrppEditor) {
@@ -86,11 +88,14 @@ class MetaLoader {
 		}
 	}
 
+	getLoadingProgress() { return this.loadProgress?.snapshot() ?? null; }
+
 	getLoadingStatus(): boolean {
-		return this.isLoading;
+		return this.isLoading || this.loadProgress?.phase === 'error';
 	}
 
 	initLoading(): void {
+		this.loadProgress = null;
 		this.isLoading = true;
 		this.editor.signals.savingStarted.dispatch();
 	}
@@ -242,6 +247,8 @@ class MetaLoader {
 	}
 
 	async load(meta: any): Promise<void> {
+		const progress = new EditorLoadProgress((meta.data?.children?.entities ?? []).filter(Boolean).length);
+		this.loadProgress = progress;
 
 		let scene: THREE.Scene | null = this.editor.scene;
 		if (!scene) {
@@ -306,30 +313,40 @@ class MetaLoader {
 			});
 
 			(root as any).uuid = data.parameters.uuid;
-			const loadPromise = this.factory.readMeta(root, data, resources, this.editor);
+			const loadPromise = this.factory.readMeta(root, data, resources, this.editor, progress);
 			this.loadingPromises.push(loadPromise);
 
 			Promise.all(this.loadingPromises).then(async () => {
-				this.isLoading = false;
+				if (this.loadProgress !== progress) return;
+				progress.finish();
+
 				this.editor.signals.savingFinished.dispatch();
 				this.editor.signals.sceneGraphChanged.dispatch();
 
 				const metaData = await this.write(root);
+				if (this.loadProgress !== progress) return;
 				this.json = JSON.stringify({ meta: metaData, events: (this.editor.scene as MrppScene).events });
+				progress.ready();
+				this.isLoading = progress.phase === 'error';
 			}).catch((error: any) => {
+				if (this.loadProgress !== progress) return;
+				progress.fail();
 				console.error('Error loading models:', error);
-				this.isLoading = false;
+
 				this.editor.signals.savingFinished.dispatch();
 			});
 
 			this.editor.signals.sceneGraphChanged.dispatch();
 
 		} else {
-			this.isLoading = false;
+			progress.finish();
 			this.editor.signals.savingFinished.dispatch();
 
 			const metaData = await this.write(root);
+			if (this.loadProgress !== progress) return;
 			this.json = JSON.stringify({ meta: metaData, events: (this.editor.scene as MrppScene).events });
+			progress.ready();
+			this.isLoading = progress.phase === 'error';
 		}
 	}
 
