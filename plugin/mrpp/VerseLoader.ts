@@ -1,3 +1,4 @@
+import { EditorLoadProgress } from './EditorLoadProgress.js';
 import * as THREE from 'three';
 import { MetaFactory } from './MetaFactory.js';
 import { SpaceReference } from './SpaceReference.js';
@@ -14,6 +15,7 @@ class VerseLoader {
 	json: string | null;
 	isLoading: boolean;
 	loadingPromises: Promise<any>[];
+	private loadProgress: EditorLoadProgress | null = null;
 	factory: MetaFactory;
 	spaceReference: SpaceReference;
 	// dynamic property set in load() — typed loosely for editor API interaction
@@ -93,8 +95,10 @@ class VerseLoader {
 		return this.isChanged(JSON.stringify({ verse }));
 	}
 
+	getLoadingProgress() { return this.loadProgress?.snapshot() ?? null; }
+
 	getLoadingStatus(): boolean {
-		return this.isLoading;
+		return this.isLoading || this.loadProgress?.phase === 'error';
 	}
 
 	async save(): Promise<void> {
@@ -271,7 +275,7 @@ class VerseLoader {
 
 	}
 
-	async read(root: THREE.Scene, data: any, resources: Map<string, any>, metas: Map<string, any>): Promise<void> {
+	async read(root: THREE.Scene, data: any, resources: Map<string, any>, metas: Map<string, any>, progress?: EditorLoadProgress): Promise<void> {
 		return new Promise(async (resolve, reject) => {
 			try {
 		(root as any).uuid = data.parameters.uuid;
@@ -279,17 +283,19 @@ class VerseLoader {
 
 		if (data.children.anchors) {
 					for (const item of data.children.anchors) {
-						const anchorPromise = this.factory.addAnchor(item);
+						const anchorPromise = progress ? progress.track('anchor', item?.parameters?.title, () => this.factory.addAnchor(item)) : this.factory.addAnchor(item);
 						loadingPromises.push(anchorPromise);
 					}
 		}
 
 		if (data.children.modules) {
 					for (const item of data.children.modules) {
+						const finishTask = progress?.start('module', item?.parameters?.title);
 						const modulePromise = new Promise<void>(async (moduleResolve) => {
 							try {
 				const meta = metas.get(item.parameters.meta_id.toString());
 				if (!meta) {
+					finishTask?.(false);
 					console.warn(`Meta not found for module meta_id=${item.parameters.meta_id}, skipping`);
 					moduleResolve();
 					return;
@@ -300,14 +306,16 @@ class VerseLoader {
 				this.editor.signals.sceneGraphChanged.dispatch();
 
 				if (meta && meta.data && meta.custom !== 0) {
-					await this.factory.readMeta(node, meta.data, resources);
+					await this.factory.readMeta(node, meta.data, resources, null, progress, false);
 					this.editor.signals.sceneGraphChanged.dispatch();
 				}
 
 				await this.factory.addGizmo(node);
 				this.editor.signals.sceneGraphChanged.dispatch();
+								finishTask?.();
 								moduleResolve();
 							} catch (error) {
+								finishTask?.(false);
 								console.error('Error loading module:', error);
 								moduleResolve();
 							}
@@ -331,6 +339,8 @@ class VerseLoader {
 	}
 
 	async load(verse: any): Promise<void> {
+		const progress = new EditorLoadProgress(1 + (verse.data?.children?.anchors?.length ?? 0) + (verse.data?.children?.modules?.length ?? 0));
+		this.loadProgress = progress;
 		this.isLoading = true;
 		this.loadingPromises = [];
 		const metaSignalRegistry = ensureMetaSignalRegistry( this.editor );
@@ -373,7 +383,7 @@ class VerseLoader {
 		}
 
 		const root = this.editor.scene;
-		this.loadingPromises.push(this.spaceReference.load(verse.space));
+		this.loadingPromises.push(progress.track('space', null, () => this.spaceReference.load(verse.space)));
 
 		if (verse.data !== null) {
 			const data = verse.data;
@@ -392,32 +402,48 @@ class VerseLoader {
 				metas.set(item.id.toString(), item);
 			});
 
-			const loadPromise = this.read(root, data, resources, metas);
+			const loadPromise = this.read(root, data, resources, metas, progress);
 			this.loadingPromises.push(loadPromise);
 
 			Promise.all(this.loadingPromises).then(async () => {
-				this.isLoading = false;
+				if (this.loadProgress !== progress) return;
+				progress.finish();
+
 				this.editor.signals.savingFinished.dispatch();
 
-			const copy = await this.write(root);
-			this.compareObjectsAndPrintDifferences(data, copy);
-
-			this.editor.signals.sceneGraphChanged.dispatch();
-		this.json = JSON.stringify({ verse: await this.write(root) });
+				const copy = await this.write(root);
+				if (this.loadProgress !== progress) return;
+				this.compareObjectsAndPrintDifferences(data, copy);
+				this.editor.signals.sceneGraphChanged.dispatch();
+				const snapshot = JSON.stringify({ verse: copy });
+				if (this.loadProgress !== progress) return;
+				this.json = snapshot;
+				progress.ready();
+				this.isLoading = progress.phase === 'error';
 
 			}).catch((error: any) => {
+				if (this.loadProgress !== progress) return;
+				progress.fail();
 				console.error('Error loading modules:', error);
-				this.isLoading = false;
+
 				this.editor.signals.savingFinished.dispatch();
 			});
 		} else {
 			Promise.all(this.loadingPromises).then(async () => {
-				this.isLoading = false;
+				if (this.loadProgress !== progress) return;
+				progress.finish();
+
 				this.editor.signals.savingFinished.dispatch();
-				this.json = JSON.stringify({ verse: await this.write(root) });
+				const snapshot = JSON.stringify({ verse: await this.write(root) });
+				if (this.loadProgress !== progress) return;
+				this.json = snapshot;
+				progress.ready();
+				this.isLoading = progress.phase === 'error';
 			}).catch((error: any) => {
+				if (this.loadProgress !== progress) return;
+				progress.fail();
 				console.error('Error loading space reference:', error);
-				this.isLoading = false;
+
 				this.editor.signals.savingFinished.dispatch();
 			});
 		}
