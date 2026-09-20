@@ -7,6 +7,7 @@ import { KTX2Loader } from '../../three.js/examples/jsm/loaders/KTX2Loader.js';
 import { Factory } from './Factory.js';
 
 import { createTextMesh } from '../utils/TextUtils.js';
+import { markImportedAnimations } from '../webmcp/ImportedAnimationMetadata.js';
 import { createMeshFromUrl, getResourceLayout } from '../utils/WebpUtils.js';
 import type { MrppEditor, MrppObject3D } from '../types/mrpp.js';
 
@@ -279,7 +280,8 @@ class MetaFactory extends Factory {
 						if (alpha < 1.0) {
 							self.setModelTransparency(gltf.scene, alpha);
 						}
-						if (gltf.animations && gltf.animations.length > 0) {
+							markImportedAnimations(gltf.scene, gltf.animations || []);
+							if (gltf.animations && gltf.animations.length > 0) {
 							gltf.scene.animations = gltf.animations;
 						}
 
