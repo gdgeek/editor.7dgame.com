@@ -1,6 +1,7 @@
 import type { MessageBridge } from './MessageBridge.js';
 import type { MrppEditor } from '../types/mrpp.js';
 import { getEditorContext, resetEditorContext } from '../webmcp/EditorContext.js';
+import { hasActiveEditorAnimationPreview } from '../webmcp/EditorAnimationPreview.js';
 
 export interface BridgeHandlersConfig {
 	bridge: MessageBridge;
@@ -121,6 +122,11 @@ export function setupBridgeHandlers( config: BridgeHandlersConfig ): void {
 		if ( action === 'webmcp-get-capabilities' ) {
 			respond( { action, ok: true, protocolVersion: 1, contextGeneration: context.generation,
 				capabilities: Object.keys( config.requestHandlers ?? {} ) } );
+			return;
+		}
+		if ( hasActiveEditorAnimationPreview( editor ) &&
+			! action.startsWith( 'webmcp-get-' ) && action !== 'check-unsaved-changes' && action !== 'webmcp-control-editor-animation-preview' ) {
+			respond( { action, ok: false, code: 'ANIMATION_PREVIEW_ACTIVE', error: '请先停止 WebMCP 动画预览，再预览创作变更、修改或保存；当前预览未写入创作内容' } );
 			return;
 		}
 

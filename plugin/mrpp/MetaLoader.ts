@@ -2,6 +2,7 @@ import { EditorLoadProgress } from './EditorLoadProgress.js';
 import * as THREE from 'three';
 import { MetaFactory } from './MetaFactory.js';
 import { prepareMetaLoadState } from './prepareMetaLoadState.js';
+import { getEditorAnimationAuthoringTransform } from '../webmcp/EditorAnimationPreview.js';
 import type { MrppEditor, MrppObject3D, MrppScene } from '../types/mrpp.js';
 
 class MetaLoader {
@@ -169,24 +170,25 @@ class MetaLoader {
 		entity.type = (node as any).userData.type;
 		entity.parameters = {};
 		entity.parameters.uuid = node.uuid;
-		entity.parameters.name = node.name;
-		entity.parameters.transform = {};
-		entity.parameters.transform.position = {
-			x: (node as any).position.x,
-			y: (node as any).position.y,
-			z: (node as any).position.z
+			entity.parameters.name = node.name;
+			const authoredTransform = getEditorAnimationAuthoringTransform(node) ?? node;
+			entity.parameters.transform = {};
+			entity.parameters.transform.position = {
+				x: authoredTransform.position.x,
+				y: authoredTransform.position.y,
+				z: authoredTransform.position.z
 		};
 		entity.parameters.transform.rotate = {
-			x: ((node as any).rotation.x / Math.PI) * 180,
-			y: ((node as any).rotation.y / Math.PI) * 180,
-			z: ((node as any).rotation.z / Math.PI) * 180
+				x: (authoredTransform.rotation.x / Math.PI) * 180,
+				y: (authoredTransform.rotation.y / Math.PI) * 180,
+				z: (authoredTransform.rotation.z / Math.PI) * 180
 		};
 		entity.parameters.transform.scale = {
-			x: (node as any).scale.x,
-			y: (node as any).scale.y,
-			z: (node as any).scale.z
+				x: authoredTransform.scale.x,
+				y: authoredTransform.scale.y,
+				z: authoredTransform.scale.z
 		};
-		entity.parameters.active = node.visible;
+			entity.parameters.active = authoredTransform.visible;
 
 		entity.children = { 'entities': [] as any[], 'components': (node as MrppObject3D).components, 'commands': (node as MrppObject3D).commands };
 		node.children.forEach((child) => {
