@@ -1,3 +1,4 @@
+import type { EditorLoadProgress } from './EditorLoadProgress.js';
 import * as THREE from 'three';
 
 import { GLTFLoader } from '../../three.js/examples/jsm/loaders/GLTFLoader.js';
@@ -149,7 +150,7 @@ class MetaFactory extends Factory {
 
 	}
 
-	async readMeta(root: THREE.Object3D, data: any, resources: Map<string, any>, editor: MrppEditor | null = null): Promise<void> {
+	async readMeta(root: THREE.Object3D, data: any, resources: Map<string, any>, editor: MrppEditor | null = null, progress?: EditorLoadProgress, trackItems = true): Promise<void> {
 
 		if (data.children) {
 
@@ -159,7 +160,15 @@ class MetaFactory extends Factory {
 
 					try {
 
-						const node = await this.building(data.children.entities[i], resources);
+						const item = data.children.entities[i];
+						const node = progress && trackItems
+							? await progress.track('model', item?.parameters?.title, async () => {
+								const built = await this.building(item, resources);
+								if (!built) throw new Error('Resource could not be loaded');
+								return built;
+							})
+							: await this.building(item, resources);
+						if (progress && node == null) progress.fail();
 						if (node != null) {
 
 							root.add(node);
@@ -173,6 +182,7 @@ class MetaFactory extends Factory {
 
 					} catch (error) {
 
+						progress?.fail();
 						console.error(error);
 
 					}
