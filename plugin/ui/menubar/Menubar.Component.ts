@@ -195,8 +195,12 @@ function MenubarComponent(editor: MrppEditor): InstanceType<typeof UIPanel> {
         if (editor.type && editor.type.toLowerCase() === 'meta' && editor.selected !== null) {
             // 只有当选中对象类型为polygen或voxel时才显示
             const objectType = editor.selected.type ? editor.selected.type.toLowerCase() : '';
-            if (objectType === 'mesh' || objectType === 'polygen' || objectType === 'voxel' || objectType === 'picture') {
-                container.setDisplay('');
+            if (editor.selected.userData?.type && objectType !== 'module') {
+                const supportsComponents = ['mesh', 'polygen', 'voxel', 'picture'].includes(objectType);
+                for (const [kind, row] of Object.entries(typeRows)) {
+                    row.setDisplay(supportsComponents || (objectType === 'entity' && kind === 'Rotate') ? '' : 'none');
+                }
+                container.setDisplay(supportsComponents || objectType === 'entity' ? '' : 'none');
             } else {
                 container.setDisplay('none');
             }

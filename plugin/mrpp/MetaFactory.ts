@@ -6,6 +6,8 @@ import { DRACOLoader } from '../../three.js/examples/jsm/loaders/DRACOLoader.js'
 import { VOXLoader, VOXMesh } from '../../three.js/examples/jsm/loaders/VOXLoader.js';
 import { KTX2Loader } from '../../three.js/examples/jsm/loaders/KTX2Loader.js';
 import { Factory } from './Factory.js';
+import { applyMediaBlend } from './MediaBlend.js';
+import { applyMediaUv } from './MediaUv.js';
 
 import { createTextMesh } from '../utils/TextUtils.js';
 import { markImportedAnimations } from '../webmcp/ImportedAnimationMetadata.js';
@@ -146,6 +148,7 @@ class MetaFactory extends Factory {
 
 		userData.draggable = false;
 		node.userData = userData;
+
 		return node;
 
 	}
@@ -685,6 +688,12 @@ class MetaFactory extends Factory {
 		(node as MrppObject3D).commands = data.children.commands || [];
 
 		node.userData = userData;
+		if ( data.type.toLowerCase() === 'picture' && data.parameters.uvRect !== undefined ) {
+			applyMediaUv( node, data.parameters.uvRect );
+		}
+		if ( [ 'picture', 'video' ].includes( data.type.toLowerCase() ) && data.parameters.blendMode !== undefined ) {
+			applyMediaBlend( node, data.parameters.blendMode );
+		}
 		for (let i = 0; i < data.children.entities.length; ++i) {
 
 			const child = await this.building(data.children.entities[i], resources);
