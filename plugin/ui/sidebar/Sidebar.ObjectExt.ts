@@ -6,7 +6,8 @@ import { SetPositionCommand } from '../../../three.js/editor/js/commands/SetPosi
 import { SetRotationCommand } from '../../../three.js/editor/js/commands/SetRotationCommand.js';
 import { SetScaleCommand } from '../../../three.js/editor/js/commands/SetScaleCommand.js';
 import { SetValueCommand } from '../../../three.js/editor/js/commands/SetValueCommand.js';
-import { ABILITIES } from '../../access/Access.js';
+import { ABILITIES, ROLES } from '../../access/Access.js';
+import { applyMediaBlend } from '../../mrpp/MediaBlend.js';
 
 // ── helpers ──────────────────────────────────────────────────────────
 
@@ -881,6 +882,19 @@ function injectSidebarObjectExtensions( editor: any, sidebarObjectContainer: HTM
 
 	objectSortingRow.add( new UIText( strings.getKey( 'sidebar/object/sortingOrder' ) ).setWidth( '90px' ) );
 	objectSortingRow.add( objectSorting );
+	const objectBlendRow = new UIRow();
+	const objectBlend = new UISelect().setOptions( { alpha: '普通透明', additive: '叠加（黑底透明）' } );
+	objectBlendRow.add( new UIText( '混合方式' ).setWidth( '90px' ) );
+	objectBlendRow.add( objectBlend );
+	sidebarObjectContainer.appendChild( objectBlendRow.dom );
+	objectBlend.onChange( function () {
+		const object = editor.selected;
+		if ( ! object || !editor.access.atLeast( ROLES.ADMIN ) ) return;
+		const userData = { ...object.userData, blendMode: objectBlend.getValue() };
+		editor.execute( new SetValueCommand( editor, object, 'userData', userData ) );
+		applyMediaBlend( object, userData.blendMode );
+		signals.objectChanged.dispatch( object );
+	} );
 
 	// ── find the visible row and insert loop / sorting / edit-entity around it ──
 
@@ -1025,6 +1039,8 @@ function injectSidebarObjectExtensions( editor: any, sidebarObjectContainer: HTM
 		// Sorting row: only for picture types
 		const isPicture = isPictureType( object );
 		objectSortingRow.setDisplay( isPicture ? '' : 'none' );
+		const type = String( object?.userData?.type || object?.type || '' ).toLowerCase();
+		objectBlendRow.setDisplay( editor.access.atLeast( ROLES.ADMIN ) && [ 'picture', 'video' ].includes( type ) ? '' : 'none' );
 
 		// Hide visible row for Module type
 		if ( objectVisibleRow && object && object.type && typeof object.type === 'string' && object.type.toLowerCase() === 'module' ) {
@@ -1109,6 +1125,11 @@ function injectSidebarObjectExtensions( editor: any, sidebarObjectContainer: HTM
 	}
 
 	function applyMrppUIValues( object: any ) {
+		objectBlend.setValue( object?.userData?.blendMode === 'additive' ? 'additive' : 'alpha' );
+		if ( object?.userData?.blendMode !== undefined &&
+			[ 'picture', 'video' ].includes( String( object.userData.type || object.type ).toLowerCase() ) ) {
+			applyMediaBlend( object, object.userData.blendMode );
+		}
 
 		// Localized type — use setTimeout(0) to ensure this runs AFTER
 		// r183's own updateUI handler, which sets objectType to object.type
