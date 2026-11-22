@@ -9,6 +9,7 @@ import { SetRotationCommand } from './commands/SetRotationCommand.js';
 import { SetScaleCommand } from './commands/SetScaleCommand.js';
 import { SetColorCommand } from './commands/SetColorCommand.js';
 import { SetShadowValueCommand } from './commands/SetShadowValueCommand.js';
+import { SidebarSubtitle } from './Sidebar.Subtitle.js';
 
 function getLocalizedObjectType( object, editor ) {
 
@@ -2254,6 +2255,8 @@ function SidebarObject( editor ) {
 	objectMediaPreviewProgressRow.add( objectMediaPreviewProgressWrap );
 	objectMediaPreviewProgressRow.setDisplay( 'none' );
 	container.add( objectMediaPreviewProgressRow );
+	const subtitleSidebar = SidebarSubtitle( editor );
+	container.add( subtitleSidebar.panel );
 
 	objectMediaPreviewProgress.addEventListener( 'input', function () {
 
@@ -2790,6 +2793,7 @@ function SidebarObject( editor ) {
 		}
 
 		updateMediaPreviewUI( object );
+		subtitleSidebar.update( object );
 		updateTransformRows( object );
 
 	}

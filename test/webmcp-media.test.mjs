@@ -2,6 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { History } from '../three.js/editor/js/History.js';
+import { SidebarSubtitle } from '../three.js/editor/js/Sidebar.Subtitle.js';
+import { MetaFactory } from '../plugin-dist/mrpp/MetaFactory.js';
 import { MetaLoader } from '../plugin-dist/mrpp/MetaLoader.js';
 import { createWebMcpMediaRequestHandlers } from '../plugin-dist/utils/WebMcpMediaHandlers.js';
 import { markImportedAnimations } from '../plugin-dist/webmcp/ImportedAnimationMetadata.js';
@@ -30,6 +32,115 @@ function fixture() {
   return { editor, handlers, add };
 }
 const completePayload = staged => ({ nodeId: staged.nodeId, proposed: staged.proposed, propertiesVersion: staged.propertiesVersion, contextGeneration: staged.contextGeneration, entityVersion: staged.entityVersion });
+
+class TestElement extends EventTarget {
+  style = {};
+  children = [];
+  attributes = {};
+  appendChild(child) { this.children.push(child); }
+  setAttribute(name, value) { this.attributes[name] = value; }
+}
+
+function subtitleSidebar(t) {
+  const oldDocument = globalThis.document;
+  globalThis.document = { createElement: () => new TestElement() };
+  t.after(() => { globalThis.document = oldDocument; });
+  const { editor, add } = fixture();
+  editor.type = 'meta';
+  const sidebar = SidebarSubtitle(editor);
+  editor.signals.objectChanged.dispatch = (object) => sidebar.update(object);
+  const select = (object) => { editor.select(object); sidebar.update(object); };
+  const controls = sidebar.panel.dom.children.flatMap(row => row.children);
+  const control = (key) => controls.find(element => element.attributes['aria-label'] === `sidebar/subtitle/${key}`);
+  return { editor, add, select, sidebar, control };
+}
+
+test('subtitle settings appear only on Sound and Video with an actual binding', (t) => {
+  const { editor, add, select, sidebar } = subtitleSidebar(t);
+  const sound = add('Sound', { resource: 10 });
+  const video = add('Video', { resource: 11 });
+  const particle = add('Particle', { resource: 11, isVideo: true });
+  editor.data.resources.push(
+    { id: 10, type: 'audio', hasSubtitle: false, info: '{"subtitleResourceId":22}' },
+    { id: 11, type: 'video', hasSubtitle: true }
+  );
+  select(sound);
+  assert.equal(sidebar.panel.dom.style.display, 'none');
+  select(video);
+  assert.equal(sidebar.panel.dom.style.display, '');
+  select(particle);
+  assert.equal(sidebar.panel.dom.style.display, 'none');
+  editor.data.resources[0] = { id: 10, type: 'audio', info: '{"subtitleResourceId":22}' };
+  select(sound);
+  assert.equal(sidebar.panel.dom.style.display, 'none');
+  editor.data.resources.push({ id: 22, type: 'subtitle' });
+  select(sound);
+  assert.equal(sidebar.panel.dom.style.display, '');
+  editor.data.resources[0].info = '{"subtitleResourceId":"22"}';
+  select(sound);
+  assert.equal(sidebar.panel.dom.style.display, 'none');
+});
+
+test('bound subtitle controls validate, save and reload independent node styles with undo and reset', async (t) => {
+  const { editor, add, select, sidebar, control } = subtitleSidebar(t);
+  const sound = add('Sound', { resource: 10, loop: true });
+  const other = add('Sound', { resource: 10 });
+  const resource = { id: 10, type: 'audio', hasSubtitle: true };
+  editor.data.resources.push(resource);
+  select(sound);
+
+  const enabled = control('enabled');
+  const fontSize = control('fontSize');
+  const color = control('color');
+  assert.equal(enabled.checked, true);
+  assert.equal(fontSize.value, '36');
+  assert.equal(color.value, '#FFFFFF');
+  assert.equal(sound.userData.subtitleStyle, undefined);
+
+  function change(element, value) {
+    element[element.type === 'checkbox' ? 'checked' : 'value'] = value;
+    element.dispatchEvent(new Event('change'));
+  }
+  change(fontSize, '97');
+  change(color, '#abcd');
+  assert.equal(color.attributes['aria-invalid'], 'true');
+  assert.equal(editor.history.undos.length, 0);
+
+  change(fontSize, '54.5');
+  change(color, '#ffcc33');
+  change(enabled, false);
+  assert.deepEqual(sound.userData.subtitleStyle, { fontSize: 54.5, color: '#FFCC33', enabled: false });
+  assert.equal(sound.userData.loop, true);
+  assert.equal(other.userData.subtitleStyle, undefined);
+
+  const saved = await editor.metaLoader.getMeta();
+  const parameters = saved.children.entities[0].parameters;
+  assert.deepEqual(parameters.subtitleStyle, sound.userData.subtitleStyle);
+  const reloaded = await new MetaFactory().building(saved.children.entities[0], new Map([['10', resource]]));
+  select(reloaded);
+  assert.equal(enabled.checked, false);
+  assert.equal(fontSize.value, '54.5');
+  assert.equal(color.value, '#FFCC33');
+  select(sound);
+
+  editor.history.undo();
+  assert.equal(enabled.checked, true);
+  editor.history.redo();
+  assert.equal(enabled.checked, false);
+  change(enabled, true);
+  control('resetFontSize').dispatchEvent(new Event('click'));
+  assert.deepEqual(sound.userData.subtitleStyle, { color: '#FFCC33' });
+  control('resetColor').dispatchEvent(new Event('click'));
+  assert.equal(sound.userData.subtitleStyle, undefined);
+  assert.equal(fontSize.value, '36');
+  assert.equal(color.value, '#FFFFFF');
+
+  editor.data.saveable = false;
+  sidebar.update(sound);
+  assert.equal(enabled.disabled, true);
+  change(enabled, false);
+  assert.equal(sound.userData.subtitleStyle, undefined);
+});
 
 test('import provenance distinguishes unresolved, pending, parsed empty, and actual duplicate-named clips', () => {
   const { editor, handlers, add } = fixture(); const object = add('Polygen', { resource: 17, animations: ['stored-only'] });
