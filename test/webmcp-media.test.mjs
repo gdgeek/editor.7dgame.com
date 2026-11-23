@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import * as THREE from 'three';
 import { History } from '../three.js/editor/js/History.js';
 import { SidebarSubtitle } from '../three.js/editor/js/Sidebar.Subtitle.js';
@@ -54,6 +55,29 @@ function subtitleSidebar(t) {
   const control = (key) => controls.find(element => element.attributes['aria-label'] === `sidebar/subtitle/${key}`);
   return { editor, add, select, sidebar, control };
 }
+
+test('embedded editor versions the subtitle modules through normalized import-map URLs', () => {
+  const editorDocument = new URL('../three.js/editor/meta-editor.html?language=zh-CN&v=host-version', import.meta.url);
+  const html = readFileSync(editorDocument, 'utf8');
+  const importMap = JSON.parse(html.match(/<script type="importmap">([\s\S]+?)<\/script>/)[1]);
+  const imports = new Map(Object.entries(importMap.imports).map(([key, target]) => [
+    new URL(key, editorDocument).href, new URL(target, editorDocument),
+  ]));
+  const dependencies = [
+    ['./js/Sidebar.Properties.js', './Sidebar.Object.js'],
+    ['./js/Sidebar.Object.js', './Sidebar.Subtitle.js'],
+    ['./js/Strings.js', '../../../plugin-dist/i18n/MrppStrings.js'],
+  ];
+  for (const [importer, specifier] of dependencies) {
+    const importerUrl = new URL(importer, editorDocument);
+    assert.ok(readFileSync(importerUrl, 'utf8').includes(`from '${specifier}'`));
+    const specifierUrl = new URL(specifier, importerUrl);
+    const target = imports.get(specifierUrl.href);
+    assert.ok(target, `Missing import-map entry for ${specifierUrl.pathname}`);
+    assert.equal(target.pathname, specifierUrl.pathname);
+    assert.equal(target.searchParams.get('v'), '__EDITOR_BUILD_VERSION__');
+  }
+});
 
 test('subtitle settings appear only on Sound and Video with an actual binding', (t) => {
   const { editor, add, select, sidebar } = subtitleSidebar(t);

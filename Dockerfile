@@ -10,8 +10,10 @@ ARG BUILD_TIME="unknown"
 # 将项目文件复制到容器的Nginx目录中
 COPY . /usr/share/nginx/html
 
-# 注入打包时间
-RUN sed -i "s/__BUILD_TIME__/${BUILD_TIME}/g" /usr/share/nginx/html/index.html
+# 注入打包时间及字幕编辑模块的缓存版本
+RUN sed -i "s/__BUILD_TIME__/${BUILD_TIME}/g" /usr/share/nginx/html/index.html \
+    && editor_build_version="$(printf '%s' "$BUILD_TIME" | tr -cd '0-9')" \
+    && sed -i "s/__EDITOR_BUILD_VERSION__/${editor_build_version:-local}/g" /usr/share/nginx/html/three.js/editor/meta-editor.html
 
 # 清理不需要的文件（.dockerignore 应该已经排除，这里做二次清理）
 RUN rm -rf /usr/share/nginx/html/.git \
