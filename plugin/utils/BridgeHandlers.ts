@@ -125,7 +125,7 @@ export function setupBridgeHandlers( config: BridgeHandlersConfig ): void {
 			return;
 		}
 		if ( hasActiveEditorAnimationPreview( editor ) &&
-			! action.startsWith( 'webmcp-get-' ) && action !== 'check-unsaved-changes' && action !== 'webmcp-control-editor-animation-preview' ) {
+			! action.startsWith( 'webmcp-get-' ) && action !== 'check-unsaved-changes' && action !== 'webmcp-control-editor-animation-preview' && action !== 'audio-subtitles-updated' && action !== 'media-subtitles-updated' ) {
 			respond( { action, ok: false, code: 'ANIMATION_PREVIEW_ACTIVE', error: '请先停止 WebMCP 动画预览，再预览创作变更、修改或保存；当前预览未写入创作内容' } );
 			return;
 		}

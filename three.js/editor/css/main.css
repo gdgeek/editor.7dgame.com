@@ -573,6 +573,10 @@ hr {
 
 	}
 
+	#sidebar .audio-subtitle-property-label {
+		cursor: help;
+	}
+
 #properties > .Tabs .Tab {
 	display: inline-block;
 	min-width: 50px;

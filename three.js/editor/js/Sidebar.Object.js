@@ -1,3 +1,4 @@
+import { buildMediaUvPanel } from '../../../plugin-dist/mrpp/MediaUv.js';
 import * as THREE from 'three';
 
 import { UIPanel, UIDiv, UIRow, UIInput, UIButton, UIColor, UICheckbox, UIText, UINumber, UISelect } from './libs/ui.js';
@@ -84,6 +85,13 @@ function sanitizeObjectName( name ) {
 
 }
 
+function isSoundType( object ) {
+
+	const type = String( object.userData?.type || '' ).toLowerCase();
+	return type === 'sound' || type === 'audio';
+
+}
+
 function isMediaType( object ) {
 
 	if ( object.userData && object.userData.type ) {
@@ -141,34 +149,28 @@ function getMediaObjectType( object ) {
 
 }
 
+function getMediaObjectResource( object, editor ) {
+
+	const resourceId = object?.userData?.resource ?? object?.userData?.resourceId;
+	const resources = editor?.data?.resources;
+	if ( resourceId == null || ! Array.isArray( resources ) ) return undefined;
+
+	return resources.find( item => item && String( item.id ) === String( resourceId ) );
+
+}
+
 function getMediaObjectUrl( object, editor = null ) {
 
 	if ( ! object || ! object.userData ) return '';
 
-	if ( object.userData.src ) return object.userData.src;
-	if ( object.userData.audioUrl ) return object.userData.audioUrl;
-	if ( object.userData.videoUrl ) return object.userData.videoUrl;
+	const { src, audioUrl, videoUrl } = object.userData;
+	if ( src || audioUrl || videoUrl ) return src || audioUrl || videoUrl;
 
-	const resourceId = object.userData.resource != null ? object.userData.resource : object.userData.resourceId;
-	const resources = editor && editor.data && editor.data.resources;
-	if ( resourceId != null && Array.isArray( resources ) ) {
+	const resource = getMediaObjectResource( object, editor );
+	const mediaType = getMediaObjectType( object );
+	if ( mediaType === 'video' || mediaType === 'audio' ) {
 
-		const resource = resources.find( function ( item ) {
-
-			return String( item.id ) === String( resourceId );
-
-		} );
-
-		if ( resource ) {
-
-			const mediaType = getMediaObjectType( object );
-			const fileUrl = resource.file && resource.file.url ? resource.file.url : '';
-			const imageUrl = resource.image && resource.image.url ? resource.image.url : '';
-
-			if ( mediaType === 'video' ) return fileUrl || imageUrl || '';
-			if ( mediaType === 'audio' ) return fileUrl || imageUrl || '';
-
-		}
+		return resource?.file?.url || resource?.image?.url || '';
 
 	}
 
@@ -2652,6 +2654,7 @@ function SidebarObject( editor ) {
 
 	}
 
+	const mediaUvPanel = buildMediaUvPanel(editor,container.dom);
 	signals.objectSelected.add( function ( object ) {
 
 		if ( object !== null ) {
@@ -2697,6 +2700,7 @@ function SidebarObject( editor ) {
 	} );
 
 	function updateUI( object ) {
+		mediaUvPanel.update(object);
 
 		objectType.setValue( getLocalizedObjectType( object, editor ) );
 		objectUUID.setValue( object.uuid );

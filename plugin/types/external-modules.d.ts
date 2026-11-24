@@ -210,6 +210,7 @@ declare module 'three' {
 	}
 
 	export class MeshStandardMaterial extends Material {
+        constructor(parameters?: any);
 		color: Color;
 		map: Texture | null;
 		[key: string]: any;
@@ -312,6 +313,7 @@ declare module 'three' {
 	export const RGBAFormat: number;
 	export const DoubleSide: number;
 	export const NormalBlending: number;
+	export const AdditiveBlending: number;
 	export const AlwaysDepth: number;
 	export const DEG2RAD: number;
 	export const RAD2DEG: number;

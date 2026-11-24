@@ -165,6 +165,12 @@ class VoiceCommand {
       Object.assign(voiceOptions, {
         //教育项目
         nextStep: '下一步',
+        openNext: '打开下一个',
+        openFilm1: '打开第一个',
+        openFilm2: '打开第二个',
+        openFilm3: '打开第三个',
+        openFilm4: '打开第四个',
+        openFilm5: '打开第五个',
         returnMain: '返回主界面',
         closeTooltip: '关闭说明卡',
         openTooltip: '显示说明卡',

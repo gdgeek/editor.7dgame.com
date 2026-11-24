@@ -135,6 +135,20 @@ function initMetaEditor( editor: MrppEditor ): void {
 
 		}
 
+		if ( ( params.action === 'audio-subtitles-updated' || params.action === 'media-subtitles-updated' ) ) {
+
+			const resource = params.data?.resource;
+			const cached = editor.data.resources?.find( ( item: any ) => String( item.id ) === String( resource?.id ) );
+			if ( cached && resource && [ 'audio', 'sound', 'video' ].includes( String( resource.type ).toLowerCase() ) ) {
+
+				cached.info = resource.info;
+				if ( editor.selected ) editor.signals.refreshSidebarObject3D.dispatch( editor.selected );
+
+			}
+			return;
+
+		}
+
 		if ( params.action === 'load' ) {
 
 			const data = params.data;
