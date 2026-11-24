@@ -41,15 +41,7 @@ class CommandContainer {
 
 	renderer(container: any): void {
 		const strings = this.editor.strings;
-		const localizedType = strings.getKey(`sidebar/command/select/${this.command.type.toLowerCase()}`) || this.command.type;
-		container.add(new UIText(localizedType));
-
-		if (this.handler !== undefined) {
-			this.handler.renderer(container);
-		}
-
 		const remove = new UIButton(strings.getKey('sidebar/command/remove'));
-		remove.setMarginLeft('4px');
 		remove.onClick(function (this: CommandContainer, event: Event) {
 			this.editor.showConfirmation(strings.getKey('sidebar/command/remove/confirm'),
 				function (this: CommandContainer) {
@@ -60,8 +52,16 @@ class CommandContainer {
 				true
 			);
 		}.bind(this));
-		container.add(remove);
-		container.add(new UIBreak());
+		if (this.handler instanceof VoiceCommand) {
+			this.handler.renderer(container, remove);
+		} else {
+			const localizedType = strings.getKey(`sidebar/command/select/${this.command.type.toLowerCase()}`) || this.command.type;
+			container.add(new UIText(localizedType));
+			this.handler?.renderer(container);
+			remove.setMarginLeft('4px');
+			container.add(remove);
+			container.add(new UIBreak());
+		}
 	}
 }
 

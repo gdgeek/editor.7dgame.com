@@ -2,13 +2,14 @@ import { UIPanel, UIBreak, UIText, UIButton, UIRow, UISelect, UIInput, UIHorizon
 
 import { AddCommandCommand } from '../../commands/AddCommandCommand.js';
 import { CommandContainer } from '../../mrpp/CommandContainer.js';
+import type { MrppCommand } from '../../types/mrpp.js';
 
 function SidebarCommand(editor: any): { container: InstanceType<typeof UIPanel>; update: () => void } {
 
 	const strings = editor.strings;
 	const signals = editor.signals;
 
-	const container = new UIPanel();
+	const container = new UIPanel().addClass('mrpp-commands-panel');
 	container.setDisplay('none');
 
 	const topContainer = new UIRow();
@@ -20,8 +21,10 @@ function SidebarCommand(editor: any): { container: InstanceType<typeof UIPanel>;
 
 	const commandsContainer = new UIRow();
 	container.add(commandsContainer);
+	const renderedCommands = new Map<MrppCommand, CommandContainer>();
 
 	function update() {
+		renderedCommands.clear();
 		topContainer.clear();
 		topContainer.setDisplay('none');
 		addCommandContainer.clear();
@@ -108,7 +111,8 @@ function SidebarCommand(editor: any): { container: InstanceType<typeof UIPanel>;
 					const cmd = new AddCommandCommand(editor, object, command);
 					editor.execute(cmd);
 
-					const successMessage = strings.getKey('menubar/command/success').replace('{0}', (select as any).getSelectedHtml());
+					const commandName = strings.getKey('sidebar/command/select/' + chosenType.toLowerCase()) || chosenType;
+					const successMessage = strings.getKey('menubar/command/success').replace('{0}', commandName);
 					editor.showNotification(successMessage, false);
 				}
 			});
@@ -117,10 +121,11 @@ function SidebarCommand(editor: any): { container: InstanceType<typeof UIPanel>;
 			if (commands !== undefined && commands.length > 0) {
 				for (let i = 0; i < commands.length; i++) {
 					(function(object, command) {
-						commandsContainer.add(new UIHorizontalRule());
+						if (command.type.toLowerCase() !== 'voice') commandsContainer.add(new UIHorizontalRule());
 						const cc = new CommandContainer(editor, object, command);
 						cc.renderer(commandsContainer);
-						commandsContainer.add(new UIBreak());
+						renderedCommands.set(command, cc);
+						if (command.type.toLowerCase() !== 'voice') commandsContainer.add(new UIBreak());
 					})(object, commands[i]);
 				}
 			}
@@ -230,7 +235,10 @@ function SidebarCommand(editor: any): { container: InstanceType<typeof UIPanel>;
 
 	signals.commandAdded.add(update);
 	signals.commandRemoved.add(update);
-	signals.commandChanged.add(update);
+	// Parameters changed on this command; keep other commands' uncommitted inputs.
+	signals.commandChanged.add((command: MrppCommand) => {
+		renderedCommands.get(command)?.handler?.updateUI();
+	});
 
 	return { container, update };
 }

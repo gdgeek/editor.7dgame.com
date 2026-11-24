@@ -1042,3 +1042,54 @@ hr {
 	transform: translate(0, 0);
 	z-index: 0;
 }
+
+/* Voice command editor: use the same controls and spacing as other properties. */
+.mrpp-voice-card {
+	margin-top: 10px;
+	border-top: 1px solid #ccc;
+	font-size: 12px;
+}
+.mrpp-voice-header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-height: 24px;
+	padding: 8px 0;
+}
+.mrpp-voice-title { flex: 1; }
+.mrpp-voice-status { font-size: 11px; }
+.mrpp-voice-status[data-state="editing"] { color: #986524; }
+.mrpp-voice-status[data-state="confirmed"] { color: #4c7b58; }
+.mrpp-voice-header .mrpp-voice-remove { padding: 4px 8px; }
+.mrpp-voice-body { display: flex; flex-direction: column; gap: 8px; }
+.mrpp-voice-field {
+	display: grid;
+	grid-template-columns: 80px minmax(0, 1fr);
+	align-items: center;
+	gap: 4px 8px;
+}
+.mrpp-voice-field label { font-size: 12px; font-weight: normal; }
+.mrpp-voice-field .Input {
+	width: 100%;
+	min-width: 0;
+	box-sizing: border-box;
+	height: 24px;
+	padding: 2px 5px;
+	border: 1px solid transparent;
+	font: inherit;
+}
+.mrpp-voice-field .Input:focus { border-color: #999; }
+.mrpp-voice-field .mrpp-voice-help { grid-column: 2; }
+.mrpp-voice-help { font-size: 11px; line-height: 1.5; }
+.mrpp-voice-error { color: #bd2837; font-size: 12px; line-height: 1.5; }
+.mrpp-voice-error:empty { display: none !important; }
+.mrpp-voice-actions { display: flex; gap: 6px; padding-left: 88px; }
+.mrpp-voice-actions .Button { white-space: nowrap; }
+.mrpp-voice-actions .Button:disabled { opacity: .5; cursor: default; pointer-events: none; }
+.mrpp-voice-card button:focus-visible { outline: 1px solid #888; outline-offset: 2px; }
+@media (prefers-color-scheme: dark) {
+	.mrpp-voice-card { border-color: #333; }
+	.mrpp-voice-status[data-state="editing"] { color: #c5a06a; }
+	.mrpp-voice-status[data-state="confirmed"] { color: #8bb296; }
+	.mrpp-voice-error { color: #e79a9a; }
+}
