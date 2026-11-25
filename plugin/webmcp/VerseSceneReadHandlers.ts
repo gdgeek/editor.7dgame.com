@@ -54,7 +54,7 @@ export const getVerseSceneWebMcpState = async (
 		sceneVersion: createVerseSceneVersion( verse ),
 		changed: Boolean( changed ),
 		loading,
-		source: 'live-editor', contextGeneration: context.generation,
+		loadProgress: loader.getLoadingProgress?.() ?? null, source: 'live-editor', contextGeneration: context.generation,
 		selectedModuleIds: selectedModuleIds( editor )
 	};
 

@@ -1,4 +1,5 @@
 import type { MrppEditor } from '../types/mrpp.js';
+import { getEditorAnimationAuthoringTransform } from './EditorAnimationPreview.js';
 
 type Context = { generation: number; active: boolean; busy: boolean; operations: Set<string>; controller: AbortController };
 const contexts = new WeakMap<MrppEditor, Context>();
@@ -45,13 +46,16 @@ export function stableValue( value: any ): string {
 }
 
 /** Authored state only: no renderer internals, geometry buffers, or parent cycles. */
-export const authoredObjectSnapshot = ( object: any ): Record<string, unknown> => ( {
-	uuid: object.uuid, name: object.name, type: object.type, visible: object.visible,
-	position: object.position?.toArray(), quaternion: object.quaternion?.toArray(),
-	scale: object.scale?.toArray(), userData: object.userData ?? {},
+export const authoredObjectSnapshot = ( object: any ): Record<string, unknown> => {
+	const authored = getEditorAnimationAuthoringTransform( object ) ?? object;
+	return {
+	uuid: object.uuid, name: object.name, type: object.type, visible: authored.visible,
+	position: authored.position?.toArray(), quaternion: authored.quaternion?.toArray(),
+	scale: authored.scale?.toArray(), userData: object.userData ?? {},
 	components: object.components ?? [], commands: object.commands ?? [], events: object.events,
 	children: ( object.children ?? [] ).map( authoredObjectSnapshot )
-} );
+	};
+};
 
 export function contentVersion( value: unknown ): string {
 	const serialized = stableValue( value );

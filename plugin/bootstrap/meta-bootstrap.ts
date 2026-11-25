@@ -1,3 +1,5 @@
+import { createWebMcpNodeCreationRequestHandlers } from '../utils/WebMcpNodeCreationHandlers.js';
+import { createWebMcpMediaRequestHandlers } from '../utils/WebMcpMediaHandlers.js';
 import { MetaLoader } from '../mrpp/MetaLoader.js';
 import { initializeGlobalShortcuts } from '../utils/GlobalShortcuts.js';
 import { applyEditorPatches } from '../patches/EditorPatches.js';
@@ -111,6 +113,8 @@ function initMetaEditor( editor: MrppEditor ): void {
 			...createWebMcpTransformRequestHandlers( editor ),
 			...createWebMcpNodePropertyRequestHandlers( editor ),
 			...createWebMcpResourcePlacementRequestHandlers( editor ),
+			...createWebMcpNodeCreationRequestHandlers( editor ),
+			...createWebMcpMediaRequestHandlers( editor ),
 			...createWebMcpHierarchyRequestHandlers( editor ),
 			...createWebMcpNodeDeletionRequestHandlers( editor ),
 			...createWebMcpNodeOrderRequestHandlers( editor ),

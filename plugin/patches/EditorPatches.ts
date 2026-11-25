@@ -1,6 +1,7 @@
 import { DialogUtils } from '../utils/DialogUtils.js';
 import { Access } from '../access/Access.js';
 import type { MrppEditor } from '../types/mrpp.js';
+import { hasActiveEditorAnimationPreview } from '../webmcp/EditorAnimationPreview.js';
 
 /**
  * Language mapping: URL parameter codes → r183 editor config codes.
@@ -125,6 +126,10 @@ function registerCustomMethods( editor: MrppEditor ): void {
 	 * before dispatching upload signal.
 	 */
 	editor.save = function (): boolean {
+		if ( hasActiveEditorAnimationPreview( this ) ) {
+			this.showNotification( '请先停止 WebMCP 动画预览，再保存创作内容', true );
+			return false;
+		}
 
 		if ( this.metaLoader && typeof this.metaLoader.getLoadingStatus === 'function' && this.metaLoader.getLoadingStatus() ) {
 
