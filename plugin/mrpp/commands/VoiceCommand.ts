@@ -1,282 +1,148 @@
 import * as THREE from 'three';
-import { UIBreak, UIText, UIRow, UIInput, UISelect } from '../../../three.js/editor/js/libs/ui.js';
-import { SetValueCommand } from '../../../three.js/editor/js/commands/SetValueCommand.js';
-import { ROLES } from '../../access/Access.js';
-import type { MrppEditor, MrppCommand } from '../../types/mrpp.js';
+import { UIDiv, UIText, UIInput, UIButton } from '../../../three.js/editor/js/libs/ui.js';
+import { SetCommandValueCommand } from '../../commands/SetCommandValueCommand.js';
+import { normalizeVoiceText, readVoiceText, validateVoiceText } from './VoiceCommandData.js';
+import type { MrppEditor, MrppCommand, MrppObject3D } from '../../types/mrpp.js';
 
 class VoiceCommand {
+  phraseInput!: any;
+  pinyinInput!: any;
+  errorText!: any;
+  statusText!: any;
+  confirmButton!: any;
+  cancelButton!: any;
 
-  editor: MrppEditor;
-  object: THREE.Object3D;
-  component: MrppCommand;
-  uuid!: any;
-  voiceSelect!: any;
-  _wasEmptyAction!: boolean;
-  _autoDefaultApplied!: boolean;
+  constructor(public editor: MrppEditor, public object: THREE.Object3D, public component: MrppCommand) {}
 
-  constructor(editor: MrppEditor, object: THREE.Object3D, component: MrppCommand) {
-    this.editor = editor;
-    this.object = object;
-    this.component = component;
-
-    // 监听用户信息变化，在角色改变时重新加载选项
-    this.editor.signals.messageReceive.add((params: any) => {
-      if (params.action === 'user-info' && this.voiceSelect) {
-        this.reloadOptions();
-      }
-    });
-
-    // 当全局命令变更时也刷新选项（保证全局唯一性生效）
-    if (this.editor.signals) {
-      if (this.editor.signals.commandAdded) this.editor.signals.commandAdded.add(() => { if (this.voiceSelect) this.reloadOptions(); });
-      if (this.editor.signals.commandRemoved) this.editor.signals.commandRemoved.add(() => { if (this.voiceSelect) this.reloadOptions(); });
-      if (this.editor.signals.commandChanged) this.editor.signals.commandChanged.add(() => { if (this.voiceSelect) this.reloadOptions(); });
-    }
-  }
-
-  /**
-   * 创建默认的 Voice 命令数据。
-   */
   static Create(): MrppCommand {
-    const component: MrppCommand = {
+    return {
       type: 'Voice',
       parameters: {
-        uuid: THREE.MathUtils.generateUUID(),
-        action: '',
-        parameter: ''
+        uuid: THREE.MathUtils.generateUUID(), action: '', parameter: '', pinyin: ''
       }
     };
-    return component;
   }
 
-  /**
-   * 构建命令 UI 并添加到容器中。
-   */
-  named(container: any): void {
-    container.add(new UIBreak());
-    container.add(new UIBreak());
+  private setStatus(state: string): void {
+    this.statusText.setValue(this.editor.strings.getKey('sidebar/command/voice/' + state));
+    this.statusText.dom.dataset.state = state;
+  }
+
+  private refreshDraftState(): void {
+    const previous = readVoiceText(this.component.parameters);
+    const changed = this.phraseInput.getValue() !== previous.phrase || this.pinyinInput.getValue() !== previous.pinyin;
+    const configured = !!(previous.phrase || previous.pinyin || (this.component.parameters.action ?? this.component.parameters.voice));
+    this.setStatus(changed ? 'editing' : configured ? 'configured' : 'empty');
+    this.confirmButton.setTextContent(this.editor.strings.getKey('sidebar/command/voice/' + (configured ? 'confirm' : 'create')));
+    this.confirmButton.setDisabled(!changed && configured);
+    this.cancelButton.setHidden(!changed);
+  }
+
+  // Commit the canonical action+pinyin pair together, retaining the event identity.
+  update(): void {
+    const text = normalizeVoiceText(this.phraseInput.getValue(), this.pinyinInput.getValue());
+    const previous = readVoiceText(this.component.parameters);
+    const unchanged = text.phrase === previous.phrase && text.pinyin === previous.pinyin;
+    if (unchanged && !Object.hasOwn(this.component.parameters, 'phrase') && !Object.hasOwn(this.component.parameters, 'pinyin')) {
+      this.updateUI();
+      return;
+    }
+    const commands: MrppCommand[] = [];
+    this.editor.scene.traverse((object: THREE.Object3D) => {
+      commands.push(...((object as MrppObject3D).commands ?? []));
+    });
+    const error = validateVoiceText(text, commands, this.component);
+    if (error) {
+      this.errorText.setValue(this.editor.strings.getKey('sidebar/command/voice/' + error));
+      return;
+    }
+    if (unchanged) {
+      this.updateUI();
+      return;
+    }
+    const parameters: MrppCommand['parameters'] = { ...this.component.parameters, action: text.phrase, pinyin: text.pinyin };
+    delete parameters.phrase;
+    delete parameters.voice;
+    this.editor.execute(new SetCommandValueCommand(
+      this.editor, this.object as MrppObject3D, this.component, 'parameters',
+      parameters
+    ));
+    this.updateUI();
+    this.setStatus('confirmed');
+  }
+
+  updateUI(): void {
+    const text = readVoiceText(this.component.parameters);
+    this.phraseInput.setValue(text.phrase);
+    this.pinyinInput.setValue(text.pinyin);
+    const parameters = this.component.parameters;
+    const unknownLegacy = !Object.hasOwn(parameters, 'phrase') && !Object.hasOwn(parameters, 'pinyin')
+      && !!(parameters.action ?? parameters.voice) && !text.pinyin;
+    this.errorText.setValue(unknownLegacy ? this.editor.strings.getKey('sidebar/command/voice/unknown_legacy') : '');
+    this.refreshDraftState();
+  }
+
+  renderer(container: any, remove?: any): void {
     const strings = this.editor.strings;
-
-    {
-      const row = new UIRow();
-      this.uuid = new UIInput().setWidth('150px').setFontSize('12px').setDisabled(true);
-
-      row.add(new UIText(strings.getKey('sidebar/geometry/uuid')).setWidth('90px'));
-      row.add(this.uuid);
-      container.add(row);
+    const card = new UIDiv().setClass('mrpp-voice-card');
+    const header = new UIDiv().setClass('mrpp-voice-header');
+    header.add(new UIText(strings.getKey('sidebar/command/select/voice')).setClass('mrpp-voice-title'));
+    this.statusText = new UIText('').setClass('mrpp-voice-status');
+    this.statusText.dom.setAttribute('role', 'status');
+    header.add(this.statusText);
+    if (remove) {
+      remove.addClass('mrpp-voice-remove');
+      header.add(remove);
     }
-
-    {
-      const row = new UIRow();
-      const voiceLabel = new UIText(strings.getKey("sidebar/command/voice/label")).setWidth('90px');
-
-      this.voiceSelect = new UISelect().setWidth('150px').setFontSize('12px');
-      this.reloadOptions();
-
-      // 延迟默认选中逻辑：保持外观为空，但在用户展开下拉时，让小勾指向第一个可用项。
-      // 不在此处保存到组件参数，只有用户在下拉中显式选择才会触发保存（onChange -> update）。
-      try {
-        this._wasEmptyAction = !this.component.parameters.action;
-        this._autoDefaultApplied = false;
-
-        const applyTempDefault = (): void => {
-          try {
-            if (!this._wasEmptyAction) return; // 只有新建/空的情况下才应用
-            const options = this.voiceSelect.dom && this.voiceSelect.dom.options;
-            if (!options) return;
-            for (let k = 0; k < options.length; k++) {
-              const opt = options[k];
-              if (opt && !opt.disabled && opt.value) {
-                // 临时在 DOM 上设置 selectedIndex，使下拉展开时有小勾
-                this.voiceSelect.dom.selectedIndex = k;
-                this._autoDefaultApplied = true;
-                break;
-              }
-            }
-          } catch (e) {
-            console.warn('VoiceCommand: applyTempDefault failed', e);
-          }
-        };
-
-        const clearTempDefaultIfUnchanged = (): void => {
-          try {
-            // 如果原本为空且用户未实际改变组件参数（仍为空），则清除临时选中
-            if (this._wasEmptyAction && this._autoDefaultApplied && !this.component.parameters.action) {
-              this.voiceSelect.dom.value = '';
-              this.voiceSelect.dom.selectedIndex = -1;
-            }
-            this._autoDefaultApplied = false;
-          } catch (e) {
-            console.warn('VoiceCommand: clearTempDefaultIfUnchanged failed', e);
-          }
-        };
-
-        // 在用户按下鼠标或通过键盘聚焦打开下拉之前，应用临时默认
-        if (this.voiceSelect && this.voiceSelect.dom) {
-          this.voiceSelect.dom.addEventListener('mousedown', applyTempDefault);
-          this.voiceSelect.dom.addEventListener('focus', applyTempDefault);
-          // 用户实际在下拉中点击时，如果之前应用了临时默认且组件仍为空，则将该临时值持久化
-          this.voiceSelect.dom.addEventListener('click', (_event: Event) => {
-            try {
-              if (this._wasEmptyAction && this._autoDefaultApplied && !this.component.parameters.action) {
-                const val = this.voiceSelect.dom.value;
-                if (val) {
-                  const cmd = new SetValueCommand(this.editor, this.component.parameters, 'action', val);
-                  this.editor.execute(cmd);
-                  if (this.editor.signals && this.editor.signals.componentChanged) {
-                    this.editor.signals.componentChanged.dispatch(this.component);
-                  }
-                  this._wasEmptyAction = false;
-                  this._autoDefaultApplied = false;
-                }
-              }
-            } catch (e) {
-              console.warn('VoiceCommand: click persistence failed', e);
-            }
-          });
-          // 失去焦点时如果没有实际保存值则清除临时默认
-          this.voiceSelect.dom.addEventListener('blur', clearTempDefaultIfUnchanged);
-        }
-      } catch (e) {
-        console.warn('VoiceCommand: failed to attach delayed default handlers', e);
-      }
-
-      row.add(voiceLabel);
-      row.add(this.voiceSelect);
-      container.add(row);
-    }
-  }
-
-  /** 重新加载下拉选项并禁用已使用的语音命令 */
-  reloadOptions(): void {
-    const currentValue: string = this.voiceSelect.getValue();
-
-    // 普通用户user可选
-    const voiceOptions: Record<string, string> = {
-      scaleUp: '放大',
-      scaleDown: '缩小',
-      decompose: '分解',
-      reset: '还原',
-      goBack: '返回',
+    card.add(header);
+    const body = new UIDiv().setClass('mrpp-voice-body');
+    const field = (key: string, input: any, hint: string): void => {
+      const group = new UIDiv().setClass('mrpp-voice-field');
+      const label = document.createElement('label');
+      label.htmlFor = input.dom.id;
+      label.textContent = strings.getKey('sidebar/command/voice/' + key);
+      group.dom.appendChild(label);
+      group.add(input);
+      const help = new UIText(strings.getKey('sidebar/command/voice/' + hint)).setClass('mrpp-voice-help');
+      help.dom.id = input.dom.id + '-help';
+      input.dom.setAttribute('aria-describedby', help.dom.id);
+      group.add(help);
+      body.add(group);
     };
-
-    // user以上角色可选
-    if (this.editor.access.atLeast(ROLES.MANAGER)) {
-      Object.assign(voiceOptions, {
-        //教育项目
-        nextStep: '下一步',
-        returnMain: '返回主界面',
-        closeTooltip: '关闭说明卡',
-        openTooltip: '显示说明卡',
-        vertical: '垂直展示',
-        horizontal: '水平展示',
-        hidden: '隐藏模式',
-        visible: '显示模式',
-        showYuelu: '展示岳麓山校区',
-        showLunan: '展示麓南校区',
-        showXiaoxiang: '展示潇湘校区',
-        showTianxin: '展示天心校区',
-        showXinglin: '展示杏林校区',
-        showKaifu: '展示开福校区',
-        bgmOn: '打开背景音乐',
-        bgmOff: '关闭背景音乐',
-        sandboxFxOn: '打开沙盘特效',
-        sandboxFxOff: '关闭沙盘特效',
-        sandboxRotateOn: '打开沙盘旋转',
-        sandboxRotateOff: '关闭沙盘旋转',
-        campusIntroOn: '打开校区介绍',
-        campusIntroOff: '关闭校区介绍',
-        //反欺凌项目
-        mockFace: '像怪物',
-        almostCrying: '他快哭了',
-        stopBullying: '别再欺负他',
-        carefulHeard: '小心被听到',
-        stillResisting: '还想反抗',
-        goCheck: '东西被拿了去看看',
-        wishfulThinking: '想得美',
-        tooMuch: '太过分了',
-        ostracizing: '在搞孤立',
-        whatsHappening: '出事了去看看',
+    this.phraseInput = new UIInput().setId('voice-phrase-' + this.component.parameters.uuid);
+    this.phraseInput.dom.setAttribute('aria-label', strings.getKey('sidebar/command/voice/phrase'));
+    this.phraseInput.dom.placeholder = strings.getKey('sidebar/command/voice/phrase_placeholder');
+    field('phrase', this.phraseInput, 'description');
+    this.pinyinInput = new UIInput().setId('voice-pinyin-' + this.component.parameters.uuid);
+    this.pinyinInput.dom.setAttribute('aria-label', strings.getKey('sidebar/command/voice/pinyin'));
+    this.pinyinInput.dom.placeholder = strings.getKey('sidebar/command/voice/pinyin_placeholder');
+    this.pinyinInput.dom.spellcheck = false;
+    this.pinyinInput.dom.autocapitalize = 'none';
+    field('pinyin', this.pinyinInput, 'hint');
+    this.errorText = new UIText('').setClass('mrpp-voice-error');
+    this.errorText.dom.setAttribute('role', 'alert');
+    body.add(this.errorText);
+    const actions = new UIDiv().setClass('mrpp-voice-actions');
+    this.confirmButton = new UIButton('').addClass('mrpp-voice-confirm').onClick(() => this.update());
+    this.cancelButton = new UIButton(strings.getKey('sidebar/command/voice/cancel')).onClick(() => this.updateUI());
+    actions.add(this.confirmButton, this.cancelButton);
+    body.add(actions);
+    for (const input of [this.phraseInput, this.pinyinInput]) {
+      input.dom.style.padding = '';
+      input.dom.style.border = '';
+      input.dom.addEventListener('input', () => {
+        this.errorText.setValue('');
+        this.refreshDraftState();
+      });
+      input.dom.addEventListener('keydown', (event: KeyboardEvent) => {
+        if (event.key === 'Enter' && !event.isComposing && !this.confirmButton.dom.disabled) {
+          event.preventDefault();
+          this.update();
+        }
       });
     }
-
-    // 清除并重新设置选项
-    this.voiceSelect.setOptions(voiceOptions);
-
-    // 如果当前值在新选项中存在，则保持选中状态
-    if (currentValue && voiceOptions[currentValue]) {
-      this.voiceSelect.setValue(currentValue);
-    }
-
-    // 全局检查：如果场景中已有某个 Voice action 被使用，则将对应选项设为不可用（除非它是当前正在编辑的值）
-    try {
-      const usedActions = new Set<string>();
-
-      if (this.editor && this.editor.scene && typeof this.editor.scene.traverse === 'function') {
-        this.editor.scene.traverse(function(obj: any) {
-          if (!obj) return;
-          if (obj.commands && Array.isArray(obj.commands)) {
-            for (let i = 0; i < obj.commands.length; i++) {
-              const cmd = obj.commands[i];
-              if (!cmd) continue;
-              // 支持旧结构或 parameters 存在的情况
-              const action = (cmd.parameters && cmd.parameters.action) || cmd.action || '';
-              if (cmd.type && cmd.type.toLowerCase() === 'voice' && action) {
-                usedActions.add(action);
-              }
-            }
-          }
-        });
-      }
-
-      // 遍历 select 的 DOM options，将已使用的项禁用（但保留当前值可用以便编辑）
-      const options = this.voiceSelect.dom && this.voiceSelect.dom.options;
-      if (options) {
-        for (let i = 0; i < options.length; i++) {
-          const opt = options[i];
-          const optVal = opt.value;
-          if (optVal && usedActions.has(optVal) && optVal !== currentValue) {
-            opt.disabled = true;
-            opt.style.color = '#888';
-          } else {
-            opt.disabled = false;
-            opt.style.color = '';
-          }
-        }
-      }
-    } catch (e) {
-      console.warn('VoiceCommand.reloadOptions: failed to compute global used actions', e);
-    }
-
-    this.voiceSelect.onChange(this.update.bind(this));
-  }
-
-  /** 将 UI 选择值更新到命令数据 */
-  update(): void {
-    this.component.parameters.action = this.voiceSelect.getValue();
-
-    const command = new SetValueCommand(
-      this.editor,
-      this.component.parameters,
-      'action',
-      this.component.parameters.action
-    );
-
-    this.editor.execute(command);
-    this.editor.signals.componentChanged.dispatch(this.component);
-  }
-
-  /** 从命令数据同步 UI 显示 */
-  updateUI(): void {
-    this.uuid.setValue(this.component.parameters.uuid);
-    this.voiceSelect.setValue(this.component.parameters.action);
-  }
-
-  /**
-   * 渲染命令 UI。
-   */
-  renderer(container: any): void {
-    this.named(container);
+    card.add(body);
+    container.add(card);
     this.updateUI();
   }
 }

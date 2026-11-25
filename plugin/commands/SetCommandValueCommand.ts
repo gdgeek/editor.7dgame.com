@@ -51,7 +51,9 @@ class SetCommandValueCommand extends Command {
 		this.oldValue = json.oldValue;
 		this.newValue = json.newValue;
 		this.object = this.editor.objectByUuid(json.objectUuid);
-		this.command = json.command;
+		const command = this.object.commands.find(item => item.parameters.uuid === json.command.parameters.uuid);
+		if (!command) throw new Error('Cannot restore history for a missing command');
+		this.command = command;
 	}
 }
 
